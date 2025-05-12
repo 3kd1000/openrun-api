@@ -1,0 +1,48 @@
+spring:
+  # MariaDB 설정
+  # datasource:
+  #   url: jdbc:mariadb://localhost:3306/openrun
+  #   username: root
+  #   password: root
+  #   driver-class-name: org.mariadb.jdbc.Driver
+  #   hikari:
+  #     maximum-pool-size: 10
+  #     minimum-idle: 5
+  #     idle-timeout: 300000
+  #     connection-timeout: 20000
+  #     max-lifetime: 1200000
+
+  # # JPA 설정
+  # jpa:
+  #   database-platform: org.hibernate.dialect.MariaDBDialect
+  #   hibernate:
+  #     ddl-auto: update
+  #   show-sql: true
+  #   properties:
+  #     hibernate:
+  #       format_sql: true
+
+  # # Neo4j 설정
+  # neo4j:
+  #   uri: bolt://localhost:7687
+  #   authentication:
+  #     username: neo4j
+  #     password: neo4j
+  #   connection:
+  #     pool:
+  #       max-connection-lifetime: 1h
+  #       max-connection-pool-size: 50
+
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# 로깅 설정
+logging:
+  level:
+    root: INFO
+    com.example.openrunapi: DEBUG
+    org.springframework: INFO
+    org.hibernate: INFO
