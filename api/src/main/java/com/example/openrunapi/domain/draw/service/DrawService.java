@@ -41,26 +41,31 @@ public class DrawService {
 
     private CreateDrawResponse generateAAMatches(List<String> userNames) {
         int n = userNames.size();
+        int gamesPerRound = n / 4;
+
         List<String> sequence = DrawPattern.AA_PATTERNS.get(n);
 
         List<String> shuffledUsers = new ArrayList<>(userNames);
         Collections.shuffle(shuffledUsers);
-
         Map<String, String> numberToName = mapNumbersToUserNames(shuffledUsers);
 
         List<CreateDrawResponse.Game> games = new ArrayList<>();
-        int gameNo = 1;
-        for (String match : sequence) {
+        for (int i = 0; i < sequence.size(); i++) {
+            String match = sequence.get(i);
             String[] teams = match.split(":");
             List<String> teamA = mapTeamToNames(teams[0], numberToName);
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
-            games.add(new CreateDrawResponse.Game(gameNo++, teamA, teamB));
+            int gameNo = i + 1;
+            int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
+            games.add(new CreateDrawResponse.Game(gameNo, roundNo, teamA, teamB));
         }
         return new CreateDrawResponse(games);
     }
 
     private CreateDrawResponse generateABMatches(List<String> groupAList, List<String> groupBList) {
         int n = groupAList.size() + groupBList.size();
+        int gamesPerRound = n / 4;
+
         List<String> sequence = DrawPattern.AB_PATTERNS.get(n);
 
         List<String> shuffledA = new ArrayList<>(groupAList);
@@ -78,18 +83,22 @@ public class DrawService {
         }
 
         List<CreateDrawResponse.Game> games = new ArrayList<>();
-        int gameNo = 1;
-        for (String match : sequence) {
+        for (int i = 0; i < sequence.size(); i++) {
+            String match = sequence.get(i);
             String[] teams = match.split(":");
             List<String> teamA = mapTeamToNames(teams[0], numberToName);
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
-            games.add(new CreateDrawResponse.Game(gameNo++, teamA, teamB));
+            int gameNo = i + 1;
+            int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
+            games.add(new CreateDrawResponse.Game(gameNo, roundNo, teamA, teamB));
         }
         return new CreateDrawResponse(games);
     }
 
     private CreateDrawResponse generateSEEDMatches(List<String> userNames, List<String> seedUserNames) {
         int n = userNames.size() + seedUserNames.size();
+        int gamesPerRound = n / 4;
+
         List<String> sequence = DrawPattern.AA_PATTERNS.get(n);
         List<String> seedPositions = DrawPattern.SEED_POSITIONS.get(n);
 
@@ -118,12 +127,14 @@ public class DrawService {
         }
 
         List<CreateDrawResponse.Game> games = new ArrayList<>();
-        int gameNo = 1;
-        for (String match : sequence) {
+        for (int i = 0; i < sequence.size(); i++) {
+            String match = sequence.get(i);
             String[] teams = match.split(":");
             List<String> teamA = mapTeamToNames(teams[0], numberToName);
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
-            games.add(new CreateDrawResponse.Game(gameNo++, teamA, teamB));
+            int gameNo = i + 1;
+            int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
+            games.add(new CreateDrawResponse.Game(gameNo, roundNo, teamA, teamB));
         }
         return new CreateDrawResponse(games);
     }
@@ -223,12 +234,13 @@ public class DrawService {
 
     public String formatDrawForSharing(CreateDrawResponse response) {
         StringBuilder sb = new StringBuilder();
-        int prevGameNo = -1;
+        int prevRoundNo = -1;
         for (CreateDrawResponse.Game game : response.getGames()) {
-            // 게임 번호가 바뀔 때마다 한 줄 띄우기 (옵션)
-            if (game.getGameNo() != prevGameNo) {
-                if (sb.length() > 0) sb.append("\n");
-                prevGameNo = game.getGameNo();
+            // 라운드가 바뀔 때마다 줄 띄우기 & 라운드 헤더 출력
+            if (game.getRoundNo() != prevRoundNo) {
+                if (sb.length() > 0) sb.append("\n");  // 이전 라운드 끝나고 한 줄 띄우기
+                sb.append("라운드 ").append(game.getRoundNo()).append("\n");
+                prevRoundNo = game.getRoundNo();
             }
             sb.append("게임").append(game.getGameNo()).append(" ");
             sb.append(String.join(", ", game.getTeamA())).append(" : ");

@@ -21,6 +21,7 @@ public class CreateDrawResponse {
     @NoArgsConstructor
     public static class Game {
         private int gameNo;
+        private int roundNo;
         private List<String> teamA;
         private List<String> teamB;
     }
