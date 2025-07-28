@@ -1,5 +1,6 @@
-import axiosInstance from '../../services/api/axiosInstance';
 import React, { useState, useEffect } from 'react';
+import Toast from '../../components/common/Toast';
+import axiosInstance from '../../services/api/axiosInstance';
 
 // API 응답 타입 정의 (CreateDrawResponse에 따라 수정 필요)
 interface Game { 
@@ -13,7 +14,7 @@ interface CreateDrawResponse {
 }
 
 const DrawGenerationPage: React.FC = () => {
-  const [drawType, setDrawType] = useState<'AA' | 'AB' | 'SEED' | ''>('');
+  const [drawType, setDrawType] = useState<'AA' | 'AB' | 'SEED'>('AA');
   const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | ''>('');
   const [participantNames, setParticipantNames] = useState<string[]>([]);
   const [seedUserNames, setSeedUserNames] = useState<string[]>([]);
@@ -21,20 +22,66 @@ const DrawGenerationPage: React.FC = () => {
   const [groupBUserNames, setGroupBUserNames] = useState<string[]>([]);
   const [drawResult, setDrawResult] = useState<CreateDrawResponse | null>(null);
   const [shareFormat, setShareFormat] = useState<string>('');
+  const [toastMessage, setToastMessage] = useState<string>('');
+
+  // 대진 타입별 총 인원수 범위
+  const totalPlayerRange = {
+    AA: { min: 6, max: 16 },
+    AB: { min: 8, max: 16 },
+    SEED: { min: 6, max: 16 },
+  };
+
+  // SEED 타입의 총 인원에 따른 일반/시드 플레이어 수
+  const getSeedPlayerCounts = (totalPlayers: number) => {
+    if (totalPlayers >= 6 && totalPlayers <= 8) return { general: totalPlayers - 2, seed: 2 };
+    if (totalPlayers > 8 && totalPlayers <= 10) return { general: totalPlayers - 3, seed: 3 };
+    if (totalPlayers > 10 && totalPlayers <= 14) return { general: totalPlayers - 4, seed: 4 };
+    if (totalPlayers == 15) return { general: totalPlayers -5, seed: 5};
+    if (totalPlayers == 16) return { general: totalPlayers -6, seed: 6};
+    return { general: totalPlayers, seed: 0 }; // 기본값
+  };
 
   useEffect(() => {
     if (typeof numberOfTotalPlayer === 'number' && numberOfTotalPlayer > 0) {
-      setParticipantNames(Array(numberOfTotalPlayer).fill(''));
-      setSeedUserNames(Array(numberOfTotalPlayer).fill('')); // 초기화
-      setGroupAUserNames(Array(Math.ceil(numberOfTotalPlayer / 2)).fill('')); // 대략 절반
-      setGroupBUserNames(Array(Math.floor(numberOfTotalPlayer / 2)).fill('')); // 대략 절반
+      if (drawType === 'SEED') {
+        const { general, seed } = getSeedPlayerCounts(numberOfTotalPlayer);
+        setParticipantNames(Array(general).fill(''));
+        setSeedUserNames(Array(seed).fill(''));
+      } else {
+        setParticipantNames(Array(numberOfTotalPlayer).fill(''));
+        setSeedUserNames([]);
+      }
+
+      if (drawType === 'AB') {
+        setGroupAUserNames(Array(Math.ceil(numberOfTotalPlayer / 2)).fill(''));
+        setGroupBUserNames(Array(Math.floor(numberOfTotalPlayer / 2)).fill(''));
+      } else {
+        setGroupAUserNames([]);
+        setGroupBUserNames([]);
+      }
     } else {
       setParticipantNames([]);
       setSeedUserNames([]);
       setGroupAUserNames([]);
       setGroupBUserNames([]);
     }
-  }, [numberOfTotalPlayer]);
+  }, [numberOfTotalPlayer, drawType]);
+
+  const handleNumberOfTotalPlayerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (isNaN(value)) {
+      setNumberOfTotalPlayer('');
+      return;
+    }
+
+    const { min, max } = totalPlayerRange[drawType];
+    if (value < min || value > max) {
+      setToastMessage(`총 인원수는 ${min}명에서 ${max}명 사이여야 합니다.`);
+      setNumberOfTotalPlayer(''); // 유효하지 않은 값은 초기화
+    } else {
+      setNumberOfTotalPlayer(value);
+    }
+  };
 
   const handleParticipantNameChange = (index: number, value: string) => {
     const newNames = [...participantNames];
@@ -79,12 +126,12 @@ const DrawGenerationPage: React.FC = () => {
       console.error('Error generating draw:', error);
       setDrawResult(null);
       setShareFormat('');
-      alert('대진 생성에 실패했습니다. 콘솔을 확인해주세요.');
+      setToastMessage('대진 생성에 실패했습니다. 콘솔을 확인해주세요.');
     }
   };
 
   const resetForm = () => {
-    setDrawType('');
+    setDrawType('AA'); // 초기화 시 AA로 설정
     setNumberOfTotalPlayer('');
     setParticipantNames([]);
     setSeedUserNames([]);
@@ -97,140 +144,169 @@ const DrawGenerationPage: React.FC = () => {
   const copyToClipboard = () => {
     if (shareFormat) {
       navigator.clipboard.writeText(shareFormat)
-        .then(() => alert('클립보드에 복사되었습니다!'))
+        .then(() => setToastMessage('클립보드에 복사되었습니다!'))
         .catch(err => console.error('클립보드 복사 실패:', err));
     } else {
-      alert('복사할 내용이 없습니다.');
+      setToastMessage('복사할 내용이 없습니다.');
     }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
-      <h1>대진 생성</h1>
+    <>
+      <div style={{ padding: '20px', maxWidth: '600px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <img src="/openrun_logo.jpeg" alt="logo" style={{ width: '150px' }} />
+        </div>
+        <div style={{ position: 'sticky', top: '0', backgroundColor: 'white', zIndex: 1, padding: '10px 0' }}>
+          <h1>대진 생성</h1>
 
-      <div>
-        <label htmlFor="drawType">대진 타입:</label>
-        <select
-          id="drawType"
-          value={drawType}
-          onChange={(e) => setDrawType(e.target.value as 'AA' | 'AB' | 'SEED' | '')}
-          style={{ marginLeft: '10px', padding: '5px' }}
-        >
-          <option value="">선택</option>
-          <option value="AA">AA (단식)</option>
-          <option value="AB">AB (복식)</option>
-          <option value="SEED">Seed (시드)</option>
-        </select>
-      </div>
-
-      <div style={{ marginTop: '15px' }}>
-        <label htmlFor="numberOfTotalPlayer">총 인원수:</label>
-        <input
-          id="numberOfTotalPlayer"
-          type="number"
-          value={numberOfTotalPlayer}
-          onChange={(e) => setNumberOfTotalPlayer(parseInt(e.target.value) || '')}
-          min="0"
-          style={{ marginLeft: '10px', padding: '5px' }}
-        />
-      </div>
-
-      {typeof numberOfTotalPlayer === 'number' && numberOfTotalPlayer > 0 && (
-        <div style={{ marginTop: '20px' }}>
-          <h2>참여자 정보 입력</h2>
-          {drawType === 'AB' ? (
-            <div style={{ display: 'flex', gap: '20px' }}>
-              <div>
-                <h3>그룹 A ({Math.ceil(numberOfTotalPlayer / 2)}명)</h3>
-                {groupAUserNames.map((name, index) => (
-                  <input
-                    key={`groupA-${index}`}
-                    type="text"
-                    placeholder={`그룹 A 참가자 ${index + 1}`}
-                    value={name}
-                    onChange={(e) => handleGroupAUserNameChange(index, e.target.value)}
-                    style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
-                  />
-                ))}
-              </div>
-              <div>
-                <h3>그룹 B ({Math.floor(numberOfTotalPlayer / 2)}명)</h3>
-                {groupBUserNames.map((name, index) => (
-                  <input
-                    key={`groupB-${index}`}
-                    type="text"
-                    placeholder={`그룹 B 참가자 ${index + 1}`}
-                    value={name}
-                    onChange={(e) => handleGroupBUserNameChange(index, e.target.value)}
-                    style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <>
-              {participantNames.map((name, index) => (
+          <div>
+            <label>대진 타입:</label>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+              <label>
                 <input
-                  key={`participant-${index}`}
-                  type="text"
-                  placeholder={`참가자 ${index + 1}`}
-                  value={name}
-                  onChange={(e) => handleParticipantNameChange(index, e.target.value)}
-                  style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
+                  type="radio"
+                  value="AA"
+                  checked={drawType === 'AA'}
+                  onChange={(e) => setDrawType(e.target.value as 'AA' | 'AB' | 'SEED')}
                 />
-              ))}
-              {drawType === 'SEED' && (
-                <div style={{ marginTop: '15px' }}>
-                  <h3>시드 플레이어 (선택 사항)</h3>
-                  {seedUserNames.map((name, index) => (
+                AA (단식)
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="AB"
+                  checked={drawType === 'AB'}
+                  onChange={(e) => setDrawType(e.target.value as 'AA' | 'AB' | 'SEED')}
+                />
+                AB (복식)
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="SEED"
+                  checked={drawType === 'SEED'}
+                  onChange={(e) => setDrawType(e.target.value as 'AA' | 'AB' | 'SEED')}
+                />
+                Seed (시드)
+              </label>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '15px' }}>
+            <label htmlFor="numberOfTotalPlayer">총 인원수:</label>
+            <input
+              id="numberOfTotalPlayer"
+              type="number"
+              value={numberOfTotalPlayer}
+              onChange={handleNumberOfTotalPlayerChange}
+              min={drawType ? totalPlayerRange[drawType].min : 0}
+              max={drawType ? totalPlayerRange[drawType].max : 100}
+              style={{ marginLeft: '10px', padding: '5px' }}
+            />
+          </div>
+        </div>
+
+        <div style={{ minHeight: '300px', overflowY: 'auto', marginTop: '20px' }}>
+          {typeof numberOfTotalPlayer === 'number' && numberOfTotalPlayer > 0 && (
+            <div>
+              <h2>참여자 정보 입력</h2>
+              {drawType === 'AB' ? (
+                <div style={{ display: 'flex', gap: '20px' }}>
+                  <div>
+                    <h3>그룹 A ({Math.ceil(numberOfTotalPlayer / 2)}명)</h3>
+                    {groupAUserNames.map((name, index) => (
+                      <input
+                        key={`groupA-${index}`}
+                        type="text"
+                        placeholder={`그룹 A 참가자 ${index + 1}`}
+                        value={name}
+                        onChange={(e) => handleGroupAUserNameChange(index, e.target.value)}
+                        style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <h3>그룹 B ({Math.floor(numberOfTotalPlayer / 2)}명)</h3>
+                    {groupBUserNames.map((name, index) => (
+                      <input
+                        key={`groupB-${index}`}
+                        type="text"
+                        placeholder={`그룹 B 참가자 ${index + 1}`}
+                        value={name}
+                        onChange={(e) => handleGroupBUserNameChange(index, e.target.value)}
+                        style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {participantNames.map((name, index) => (
                     <input
-                      key={`seed-${index}`}
+                      key={`participant-${index}`}
                       type="text"
-                      placeholder={`시드 ${index + 1}`}
+                      placeholder={`참가자 ${index + 1}`}
                       value={name}
-                      onChange={(e) => handleSeedUserNameChange(index, e.target.value)}
+                      onChange={(e) => handleParticipantNameChange(index, e.target.value)}
                       style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
                     />
                   ))}
-                </div>
+                  {drawType === 'SEED' && (
+                    <div style={{ marginTop: '15px' }}>
+                      <h3>시드 플레이어 ({getSeedPlayerCounts(numberOfTotalPlayer).seed}명)</h3>
+                      {seedUserNames.map((name, index) => (
+                        <input
+                          key={`seed-${index}`}
+                          type="text"
+                          placeholder={`시드 ${index + 1}`}
+                          value={name}
+                          onChange={(e) => handleSeedUserNameChange(index, e.target.value)}
+                          style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
-            </>
+            </div>
           )}
         </div>
-      )}
 
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={generateDraw} style={{ padding: '10px 20px', marginRight: '10px' }}>
-          대진 생성
-        </button>
-        <button onClick={resetForm} style={{ padding: '10px 20px', marginRight: '10px' }}>
-          다시 생성하기
-        </button>
-        <button onClick={copyToClipboard} style={{ padding: '10px 20px' }}>
-          클립보드에 복사
-        </button>
-      </div>
-
-      {drawResult && (
-        <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-          <h2>생성된 대진 결과</h2>
-          {drawResult.games.map((game) => (
-            <p key={game.gameNumber}>
-              <strong>게임 {game.gameNumber}:</strong> {game.players.join(' vs ')}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {shareFormat && (
         <div style={{ marginTop: '20px' }}>
-          <h3>공유 형식</h3>
-          <pre style={{ backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '5px', whiteSpace: 'pre-wrap' }}>
-            {shareFormat}
-          </pre>
+          <button onClick={generateDraw} style={{ padding: '10px 20px', marginRight: '10px' }}>
+            대진 생성
+          </button>
+          <button onClick={resetForm} style={{ padding: '10px 20px', marginRight: '10px' }}>
+            초기화
+          </button>
+          <button onClick={copyToClipboard} style={{ padding: '10px 20px' }}>
+            클립보드에 복사
+          </button>
         </div>
-      )}
-    </div>
+
+        {drawResult && (
+          <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+            <h2>생성된 대진 결과</h2>
+            {drawResult.games.map((game) => (
+              <p key={game.gameNumber}>
+                <strong>게임 {game.gameNumber}:</strong> {game.players.join(' vs ')}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {shareFormat && (
+          <div style={{ marginTop: '20px' }}>
+            <h3>공유 형식</h3>
+            <pre style={{ backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '5px', whiteSpace: 'pre-wrap' }}>
+              {shareFormat}
+            </pre>
+          </div>
+        )}
+      </div>
+      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
+    </>
   );
 };
 
