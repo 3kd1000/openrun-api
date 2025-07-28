@@ -6,7 +6,6 @@ import java.util.Map;
 public final class DrawPattern {
     // public static final 
     public static final Map<Integer, List<String>> AA_PATTERNS = Map.ofEntries(
-    Map.entry(5, List.of("12:34", "13:25", "14:35", "15:24", "23:45")),
     Map.entry(6, List.of("12:34", "15:46", "23:56", "14:25", "24:36", "16:35")),
     Map.entry(7, List.of("12:34", "56:17", "35:24", "14:67", "23:57", "16:25", "46:37")),
     Map.entry(8, List.of("12:34", "56:78", "13:57", "24:68", "37:48", "15:26", "16:38", "25:47")),
