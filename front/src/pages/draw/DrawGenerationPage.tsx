@@ -13,7 +13,7 @@ interface CreateDrawResponse {
 }
 
 const DrawGenerationPage: React.FC = () => {
-  const [drawType, setDrawType] = useState<'AA' | 'AB' | 'Seed' | ''>('');
+  const [drawType, setDrawType] = useState<'AA' | 'AB' | 'SEED' | ''>('');
   const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | ''>('');
   const [participantNames, setParticipantNames] = useState<string[]>([]);
   const [seedUserNames, setSeedUserNames] = useState<string[]>([]);
@@ -64,8 +64,8 @@ const DrawGenerationPage: React.FC = () => {
     try {
       const requestBody = {
         userNames: participantNames.filter(name => name.trim() !== ''),
-        seedUserNames: drawType === 'Seed' ? seedUserNames.filter(name => name.trim() !== '') : [],
-        drawType: drawType === 'AA' ? 'SINGLE' : (drawType === 'AB' ? 'DOUBLE' : 'SEED'), // API의 DrawType enum에 맞게 매핑
+        seedUserNames: drawType === 'SEED' ? seedUserNames.filter(name => name.trim() !== '') : [],
+        drawType: drawType, // API의 DrawType enum에 맞게 매핑
         groupAUserNames: drawType === 'AB' ? groupAUserNames.filter(name => name.trim() !== '') : [],
         groupBUserNames: drawType === 'AB' ? groupBUserNames.filter(name => name.trim() !== '') : [],
         numberOfTotalPlayer: typeof numberOfTotalPlayer === 'number' ? numberOfTotalPlayer : 0,
@@ -113,13 +113,13 @@ const DrawGenerationPage: React.FC = () => {
         <select
           id="drawType"
           value={drawType}
-          onChange={(e) => setDrawType(e.target.value as 'AA' | 'AB' | 'Seed' | '')}
+          onChange={(e) => setDrawType(e.target.value as 'AA' | 'AB' | 'SEED' | '')}
           style={{ marginLeft: '10px', padding: '5px' }}
         >
           <option value="">선택</option>
           <option value="AA">AA (단식)</option>
           <option value="AB">AB (복식)</option>
-          <option value="Seed">Seed (시드)</option>
+          <option value="SEED">Seed (시드)</option>
         </select>
       </div>
 
@@ -179,7 +179,7 @@ const DrawGenerationPage: React.FC = () => {
                   style={{ display: 'block', marginBottom: '5px', padding: '5px' }}
                 />
               ))}
-              {drawType === 'Seed' && (
+              {drawType === 'SEED' && (
                 <div style={{ marginTop: '15px' }}>
                   <h3>시드 플레이어 (선택 사항)</h3>
                   {seedUserNames.map((name, index) => (
