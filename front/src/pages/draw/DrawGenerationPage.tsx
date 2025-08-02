@@ -16,10 +16,8 @@ interface CreateDrawResponse {
 }
 
 const DrawGenerationPage: React.FC = () => {
-  const [drawType, setDrawType] = useState<"AA" | "AB" | "SEED">("AA");
-  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(
-    ""
-  );
+  const [drawType, setDrawType] = useState<"AA" | "AB" | "SEED">("SEED");
+  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(8);
   const [participantNames, setParticipantNames] = useState<string[]>([]);
   const [seedUserNames, setSeedUserNames] = useState<string[]>([]);
   const [groupAUserNames, setGroupAUserNames] = useState<string[]>([]);
