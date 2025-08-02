@@ -30,9 +30,10 @@
   top: 0;
   background: #fff;
   z-index: 2;
-  padding-bottom: 8px;
-  padding-top: 8px;
+  padding: 16px 18px 12px 18px;    /* 상/하/좌우 padding 넉넉히 */
   border-bottom: 1px solid #eeeff5;
+  margin-bottom: 12px;
+  border-radius: 14px 14px 0 0;
 }
 
 h1 {
@@ -165,11 +166,15 @@ h1 {
 }
 
 /* 결과/공유 */
-.result-section,
+.result-section, 
 .share-section {
   margin-top: 36px;
   border-top: 1px solid #eee;
   padding-top: 18px;
+  background: #fff !important;    /* 흰색 고정 */
+  color: #222 !important;         /* 진한 텍스트 */
+  border-radius: 10px;
+  box-shadow: 0 2px 8px 0 rgba(60,60,100,0.06);
 }
 .result-title {
   font-size: 1.13rem;
@@ -186,14 +191,18 @@ h1 {
   white-space: pre-wrap;
   overflow-x: auto;
   margin-top: 7px;
+  color: #1e2030;
 }
 
 /* 반응형 (모바일) */
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .page-container {
-    max-width: 98vw;
-    padding: 22px 8vw; /* 모바일에서는 좌우 8vw 정도 여백 (화면폭 8%만큼) */
+    width: 99vw;
+    max-width: 99vw;
+    padding: 18px 1vw;
     margin: 0 auto;
+    border-radius: 0;
+    box-shadow: none;
   }
   .logo-img {
     width: 78px;
@@ -216,5 +225,8 @@ h1 {
   }
   .share-format-box {
     font-size: 0.96rem;
+  }
+  .sticky-header {
+    padding: 12px 6vw;   /* 좌우 6% 여백, 기기 해상도 따라 자연스러운 패딩 */
   }
 }
