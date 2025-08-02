@@ -67,16 +67,16 @@ WORKDIR /app
 COPY --from=api-builder /app/api/build/libs/*.jar ./app.jar
 
 # 'front-builder' 스테이지의 /app/front/dist/ 경로에 있던 빌드된 프론트엔드 정적 파일들을
-# Spring Boot가 자동으로 인식하여 웹서버 루트 경로로 제공하는 위치인
-# '/app/src/main/resources/static' 디렉토리 안으로 복사합니다.
-# 이렇게 하면, Spring Boot 서버 하나가 API와 프론트엔드 화면을 모두 제공할 수 있게 됩니다.
-COPY --from=front-builder /app/front/dist /app/src/main/resources/static
+# 컨테이너의 /app/static 디렉토리로 복사합니다.
+COPY --from=front-builder /app/front/dist /app/static
 
 # --- 포트 노출 및 애플리케이션 실행 ---
 # 이 컨테이너가 외부와 통신하기 위해 8080 포트를 사용한다는 것을 명시적으로 알려줍니다.
 # (실제 포트 매핑은 'docker run' 또는 'docker-compose.yml'에서 이루어집니다.)
 EXPOSE 8080
 
-# 컨테이너가 시작될 때, 'java -jar app.jar' 명령어를 실행하여 Spring Boot 애플리케이션을 구동합니다.
-# ENTRYPOINT는 컨테이너의 주 목적(실행 파일)을 지정하는 데 사용됩니다.
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# 컨테이너가 시작될 때 Spring Boot 애플리케이션을 구동합니다.
+# -Dspring.web.resources.static-locations 옵션을 추가하여
+# Spring Boot에게 기본 경로 외에, 파일 시스템의 /app/static 폴더도
+# 정적 리소스를 제공하는 위치로 사용하라고 알려줍니다.
+ENTRYPOINT ["java", "-Dspring.web.resources.static-locations=classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,file:/app/static/", "-jar", "app.jar"]
