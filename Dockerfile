@@ -56,7 +56,7 @@ RUN gradle :api:build -x test
 # 이 스테이지는 앞선 빌드 스테이지들에서 만들어진 결과물(artifact)들을 가져와
 # 실제 운영 환경에서 실행될 최종 이미지를 만듭니다.
 # Java 실행 환경(JRE)만 포함된 가벼운 이미지를 사용하여 이미지 크기를 최소화합니다.
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre
 
 # --- 작업 디렉토리 설정 ---
 WORKDIR /app
