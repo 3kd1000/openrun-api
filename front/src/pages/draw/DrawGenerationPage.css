@@ -5,6 +5,17 @@
   box-sizing: border-box;
 }
 
+/* 페이지 전체 배경 + 가운데 정렬을 위한 래퍼 */
+.body-bg {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;     /* 수평 가운데 정렬 */
+  align-items: flex-start;     /* 수직 기준 (중앙하려면 center) */
+  background: #fff;
+}
+
+
 .page-container {
   padding: 32px 24px;
   max-width: 480px;
