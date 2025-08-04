@@ -18,9 +18,7 @@ interface CreateDrawResponse {
 
 const DrawGenerationPage: React.FC = () => {
   const [drawType, setDrawType] = useState<"AA" | "AB" | "SEED">("SEED");
-  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(
-    8
-  );
+  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(8);
   const [participantNames, setParticipantNames] = useState<string[]>([]);
   const [seedUserNames, setSeedUserNames] = useState<string[]>([]);
   const [groupAUserNames, setGroupAUserNames] = useState<string[]>([]);
@@ -47,6 +45,15 @@ const DrawGenerationPage: React.FC = () => {
     if (totalPlayers == 15) return { general: totalPlayers - 5, seed: 5 };
     if (totalPlayers == 16) return { general: totalPlayers - 6, seed: 6 };
     return { general: totalPlayers, seed: 0 }; // 기본값
+  };
+
+  // participantNames / seedUserNames 배열을 2명씩 한 줄로 묶는 함수
+  const groupByTwo = (arr: string[]) => {
+    const result: [string, string | ""][] = [];
+    for (let i = 0; i < arr.length; i += 2) {
+      result.push([arr[i], arr[i + 1] ?? ""]);
+    }
+    return result;
   };
 
   useEffect(() => {
@@ -91,7 +98,6 @@ const DrawGenerationPage: React.FC = () => {
       const step = drawType === "AB" ? 2 : 1;
       let newVal = currentVal + step;
       if (newVal > max) newVal = max;
-      // AB 타입일 때 홀수에서 +1 하면 짝수가 되도록 보정
       if (drawType === "AB" && newVal % 2 !== 0) {
         newVal += 1;
       }
@@ -106,7 +112,6 @@ const DrawGenerationPage: React.FC = () => {
       const step = drawType === "AB" ? 2 : 1;
       let newVal = currentVal - step;
       if (newVal < min) newVal = min;
-      // AB 타입일 때 홀수에서 -1 하면 짝수가 되도록 보정
       if (drawType === "AB" && newVal % 2 !== 0) {
         newVal -= 1;
       }
@@ -114,7 +119,6 @@ const DrawGenerationPage: React.FC = () => {
     });
   };
 
-  // drawType이 변경될 때마다 numberOfTotalPlayer를 유효한 범위 내로 조정
   useEffect(() => {
     const { min, max } = totalPlayerRange[drawType];
     if (typeof numberOfTotalPlayer === "number") {
@@ -124,13 +128,11 @@ const DrawGenerationPage: React.FC = () => {
       } else if (currentVal > max) {
         currentVal = max;
       }
-      // AB 타입일 때 짝수 강제
       if (drawType === "AB" && currentVal % 2 !== 0) {
-        currentVal = Math.max(min, currentVal - 1); // 가장 가까운 짝수로 (min보다 작아지지 않게)
+        currentVal = Math.max(min, currentVal - 1);
       }
       setNumberOfTotalPlayer(currentVal);
     } else {
-      // 초기 로드 시 또는 유효하지 않은 값일 때 기본값 8로 설정
       setNumberOfTotalPlayer(8);
     }
   }, [drawType]);
@@ -167,7 +169,7 @@ const DrawGenerationPage: React.FC = () => {
           drawType === "SEED"
             ? seedUserNames.filter((name) => name.trim() !== "")
             : [],
-        drawType: drawType, // API의 DrawType enum에 맞게 매핑
+        drawType: drawType,
         groupAUserNames:
           drawType === "AB"
             ? groupAUserNames.filter((name) => name.trim() !== "")
@@ -185,7 +187,7 @@ const DrawGenerationPage: React.FC = () => {
         requestBody
       );
       setShareFormat(shareResponse.data);
-      setDrawResult(null); // drawResult는 사용하지 않으므로 null로 설정
+      setDrawResult(null);
     } catch (error) {
       console.error("Error generating draw:", error);
       setDrawResult(null);
@@ -195,7 +197,7 @@ const DrawGenerationPage: React.FC = () => {
   };
 
   const resetForm = () => {
-    setDrawType("AA"); // 초기화 시 AA로 설정
+    setDrawType("AA");
     setNumberOfTotalPlayer("");
     setParticipantNames([]);
     setSeedUserNames([]);
@@ -350,40 +352,86 @@ const DrawGenerationPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="input-list">
-                      {participantNames.map((name, index) => (
-                        <input
-                          key={`participant-${index}`}
-                          className="input-text"
-                          type="text"
-                          placeholder={`참가자 ${index + 1}`}
-                          value={name}
-                          onChange={(e) =>
-                            handleParticipantNameChange(index, e.target.value)
-                          }
-                        />
+                    {/* 참가자명 2명씩 한 줄에 배치 */}
+                    <div className="input-list-2col">
+                      {groupByTwo(participantNames).map(([name1, name2], idx) => (
+                        <div className="participant-row" key={idx}>
+                          <input
+                            className="input-text"
+                            type="text"
+                            placeholder={`참가자 ${idx * 2 + 1}`}
+                            value={name1}
+                            onChange={(e) => handleParticipantNameChange(idx * 2, e.target.value)}
+                          />
+                          {participantNames[idx * 2 + 1] !== undefined && (
+                            <input
+                              className="input-text"
+                              type="text"
+                              placeholder={`참가자 ${idx * 2 + 2}`}
+                              value={name2}
+                              onChange={(e) =>
+                                handleParticipantNameChange(idx * 2 + 1, e.target.value)
+                              }
+                            />
+                          )}
+                        </div>
                       ))}
                     </div>
+                    {/* 시드 플레이어명도 2명씩 한 줄에 배치 */}
                     {drawType === "SEED" && (
                       <div id="seed-section">
                         <div className="group-title">
-                          시드 플레이어 (
-                          {getSeedPlayerCounts(numberOfTotalPlayer).seed}명)
+                          시드 플레이어 ({getSeedPlayerCounts(numberOfTotalPlayer).seed}명)
                         </div>
-                        <div className="input-list">
-                          {seedUserNames.map((name, index) => (
-                            <input
-                              key={`seed-${index}`}
-                              className="input-text"
-                              type="text"
-                              placeholder={`시드 ${index + 1}`}
-                              value={name}
-                              onChange={(e) =>
-                                handleSeedUserNameChange(index, e.target.value)
-                              }
-                            />
+                        <div className="input-list-2col">
+                          {groupByTwo(seedUserNames).map(([name1, name2], idx) => (
+                            <div className="participant-row" key={idx}>
+                              <input
+                                className="input-text"
+                                type="text"
+                                placeholder={`참가자 ${idx * 2 + 1}`}
+                                value={name1}
+                                onChange={(e) => handleSeedUserNameChange(idx * 2, e.target.value)}
+                              />
+                              {seedUserNames[idx * 2 + 1] !== undefined && (
+                                <input
+                                  className="input-text"
+                                  type="text"
+                                  placeholder={`참가자 ${idx * 2 + 2}`}
+                                  value={name2}
+                                  onChange={(e) =>
+                                    handleSeedUserNameChange(idx * 2 + 1, e.target.value)
+                                  }
+                                />
+                              )}
+                            </div>
                           ))}
                         </div>
+                        {/* <div className="input-list-2col">
+                          {groupByTwo(seedUserNames).map(([name1, name2], idx) => (
+                            <div className="participant-row" key={idx}>
+                              <input
+                                className="input-text"
+                                type="text"
+                                placeholder={`시드 ${idx * 2 + 1}`}
+                                value={name1}
+                                onChange={(e) =>
+                                  handleSeedUserNameChange(idx * 2, e.target.value)
+                                }
+                              />
+                              <input
+                                className="input-text"
+                                type="text"
+                                placeholder={name2 ? `시드 ${idx * 2 + 2}` : ""}
+                                value={name2}
+                                onChange={(e) =>
+                                  handleSeedUserNameChange(idx * 2 + 1, e.target.value)
+                                }
+                                style={name2 ? {} : { visibility: "hidden" }}
+                              />
+                            </div>
+                          ))}
+                        </div> */}
                       </div>
                     )}
                   </>
@@ -409,8 +457,7 @@ const DrawGenerationPage: React.FC = () => {
             <div className="result-title">생성된 대진 결과</div>
             {drawResult.games.map((game) => (
               <p key={game.gameNumber}>
-                <strong>게임 {game.gameNumber}:</strong>{" "}
-                {game.players.join(" vs ")}
+                <strong>게임 {game.gameNumber}:</strong> {game.players.join(" vs ")}
               </p>
             ))}
           </div>
