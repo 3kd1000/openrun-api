@@ -3,6 +3,7 @@ import Toast from "../../components/common/Toast";
 import axiosInstance from "../../services/api/axiosInstance";
 
 import "./DrawGenerationPage.css"; // 꼭 추가해 주세요!
+import Tooltip from "../../components/common/Tooltip";
 
 // API 응답 타입 정의 (CreateDrawResponse에 따라 수정 필요)
 interface Game {
@@ -78,19 +79,61 @@ const DrawGenerationPage: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = parseInt(e.target.value);
-    if (isNaN(value)) {
-      setNumberOfTotalPlayer("");
-      return;
-    }
-
-    const { min, max } = totalPlayerRange[drawType];
-    if (value < min || value > max) {
-      setToastMessage(`총 인원수는 ${min}명에서 ${max}명 사이여야 합니다.`);
-      setNumberOfTotalPlayer(""); // 유효하지 않은 값은 초기화
-    } else {
+    if (!isNaN(value)) {
       setNumberOfTotalPlayer(value);
     }
   };
+
+  const handleIncrement = () => {
+    setNumberOfTotalPlayer((prev) => {
+      const currentVal = typeof prev === "number" ? prev : 8; // 기본값 8
+      const { max } = totalPlayerRange[drawType];
+      const step = drawType === "AB" ? 2 : 1;
+      let newVal = currentVal + step;
+      if (newVal > max) newVal = max;
+      // AB 타입일 때 홀수에서 +1 하면 짝수가 되도록 보정
+      if (drawType === "AB" && newVal % 2 !== 0) {
+        newVal += 1;
+      }
+      return newVal;
+    });
+  };
+
+  const handleDecrement = () => {
+    setNumberOfTotalPlayer((prev) => {
+      const currentVal = typeof prev === "number" ? prev : 8; // 기본값 8
+      const { min } = totalPlayerRange[drawType];
+      const step = drawType === "AB" ? 2 : 1;
+      let newVal = currentVal - step;
+      if (newVal < min) newVal = min;
+      // AB 타입일 때 홀수에서 -1 하면 짝수가 되도록 보정
+      if (drawType === "AB" && newVal % 2 !== 0) {
+        newVal -= 1;
+      }
+      return newVal;
+    });
+  };
+
+  // drawType이 변경될 때마다 numberOfTotalPlayer를 유효한 범위 내로 조정
+  useEffect(() => {
+    const { min, max } = totalPlayerRange[drawType];
+    if (typeof numberOfTotalPlayer === "number") {
+      let currentVal = numberOfTotalPlayer;
+      if (currentVal < min) {
+        currentVal = min;
+      } else if (currentVal > max) {
+        currentVal = max;
+      }
+      // AB 타입일 때 짝수 강제
+      if (drawType === "AB" && currentVal % 2 !== 0) {
+        currentVal = Math.max(min, currentVal - 1); // 가장 가까운 짝수로 (min보다 작아지지 않게)
+      }
+      setNumberOfTotalPlayer(currentVal);
+    } else {
+      // 초기 로드 시 또는 유효하지 않은 값일 때 기본값 8로 설정
+      setNumberOfTotalPlayer(8);
+    }
+  }, [drawType]);
 
   const handleParticipantNameChange = (index: number, value: string) => {
     const newNames = [...participantNames];
@@ -183,7 +226,17 @@ const DrawGenerationPage: React.FC = () => {
           <h1>대진 생성</h1>
 
           <div className="input-row">
-            <span className="input-label">대진 타입</span>
+            <span className="input-label">
+              대진 타입
+              <Tooltip
+                label="(?)"
+                content={
+                  `AA: 단식 (1대1 경기)\n` +
+                  `AB: 복식 (2대2 경기)\n` +
+                  `SEED: 시드 방식 적용 대진`
+                }
+              />
+            </span>
             <div className="radio-row">
               <label className="radio-label">
                 <input
@@ -221,19 +274,31 @@ const DrawGenerationPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="input-row">
+          <div className="input-row player-count-input">
             <label htmlFor="numberOfTotalPlayer" className="input-label">
               총 인원수
             </label>
-            <input
-              id="numberOfTotalPlayer"
-              className="input-number"
-              type="number"
-              value={numberOfTotalPlayer}
-              onChange={handleNumberOfTotalPlayerChange}
-              min={drawType ? totalPlayerRange[drawType].min : 0}
-              max={drawType ? totalPlayerRange[drawType].max : 100}
-            />
+            <div className="player-count-control">
+              <button className="btn-stepper" onClick={handleDecrement}>
+                -
+              </button>
+              <input
+                id="numberOfTotalPlayer"
+                className="input-range"
+                type="range"
+                value={numberOfTotalPlayer === "" ? 8 : numberOfTotalPlayer}
+                onChange={handleNumberOfTotalPlayerChange}
+                min={totalPlayerRange[drawType].min}
+                max={totalPlayerRange[drawType].max}
+                step={drawType === "AB" ? 2 : 1}
+              />
+              <button className="btn-stepper" onClick={handleIncrement}>
+                +
+              </button>
+              <span className="current-player-count">
+                {numberOfTotalPlayer === "" ? 8 : numberOfTotalPlayer}명
+              </span>
+            </div>
           </div>
         </div>
 

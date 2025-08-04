@@ -7,7 +7,7 @@ on:
   push:
     # 'develop' 브랜치에 push가 발생할 때만 이 워크플로우를 트리거(실행)합니다.
     # main, feature/* 등 다른 브랜치를 추가할 수도 있습니다.
-    branches: [ "develop" ]
+    branches: ["production"]
 
 # 'jobs' 섹션: 워크플로우에서 실행될 하나 이상의 작업(job)들을 정의합니다.
 jobs:
