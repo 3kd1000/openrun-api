@@ -17,7 +17,9 @@ interface CreateDrawResponse {
 
 const DrawGenerationPage: React.FC = () => {
   const [drawType, setDrawType] = useState<"AA" | "AB" | "SEED">("SEED");
-  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(8);
+  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(
+    8
+  );
   const [participantNames, setParticipantNames] = useState<string[]>([]);
   const [seedUserNames, setSeedUserNames] = useState<string[]>([]);
   const [groupAUserNames, setGroupAUserNames] = useState<string[]>([]);
@@ -172,7 +174,7 @@ const DrawGenerationPage: React.FC = () => {
   };
 
   return (
-    <>
+    <div className="body-bg">
       <div className="page-container">
         <div className="logo-wrapper">
           <img src="/openrun_logo.jpeg" alt="logo" className="logo-img" />
@@ -357,7 +359,7 @@ const DrawGenerationPage: React.FC = () => {
         )}
       </div>
       <Toast message={toastMessage} onClose={() => setToastMessage("")} />
-    </>
+    </div>
   );
 };
 
