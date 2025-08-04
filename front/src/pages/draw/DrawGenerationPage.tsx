@@ -4,6 +4,7 @@ import axiosInstance from "../../services/api/axiosInstance";
 
 import "./DrawGenerationPage.css"; // 꼭 추가해 주세요!
 import Tooltip from "../../components/common/Tooltip";
+import FAQItem from "../../components/common/FAQItem";
 
 // API 응답 타입 정의 (CreateDrawResponse에 따라 수정 필요)
 interface Game {
@@ -26,6 +27,7 @@ const DrawGenerationPage: React.FC = () => {
   const [drawResult, setDrawResult] = useState<CreateDrawResponse | null>(null);
   const [shareFormat, setShareFormat] = useState<string>("");
   const [toastMessage, setToastMessage] = useState<string>("");
+  const [openFaq, setOpenFaq] = useState<string>("");
   const resultRef = useRef<HTMLDivElement>(null);
 
   // 대진 타입별 총 인원수 범위
@@ -227,20 +229,12 @@ const DrawGenerationPage: React.FC = () => {
         <div className="logo-wrapper">
           <img src="/openrun_logo.jpeg" alt="logo" className="logo-img" />
         </div>
-        <div className="sticky-header">
-          <h1>대진 생성</h1>
 
+        <div className="sticky-header">
+          <h1>한울방식 대진 생성</h1>
           <div className="input-row radio-type-row">
             <span className="input-label">
               대진 타입
-              <Tooltip
-                label="(?)"
-                content={
-                  `AA: 단식 (1대1 경기)\n` +
-                  `AB: 복식 (2대2 경기)\n` +
-                  `SEED: 시드 방식 적용 대진`
-                }
-              />
             </span>
             <div className="radio-row">
               <label className="radio-label">
@@ -252,7 +246,7 @@ const DrawGenerationPage: React.FC = () => {
                     setDrawType(e.target.value as "AA" | "AB" | "SEED")
                   }
                 />
-                Seed (시드)
+                시드
               </label>
               <label className="radio-label">
                 <input
@@ -442,6 +436,37 @@ const DrawGenerationPage: React.FC = () => {
               </div>
             )}
         </div>
+
+        <div className="explain-btns-row">
+          <button className="btn-guide" onClick={() => setOpenFaq("about")}>서비스 안내</button>
+          <button className="btn-type" onClick={() => setOpenFaq("types")}>대진 타입 설명</button>
+        </div>
+        {openFaq === "about" && (
+          <div className="accordion-card" style={{ position: 'relative'}}>
+            {/* 페이지 소개 텍스트 */}
+            <button className="close-btn" onClick={() => setOpenFaq("")}>x</button>
+            <div style={{ paddingTop: 8, paddingRight: 14}}>
+            <br/>
+            테니스 대진 생성 방식 중 하나인 한울타리 방식으로 대진을 생성할 수 있는 서비스입니다. Openrun 테니스 클럽에서 제공합니다. <br/><br/>
+            대진 생성을 누를 때마다 랜덤요소가 적용하여 매번 다른 대진이 생성됩니다. 시드 / AA / AB 모두 동일합니다. <br/><br/>
+            누구든지 무료로 자유롭게 이용 가능하며, 그 어떤 데이터도 수집하지 않습니다. <br/>(서버에 부하가 많이 걸려서 제가 비용을 내지 않는다면 말이죠..)
+            </div>
+          </div>
+        )}
+        {openFaq === "types" && (
+          <div className="accordion-card" style={{ position: 'relative'}}>
+            <button className="close-btn" onClick={() => setOpenFaq("")}>x</button>
+            {/* 타입 설명 텍스트 */}
+            <div style={{ paddingTop: 8, paddingRight: 14}}>
+            <br/>
+            AA: 실력이 비슷한 선수끼리 복식 게임을 진행합니다. 게임마다 파트너가 바뀌며, 상대편도 같은 사람은 최소한 적게 만나도록 합니다.<br/><br/>
+            
+            시드: AA 방식을 기반으로 몇명의 실력이 출중하거나 반대의 경우 시드로 지정하면 시드 플레이어는 같은 팀으로 만날 수 없도록 합니다. (상대편은 가능) <br/><br/>
+            
+            AB: 두 그룹을 구분하여 함께 파트너가 될 수 있도록 합니다. 우승자 / 비우승자 그룹 등으로 나눈 뒤 혼합복식 대진을 생성합니다. 
+            </div>
+          </div>
+        )}
 
         <div className="button-row">
           <button className="btn" onClick={generateDraw}>
