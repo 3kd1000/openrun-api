@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Toast from "../../components/common/Toast";
 import axiosInstance from "../../services/api/axiosInstance";
 
@@ -26,6 +26,7 @@ const DrawGenerationPage: React.FC = () => {
   const [drawResult, setDrawResult] = useState<CreateDrawResponse | null>(null);
   const [shareFormat, setShareFormat] = useState<string>("");
   const [toastMessage, setToastMessage] = useState<string>("");
+  const resultRef = useRef<HTMLDivElement>(null);
 
   // 대진 타입별 총 인원수 범위
   const totalPlayerRange = {
@@ -182,12 +183,14 @@ const DrawGenerationPage: React.FC = () => {
           typeof numberOfTotalPlayer === "number" ? numberOfTotalPlayer : 0,
       };
 
+      //remove share format for new draw
       const shareResponse = await axiosInstance.post<string>(
         "/draw/share-format",
         requestBody
       );
       setShareFormat(shareResponse.data);
       setDrawResult(null);
+      resultRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
       console.error("Error generating draw:", error);
       setDrawResult(null);
@@ -464,7 +467,7 @@ const DrawGenerationPage: React.FC = () => {
         )}
 
         {shareFormat && (
-          <div className="share-section">
+          <div className="share-section" ref={resultRef}>
             <div className="result-title">공유 형식</div>
             <pre className="share-format-box">{shareFormat}</pre>
           </div>
