@@ -227,7 +227,7 @@ const DrawGenerationPage: React.FC = () => {
         <div className="sticky-header">
           <h1>대진 생성</h1>
 
-          <div className="input-row">
+          <div className="input-row radio-type-row">
             <span className="input-label">
               대진 타입
               <Tooltip

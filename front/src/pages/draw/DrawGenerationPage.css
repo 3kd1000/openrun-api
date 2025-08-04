@@ -385,10 +385,15 @@ h1 {
   .input-list-2col {
     gap: 6px;
   }
-  .participant-row {
+  /* .participant-row {
     flex-direction: column;
-  }
+  } */
   .input-list-2col .input-text {
     height: 42px;
+  }
+  .input-row.radio-type-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
   }
 }
