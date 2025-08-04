@@ -1,0 +1,363 @@
+/* DrawGenerationPage.css */
+
+/* Reset some browser styles */
+* {
+  box-sizing: border-box;
+}
+
+/* 페이지 전체 배경 + 가운데 정렬을 위한 래퍼 */
+.body-bg {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center; /* 수평 가운데 정렬 */
+  align-items: flex-start; /* 수직 기준 (중앙하려면 center) */
+  background: #fff;
+}
+
+.page-container {
+  padding: 32px 24px;
+  max-width: 480px;
+  margin: 36px auto;
+  background: #fafbfc;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(60, 60, 100, 0.06);
+  font-family: "Noto Sans", "Apple SD Gothic Neo", sans-serif;
+}
+
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.logo-img {
+  width: 120px;
+  border-radius: 12px;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+  padding: 16px 18px 12px 18px; /* 상/하/좌우 padding 넉넉히 */
+  border-bottom: 1px solid #eeeff5;
+  margin-bottom: 12px;
+  border-radius: 14px 14px 0 0;
+}
+
+h1 {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 16px;
+  color: #282d3c;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 17px 0;
+  min-height: 48px;
+}
+
+.input-label {
+  font-weight: 600;
+  color: #58616d;
+  min-width: 82px; /* '대진 타입'에 맞게 */
+  text-align: right;
+}
+
+.input-text,
+.input-number,
+.input-list input {
+  background: #fff !important; /* 항상 흰 배경 */
+  color: #222 !important; /* 진한 검정 텍스트 */
+  border: 1.5px solid #c5cadb;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 100%;
+  box-shadow: none;
+  outline: none;
+  transition: border 0.18s;
+  height: 46px;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+.input-list input:last-child {
+  margin-bottom: 0;
+}
+
+.input-text::placeholder,
+.input-number::placeholder,
+.input-list input::placeholder {
+  color: #b5bfd0 !important; /* 연한 회색 플레이스홀더 */
+}
+
+/* 인풋이 포커스됐을 때 효과도 추가 */
+.input-text:focus,
+.input-number:focus,
+.input-list input:focus {
+  border: 1.7px solid #396fda;
+  background: #fff; /* 포커스 시에도 흰 배경 유지 */
+}
+
+.input-number {
+  max-width: 90px;
+}
+
+.radio-row {
+  display: flex;
+  align-items: center;
+  gap: 24px; /* 라벨 간격 넉넉히 */
+  min-height: 40px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 5px; /* 라디오와 텍스트 간격 */
+  font-size: 1.04rem;
+  font-weight: 500;
+  cursor: pointer;
+  line-height: 1.25;
+  padding: 0; /* 불필요한 padding 제거 */
+  margin: 0;
+}
+
+/* 라디오 input만 쓸 때의 vertical-align 보정 */
+.radio-label input[type="radio"] {
+  margin: 0;
+  accent-color: #396fda;
+  vertical-align: middle;
+  /* transform: scale(1.16);   // 원한다면 라디오만 살짝 키움 */
+}
+
+.section {
+  margin-top: 28px;
+  margin-bottom: 18px;
+}
+.section-title {
+  font-size: 1.08rem;
+  color: #384050;
+  font-weight: 700;
+  margin-bottom: 13px;
+}
+
+.groups-row {
+  display: flex;
+  gap: 16px;
+}
+.group-box {
+  flex: 1 1 0;
+}
+.group-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #4c566a;
+}
+
+#seed-section {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed #dee2e6;
+}
+
+.button-row {
+  margin: 30px 0 8px 0;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 10px 18px;
+  background: #396fda;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-width: 116px;
+}
+.btn:active {
+  background: #224a90;
+}
+.btn-secondary {
+  background: #6c727d;
+}
+.btn-outline {
+  background: #fff;
+  color: #396fda;
+  border: 1.5px solid #396fda;
+}
+
+/* 결과/공유 */
+.result-section,
+.share-section {
+  margin-top: 36px;
+  border-top: 1px solid #eee;
+  padding-top: 18px;
+  background: #fff !important; /* 흰색 고정 */
+  color: #222 !important; /* 진한 텍스트 */
+  border-radius: 10px;
+  box-shadow: 0 2px 8px 0 rgba(60, 60, 100, 0.06);
+}
+.result-title {
+  font-size: 1.13rem;
+  font-weight: bold;
+  color: #344364;
+  margin-bottom: 12px;
+}
+.share-format-box {
+  padding: 12px;
+  background: #f6f6fb;
+  border-radius: 8px;
+  font-family: monospace, "Noto Sans", "Apple SD Gothic Neo", sans-serif;
+  font-size: 1.01rem;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  margin-top: 7px;
+  color: #1e2030;
+}
+
+/* 슬라이더 관련 스타일 */
+.player-count-input {
+  position: relative;
+  /* padding-right: 60px; */ /* 숫자 표시 공간 확보 - 이제 버튼과 함께 배치 */
+}
+
+.player-count-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  min-width: 0;
+  width: 100%;
+}
+
+.input-range {
+  width: 100px;
+  min-width: 100px;
+  height: 7px;
+  margin: 0 7px;
+  background: #d3d3d3;
+  border-radius: 5px;
+}
+
+.input-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #396fda;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.input-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #396fda;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.current-player-count {
+  font-weight: 600;
+  color: #396fda;
+  min-width: 50px;
+  width: 58px;
+  text-align: right;
+  font-size: 1.07rem;
+  margin-left: 8px;
+}
+
+.btn-stepper {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1.5px solid #396fda;
+  background: #fff;
+  color: #396fda;
+  font-size: 2.4rem;
+  line-height: 1;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+.btn-stepper:active {
+  background: #396fda;
+  color: #fff;
+}
+
+/* 반응형 (모바일) */
+@media (max-width: 900px) {
+  .page-container {
+    width: 99vw;
+    max-width: 99vw;
+    padding: 18px 1vw;
+    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .logo-img {
+    width: 78px;
+  }
+  .groups-row {
+    flex-direction: column;
+    gap: 7px;
+  }
+  .button-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    min-height: 0;
+  }
+  .input-number {
+    max-width: 100%;
+  }
+  .share-format-box {
+    font-size: 0.96rem;
+  }
+  .sticky-header {
+    padding: 12px 6vw; /* 좌우 6% 여백, 기기 해상도 따라 자연스러운 패딩 */
+  }
+  .player-count-control {
+    width: 100%;
+    height: 42px;
+    gap: 6px;
+  }
+  .input-range {
+    min-width: 0;
+    width: 100%;
+  }
+  .current-player-count {
+    position: static; /* static으로 변경하여 flex 흐름에 따르도록 */
+    transform: none;
+    margin-left: auto; /* 오른쪽으로 밀기 */
+  }
+}
