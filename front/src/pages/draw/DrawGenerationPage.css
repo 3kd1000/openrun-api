@@ -120,13 +120,15 @@ h1 {
 .radio-label {
   display: flex;
   align-items: center;
-  gap: 5px; /* 라디오와 텍스트 간격 */
+  gap: 5px;
   font-size: 1.04rem;
   font-weight: 500;
   cursor: pointer;
   line-height: 1.25;
-  padding: 0; /* 불필요한 padding 제거 */
+  padding: 0;
   margin: 0;
+  color: #222 !important;        /* 다크/라이트 모드 모두에서 보장 */
+  background: none !important;   /* 혹시 백그라운드 상속 방지 */
 }
 
 /* 라디오 input만 쓸 때의 vertical-align 보정 */
@@ -310,6 +312,25 @@ h1 {
   color: #fff;
 }
 
+/* --- 추가된 부분: 한줄 2명씩 입력란 스타일 --- */
+.input-list-2col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.participant-row {
+  display: flex;
+  gap: 12px;
+}
+.input-list-2col .input-text {
+  flex: 1;
+  min-width: 0;  
+  height: 46px;
+  font-size: 1rem;
+  padding: 10px 12px;
+  margin-bottom: 0; /* 개별 input의 margin-bottom은 JS에서 마지막 제외하므로 0으로 */
+}
+
 /* 반응형 (모바일) */
 @media (max-width: 900px) {
   .page-container {
@@ -359,5 +380,15 @@ h1 {
     position: static; /* static으로 변경하여 flex 흐름에 따르도록 */
     transform: none;
     margin-left: auto; /* 오른쪽으로 밀기 */
+  }
+  /* 모바일에선 2명씩 한 줄 입력 대신 세로 정렬 */
+  .input-list-2col {
+    gap: 6px;
+  }
+  .participant-row {
+    flex-direction: column;
+  }
+  .input-list-2col .input-text {
+    height: 42px;
   }
 }
