@@ -3,8 +3,6 @@ import Toast from "../../components/common/Toast";
 import axiosInstance from "../../services/api/axiosInstance";
 
 import "./DrawGenerationPage.css"; // 꼭 추가해 주세요!
-import Tooltip from "../../components/common/Tooltip";
-import FAQItem from "../../components/common/FAQItem";
 
 // API 응답 타입 정의 (CreateDrawResponse에 따라 수정 필요)
 interface Game {
