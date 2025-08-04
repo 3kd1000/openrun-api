@@ -1,11 +1,18 @@
 import { Routes, Route } from 'react-router-dom';
 import DrawGenerationPage from './pages/draw/DrawGenerationPage';
+import Footer from './components/common/Footer';
+import './App.css';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<DrawGenerationPage />} />
-    </Routes>
+    <div className="App">
+      <main className="App-content">
+        <Routes>
+          <Route path="/" element={<DrawGenerationPage />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
