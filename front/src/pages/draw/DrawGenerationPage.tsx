@@ -140,6 +140,12 @@ const DrawGenerationPage: React.FC = () => {
     }
   }, [drawType]);
 
+  useEffect(() => {
+    if (shareFormat && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [shareFormat]);
+
   const handleParticipantNameChange = (index: number, value: string) => {
     const newNames = [...participantNames];
     newNames[index] = value;
@@ -192,7 +198,6 @@ const DrawGenerationPage: React.FC = () => {
       );
       setShareFormat(shareResponse.data);
       setDrawResult(null);
-      resultRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
       console.error("Error generating draw:", error);
       setDrawResult(null);
