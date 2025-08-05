@@ -127,8 +127,8 @@ h1 {
   line-height: 1.25;
   padding: 0;
   margin: 0;
-  color: #222 !important;        /* 다크/라이트 모드 모두에서 보장 */
-  background: none !important;   /* 혹시 백그라운드 상속 방지 */
+  color: #222 !important; /* 다크/라이트 모드 모두에서 보장 */
+  background: none !important; /* 혹시 백그라운드 상속 방지 */
 }
 
 /* 라디오 input만 쓸 때의 vertical-align 보정 */
@@ -324,7 +324,7 @@ h1 {
 }
 .input-list-2col .input-text {
   flex: 1;
-  min-width: 0;  
+  min-width: 0;
   height: 46px;
   font-size: 1rem;
   padding: 10px 12px;
@@ -372,7 +372,7 @@ h1 {
   background: #fff;
   border: 1.5px solid #396fda;
   border-radius: 10px;
-  box-shadow: 0 4px 16px 0 rgba(60,60,100,0.06);
+  box-shadow: 0 4px 16px 0 rgba(60, 60, 100, 0.06);
   margin-bottom: 14px;
   margin-top: -8px;
   position: relative;
@@ -382,7 +382,16 @@ h1 {
   font-size: 1.01rem;
   line-height: 1.55;
 }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-12px);} to { opacity: 1; transform: none;} }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 .close-btn {
   position: absolute;
   top: 10px;
@@ -395,7 +404,7 @@ h1 {
   font-size: 1.25rem;
   color: #091f49;
   font-weight: 900;
-  box-shadow: 0 2px 8px rgba(60,60,100,0.08);
+  box-shadow: 0 2px 8px rgba(60, 60, 100, 0.08);
   display: flex;
   justify-content: center;
   align-items: center;
