@@ -46,3 +46,5 @@ temp/
 
 # API specific ignores
 api/build/
+
+gemini_history/
