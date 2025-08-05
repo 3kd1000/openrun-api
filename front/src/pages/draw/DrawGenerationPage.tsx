@@ -17,7 +17,9 @@ interface CreateDrawResponse {
 
 const DrawGenerationPage: React.FC = () => {
   const [drawType, setDrawType] = useState<"AA" | "AB" | "SEED">("SEED");
-  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(8);
+  const [numberOfTotalPlayer, setNumberOfTotalPlayer] = useState<number | "">(
+    8
+  );
   const [participantNames, setParticipantNames] = useState<string[]>([]);
   const [seedUserNames, setSeedUserNames] = useState<string[]>([]);
   const [groupAUserNames, setGroupAUserNames] = useState<string[]>([]);
@@ -231,21 +233,8 @@ const DrawGenerationPage: React.FC = () => {
         <div className="sticky-header">
           <h1>한울방식 대진 생성</h1>
           <div className="input-row radio-type-row">
-            <span className="input-label">
-              대진 타입
-            </span>
+            <span className="input-label">대진 타입</span>
             <div className="radio-row">
-              <label className="radio-label">
-                <input
-                  type="radio"
-                  value="SEED"
-                  checked={drawType === "SEED"}
-                  onChange={(e) =>
-                    setDrawType(e.target.value as "AA" | "AB" | "SEED")
-                  }
-                />
-                시드
-              </label>
               <label className="radio-label">
                 <input
                   type="radio"
@@ -256,6 +245,17 @@ const DrawGenerationPage: React.FC = () => {
                   }
                 />
                 AA
+              </label>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  value="SEED"
+                  checked={drawType === "SEED"}
+                  onChange={(e) =>
+                    setDrawType(e.target.value as "AA" | "AB" | "SEED")
+                  }
+                />
+                시드
               </label>
               <label className="radio-label">
                 <input
@@ -305,128 +305,140 @@ const DrawGenerationPage: React.FC = () => {
               <div>
                 <div className="section-title">참여자 정보 입력</div>
                 {drawType === "AB" ? (
-                  <div className="groups-row">
-                    <div className="group-box">
-                      <div className="group-title">
-                        그룹 A ({Math.ceil(numberOfTotalPlayer / 2)}명)
-                      </div>
-                      <div className="input-list">
-                        {groupAUserNames.map((name, index) => (
+                  <div className="input-list-2col">
+                    {groupAUserNames.map((nameA, idx) => (
+                      <div className="participant-row" key={idx}>
+                        <div
+                          style={{
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "column",
+                          }}
+                        >
+                          {idx === 0 && (
+                            <div
+                              className="group-title"
+                              style={{ marginBottom: 4, fontSize: "0.92rem" }}
+                            >
+                              그룹 A
+                            </div>
+                          )}
                           <input
-                            key={`groupA-${index}`}
                             className="input-text"
                             type="text"
-                            placeholder={`그룹 A 참가자 ${index + 1}`}
-                            value={name}
+                            placeholder={`그룹 A 참가자 ${idx + 1}`}
+                            value={nameA}
                             onChange={(e) =>
-                              handleGroupAUserNameChange(index, e.target.value)
+                              handleGroupAUserNameChange(idx, e.target.value)
                             }
                           />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="group-box">
-                      <div className="group-title">
-                        그룹 B ({Math.floor(numberOfTotalPlayer / 2)}명)
-                      </div>
-                      <div className="input-list">
-                        {groupBUserNames.map((name, index) => (
+                        </div>
+                        <div
+                          style={{
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "column",
+                          }}
+                        >
+                          {idx === 0 && (
+                            <div
+                              className="group-title"
+                              style={{ marginBottom: 4, fontSize: "0.92rem" }}
+                            >
+                              그룹 B
+                            </div>
+                          )}
                           <input
-                            key={`groupB-${index}`}
                             className="input-text"
                             type="text"
-                            placeholder={`그룹 B 참가자 ${index + 1}`}
-                            value={name}
+                            placeholder={`그룹 B 참가자 ${idx + 1}`}
+                            value={groupBUserNames[idx]}
                             onChange={(e) =>
-                              handleGroupBUserNameChange(index, e.target.value)
+                              handleGroupBUserNameChange(idx, e.target.value)
                             }
                           />
-                        ))}
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 ) : (
                   <>
                     {/* 참가자명 2명씩 한 줄에 배치 */}
                     <div className="input-list-2col">
-                      {groupByTwo(participantNames).map(([name1, name2], idx) => (
-                        <div className="participant-row" key={idx}>
-                          <input
-                            className="input-text"
-                            type="text"
-                            placeholder={`참가자 ${idx * 2 + 1}`}
-                            value={name1}
-                            onChange={(e) => handleParticipantNameChange(idx * 2, e.target.value)}
-                          />
-                          {participantNames[idx * 2 + 1] !== undefined && (
+                      {groupByTwo(participantNames).map(
+                        ([name1, name2], idx) => (
+                          <div className="participant-row" key={idx}>
                             <input
                               className="input-text"
                               type="text"
-                              placeholder={`참가자 ${idx * 2 + 2}`}
-                              value={name2}
+                              placeholder={`참가자 ${idx * 2 + 1}`}
+                              value={name1}
                               onChange={(e) =>
-                                handleParticipantNameChange(idx * 2 + 1, e.target.value)
+                                handleParticipantNameChange(
+                                  idx * 2,
+                                  e.target.value
+                                )
                               }
                             />
-                          )}
-                        </div>
-                      ))}
+                            {participantNames[idx * 2 + 1] !== undefined && (
+                              <input
+                                className="input-text"
+                                type="text"
+                                placeholder={`참가자 ${idx * 2 + 2}`}
+                                value={name2}
+                                onChange={(e) =>
+                                  handleParticipantNameChange(
+                                    idx * 2 + 1,
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            )}
+                          </div>
+                        )
+                      )}
                     </div>
                     {/* 시드 플레이어명도 2명씩 한 줄에 배치 */}
                     {drawType === "SEED" && (
                       <div id="seed-section">
                         <div className="group-title">
-                          시드 플레이어 ({getSeedPlayerCounts(numberOfTotalPlayer).seed}명)
+                          시드 플레이어 (
+                          {getSeedPlayerCounts(numberOfTotalPlayer).seed}명)
                         </div>
                         <div className="input-list-2col">
-                          {groupByTwo(seedUserNames).map(([name1, name2], idx) => (
-                            <div className="participant-row" key={idx}>
-                              <input
-                                className="input-text"
-                                type="text"
-                                placeholder={`참가자 ${idx * 2 + 1}`}
-                                value={name1}
-                                onChange={(e) => handleSeedUserNameChange(idx * 2, e.target.value)}
-                              />
-                              {seedUserNames[idx * 2 + 1] !== undefined && (
+                          {groupByTwo(seedUserNames).map(
+                            ([name1, name2], idx) => (
+                              <div className="participant-row" key={idx}>
                                 <input
                                   className="input-text"
                                   type="text"
-                                  placeholder={`참가자 ${idx * 2 + 2}`}
-                                  value={name2}
+                                  placeholder={`참가자 ${idx * 2 + 1}`}
+                                  value={name1}
                                   onChange={(e) =>
-                                    handleSeedUserNameChange(idx * 2 + 1, e.target.value)
+                                    handleSeedUserNameChange(
+                                      idx * 2,
+                                      e.target.value
+                                    )
                                   }
                                 />
-                              )}
-                            </div>
-                          ))}
+                                {seedUserNames[idx * 2 + 1] !== undefined && (
+                                  <input
+                                    className="input-text"
+                                    type="text"
+                                    placeholder={`참가자 ${idx * 2 + 2}`}
+                                    value={name2}
+                                    onChange={(e) =>
+                                      handleSeedUserNameChange(
+                                        idx * 2 + 1,
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                )}
+                              </div>
+                            )
+                          )}
                         </div>
-                        {/* <div className="input-list-2col">
-                          {groupByTwo(seedUserNames).map(([name1, name2], idx) => (
-                            <div className="participant-row" key={idx}>
-                              <input
-                                className="input-text"
-                                type="text"
-                                placeholder={`시드 ${idx * 2 + 1}`}
-                                value={name1}
-                                onChange={(e) =>
-                                  handleSeedUserNameChange(idx * 2, e.target.value)
-                                }
-                              />
-                              <input
-                                className="input-text"
-                                type="text"
-                                placeholder={name2 ? `시드 ${idx * 2 + 2}` : ""}
-                                value={name2}
-                                onChange={(e) =>
-                                  handleSeedUserNameChange(idx * 2 + 1, e.target.value)
-                                }
-                                style={name2 ? {} : { visibility: "hidden" }}
-                              />
-                            </div>
-                          ))}
-                        </div> */}
                       </div>
                     )}
                   </>
@@ -436,32 +448,62 @@ const DrawGenerationPage: React.FC = () => {
         </div>
 
         <div className="explain-btns-row">
-          <button className="btn-guide" onClick={() => setOpenFaq("about")}>서비스 안내</button>
-          <button className="btn-type" onClick={() => setOpenFaq("types")}>대진 타입 설명</button>
+          <button className="btn-guide" onClick={() => setOpenFaq("about")}>
+            서비스 안내
+          </button>
+          <button className="btn-type" onClick={() => setOpenFaq("types")}>
+            대진 타입 설명
+          </button>
         </div>
         {openFaq === "about" && (
-          <div className="accordion-card" style={{ position: 'relative'}}>
+          <div className="accordion-card" style={{ position: "relative" }}>
             {/* 페이지 소개 텍스트 */}
-            <button className="close-btn" onClick={() => setOpenFaq("")}>x</button>
-            <div style={{ paddingTop: 8, paddingRight: 14}}>
-            <br/>
-            테니스 대진 생성 방식 중 하나인 한울타리 방식으로 대진을 생성할 수 있는 서비스입니다. Openrun 테니스 클럽에서 제공합니다. <br/><br/>
-            대진 생성을 누를 때마다 랜덤요소가 적용하여 매번 다른 대진이 생성됩니다. 시드 / AA / AB 모두 동일합니다. <br/><br/>
-            누구든지 무료로 자유롭게 이용 가능하며, 그 어떤 데이터도 수집하지 않습니다. <br/>(서버에 부하가 많이 걸려서 제가 비용을 내지 않는다면 말이죠..)
+            <button className="close-btn" onClick={() => setOpenFaq("")}>
+              x
+            </button>
+            <div style={{ paddingTop: 8, paddingRight: 14 }}>
+              <br />
+              테니스 대진 생성 방식 중 하나인 한울타리 방식으로 대진을 생성하는
+              서비스입니다. Openrun 테니스 클럽에서 제공합니다. <br />
+              <br />
+              대진 생성을 누를 때마다 랜덤요소가 적용하여 매번 다른 대진이
+              생성됩니다. AA / 시드 / AB 모두 동일합니다. <br />
+              <br />
+              누구든지 무료로 자유롭게 이용 가능하며, 방문자 통계를 위한 수집
+              이외에는 그 어떤 정보도 수집하지 않습니다. <br />
+              (서버에 부하가 많이 걸려서 제가 비용을 내지 않는다면 말이죠..){" "}
+              <br />
+              <br />
+              <span style={{ color: "#555", fontWeight: 500 }}>
+                서비스 문의/개선/버그 신고:{" "}
+                <a
+                  href="mailto:dev.openrun@gmail.com"
+                  style={{ color: "#396fda", textDecoration: "underline" }}
+                >
+                  dev.openrun@gmail.com
+                </a>
+              </span>
             </div>
           </div>
         )}
         {openFaq === "types" && (
-          <div className="accordion-card" style={{ position: 'relative'}}>
-            <button className="close-btn" onClick={() => setOpenFaq("")}>x</button>
+          <div className="accordion-card" style={{ position: "relative" }}>
+            <button className="close-btn" onClick={() => setOpenFaq("")}>
+              x
+            </button>
             {/* 타입 설명 텍스트 */}
-            <div style={{ paddingTop: 8, paddingRight: 14}}>
-            <br/>
-            AA: 실력이 비슷한 선수끼리 복식 게임을 진행합니다. 게임마다 파트너가 바뀌며, 상대편도 같은 사람은 최소한 적게 만나도록 합니다.<br/><br/>
-            
-            시드: AA 방식을 기반으로 몇명의 실력이 출중하거나 반대의 경우 시드로 지정하면 시드 플레이어는 같은 팀으로 만날 수 없도록 합니다. (상대편은 가능) <br/><br/>
-            
-            AB: 두 그룹을 구분하여 함께 파트너가 될 수 있도록 합니다. 우승자 / 비우승자 그룹 등으로 나눈 뒤 혼합복식 대진을 생성합니다. 
+            <div style={{ paddingTop: 8, paddingRight: 14 }}>
+              <br />
+              AA: 실력이 비슷한 선수끼리 복식 게임을 진행합니다. 게임마다
+              파트너가 바뀌며, 상대편도 같은 사람은 최소한 적게 만나도록 합니다.
+              <br />
+              <br />
+              시드: AA 방식을 기반으로 몇명의 실력이 출중하거나 반대의 경우
+              시드로 지정하면 시드 플레이어는 같은 팀으로 만날 수 없도록 합니다.
+              (상대편은 가능) <br />
+              <br />
+              AB: 두 그룹을 구분하여 함께 파트너가 될 수 있도록 합니다. 우승자 /
+              비우승자 그룹 등으로 나눈 뒤 혼합복식 대진을 생성합니다.
             </div>
           </div>
         )}
@@ -483,7 +525,8 @@ const DrawGenerationPage: React.FC = () => {
             <div className="result-title">생성된 대진 결과</div>
             {drawResult.games.map((game) => (
               <p key={game.gameNumber}>
-                <strong>게임 {game.gameNumber}:</strong> {game.players.join(" vs ")}
+                <strong>게임 {game.gameNumber}:</strong>{" "}
+                {game.players.join(" vs ")}
               </p>
             ))}
           </div>
