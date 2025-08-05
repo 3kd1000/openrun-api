@@ -37,9 +37,9 @@
 
 .sticky-header {
   position: sticky;
-  top: 0;
+  top: auto;
   background: #fff;
-  z-index: 2;
+  z-index: auto;
   padding: 16px 18px 12px 18px; /* 상/하/좌우 padding 넉넉히 */
   border-bottom: 1px solid #eeeff5;
   margin-bottom: 12px;
