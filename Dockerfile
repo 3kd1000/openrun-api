@@ -41,6 +41,10 @@ WORKDIR /app
 COPY build.gradle settings.gradle ./
 COPY api/build.gradle ./api/
 
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
 # --- 소스코드 복사 및 빌드 ---
 # API 서버의 소스코드를 복사합니다.
 COPY api/src ./api/src
@@ -49,7 +53,7 @@ COPY api/src ./api/src
 # '-x test' 옵션은 빌드 과정에서 시간이 오래 걸리는 유닛 테스트를 제외하여 CI/CD 파이프라인의 속도를 높입니다.
 # (테스트는 별도의 'test' 스테이지에서 따로 실행하는 것이 일반적입니다.)
 # 빌드가 성공하면 실행 가능한 .jar 파일이 /app/api/build/libs/ 경로에 생성됩니다.
-RUN gradle :api:build -x test
+RUN ./gradlew :api:build -x test
 
 
 # --- Stage 3: 최종 실행 이미지 생성 스테이지 ---
