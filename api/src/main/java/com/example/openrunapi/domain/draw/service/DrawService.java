@@ -1,23 +1,25 @@
 package com.example.openrunapi.domain.draw.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.springframework.stereotype.Service;
-
 import com.example.openrunapi.common.model.ValidationResult;
 import com.example.openrunapi.domain.draw.model.DrawPattern;
+import com.example.openrunapi.domain.draw.model.DrawStatistics;
 import com.example.openrunapi.domain.draw.model.DrawType;
 import com.example.openrunapi.domain.draw.model.request.CreateDrawRequest;
 import com.example.openrunapi.domain.draw.model.response.CreateDrawResponse;
+import com.example.openrunapi.domain.draw.repository.DrawStatisticsRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class DrawService {
+
+    private final DrawStatisticsRepository drawStatisticsRepository;
+
+    @Transactional
     public CreateDrawResponse generateDrawSequence(CreateDrawRequest request) {
 
         ValidationResult validation = isValidRequest(request);
@@ -26,6 +28,14 @@ public class DrawService {
         }
 
         DrawType drawType = request.getDrawType();
+
+        // --- 통계 기록 로직 추가 ---
+        DrawStatistics statistics = drawStatisticsRepository.findByDrawType(drawType)
+                .orElseGet(() -> DrawStatistics.builder().drawType(drawType).build());
+
+        statistics.incrementCount();
+        drawStatisticsRepository.save(statistics);
+        // --------------------------
 
         switch (drawType) {
             case AA:

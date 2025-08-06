@@ -20,10 +20,10 @@ RUN npm install
 # --- 소스코드 복사 및 빌드 ---
 # 이제 프론트엔드 소스코드 전체를 작업 디렉토리로 복사합니다.
 COPY front/ .
-
+ARG BUILD_COMMAND="npm run build"
 # package.json에 정의된 'build' 스크립트를 실행합니다. (예: vite build)
 # 이 명령이 실행되면, 최적화된 정적 파일들이 기본적으로 'dist' 폴더에 생성됩니다.
-RUN npm run build
+RUN ${BUILD_COMMAND}
 
 
 # --- Stage 2: Backend 빌드 스테이지 ---
