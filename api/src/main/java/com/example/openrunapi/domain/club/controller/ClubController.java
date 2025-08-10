@@ -6,12 +6,16 @@ import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.service.ClubService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/clubs")
+@RequestMapping("/api/clubs")
 @RequiredArgsConstructor
 public class ClubController {
 
@@ -30,6 +34,14 @@ public class ClubController {
     public ResponseEntity<ClubResponse> findClub(@PathVariable Long clubId) {
         ClubResponse response = clubService.findClub(clubId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<ClubResponse>> findClubs(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ClubResponse> responses = clubService.findClubs(keyword, pageable);
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/{clubId}")

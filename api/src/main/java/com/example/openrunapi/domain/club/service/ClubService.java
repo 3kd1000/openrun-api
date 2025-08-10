@@ -7,6 +7,9 @@ import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,12 @@ public class ClubService {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
         return new ClubResponse(club);
+    }
+
+    public Page<ClubResponse> findClubs(String keyword, Pageable pageable) {
+        Specification<Club> spec = search(keyword);
+        Page<Club> clubs = clubRepository.findAll(spec, pageable);
+        return clubs.map(ClubResponse::new);
     }
 
     @Transactional
@@ -64,5 +73,18 @@ public class ClubService {
         // }
 
         clubRepository.deleteById(clubId);
+    }
+
+    private Specification<Club> search(String keyword) {
+        return (root, query, criteriaBuilder) -> {
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return criteriaBuilder.conjunction(); // 항상 true를 반환하여 모든 결과를 포함
+            }
+            // name LIKE '%keyword%' OR region LIKE '%keyword%'
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("region")), "%" + keyword.toLowerCase() + "%")
+            );
+        };
     }
 }
