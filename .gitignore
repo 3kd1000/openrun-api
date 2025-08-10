@@ -48,3 +48,4 @@ temp/
 api/build/
 
 gemini_history/
+\n# Environment variables file\n.env

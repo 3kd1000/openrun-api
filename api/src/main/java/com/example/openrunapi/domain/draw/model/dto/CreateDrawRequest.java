@@ -1,4 +1,4 @@
-package com.example.openrunapi.domain.draw.model.request;
+package com.example.openrunapi.domain.draw.model.dto;
 
 import java.util.List;
 
