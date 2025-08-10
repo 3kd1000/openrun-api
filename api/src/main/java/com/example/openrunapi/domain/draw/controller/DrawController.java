@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.openrunapi.domain.draw.model.request.CreateDrawRequest;
-import com.example.openrunapi.domain.draw.model.response.CreateDrawResponse;
+import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
+import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
 import com.example.openrunapi.domain.draw.service.DrawService;
 
 @RestController
@@ -18,8 +18,8 @@ public class DrawController {
     private final DrawService drawService;
 
     @PostMapping
-    public ResponseEntity<CreateDrawResponse> createDraw(@RequestBody CreateDrawRequest createDrawRequest) {
-        CreateDrawResponse response = drawService.generateDrawSequence(createDrawRequest);
+    public ResponseEntity<DrawResponse> createDraw(@RequestBody CreateDrawRequest createDrawRequest) {
+        DrawResponse response = drawService.generateDrawSequence(createDrawRequest);
         return ResponseEntity.ok(response);
     }
 

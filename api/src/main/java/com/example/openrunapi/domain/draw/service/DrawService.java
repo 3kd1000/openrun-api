@@ -4,8 +4,8 @@ import com.example.openrunapi.common.model.ValidationResult;
 import com.example.openrunapi.domain.draw.model.DrawPattern;
 import com.example.openrunapi.domain.draw.model.DrawStatistics;
 import com.example.openrunapi.domain.draw.model.DrawType;
-import com.example.openrunapi.domain.draw.model.request.CreateDrawRequest;
-import com.example.openrunapi.domain.draw.model.response.CreateDrawResponse;
+import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
+import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
 import com.example.openrunapi.domain.draw.repository.DrawStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class DrawService {
     private final DrawStatisticsRepository drawStatisticsRepository;
 
     @Transactional
-    public CreateDrawResponse generateDrawSequence(CreateDrawRequest request) {
+    public DrawResponse generateDrawSequence(CreateDrawRequest request) {
 
         ValidationResult validation = isValidRequest(request);
         if (!validation.isValid()) {
@@ -49,7 +49,7 @@ public class DrawService {
         }
     }
 
-    private CreateDrawResponse generateAAMatches(List<String> userNames) {
+    private DrawResponse generateAAMatches(List<String> userNames) {
         int n = userNames.size();
         int gamesPerRound = n / 4;
 
@@ -59,7 +59,7 @@ public class DrawService {
         Collections.shuffle(shuffledUsers);
         Map<String, String> numberToName = mapNumbersToUserNames(shuffledUsers);
 
-        List<CreateDrawResponse.Game> games = new ArrayList<>();
+        List<DrawResponse.Game> games = new ArrayList<>();
         for (int i = 0; i < sequence.size(); i++) {
             String match = sequence.get(i);
             String[] teams = match.split(":");
@@ -67,12 +67,12 @@ public class DrawService {
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
             int gameNo = i + 1;
             int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
-            games.add(new CreateDrawResponse.Game(gameNo, roundNo, teamA, teamB));
+            games.add(new DrawResponse.Game(gameNo, roundNo, teamA, teamB));
         }
-        return new CreateDrawResponse(games);
+        return new DrawResponse(games);
     }
 
-    private CreateDrawResponse generateABMatches(List<String> groupAList, List<String> groupBList) {
+    private DrawResponse generateABMatches(List<String> groupAList, List<String> groupBList) {
         int n = groupAList.size() + groupBList.size();
         int gamesPerRound = n / 4;
 
@@ -92,7 +92,7 @@ public class DrawService {
             numberToName.put(DrawPattern.BRACKET_NUMBERS[9 + i], shuffledB.get(i)); // 9까지가 "1"~"9", 그 뒤가 "A"~
         }
 
-        List<CreateDrawResponse.Game> games = new ArrayList<>();
+        List<DrawResponse.Game> games = new ArrayList<>();
         for (int i = 0; i < sequence.size(); i++) {
             String match = sequence.get(i);
             String[] teams = match.split(":");
@@ -100,12 +100,12 @@ public class DrawService {
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
             int gameNo = i + 1;
             int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
-            games.add(new CreateDrawResponse.Game(gameNo, roundNo, teamA, teamB));
+            games.add(new DrawResponse.Game(gameNo, roundNo, teamA, teamB));
         }
-        return new CreateDrawResponse(games);
+        return new DrawResponse(games);
     }
 
-    private CreateDrawResponse generateSEEDMatches(List<String> userNames, List<String> seedUserNames) {
+    private DrawResponse generateSEEDMatches(List<String> userNames, List<String> seedUserNames) {
         int n = userNames.size() + seedUserNames.size();
         int gamesPerRound = n / 4;
 
@@ -136,7 +136,7 @@ public class DrawService {
             }
         }
 
-        List<CreateDrawResponse.Game> games = new ArrayList<>();
+        List<DrawResponse.Game> games = new ArrayList<>();
         for (int i = 0; i < sequence.size(); i++) {
             String match = sequence.get(i);
             String[] teams = match.split(":");
@@ -144,9 +144,9 @@ public class DrawService {
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
             int gameNo = i + 1;
             int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
-            games.add(new CreateDrawResponse.Game(gameNo, roundNo, teamA, teamB));
+            games.add(new DrawResponse.Game(gameNo, roundNo, teamA, teamB));
         }
-        return new CreateDrawResponse(games);
+        return new DrawResponse(games);
     }
 
     // 번호 → 이름 매핑
@@ -242,10 +242,10 @@ public class DrawService {
         }
     }
 
-    public String formatDrawForSharing(CreateDrawResponse response) {
+    public String formatDrawForSharing(DrawResponse response) {
         StringBuilder sb = new StringBuilder();
         int prevRoundNo = -1;
-        for (CreateDrawResponse.Game game : response.getGames()) {
+        for (DrawResponse.Game game : response.getGames()) {
             // 라운드가 바뀔 때마다 줄 띄우기 & 라운드 헤더 출력
             if (game.getRoundNo() != prevRoundNo) {
                 if (sb.length() > 0) sb.append("\n");  // 이전 라운드 끝나고 한 줄 띄우기
