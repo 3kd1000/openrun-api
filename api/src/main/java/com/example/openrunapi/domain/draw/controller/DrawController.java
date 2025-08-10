@@ -12,8 +12,8 @@ import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
 import com.example.openrunapi.domain.draw.service.DrawService;
 
 @RestController
+@RequestMapping("/api/draw")
 @RequiredArgsConstructor
-@RequestMapping("/draw")
 public class DrawController {
     private final DrawService drawService;
 
