@@ -16,8 +16,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login/kakao")
-    public ResponseEntity<LoginResponse> kakaoLogin(@Valid @RequestBody SocialLoginRequest request) {
-        LoginResponse response = authService.kakaoLogin(request.getCode());
+    public ResponseEntity<LoginResponse> kakaoLogin(@RequestParam String code) {
+        LoginResponse response = authService.kakaoLogin(code);
         return ResponseEntity.ok(response);
     }
 }
