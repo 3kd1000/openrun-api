@@ -65,7 +65,7 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByFirebaseUid(uid)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
 
-        user.updateProfile(request.getNickname(), request.getImageUrl());
+        user.updateProfile(request.getName(), request.getImageUrl()); // name 사용
 
         return new UserResponse(user);
     }

@@ -21,9 +21,9 @@ public class ClubService {
     private final ClubRepository clubRepository;
 
     @Transactional
-    public ClubResponse createClub(CreateClubRequest request, Long currentUserId) {
-        // TODO: 추후 User 기능 구현 시, currentUserId가 실제 존재하는 사용자인지 확인하는 로직 필요
-        Club newClub = request.toEntity(currentUserId);
+    public ClubResponse createClub(CreateClubRequest request, Long ownerUserId) {
+        // TODO: 추후 User 기능 구현 시, ownerUserId가 실제 존재하는 사용자인지 확인하는 로직 필요
+        Club newClub = request.toEntity(ownerUserId);
         Club savedClub = clubRepository.save(newClub);
         return new ClubResponse(savedClub);
     }
@@ -46,9 +46,9 @@ public class ClubService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
 
         // TODO: 추후 인증 기능 구현 시, currentUserId가 클럽의 소유자(또는 관리자)인지 확인하는 권한 검증 로직 필요
-        // if (!club.getOwnerUserId().equals(currentUserId)) {
-        //     throw new SecurityException("클럽 정보를 수정할 권한이 없습니다.");
-        // }
+        if (!club.getOwnerUserId().equals(currentUserId)) {
+             throw new SecurityException("클럽 정보를 수정할 권한이 없습니다.");
+        }
 
         club.update(request.getName(), request.getDescription(), request.getRegion());
 
@@ -68,9 +68,9 @@ public class ClubService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
 
         // TODO: 추후 인증 기능 구현 시, currentUserId가 클럽의 소유자(또는 관리자)인지 확인하는 권한 검증 로직 필요
-        // if (!club.getOwnerUserId().equals(currentUserId)) {
-        //     throw new SecurityException("클럽을 삭제할 권한이 없습니다.");
-        // }
+        if (!club.getOwnerUserId().equals(currentUserId)) {
+             throw new SecurityException("클럽을 삭제할 권한이 없습니다.");
+        }
 
         clubRepository.deleteById(clubId);
     }

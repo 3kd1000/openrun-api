@@ -10,7 +10,7 @@ public class UserResponse {
     private final Long id;
     private final String uid;
     private final String email;
-    private final String nickname;
+    private final String name; // nickname 대신 name
     private final String imageUrl;
     private final LocalDateTime createdAt;
 
@@ -18,7 +18,7 @@ public class UserResponse {
         this.id = user.getId();
         this.uid = user.getFirebaseUid();
         this.email = user.getEmail();
-        this.nickname = user.getName();
+        this.name = user.getName(); // getName 사용
         this.imageUrl = user.getImageUrl();
         this.createdAt = user.getCreatedAt();
     }

@@ -96,7 +96,7 @@ public class AuthService {
 
         if (existingUser.isPresent()) {
             User user = existingUser.get();
-            user.updateProfile(kakaoUserInfo.getName());
+            user.updateProfile(kakaoUserInfo.getName(), kakaoUserInfo.getImageUrl()); // imageUrl 파라미터에 null 전달
             return user;
         } else {
             String firebaseUid;
@@ -107,14 +107,28 @@ public class AuthService {
                 throw new RuntimeException("Firebase 사용자 생성에 실패했습니다.");
             }
 
+            // 카카오에서 받은 정보가 null일 경우 기본값 설정
+            String name = Optional.ofNullable(kakaoUserInfo.getName()).orElse("카카오 사용자");
+            String email = Optional.ofNullable(kakaoUserInfo.getEmail()).orElse(firebaseUid + "@kakao.com");
+            String imageUrl = kakaoUserInfo.getImageUrl(); // 이미지 URL은 null 허용
+
             User newUser = User.builder()
                     .firebaseUid(firebaseUid)
                     .socialId(String.valueOf(kakaoUserInfo.getSocialId()))
-                    .name(kakaoUserInfo.getName())
-                    .email(kakaoUserInfo.getEmail())
+                    .name(name)
+                    .email(email)
+                    .imageUrl(imageUrl)
                     .build();
 
             return userRepository.save(newUser);
         }
+    }
+
+    // KakaoUserInfo에 imageUrl 필드 추가 (없을 경우 null 반환)
+    private String getImageUrl(KakaoUserInfo kakaoUserInfo) {
+        if (kakaoUserInfo.getKakaoAccount() != null && kakaoUserInfo.getKakaoAccount().getProfile() != null) {
+            return kakaoUserInfo.getKakaoAccount().getProfile().getProfileImageUrl(); // 카카오 프로필 이미지 URL 필드명 확인 필요
+        }
+        return null;
     }
 }
