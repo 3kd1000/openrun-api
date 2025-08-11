@@ -16,9 +16,9 @@ public class UserResponse {
 
     public UserResponse(User user) {
         this.id = user.getId();
-        this.uid = user.getUid();
+        this.uid = user.getFirebaseUid();
         this.email = user.getEmail();
-        this.nickname = user.getNickname();
+        this.nickname = user.getName();
         this.imageUrl = user.getImageUrl();
         this.createdAt = user.getCreatedAt();
     }
