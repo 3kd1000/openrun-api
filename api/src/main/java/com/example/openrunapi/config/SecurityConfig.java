@@ -29,6 +29,7 @@ public class SecurityConfig {
 
                 // HTTP 요청에 대한 인가 설정
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/**").permitAll() // 소셜 로그인 API는 누구나 접근 가능
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API는 누구나 접근 가능
                         .requestMatchers("/api/clubs").permitAll()     // 클럽 목록 조회 API는 누구나 접근 가능
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
