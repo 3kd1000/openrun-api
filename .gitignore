@@ -1,5 +1,10 @@
 # macOS
+# User-specific files
 .DS_Store
+
+# Local configuration files
+/config/
+
 
 # Java
 *.class
