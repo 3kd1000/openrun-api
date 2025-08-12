@@ -32,8 +32,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 정적 리소스(js, css, image 등)는 모두 허용
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                        // 웹 페이지 진입점 (/, /index.html 등) 및 기타 정적 리소스 허용
-                        .requestMatchers("/", "/index.html", "/favicon.ico", "/manifest.json", "/assets/**").permitAll()
+                        // React Router 같은 SPA 라우팅 및 루트 리소스를 위한 설정
+                        .requestMatchers("/*", "/*.*", "/assets/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll() // 소셜 로그인 API는 누구나 접근 가능
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API는 누구나 접근 가능
                         .requestMatchers("/api/clubs").permitAll()     // 클럽 목록 조회 API는 누구나 접근 가능
