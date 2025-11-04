@@ -1,0 +1,92 @@
+# OpenRun ConfigMap - 공개 가능한 설정값들
+# Git에 포함되어 버전 관리됨
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openrun-config-prod
+  namespace: default
+data:
+  # === 환경 설정 ===
+  SPRING_PROFILES_ACTIVE: "prod"
+  ENVIRONMENT: "production"
+  
+  # === 서버 설정 ===
+  SERVER_PORT: "8080"
+  
+  # === 데이터베이스 설정 (민감하지 않은 정보만) ===
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/prod_db"
+  POSTGRES_DB: "postgres"  # 초기 DB 생성용
+  
+  # === JPA & Hibernate ===
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_SHOW_SQL: "false"  # 운영환경에서는 false
+  SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
+  
+  # === Flyway 설정 ===
+  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
+  
+  # === OAuth2 설정 (민감하지 않은 부분) ===
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI: "https://front.openrun.app/auth/callback"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_AUTHENTICATION_METHOD: "client_secret_post"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_SCOPE: "profile_nickname, account_email"
+  
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI: "https://kauth.kakao.com/oauth/authorize"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN_URI: "https://kauth.kakao.com/oauth/token"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_INFO_URI: "https://kapi.kakao.com/v2/user/me"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE: "id"
+  
+  # === Firebase 설정 ===
+  FIREBASE_CONFIG_PATH: "/app/config/firebase-service-account.json"
+  
+  # === 도메인 설정 ===
+  FRONTEND_URL: "https://front.openrun.app"
+  API_BASE_URL: "https://api.openrun.app"
+
+---
+# Development용 ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openrun-config-dev
+  namespace: default
+data:
+  # === 환경 설정 ===
+  SPRING_PROFILES_ACTIVE: "dev"
+  ENVIRONMENT: "development"
+  
+  # === 서버 설정 ===
+  SERVER_PORT: "8080"
+  
+  # === 데이터베이스 설정 ===
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/dev_db"
+  POSTGRES_DB: "postgres"
+  
+  # === JPA & Hibernate (개발환경) ===
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_SHOW_SQL: "true"  # 개발환경에서는 true
+  SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+  
+  # === Flyway 설정 ===
+  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
+  
+  # === OAuth2 설정 (개발용) ===
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI: "http://localhost:5173/auth-test"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_AUTHENTICATION_METHOD: "client_secret_post"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_SCOPE: "profile_nickname, account_email"
+  
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI: "https://kauth.kakao.com/oauth/authorize"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN_URI: "https://kauth.kakao.com/oauth/token"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_INFO_URI: "https://kapi.kakao.com/v2/user/me"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE: "id"
+  
+  # === Firebase 설정 ===
+  FIREBASE_CONFIG_PATH: "/app/config/firebase-service-account.json"
+  
+  # === 도메인 설정 (개발용) ===
+  FRONTEND_URL: "http://localhost:5173"
+  API_BASE_URL: "http://localhost:8080"

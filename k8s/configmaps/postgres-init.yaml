@@ -1,0 +1,38 @@
+# PostgreSQL 초기화 스크립트 ConfigMap
+# prod_db, dev_db 두 개 데이터베이스를 생성
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: default
+data:
+  init-db.sh: |
+    #!/bin/bash
+    set -e
+    
+    # 초기화 스크립트 실행 로그
+    echo "🚀 OpenRun PostgreSQL 초기화 시작..."
+    
+    # POSTGRES_USER와 POSTGRES_DB가 설정되어 있는지 확인
+    echo "📋 환경변수 확인:"
+    echo "  POSTGRES_USER: $POSTGRES_USER"
+    echo "  POSTGRES_DB: $POSTGRES_DB"
+    
+    # 다중 데이터베이스 생성
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        -- Production 데이터베이스 생성
+        CREATE DATABASE prod_db;
+        GRANT ALL PRIVILEGES ON DATABASE prod_db TO $POSTGRES_USER;
+        
+        -- Development 데이터베이스 생성  
+        CREATE DATABASE dev_db;
+        GRANT ALL PRIVILEGES ON DATABASE dev_db TO $POSTGRES_USER;
+        
+        -- 데이터베이스 목록 출력
+        \list
+    EOSQL
+    
+    echo "✅ OpenRun 데이터베이스 초기화 완료!"
+    echo "  - prod_db: Production 환경용"
+    echo "  - dev_db: Development 환경용"
