@@ -1,0 +1,163 @@
+# n8n Deployment & Service
+# Workflow automation platform
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: openrun
+  labels:
+    app: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      containers:
+      - name: n8n
+        image: n8nio/n8n:latest
+        ports:
+        - containerPort: 5678
+
+        # === 환경변수 설정 ===
+        env:
+        # 기본 인증
+        - name: N8N_BASIC_AUTH_ACTIVE
+          value: "true"
+        - name: N8N_BASIC_AUTH_USER
+          valueFrom:
+            secretKeyRef:
+              name: openrun-secrets-prod
+              key: N8N_BASIC_AUTH_USER
+        - name: N8N_BASIC_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openrun-secrets-prod
+              key: N8N_BASIC_AUTH_PASSWORD
+
+        # Node.js 함수 허용
+        - name: NODE_FUNCTION_ALLOW_BUILTIN
+          value: "*"
+        - name: NODE_FUNCTION_ALLOW_EXTERNAL
+          value: "axios"
+
+        # 데이터베이스 설정
+        - name: DB_TYPE
+          value: "postgresdb"
+        - name: DB_POSTGRESDB_HOST
+          value: "postgres-service"
+        - name: DB_POSTGRESDB_PORT
+          value: "5432"
+        - name: DB_POSTGRESDB_DATABASE
+          value: "n8n"
+        - name: DB_POSTGRESDB_USER
+          valueFrom:
+            secretKeyRef:
+              name: openrun-secrets-prod
+              key: N8N_DB_USER
+        - name: DB_POSTGRESDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openrun-secrets-prod
+              key: N8N_DB_PASSWORD
+
+        # 웹훅 및 URL 설정
+        - name: WEBHOOK_URL
+          value: "https://n8n.openrun.app"
+        - name: N8N_HOST
+          value: "n8n.openrun.app"
+        - name: N8N_PROTOCOL
+          value: "https"
+        - name: N8N_PORT
+          value: "5678"
+
+        # 프록시 설정 (Cloudflare용)
+        - name: N8N_PROXY_HOPS
+          value: "1"
+
+        # 타임존
+        - name: GENERIC_TIMEZONE
+          value: "Asia/Seoul"
+        - name: TZ
+          value: "Asia/Seoul"
+
+        # 로그 설정
+        - name: N8N_LOG_LEVEL
+          value: "info"
+
+        # UI/API 설정
+        - name: N8N_SECURE_COOKIE
+          value: "false"
+        - name: N8N_DISABLE_UI
+          value: "false"
+
+        # Naver API (선택적)
+        - name: NAVER_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: openrun-secrets-prod
+              key: NAVER_CLIENT_ID
+              optional: true
+        - name: NAVER_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: openrun-secrets-prod
+              key: NAVER_CLIENT_SECRET
+              optional: true
+
+        # === 볼륨 마운트 ===
+        volumeMounts:
+        - name: n8n-data
+          mountPath: /home/node/.n8n
+
+        # === 리소스 제한 ===
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+      # === 볼륨 정의 ===
+      volumes:
+      - name: n8n-data
+        persistentVolumeClaim:
+          claimName: n8n-pvc
+
+---
+# n8n Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n-service
+  namespace: openrun
+  labels:
+    app: n8n
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5678
+    targetPort: 5678
+    protocol: TCP
+  selector:
+    app: n8n
+
+---
+# n8n PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-pvc
+  namespace: openrun
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
