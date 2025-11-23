@@ -8,7 +8,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openrun-api-prod
-  namespace: default
+  namespace: openrun
   labels:
     app: openrun-api
     env: production
@@ -45,22 +45,22 @@ spec:
           mountPath: /app/config
           readOnly: true
           
-        # === 헬스체크 ===
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 60
-          periodSeconds: 30
-          failureThreshold: 3
-          
-        readinessProbe:
-          httpGet:
-            path: /actuator/health/readiness
-            port: 8080
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          failureThreshold: 3
+        # === 헬스체크 (임시 비활성화 - Actuator 의존성 추가 후 활성화) ===
+        # livenessProbe:
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: 8080
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 30
+        #   failureThreshold: 3
+        #
+        # readinessProbe:
+        #   httpGet:
+        #     path: /actuator/health/readiness
+        #     port: 8080
+        #   initialDelaySeconds: 20
+        #   periodSeconds: 10
+        #   failureThreshold: 3
           
         # === 리소스 제한 ===
         resources:
@@ -83,13 +83,13 @@ spec:
 
 ---
 # ==========================================
-# Development API Deployment  
+# Development API Deployment
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openrun-api-dev
-  namespace: default
+  namespace: openrun
   labels:
     app: openrun-api
     env: development
@@ -126,20 +126,20 @@ spec:
           mountPath: /app/config
           readOnly: true
           
-        # === 헬스체크 (개발환경은 좀 더 관대하게) ===
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 5
+        # === 헬스체크 (임시 비활성화 - Actuator 의존성 추가 후 활성화) ===
+        # livenessProbe:
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: 8080
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 30
+        #
+        # readinessProbe:
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: 8080
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 5
           
         # === 리소스 제한 (개발환경은 더 적게) ===
         resources:
@@ -166,7 +166,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: openrun-api-prod-service
-  namespace: default
+  namespace: openrun
   labels:
     app: openrun-api
     env: production
@@ -188,7 +188,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: openrun-api-dev-service
-  namespace: default
+  namespace: openrun
   labels:
     app: openrun-api
     env: development
