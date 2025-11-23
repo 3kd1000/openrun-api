@@ -1,9 +1,7 @@
-# OpenRun 프로젝트
+# OpenRun - 테니스 클럽 관리 서비스
 
-## 👤 프로필
-- **개발자**: 개인 개발자
-- **환경**: MacBook, Mac Mini, Ubuntu Server (Oracle Cloud)
-- **작업 방식**: Claude Code를 활용한 다중 환경 개발
+## 👤 개발자 정보
+**상세한 개인 프로필, 작업 스타일, 문서화 규칙은 @docs/PROFILE.md 참조**
 
 ## 🎯 프로젝트 개요
 
@@ -24,16 +22,6 @@
 - 코트 일정 관리 (캘린더/리스트뷰)
 - 대진표 자동 생성 (한울 KDK, 무작위, 수동)
 - 소셜 로그인 (Google, Kakao, Naver)
-
-## 📚 작업 가이드
-
-### 문서 생성 시
-작업 중 문서를 생성할 때는 **`docs/guides/documentation-guide.md`를 참고**하여:
-- 적절한 위치에 저장 (`docs/infra/k8s/`, `docs/backend/spring/` 등)
-- 소문자-하이픈 형식의 파일명 사용
-- 필수 메타데이터 포함 (작성일, 목적, 예제)
-
-자세한 내용: `@docs/guides/documentation-guide.md`
 
 ## 🔧 개발 환경
 
@@ -62,7 +50,7 @@ openrun/
 ├── api/              # Spring Boot 백엔드
 ├── front/            # React 프론트엔드
 ├── k8s/              # Kubernetes 매니페스트
-├── docs/             # 모든 문서 저장소
+├── docs/             # 모든 문서 저장소 (git submodule)
 │   ├── guides/      # 작업 가이드 (문서화, 배포 등)
 │   ├── infra/       # 인프라 관련
 │   ├── backend/     # 백엔드 관련
@@ -75,3 +63,24 @@ openrun/
 - [ ] 대진표 생성 알고리즘 개선
 - [ ] 실시간 알림 시스템 (WebSocket)
 - [ ] 모바일 반응형 UI 개선
+
+## 📚 문서화 가이드
+
+### 문서 생성 시
+작업 중 문서를 생성할 때는 **`docs/guides/documentation-guide.md`를 참고**하여:
+- 적절한 위치에 저장 (`docs/infra/k8s/`, `docs/backend/spring/` 등)
+- 소문자-하이픈 형식의 파일명 사용
+- 필수 메타데이터 포함 (작성일, 목적, 예제)
+
+자세한 내용: `@docs/guides/documentation-guide.md`
+
+## 🔄 개발 패턴
+- **최소 변경으로 기능 구현**: 기존 아키텍처 유지하면서 점진적 개선
+- **환경별 분리**: 개발/운영 환경 철저히 분리
+- **자동화 우선**: CI/CD 파이프라인을 통한 배포 자동화
+- **문서화**: 모든 설정 변경과 새로운 기능은 docs/에 문서화
+
+---
+
+**프로젝트 상태**: 운영 중 (Production Ready)  
+**마지막 업데이트**: 2025-11-20
