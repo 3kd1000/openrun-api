@@ -1,5 +1,6 @@
 package com.example.openrunapi.config;
 
+import com.example.openrunapi.config.auth.DevAuthenticationFilter;
 import com.example.openrunapi.config.auth.FirebaseTokenFilter;
 import com.example.openrunapi.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -30,18 +31,23 @@ public class SecurityConfig {
 
                 // HTTP 요청에 대한 인가 설정
                 .authorizeHttpRequests(auth -> auth
+                        // Actuator health 엔드포인트는 무조건 허용 (K8s liveness/readiness probe용)
+                        .requestMatchers("/actuator/health/**").permitAll()
                         // 정적 리소스(js, css, image 등)는 모두 허용
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         // React Router 같은 SPA 라우팅 및 루트 리소스를 위한 설정
                         .requestMatchers("/*", "/*.*", "/assets/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll() // 소셜 로그인 API는 누구나 접근 가능
+                        .requestMatchers("/api/v1/dev/**").permitAll() // 개발용 로그인 API는 누구나 접근 가능
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API는 누구나 접근 가능
-                        .requestMatchers("/api/clubs").permitAll()     // 클럽 목록 조회 API는 누구나 접근 가능
+                        .requestMatchers("/api/clubs").permitAll() // 클럽 목록 조회 API는 누구나 접근 가능
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                 )
 
                 // Firebase 토큰 검증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
-                .addFilterBefore(new FirebaseTokenFilter(userService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new FirebaseTokenFilter(userService), UsernamePasswordAuthenticationFilter.class)
+                // 로컬 개발용 인증 필터 추가
+                .addFilterBefore(new DevAuthenticationFilter(userService), FirebaseTokenFilter.class);
 
         return http.build();
     }
