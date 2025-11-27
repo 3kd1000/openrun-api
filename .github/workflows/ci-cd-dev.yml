@@ -59,12 +59,12 @@ jobs:
           # 여기서는 'develop' 태그를 사용하며, 소유자 이름과 레포지토리 이름은 동적으로 가져옵니다.
           # 예: ghcr.io/wisdomhill/openrun:develop
           build-args: |
-                BUILD_COMMAND=npm run build:staging
+            BUILD_COMMAND=npm run build:develop
           tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:develop
 
   # ========== 배포 Job (Helm Chart를 Artifact로 전달) ==========
   deploy:
-    needs: build-and-push  # 빌드가 성공해야 배포 시작
+    needs: build-and-push # 빌드가 성공해야 배포 시작
     runs-on: ubuntu-latest
     steps:
       # --- 1. 코드 체크아웃 (Runner에서만) ---

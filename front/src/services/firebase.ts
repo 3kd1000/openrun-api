@@ -2,15 +2,15 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-// Your web app's Firebase configuration from login.html
+// Firebase configuration from environment variables
 const firebaseConfig = {
-    apiKey: "AIzaSyBs5-OMmuj7ONsUosbyfwowjO-1diBhXoU",
-    authDomain: "openrun-ed7a1.firebaseapp.com",
-    projectId: "openrun-ed7a1",
-    storageBucket: "openrun-ed7a1.appspot.com", // Using .appspot.com as it's more standard
-    messagingSenderId: "4793689059",
-    appId: "1:4793689059:web:282843d13c85bb7efb76d6",
-    measurementId: "G-YVKCQ514WS"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

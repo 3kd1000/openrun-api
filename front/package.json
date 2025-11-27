@@ -7,7 +7,7 @@
     "dev": "vite",
     "localhost": "vite --mode localhost",
     "build": "tsc -b && vite build",
-    "build:staging": "tsc && vite build --mode staging",
+    "build:develop": "tsc && vite build --mode develop",
     "lint": "eslint .",
     "preview": "vite preview"
   },
