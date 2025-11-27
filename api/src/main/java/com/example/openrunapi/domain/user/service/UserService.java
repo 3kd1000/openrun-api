@@ -37,8 +37,18 @@ public class UserService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getFirebaseUid(),
                 "",
-                new ArrayList<>()
-        );
+                new ArrayList<>());
+    }
+
+    @Transactional
+    public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getFirebaseUid(),
+                "",
+                new ArrayList<>());
     }
 
     @Transactional

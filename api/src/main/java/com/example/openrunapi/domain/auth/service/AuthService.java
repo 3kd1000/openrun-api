@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,7 +29,8 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final FirebaseAuth firebaseAuth;
+    @Autowired(required = false)
+    private FirebaseAuth firebaseAuth;
     private final WebClient webClient;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
