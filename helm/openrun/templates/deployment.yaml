@@ -5,153 +5,155 @@ metadata:
   namespace: openrun
   labels:
     app: openrun-api
-    env: {{ .Values.environment }}
+    env: { { .Values.environment } }
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: { { .Values.replicaCount } }
   selector:
     matchLabels:
       app: openrun-api
-      env: {{ .Values.environment }}
+      env: { { .Values.environment } }
   template:
     metadata:
       labels:
         app: openrun-api
-        env: {{ .Values.environment }}
+        env: { { .Values.environment } }
     spec:
       containers:
-      - name: api
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        ports:
-        - containerPort: {{ .Values.service.port }}
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: { { .Values.image.pullPolicy } }
+          ports:
+            - containerPort: { { .Values.service.port } }
 
-        env:
-        # === 환경 설정 ===
-        - name: SPRING_PROFILES_ACTIVE
-          value: {{ .Values.springProfile | quote }}
-        - name: ENVIRONMENT
-          value: {{ .Values.environment | quote }}
-        - name: SERVER_PORT
-          value: {{ .Values.service.port | quote }}
+          env:
+            # === 환경 설정 ===
+            - name: SPRING_PROFILES_ACTIVE
+              value: { { .Values.springProfile | quote } }
+            - name: ENVIRONMENT
+              value: { { .Values.environment | quote } }
+            - name: SERVER_PORT
+              value: { { .Values.service.port | quote } }
 
-        # === 데이터베이스 설정 ===
-        - name: SPRING_DATASOURCE_URL
-          value: {{ .Values.database.url | quote }}
-        - name: POSTGRES_DB
-          value: {{ .Values.database.name | quote }}
-        - name: SPRING_DATASOURCE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.secrets.name }}
-              key: SPRING_DATASOURCE_USERNAME
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.secrets.name }}
-              key: SPRING_DATASOURCE_PASSWORD
+            # === 데이터베이스 설정 ===
+            - name: SPRING_DATASOURCE_URL
+              value: { { .Values.database.url | quote } }
+            - name: POSTGRES_DB
+              value: { { .Values.database.name | quote } }
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: { { .Values.secrets.name } }
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: { { .Values.secrets.name } }
+                  key: SPRING_DATASOURCE_PASSWORD
 
-        # === JPA & Hibernate ===
-        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-          value: {{ .Values.jpa.hibernateDdlAuto | quote }}
-        - name: SPRING_JPA_SHOW_SQL
-          value: {{ .Values.jpa.showSql | quote }}
-        - name: SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL
-          value: {{ .Values.jpa.formatSql | quote }}
+            # === JPA & Hibernate ===
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: { { .Values.jpa.hibernateDdlAuto | quote } }
+            - name: SPRING_JPA_SHOW_SQL
+              value: { { .Values.jpa.showSql | quote } }
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL
+              value: { { .Values.jpa.formatSql | quote } }
 
-        # === Flyway 설정 ===
-        - name: SPRING_FLYWAY_ENABLED
-          value: {{ .Values.flyway.enabled | quote }}
-        - name: SPRING_FLYWAY_LOCATIONS
-          value: {{ .Values.flyway.locations | quote }}
+            # === Flyway 설정 ===
+            - name: SPRING_FLYWAY_ENABLED
+              value: { { .Values.flyway.enabled | quote } }
+            - name: SPRING_FLYWAY_LOCATIONS
+              value: { { .Values.flyway.locations | quote } }
 
-        # === OAuth2 설정 (민감하지 않은 부분) ===
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI
-          value: {{ .Values.oauth2.kakao.redirectUri | quote }}
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE
-          value: {{ .Values.oauth2.kakao.authorizationGrantType | quote }}
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_AUTHENTICATION_METHOD
-          value: {{ .Values.oauth2.kakao.clientAuthenticationMethod | quote }}
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_SCOPE
-          value: {{ .Values.oauth2.kakao.scope | quote }}
+            # === OAuth2 설정 (민감하지 않은 부분) ===
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI
+              value: { { .Values.oauth2.kakao.redirectUri | quote } }
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE
+              value: { { .Values.oauth2.kakao.authorizationGrantType | quote } }
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_AUTHENTICATION_METHOD
+              value:
+                { { .Values.oauth2.kakao.clientAuthenticationMethod | quote } }
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_SCOPE
+              value: { { .Values.oauth2.kakao.scope | quote } }
 
-        # === OAuth2 Client Credentials (민감 정보) ===
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.secrets.name }}
-              key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.secrets.name }}
-              key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET
+            # === OAuth2 Client Credentials (민감 정보) ===
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: { { .Values.secrets.name } }
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: { { .Values.secrets.name } }
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET
 
-        # === OAuth2 Provider 설정 ===
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI
-          value: {{ .Values.oauth2Provider.kakao.authorizationUri | quote }}
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN_URI
-          value: {{ .Values.oauth2Provider.kakao.tokenUri | quote }}
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_INFO_URI
-          value: {{ .Values.oauth2Provider.kakao.userInfoUri | quote }}
-        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE
-          value: {{ .Values.oauth2Provider.kakao.userNameAttribute | quote }}
+            # === OAuth2 Provider 설정 ===
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI
+              value:
+                { { .Values.oauth2Provider.kakao.authorizationUri | quote } }
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN_URI
+              value: { { .Values.oauth2Provider.kakao.tokenUri | quote } }
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_INFO_URI
+              value: { { .Values.oauth2Provider.kakao.userInfoUri | quote } }
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE
+              value:
+                { { .Values.oauth2Provider.kakao.userNameAttribute | quote } }
 
-        # === Firebase 설정 ===
-        - name: FIREBASE_CONFIG_PATH
-          value: {{ .Values.firebase.configPath | quote }}
+            # === Firebase 설정 ===
+            - name: FIREBASE_CONFIG_PATH
+              value: { { .Values.firebase.configPath | quote } }
 
-        # === 도메인 설정 ===
-        - name: FRONTEND_URL
-          value: {{ .Values.frontend.url | quote }}
-        - name: API_BASE_URL
-          value: {{ .Values.api.baseUrl | quote }}
+            # === 도메인 설정 ===
+            - name: FRONTEND_URL
+              value: { { .Values.frontend.url | quote } }
+            - name: API_BASE_URL
+              value: { { .Values.api.baseUrl | quote } }
 
-        # === Actuator 설정 ===
-        - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
-          value: {{ .Values.actuator.endpoints | quote }}
-        - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
-          value: {{ .Values.actuator.showDetails | quote }}
-        - name: MANAGEMENT_HEALTH_READINESSSTATE_ENABLED
-          value: {{ .Values.actuator.readinessEnabled | quote }}
-        - name: MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED
-          value: {{ .Values.actuator.livenessEnabled | quote }}
+            # === Actuator 설정 ===
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: { { .Values.actuator.endpoints | quote } }
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: { { .Values.actuator.showDetails | quote } }
+            - name: MANAGEMENT_HEALTH_READINESSSTATE_ENABLED
+              value: { { .Values.actuator.readinessEnabled | quote } }
+            - name: MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED
+              value: { { .Values.actuator.livenessEnabled | quote } }
 
-        # === 볼륨 마운트 (Firebase 설정 파일) ===
-        volumeMounts:
-        - name: firebase-config
-          mountPath: /app/config
-          readOnly: true
+          # === 볼륨 마운트 (Firebase 설정 파일) ===
+          volumeMounts:
+            - name: firebase-config
+              mountPath: /app/config
+              readOnly: true
 
-        # === Health Check (Liveness Probe) ===
-        livenessProbe:
-          httpGet:
-            path: /actuator/health/liveness
-            port: {{ .Values.service.port }}
-          initialDelaySeconds: 60
-          periodSeconds: 30
-          timeoutSeconds: 5
-          failureThreshold: 3
+          # === Health Check (Liveness Probe) ===
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: { { .Values.service.port } }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
 
-        # === Health Check (Readiness Probe) ===
-        readinessProbe:
-          httpGet:
-            path: /actuator/health/readiness
-            port: {{ .Values.service.port }}
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+          # === Health Check (Readiness Probe) ===
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: { { .Values.service.port } }
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
 
-        # === 리소스 제한 ===
-        resources:
-          {{- toYaml .Values.resources | nindent 10 }}
+          # === 리소스 제한 ===
+          resources: { { - toYaml .Values.resources | nindent 10 } }
 
       # === 볼륨 정의 ===
       volumes:
-      - name: firebase-config
-        secret:
-          secretName: {{ .Values.firebaseSecret.name }}
+        - name: firebase-config
+          secret:
+            secretName: { { .Values.firebaseSecret.name } }
 
       # === ImagePullSecrets (GHCR 인증) ===
       imagePullSecrets:
-      - name: {{ .Values.imagePullSecret.name }}
+        - name: { { .Values.imagePullSecret.name } }
