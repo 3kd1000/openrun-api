@@ -7,4 +7,12 @@ const axiosInstance = axios.create({
   },
 });
 
+axiosInstance.interceptors.request.use((config) => {
+  const devUserId = localStorage.getItem('devUserId');
+  if (devUserId) {
+    config.headers['X-DEV-USER-ID'] = devUserId;
+  }
+  return config;
+});
+
 export default axiosInstance;
