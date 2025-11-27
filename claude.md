@@ -1,13 +1,16 @@
 # OpenRun - 테니스 클럽 관리 서비스
 
 ## 👤 개발자 정보
+
 **상세한 개인 프로필, 작업 스타일, 문서화 규칙은 @docs/PROFILE.md 참조**
+모든 답변은 공손하게 존댓말로 생성합니다.
 
 ## 🎯 프로젝트 개요
 
 **OpenRun**은 테니스 클럽을 위한 코트 예약 및 대진표 생성 서비스입니다.
 
 ### 기술 스택
+
 - **Backend**: Spring Boot (Kotlin/Java), PostgreSQL
 - **Frontend**: React + TypeScript + Vite
 - **Infrastructure**:
@@ -18,6 +21,7 @@
 - **Authentication**: Firebase Authentication
 
 ### 주요 기능
+
 - 클럽 관리 및 멤버 초대
 - 코트 일정 관리 (캘린더/리스트뷰)
 - 대진표 자동 생성 (한울 KDK, 무작위, 수동)
@@ -26,6 +30,7 @@
 ## 🔧 개발 환경
 
 ### 로컬 개발
+
 ```bash
 # Backend (Spring Boot)
 ./gradlew :api:bootRun
@@ -35,11 +40,13 @@ cd front && npm run localhost
 ```
 
 ### 운영 환경
+
 - **Production**: `api.openrun.app`, `front.openrun.app`
 - **Development**: `dev-api.openrun.app`, `dev-front.openrun.app`
 - **배포**: GitHub Actions → GHCR → Kubernetes 자동 배포
 
 ### 데이터베이스
+
 - **K8s PostgreSQL**: `prod_db`, `dev_db` (환경별 분리)
 - **접속**: `kubectl port-forward -n openrun svc/postgres-service 15432:5432`
 
@@ -59,6 +66,7 @@ openrun/
 ```
 
 ## 🚀 다음 작업 예정
+
 - [ ] 클럽 멤버 역할 관리 기능
 - [ ] 대진표 생성 알고리즘 개선
 - [ ] 실시간 알림 시스템 (WebSocket)
@@ -67,7 +75,9 @@ openrun/
 ## 📚 문서화 가이드
 
 ### 문서 생성 시
+
 작업 중 문서를 생성할 때는 **`docs/guides/documentation-guide.md`를 참고**하여:
+
 - 적절한 위치에 저장 (`docs/infra/k8s/`, `docs/backend/spring/` 등)
 - 소문자-하이픈 형식의 파일명 사용
 - 필수 메타데이터 포함 (작성일, 목적, 예제)
@@ -75,6 +85,7 @@ openrun/
 자세한 내용: `@docs/guides/documentation-guide.md`
 
 ## 🔄 개발 패턴
+
 - **최소 변경으로 기능 구현**: 기존 아키텍처 유지하면서 점진적 개선
 - **환경별 분리**: 개발/운영 환경 철저히 분리
 - **자동화 우선**: CI/CD 파이프라인을 통한 배포 자동화
