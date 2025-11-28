@@ -89,10 +89,10 @@ firebaseSecret:
 imagePullSecret:
   name: ghcr-pull-secret
 
-# Ingress 설정 (개발 환경은 비활성화)
+# Ingress 설정 (Cloudflare Tunnel 사용 시 비활성화)
 ingress:
-  enabled: true
-  host: dev.api.openrun.app
+  enabled: false
+  host: dev-api.openrun.app
   className: traefik
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
