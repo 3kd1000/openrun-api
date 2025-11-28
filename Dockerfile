@@ -46,8 +46,8 @@ RUN ./gradlew dependencies --no-daemon 2>/dev/null || true
 # --- 소스코드 복사 및 빌드 ---
 COPY api/src ./api/src
 
-# Gradle 빌드 (테스트 제외, 캐시 최대 활용)
-RUN ./gradlew :api:build -x test --no-daemon --build-cache
+# Gradle 빌드 (테스트 제외, 캐시 최대 활용, 병렬 빌드)
+RUN ./gradlew :api:build -x test --no-daemon --build-cache --parallel
 
 
 # --- Stage 3: 최종 실행 이미지 생성 스테이지 ---
