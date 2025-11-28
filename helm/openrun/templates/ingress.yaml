@@ -16,10 +16,30 @@ spec:
   {{- if .Values.ingress.tls.enabled }}
   tls:
   - hosts:
+    {{- if .Values.ingress.hosts }}
+    {{- range .Values.ingress.hosts }}
+    - {{ . }}
+    {{- end }}
+    {{- else }}
     - {{ .Values.ingress.host }}
+    {{- end }}
     secretName: {{ .Values.ingress.tls.secretName }}
   {{- end }}
   rules:
+  {{- if .Values.ingress.hosts }}
+  {{- range .Values.ingress.hosts }}
+  - host: {{ . }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openrun-api-{{ $.Values.environment }}-service
+            port:
+              number: {{ $.Values.service.port }}
+  {{- end }}
+  {{- else }}
   - host: {{ .Values.ingress.host }}
     http:
       paths:
@@ -30,4 +50,5 @@ spec:
             name: openrun-api-{{ .Values.environment }}-service
             port:
               number: {{ .Values.service.port }}
+  {{- end }}
 {{- end }}

@@ -89,9 +89,9 @@ firebaseSecret:
 imagePullSecret:
   name: ghcr-pull-secret
 
-# Ingress 설정 (운영 환경 활성화)
+# Ingress 설정 (Cloudflare Tunnel 사용 시 비활성화)
 ingress:
-  enabled: true
+  enabled: false
   host: api.openrun.app
   className: traefik
   annotations:
