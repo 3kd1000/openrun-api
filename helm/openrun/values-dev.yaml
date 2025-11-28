@@ -7,6 +7,7 @@ replicaCount: 1
 # 이미지 설정
 image:
   repository: ghcr.io/3kd1000/openrun
+  # 기본값: develop (CI/CD에서 develop-{commit-sha}로 덮어씀)
   tag: develop
   pullPolicy: Always
 

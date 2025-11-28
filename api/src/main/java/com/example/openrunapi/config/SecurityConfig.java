@@ -35,13 +35,17 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health/**").permitAll()
                         // 정적 리소스(js, css, image 등)는 모두 허용
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                        // React Router 같은 SPA 라우팅 및 루트 리소스를 위한 설정
+                        // SPA 페이지 및 루트 리소스 허용 (React Router가 처리)
                         .requestMatchers("/*", "/*.*", "/assets/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll() // 소셜 로그인 API는 누구나 접근 가능
-                        .requestMatchers("/api/v1/dev/**").permitAll() // 개발용 로그인 API는 누구나 접근 가능
-                        .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API는 누구나 접근 가능
-                        .requestMatchers("/api/clubs").permitAll() // 클럽 목록 조회 API는 누구나 접근 가능
-                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+                        // 인증 불필요한 API 엔드포인트
+                        .requestMatchers("/api/v1/auth/**").permitAll() // 소셜 로그인 API
+                        .requestMatchers("/api/v1/dev/**").permitAll() // 개발용 로그인 API
+                        .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API
+                        .requestMatchers("/api/clubs").permitAll() // 클럽 목록 조회 API
+                        // 그 외 모든 API 요청은 인증 필요
+                        .requestMatchers("/api/**").authenticated()
+                        // 그 외 요청(SPA 라우팅)은 나중에 exceptionHandling에서 처리
+                        .anyRequest().permitAll()
                 )
 
                 // SPA 라우팅: /api로 시작하지 않는 요청은 인증 불필요 (SPA 페이지 접근용)
