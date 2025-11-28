@@ -41,27 +41,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll() // 소셜 로그인 API
                         .requestMatchers("/api/v1/dev/**").permitAll() // 개발용 로그인 API
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API
-                        .requestMatchers("/api/clubs").permitAll() // 클럽 목록 조회 API
+                        .requestMatchers("/api/clubs/**").permitAll() // 클럽 목록 조회 API
                         // 그 외 모든 API 요청은 인증 필요
                         .requestMatchers("/api/**").authenticated()
                         // 그 외 요청(SPA 라우팅)은 나중에 exceptionHandling에서 처리
                         .anyRequest().permitAll()
                 )
 
-                // SPA 라우팅: /api로 시작하지 않는 요청은 인증 불필요 (SPA 페이지 접근용)
+                // 에러 처리는 최소화 (WebConfig의 addResourceHandlers가 처리)
                 .exceptionHandling(exception -> exception
-                        .defaultAuthenticationEntryPointFor(
-                                (request, response, authException) -> {
-                                    String requestUri = request.getRequestURI();
-                                    // /api로 시작하지 않는 요청(SPA 라우팅)은 index.html로 포워드
-                                    if (!requestUri.startsWith("/api")) {
-                                        request.getRequestDispatcher("/index.html").forward(request, response);
-                                    } else {
-                                        response.sendError(401, "Unauthorized");
-                                    }
-                                },
-                                new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/**")
-                        )
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(401, "Unauthorized");
+                        })
                 )
 
                 // Firebase 토큰 검증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
