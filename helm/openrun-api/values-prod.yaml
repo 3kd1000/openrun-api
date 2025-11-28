@@ -1,4 +1,4 @@
-# OpenRun Helm Chart - Production Environment Values
+# OpenRun API Helm Chart - Production Environment Values
 
 # 환경 구분
 environment: production
@@ -6,7 +6,7 @@ replicaCount: 2
 
 # 이미지 설정
 image:
-  repository: ghcr.io/3kd1000/openrun
+  repository: ghcr.io/3kd1000/openrun-api
   tag: latest
   pullPolicy: Always
 
