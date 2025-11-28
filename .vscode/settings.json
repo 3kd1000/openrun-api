@@ -1,3 +1,10 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic"
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.compile.nullAnalysis.mode": "disabled",
+  "[yaml]": {
+    "editor.formatOnSave": false
+  },
+  "files.exclude": {
+    "helm/openrun/templates": true
+  }
 }
