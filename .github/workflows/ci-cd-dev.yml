@@ -51,6 +51,9 @@ jobs:
           file: ./Dockerfile
           # 'push: true'로 설정해야 빌드 완료 후 GHCR로 이미지를 푸시합니다. (false이면 빌드만 수행)
           push: true
+          # 'no-cache: true'로 설정하여 매번 최신 소스코드를 반영합니다.
+          # 캐시를 사용하면 코드가 변경되어도 이전 빌드 결과를 사용할 수 있으므로 비활성화합니다.
+          no-cache: true
           # linux/amd64(Intel/AMD)와 linux/arm64(Apple Silicon/Oracle Ampere) 아키텍처를 모두 지원하는
           # 멀티 플랫폼 이미지를 빌드합니다.
           platforms: linux/amd64, linux/arm64
