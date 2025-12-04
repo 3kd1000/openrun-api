@@ -2,7 +2,7 @@ name: Deploy Frontend to Production
 
 on:
   push:
-    branches: ["main"]
+    branches: ["production"]
     paths:
       - "front/**"
       - "Dockerfile.front"

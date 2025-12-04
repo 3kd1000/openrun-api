@@ -2,7 +2,7 @@ name: Deploy API to Production
 
 on:
   push:
-    branches: ["main"]
+    branches: ["production"]
     paths:
       - "api/**"
       - "gradle/**"
