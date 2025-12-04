@@ -1,5 +1,10 @@
 # macOS
+# User-specific files
 .DS_Store
+
+# Local configuration files
+/config/
+
 
 # Java
 *.class
@@ -47,4 +52,6 @@ temp/
 # API specific ignores
 api/build/
 
-gemini_history/
+.env
+api/src/main/resources/openrun-ed7a1-firebase-adminsdk-fbsvc-4e67d9a55a.json
+openrun-ed7a1-firebase-adminsdk-fbsvc-4e67d9a55a.json

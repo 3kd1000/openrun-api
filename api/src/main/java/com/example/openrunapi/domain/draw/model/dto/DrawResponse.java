@@ -1,4 +1,4 @@
-package com.example.openrunapi.domain.draw.model.response;
+package com.example.openrunapi.domain.draw.model.dto;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateDrawResponse {
+public class DrawResponse {
 
     private List<Game> games;
 
