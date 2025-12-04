@@ -89,6 +89,11 @@ jobs:
               --wait \
               --timeout 5m
 
+            # 강제로 Pod 재시작하여 새 이미지 Pull
+            echo "=== Restarting Frontend Deployment ==="
+            kubectl rollout restart deployment/openrun-frontend-production -n openrun
+            kubectl rollout status deployment/openrun-frontend-production -n openrun --timeout=5m
+
             # 배포 상태 확인
             echo "=== Frontend Production Deployment Status ==="
             kubectl get pods -n openrun -l app=openrun-frontend,env=production
