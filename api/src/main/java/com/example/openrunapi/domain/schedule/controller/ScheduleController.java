@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.schedule.controller;
 
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
 import jakarta.validation.Valid;
@@ -67,5 +68,25 @@ public class ScheduleController {
     public ResponseEntity<ScheduleResponse> getScheduleById(@PathVariable Long scheduleId) {
         ScheduleResponse response = scheduleService.getScheduleById(scheduleId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 일정 수정
+     */
+    @PutMapping("/{scheduleId}")
+    public ResponseEntity<ScheduleResponse> updateSchedule(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody UpdateScheduleRequest request) {
+        ScheduleResponse response = scheduleService.updateSchedule(scheduleId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 일정 삭제
+     */
+    @DeleteMapping("/{scheduleId}")
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long scheduleId) {
+        scheduleService.deleteSchedule(scheduleId);
+        return ResponseEntity.noContent().build();
     }
 }

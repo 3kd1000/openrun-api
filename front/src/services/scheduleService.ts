@@ -46,5 +46,16 @@ export const scheduleService = {
       params: { clubId, start, end }
     });
     return response.data;
+  },
+
+  // 일정 수정
+  updateSchedule: async (scheduleId: number, data: CreateScheduleRequest): Promise<Schedule> => {
+    const response = await axiosInstance.put(`/schedules/${scheduleId}`, data);
+    return response.data;
+  },
+
+  // 일정 삭제
+  deleteSchedule: async (scheduleId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}`);
   }
 };

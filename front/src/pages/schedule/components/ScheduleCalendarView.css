@@ -31,6 +31,7 @@
   cursor: pointer;
   transition: background-color 0.2s;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .react-calendar__navigation button:hover:not(:disabled) {
@@ -67,17 +68,23 @@
 
 .react-calendar__tile {
   position: relative;
-  height: 100px;
-  min-height: 100px;
+  height: 140px;
+  min-height: 140px;
+  max-height: 140px;
   padding: 8px;
   background: none;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #d0d0d0 !important;
   font-size: 14px;
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s;
   vertical-align: top;
   text-align: left;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .react-calendar__tile:hover:not(:disabled) {
@@ -85,11 +92,13 @@
 }
 
 .react-calendar__tile--now {
-  background-color: #e3f2fd !important;
+  background-color: transparent !important;
+  border: 2px solid #ff9800 !important;
+  box-shadow: 0 0 0 1px #ff9800 inset;
 }
 
 .react-calendar__tile--now:hover {
-  background-color: #bbdefb !important;
+  background-color: #fff3e0 !important;
 }
 
 .react-calendar__tile--active {
@@ -110,7 +119,8 @@
 .react-calendar__tile abbr {
   display: block;
   font-weight: 500;
-  margin-bottom: 4px;
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 /* 캘린더 타일 콘텐츠 */
@@ -119,8 +129,10 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 70px;
+  max-height: 100px;
   overflow: hidden;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .calendar-event {
@@ -168,11 +180,25 @@
     padding: 12px;
   }
 
+  .react-calendar__navigation button {
+    font-size: 15px;
+  }
+
   .react-calendar__tile {
-    height: 80px;
-    min-height: 80px;
+    height: 110px;
+    min-height: 110px;
+    max-height: 110px;
     padding: 6px;
     font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .calendar-tile-content {
+    max-height: 80px;
+    width: 100%;
+    flex-shrink: 0;
   }
 
   .calendar-event {

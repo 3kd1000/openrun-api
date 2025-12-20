@@ -7,16 +7,19 @@ import './ScheduleCalendarView.css';
 
 interface Props {
   schedules: Schedule[];
+  onDateClick: (date: Date) => void;
   onDateDoubleClick: (date: Date) => void;
   onScheduleClick: (schedule: Schedule) => void;
 }
 
 const ScheduleCalendarView: React.FC<Props> = ({
   schedules,
+  onDateClick,
   onDateDoubleClick,
   onScheduleClick
 }) => {
   const [date, setDate] = useState(new Date());
+  const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // 특정 날짜의 일정들 가져오기
   const getSchedulesForDate = (date: Date): Schedule[] => {
@@ -61,9 +64,21 @@ const ScheduleCalendarView: React.FC<Props> = ({
     return null;
   };
 
-  // 타일 더블클릭 핸들러
-  const handleTileDoubleClick = (date: Date) => {
-    onDateDoubleClick(date);
+  // 타일 클릭 핸들러 (단일 클릭 vs 더블클릭 구분)
+  const handleTileClick = (date: Date) => {
+    if (clickTimeout) {
+      // 더블클릭
+      clearTimeout(clickTimeout);
+      setClickTimeout(null);
+      onDateDoubleClick(date);
+    } else {
+      // 단일 클릭 (300ms 후 실행)
+      const timeout = setTimeout(() => {
+        onDateClick(date);
+        setClickTimeout(null);
+      }, 300);
+      setClickTimeout(timeout);
+    }
   };
 
   return (
@@ -75,7 +90,7 @@ const ScheduleCalendarView: React.FC<Props> = ({
         locale="ko-KR"
         calendarType="gregory"
         formatDay={(locale, date) => format(date, 'd')}
-        onClickDay={handleTileDoubleClick}
+        onClickDay={handleTileClick}
         showNeighboringMonth={false}
       />
     </div>

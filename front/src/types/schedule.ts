@@ -19,3 +19,12 @@ export interface CreateScheduleRequest {
   cost?: number;
   description?: string;
 }
+
+export interface Participant {
+  id: number;
+  scheduleId: number;
+  userId: number;
+  status: 'CONFIRMED' | 'WAITING' | 'CANCELLED';
+  position: number;
+  joinedAt: string;
+}

@@ -4,6 +4,7 @@ import { scheduleService } from '../../services/scheduleService';
 import type { Schedule } from '../../types/schedule';
 import ScheduleCreateModal from './components/ScheduleCreateModal';
 import ScheduleCalendarView from './components/ScheduleCalendarView';
+import ScheduleDetailModal from './components/ScheduleDetailModal';
 import './ScheduleListPage.css';
 
 type ViewMode = 'calendar' | 'list';
@@ -13,8 +14,11 @@ const ScheduleListPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
+  const [filterDate, setFilterDate] = useState<Date | null>(null);
 
   useEffect(() => {
     loadSchedules();
@@ -25,7 +29,11 @@ const ScheduleListPage: React.FC = () => {
       setLoading(true);
       setError('');
       const data = await scheduleService.getAllSchedules();
-      setSchedules(data);
+      // 일정날짜순으로 정렬 (오름차순)
+      const sortedData = data.sort((a, b) =>
+        new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+      );
+      setSchedules(sortedData);
     } catch (err) {
       console.error('일정 조회 실패:', err);
       setError('일정을 불러오는데 실패했습니다.');
@@ -50,20 +58,43 @@ const ScheduleListPage: React.FC = () => {
     );
   }
 
+  const handleDateClick = (date: Date) => {
+    // 단일 클릭: 리스트뷰로 전환 + 해당 날짜로 필터링
+    setFilterDate(date);
+    setViewMode('list');
+  };
+
   const handleDateDoubleClick = (date: Date) => {
+    // 더블클릭: 일정 생성 모달
     setSelectedDate(date);
     setShowCreateModal(true);
   };
 
   const handleScheduleClick = (schedule: Schedule) => {
-    // TODO: 일정 상세 모달 (나중에 구현)
-    console.log('Schedule clicked:', schedule);
+    setSelectedSchedule(schedule);
+    setShowDetailModal(true);
+  };
+
+  const handleClearFilter = () => {
+    setFilterDate(null);
   };
 
   const handleCreateModalClose = () => {
     setShowCreateModal(false);
     setSelectedDate(null);
   };
+
+  const handleDetailModalClose = () => {
+    setShowDetailModal(false);
+    setSelectedSchedule(null);
+  };
+
+  // 필터링된 일정 목록
+  const filteredSchedules = filterDate
+    ? schedules.filter(schedule =>
+        format(new Date(schedule.scheduledAt), 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd')
+      )
+    : schedules;
 
   return (
     <div className="schedule-page">
@@ -73,7 +104,10 @@ const ScheduleListPage: React.FC = () => {
           <div className="view-toggle">
             <button
               className={`toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
-              onClick={() => setViewMode('calendar')}
+              onClick={() => {
+                setViewMode('calendar');
+                setFilterDate(null);
+              }}
             >
               📅 캘린더
             </button>
@@ -88,13 +122,21 @@ const ScheduleListPage: React.FC = () => {
         </div>
       </div>
 
+      {filterDate && viewMode === 'list' && (
+        <div className="filter-info">
+          <span>{format(filterDate, 'yyyy년 M월 d일')} 일정</span>
+          <button className="btn-clear-filter" onClick={handleClearFilter}>전체 보기</button>
+        </div>
+      )}
+
       {viewMode === 'calendar' ? (
         <ScheduleCalendarView
           schedules={schedules}
+          onDateClick={handleDateClick}
           onDateDoubleClick={handleDateDoubleClick}
           onScheduleClick={handleScheduleClick}
         />
-      ) : schedules.length === 0 ? (
+      ) : filteredSchedules.length === 0 ? (
         <div className="empty-state">
           <p>📅</p>
           <p>등록된 일정이 없습니다.</p>
@@ -102,8 +144,12 @@ const ScheduleListPage: React.FC = () => {
         </div>
       ) : (
         <div className="schedule-list">
-          {schedules.map((schedule) => (
-            <div key={schedule.id} className="schedule-card">
+          {filteredSchedules.map((schedule) => (
+            <div
+              key={schedule.id}
+              className="schedule-card"
+              onClick={() => handleScheduleClick(schedule)}
+            >
               <div className="schedule-info">
                 <h3>{schedule.courtName}</h3>
                 <p className="schedule-time">
@@ -137,6 +183,16 @@ const ScheduleListPage: React.FC = () => {
         <ScheduleCreateModal
           initialDate={selectedDate ? format(selectedDate, "yyyy-MM-dd'T'HH:mm") : undefined}
           onClose={handleCreateModalClose}
+          onSuccess={() => {
+            loadSchedules();
+          }}
+        />
+      )}
+
+      {showDetailModal && selectedSchedule && (
+        <ScheduleDetailModal
+          schedule={selectedSchedule}
+          onClose={handleDetailModalClose}
           onSuccess={() => {
             loadSchedules();
           }}
