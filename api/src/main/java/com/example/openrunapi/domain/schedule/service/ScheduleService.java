@@ -2,6 +2,7 @@ package com.example.openrunapi.domain.schedule.service;
 
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -74,5 +75,35 @@ public class ScheduleService {
         return scheduleRepository.findByClubIdAndScheduledAtBetween(clubId, start, end).stream()
                 .map(ScheduleResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 일정 수정
+     */
+    @Transactional
+    public ScheduleResponse updateSchedule(Long scheduleId, UpdateScheduleRequest request) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        schedule.update(
+                request.getCourtName(),
+                request.getScheduledAt(),
+                request.getMaxCapacity(),
+                request.getCost(),
+                request.getDescription()
+        );
+
+        return new ScheduleResponse(schedule);
+    }
+
+    /**
+     * 일정 삭제
+     */
+    @Transactional
+    public void deleteSchedule(Long scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        scheduleRepository.delete(schedule);
     }
 }
