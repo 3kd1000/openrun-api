@@ -6,4 +6,13 @@
 
 .App-content {
   flex: 1;
+  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+}
+
+/* PC: 좌측 네비게이션 여백 */
+@media (min-width: 768px) {
+  .App-content {
+    margin-left: 200px; /* 좌측 네비게이션 너비만큼 */
+    padding-bottom: 0;
+  }
 }
