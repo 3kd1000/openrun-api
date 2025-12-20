@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/dev/**").permitAll() // 개발용 로그인 API
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API
                         .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/**").permitAll() // 클럽 목록 조회 API
+                        .requestMatchers("/api/schedules/**").permitAll() // 일정 관리 API (개발 단계)
                         // 그 외 모든 API 요청은 인증 필요
                         .requestMatchers("/api/**").authenticated()
                         // 그 외 요청은 거부 (API 서버이므로 정적 리소스나 SPA 라우팅 불필요)

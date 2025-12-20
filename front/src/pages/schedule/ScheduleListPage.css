@@ -1,0 +1,202 @@
+.schedule-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.schedule-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  background: #f5f5f5;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.toggle-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  background: #e0e0e0;
+}
+
+.toggle-btn.active {
+  background: white;
+  color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-create {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn-create:hover {
+  background-color: #0056b3;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.error-state p:first-child {
+  font-size: 64px;
+  margin: 0 0 16px 0;
+}
+
+.error-state p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #d32f2f;
+}
+
+.btn-retry {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-retry:hover {
+  background-color: #0056b3;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state p:first-child {
+  font-size: 64px;
+  margin: 0 0 16px 0;
+}
+
+.empty-state p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.empty-hint {
+  color: #999;
+  font-size: 14px !important;
+}
+
+.schedule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.schedule-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  transition: box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.schedule-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.schedule-info p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.schedule-time {
+  color: #007bff !important;
+  font-weight: 500;
+}
+
+.schedule-participants {
+  color: #28a745 !important;
+}
+
+.schedule-cost {
+  color: #ff6b6b !important;
+  font-weight: 500;
+}
+
+.schedule-description {
+  color: #888 !important;
+  font-size: 13px;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.badge-full {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  background-color: #ff6b6b;
+  color: white;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* PC: 모바일 패딩 제거 */
+@media (min-width: 768px) {
+  .schedule-page {
+    padding-bottom: 20px;
+  }
+}

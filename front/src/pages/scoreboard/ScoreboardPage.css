@@ -1,0 +1,44 @@
+.scoreboard-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+}
+
+.scoreboard-header {
+  margin-bottom: 24px;
+}
+
+.scoreboard-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state p:first-child {
+  font-size: 64px;
+  margin: 0 0 16px 0;
+}
+
+.empty-state p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.empty-hint {
+  color: #999;
+  font-size: 14px !important;
+}
+
+/* PC: 모바일 패딩 제거 */
+@media (min-width: 768px) {
+  .scoreboard-page {
+    padding-bottom: 20px;
+  }
+}
