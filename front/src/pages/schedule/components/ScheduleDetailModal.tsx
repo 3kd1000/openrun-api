@@ -5,8 +5,6 @@ import { participantService } from '../../../services/participantService';
 import type { Schedule, CreateScheduleRequest, Participant } from '../../../types/schedule';
 import { DEV_USERS } from '../../../components/DevUserSwitcher';
 import DrawCreateModal from './DrawCreateModal';
-import DrawResultModal from './DrawResultModal';
-import type { DrawResponse } from '../../../services/drawService';
 import './ScheduleDetailModal.css';
 
 interface Props {
@@ -38,7 +36,6 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [myParticipation, setMyParticipation] = useState<Participant | null>(null);
   const [showDrawCreateModal, setShowDrawCreateModal] = useState(false);
-  const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
 
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem('devUserId');
@@ -420,26 +417,7 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
           scheduleId={schedule.id}
           participants={participants}
           onClose={() => setShowDrawCreateModal(false)}
-          onSuccess={(result) => {
-            setShowDrawCreateModal(false);
-            setDrawResult(result);
-          }}
-        />
-      )}
-
-      {/* 대진 결과 모달 */}
-      {drawResult && (
-        <DrawResultModal
-          scheduleId={schedule.id}
-          drawResult={drawResult}
-          onClose={() => {
-            setDrawResult(null);
-            onSuccess();
-          }}
-          onRegenerate={() => {
-            setDrawResult(null);
-            setShowDrawCreateModal(true);
-          }}
+          onSuccess={onSuccess}
         />
       )}
     </div>

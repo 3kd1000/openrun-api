@@ -9,7 +9,7 @@ interface Props {
   scheduleId: number;
   participants: Participant[];
   onClose: () => void;
-  onSuccess: (drawResult: DrawResponse) => void;
+  onSuccess: () => void;
 }
 
 type DrawType = 'AA' | 'AB' | 'SEED';
@@ -29,8 +29,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   const [seedPlayers, setSeedPlayers] = useState<number[]>([]);
   const [normalPlayers, setNormalPlayers] = useState<number[]>([]);
 
-  // 드래그 상태
-  const [draggedUser, setDraggedUser] = useState<number | null>(null);
+  // 체크박스 선택 상태
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+
+  // 대진 생성 결과
+  const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // 사용자 ID로 이름 가져오기
   const getUserName = (userId: number): string => {
@@ -75,70 +79,52 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
     }
   }, [drawType]);
 
-  // 드래그 시작
-  const handleDragStart = (userId: number) => {
-    setDraggedUser(userId);
+  // 체크박스 토글
+  const toggleUserSelection = (userId: number) => {
+    setSelectedUsers(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
   };
 
-  // 드래그 오버
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  // 터치 시작 (모바일)
-  const handleTouchStart = (userId: number) => {
-    setDraggedUser(userId);
-  };
-
-  // 터치 종료 (모바일)
-  const handleTouchEnd = (e: React.TouchEvent, targetGroup: 'A' | 'B' | 'SEED' | 'NORMAL') => {
-    e.preventDefault();
-    if (!draggedUser) return;
-
-    if (targetGroup === 'A' || targetGroup === 'B') {
-      handleDropToGroup(targetGroup);
-    } else {
-      handleDropToSeedGroup(targetGroup);
-    }
-  };
-
-  // AB: 그룹 간 이동
-  const handleDropToGroup = (targetGroup: 'A' | 'B') => {
-    if (!draggedUser) return;
+  // AB: 선택된 사용자들을 그룹으로 이동
+  const moveSelectedToGroup = (targetGroup: 'A' | 'B') => {
+    if (selectedUsers.length === 0) return;
 
     if (targetGroup === 'A') {
-      if (!groupA.includes(draggedUser)) {
-        setGroupA([...groupA, draggedUser]);
-        setGroupB(groupB.filter(id => id !== draggedUser));
-      }
+      const newGroupA = [...groupA, ...selectedUsers.filter(id => !groupA.includes(id))];
+      const newGroupB = groupB.filter(id => !selectedUsers.includes(id));
+      setGroupA(newGroupA);
+      setGroupB(newGroupB);
     } else {
-      if (!groupB.includes(draggedUser)) {
-        setGroupB([...groupB, draggedUser]);
-        setGroupA(groupA.filter(id => id !== draggedUser));
-      }
+      const newGroupB = [...groupB, ...selectedUsers.filter(id => !groupB.includes(id))];
+      const newGroupA = groupA.filter(id => !selectedUsers.includes(id));
+      setGroupA(newGroupA);
+      setGroupB(newGroupB);
     }
-    setDraggedUser(null);
+    setSelectedUsers([]);
   };
 
-  // SEED: 시드/일반 간 이동
-  const handleDropToSeedGroup = (targetGroup: 'SEED' | 'NORMAL') => {
-    if (!draggedUser) return;
+  // SEED: 선택된 사용자들을 시드/일반으로 이동
+  const moveSelectedToSeedGroup = (targetGroup: 'SEED' | 'NORMAL') => {
+    if (selectedUsers.length === 0) return;
 
     if (targetGroup === 'SEED') {
-      if (!seedPlayers.includes(draggedUser)) {
-        setSeedPlayers([...seedPlayers, draggedUser]);
-        setNormalPlayers(normalPlayers.filter(id => id !== draggedUser));
-      }
+      const newSeedPlayers = [...seedPlayers, ...selectedUsers.filter(id => !seedPlayers.includes(id))];
+      const newNormalPlayers = normalPlayers.filter(id => !selectedUsers.includes(id));
+      setSeedPlayers(newSeedPlayers);
+      setNormalPlayers(newNormalPlayers);
     } else {
-      if (!normalPlayers.includes(draggedUser)) {
-        setNormalPlayers([...normalPlayers, draggedUser]);
-        setSeedPlayers(seedPlayers.filter(id => id !== draggedUser));
-      }
+      const newNormalPlayers = [...normalPlayers, ...selectedUsers.filter(id => !normalPlayers.includes(id))];
+      const newSeedPlayers = seedPlayers.filter(id => !selectedUsers.includes(id));
+      setNormalPlayers(newNormalPlayers);
+      setSeedPlayers(newSeedPlayers);
     }
-    setDraggedUser(null);
+    setSelectedUsers([]);
   };
 
-  // 대진 생성
+  // 대진 생성 (또는 재생성)
   const handleCreateDraw = async () => {
     try {
       setLoading(true);
@@ -166,15 +152,39 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
         request.groupBUserNames = [];
       }
 
-      const drawResult = await drawService.createDrawWithSchedule(scheduleId, request);
-      onSuccess(drawResult);
-      onClose();
+      const result = await drawService.createDrawWithSchedule(scheduleId, request);
+      setDrawResult(result);
 
     } catch (err: any) {
       console.error('대진 생성 실패:', err);
       setError(err.response?.data?.message || '대진 생성에 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 대진표 텍스트로 포맷팅
+  const formatDrawAsText = (): string => {
+    if (!drawResult) return '';
+    let text = '🎯 대진표\n\n';
+
+    drawResult.games.forEach(game => {
+      text += `경기 ${game.gameNo} (${game.roundNo}R)\n`;
+      text += `  Team A: ${game.teamA.join(', ')}\n`;
+      text += `  Team B: ${game.teamB.join(', ')}\n\n`;
+    });
+
+    return text;
+  };
+
+  // 클립보드 복사
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(formatDrawAsText());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('복사 실패:', err);
     }
   };
 
@@ -248,110 +258,144 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
 
           {/* AB 타입: 그룹 A/B 분할 */}
           {drawType === 'AB' && (
-            <div className="group-division">
-              <div
-                className="group-box group-a"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDropToGroup('A')}
-                onTouchEnd={(e) => handleTouchEnd(e, 'A')}
-              >
-                <h4>그룹 A ({groupA.length}명)</h4>
-                <div className="player-grid">
-                  {groupA.map(userId => (
-                    <div
-                      key={userId}
-                      className="player-card draggable"
-                      draggable
-                      onDragStart={() => handleDragStart(userId)}
-                      onTouchStart={() => handleTouchStart(userId)}
-                    >
-                      {getUserName(userId)}
-                    </div>
-                  ))}
-                </div>
+            <>
+              <div className="move-buttons">
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToGroup('A')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group"
+                >
+                  그룹 A로 이동 ({selectedUsers.length}명)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToGroup('B')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group"
+                >
+                  그룹 B로 이동 ({selectedUsers.length}명)
+                </button>
               </div>
 
-              <div className="divider-arrow">⇄</div>
+              <div className="group-division">
+                <div className="group-box group-a">
+                  <h4>그룹 A ({groupA.length}명)</h4>
+                  <div className="player-grid">
+                    {groupA.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>{getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-              <div
-                className="group-box group-b"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDropToGroup('B')}
-                onTouchEnd={(e) => handleTouchEnd(e, 'B')}
-              >
-                <h4>그룹 B ({groupB.length}명)</h4>
-                <div className="player-grid">
-                  {groupB.map(userId => (
-                    <div
-                      key={userId}
-                      className="player-card draggable"
-                      draggable
-                      onDragStart={() => handleDragStart(userId)}
-                      onTouchStart={() => handleTouchStart(userId)}
-                    >
-                      {getUserName(userId)}
-                    </div>
-                  ))}
+                <div className="group-box group-b">
+                  <h4>그룹 B ({groupB.length}명)</h4>
+                  <div className="player-grid">
+                    {groupB.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>{getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* SEED 타입: 시드/일반 분할 */}
           {drawType === 'SEED' && (
-            <div className="group-division">
-              <div
-                className="group-box seed-group"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDropToSeedGroup('SEED')}
-                onTouchEnd={(e) => handleTouchEnd(e, 'SEED')}
-              >
-                <h4>시드 플레이어 ({seedPlayers.length}명)</h4>
-                <div className="player-grid">
-                  {seedPlayers.map(userId => (
-                    <div
-                      key={userId}
-                      className="player-card draggable seed"
-                      draggable
-                      onDragStart={() => handleDragStart(userId)}
-                      onTouchStart={() => handleTouchStart(userId)}
-                    >
-                      ⭐ {getUserName(userId)}
-                    </div>
-                  ))}
-                </div>
+            <>
+              <div className="move-buttons">
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToSeedGroup('SEED')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group"
+                >
+                  시드로 이동 ({selectedUsers.length}명)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToSeedGroup('NORMAL')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group"
+                >
+                  일반으로 이동 ({selectedUsers.length}명)
+                </button>
               </div>
 
-              <div className="divider-arrow">⇄</div>
+              <div className="group-division">
+                <div className="group-box seed-group">
+                  <h4>시드 플레이어 ({seedPlayers.length}명)</h4>
+                  <div className="player-grid">
+                    {seedPlayers.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox seed ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>⭐ {getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-              <div
-                className="group-box normal-group"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDropToSeedGroup('NORMAL')}
-                onTouchEnd={(e) => handleTouchEnd(e, 'NORMAL')}
-              >
-                <h4>일반 플레이어 ({normalPlayers.length}명)</h4>
-                <div className="player-grid">
-                  {normalPlayers.map(userId => (
-                    <div
-                      key={userId}
-                      className="player-card draggable"
-                      draggable
-                      onDragStart={() => handleDragStart(userId)}
-                      onTouchStart={() => handleTouchStart(userId)}
-                    >
-                      {getUserName(userId)}
-                    </div>
-                  ))}
+                <div className="group-box normal-group">
+                  <h4>일반 플레이어 ({normalPlayers.length}명)</h4>
+                  <div className="player-grid">
+                    {normalPlayers.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>{getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* 대기 참가자 (AB/SEED에서만 추가 가능) */}
           {(drawType === 'AB' || drawType === 'SEED') && waitingParticipants.length > 0 && (
             <div className="waiting-players-pool">
-              <h4>대기 참가자 ({waitingParticipants.length}명) - 드래그하여 추가</h4>
+              <h4>대기 참가자 ({waitingParticipants.length}명) - 선택하여 추가</h4>
               <div className="player-grid">
                 {waitingParticipants
                   .filter(p => {
@@ -362,36 +406,108 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   .map(p => (
                     <div
                       key={p.userId}
-                      className="player-card draggable waiting"
-                      draggable
-                      onDragStart={() => handleDragStart(p.userId)}
-                      onTouchStart={() => handleTouchStart(p.userId)}
+                      className={`player-card-with-checkbox waiting ${selectedUsers.includes(p.userId) ? 'selected' : ''}`}
+                      onClick={() => toggleUserSelection(p.userId)}
                     >
-                      {getUserName(p.userId)}
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(p.userId)}
+                        onChange={() => toggleUserSelection(p.userId)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span>{getUserName(p.userId)}</span>
                     </div>
                   ))}
               </div>
             </div>
           )}
 
+          {/* 대진 생성 결과 */}
+          {drawResult && (
+            <div className="draw-result-section">
+              <h3>🎯 대진표 생성 완료</h3>
+              <div className="draw-games-list">
+                {drawResult.games.map(game => (
+                  <div key={game.gameNo} className="draw-game-card">
+                    <div className="game-header">
+                      <span className="game-number">경기 {game.gameNo}</span>
+                      <span className="round-badge">{game.roundNo}R</span>
+                    </div>
+                    <div className="game-teams">
+                      <div className="team team-a">
+                        <div className="team-label">Team A</div>
+                        <div className="team-players">
+                          {game.teamA.map((player, idx) => (
+                            <span key={idx} className="player-name">{player}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="vs-divider">VS</div>
+                      <div className="team team-b">
+                        <div className="team-label">Team B</div>
+                        <div className="team-players">
+                          {game.teamB.map((player, idx) => (
+                            <span key={idx} className="player-name">{player}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 액션 버튼 */}
           <div className="modal-actions">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-secondary"
-              disabled={loading}
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              onClick={handleCreateDraw}
-              className="btn-primary"
-              disabled={loading || !isValid}
-            >
-              {loading ? '생성 중...' : '대진 생성'}
-            </button>
+            {!drawResult ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-secondary"
+                  disabled={loading}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateDraw}
+                  className="btn-primary"
+                  disabled={loading || !isValid}
+                >
+                  {loading ? '생성 중...' : '대진 생성'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="btn-copy"
+                >
+                  {copied ? '✓ 복사됨' : '📋 복사하기'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateDraw}
+                  className="btn-regenerate"
+                  disabled={loading}
+                >
+                  🔄 다시 생성
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSuccess();
+                    onClose();
+                  }}
+                  className="btn-primary"
+                >
+                  확인
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
