@@ -23,7 +23,7 @@ export interface CreateDrawRequest {
 class DrawService {
   // 일반 사용자용 대진 생성 (DB 저장 안함)
   async createDraw(request: CreateDrawRequest): Promise<DrawResponse> {
-    const response = await axios.post<DrawResponse>('/api/draw', request);
+    const response = await axios.post<DrawResponse>('/draw', request);
     return response.data;
   }
 
@@ -33,7 +33,7 @@ class DrawService {
     request: CreateDrawRequest
   ): Promise<DrawResponse> {
     const response = await axios.post<DrawResponse>(
-      `/api/schedules/${scheduleId}/draw`,
+      `/schedules/${scheduleId}/draw`,
       request
     );
     return response.data;

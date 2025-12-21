@@ -168,15 +168,18 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
+  justify-items: center;
 }
 
 .schedule-card {
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 20px;
+  padding: 16px;
   transition: box-shadow 0.3s ease;
   cursor: pointer;
+  width: 100%;
+  max-width: 400px;
 }
 
 .schedule-card:hover {
@@ -184,15 +187,32 @@
 }
 
 .schedule-info h3 {
-  margin: 0 0 12px 0;
-  font-size: 18px;
+  margin: 0 0 10px 0;
+  font-size: 17px;
   font-weight: 600;
 }
 
 .schedule-info p {
-  margin: 6px 0;
-  font-size: 14px;
+  margin: 4px 0;
+  font-size: 13px;
   color: #666;
+}
+
+/* 모바일: 더 compact하게 */
+@media (max-width: 768px) {
+  .schedule-card {
+    padding: 12px;
+  }
+
+  .schedule-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+  }
+
+  .schedule-info p {
+    margin: 3px 0;
+    font-size: 12px;
+  }
 }
 
 .schedule-time {

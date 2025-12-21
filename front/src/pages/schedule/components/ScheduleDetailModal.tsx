@@ -226,7 +226,7 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
 
             {/* 참가자 목록 */}
             {participants.length > 0 && (
-              <div className="detail-item">
+              <div className="participants-section">
                 <label>참가자 목록</label>
                 <div className="participants-list">
                   {confirmedParticipants.length > 0 && (
