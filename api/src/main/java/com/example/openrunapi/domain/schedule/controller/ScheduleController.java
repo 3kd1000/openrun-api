@@ -1,5 +1,8 @@
 package com.example.openrunapi.domain.schedule.controller;
 
+import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
+import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
+import com.example.openrunapi.domain.draw.service.DrawService;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
@@ -20,6 +23,7 @@ import java.util.List;
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
+    private final DrawService drawService;
 
     /**
      * 일정 생성
@@ -88,5 +92,27 @@ public class ScheduleController {
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long scheduleId) {
         scheduleService.deleteSchedule(scheduleId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 클럽용 대진 생성 (DB 저장)
+     */
+    @PostMapping("/{scheduleId}/draw")
+    public ResponseEntity<DrawResponse> createDrawForSchedule(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody CreateDrawRequest request) {
+
+        // 일정 존재 확인
+        scheduleService.getScheduleById(scheduleId);
+
+        // 대진 생성 (일반 DrawService 사용)
+        DrawResponse response = drawService.generateDrawSequence(request);
+
+        // TODO: DB 저장 로직 추가
+        // - schedule_draw 테이블에 저장
+        // - match 테이블에 경기들 저장
+        // - 현재는 대진만 생성하고 DB 저장은 나중에 구현
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

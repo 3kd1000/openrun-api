@@ -98,7 +98,7 @@
 }
 
 .react-calendar__tile--now:hover {
-  background-color: #fff3e0 !important;
+  background-color: #f9f9f9 !important;
 }
 
 .react-calendar__tile--active {
@@ -108,6 +108,17 @@
 
 .react-calendar__tile--active:hover {
   background-color: #0056b3 !important;
+}
+
+/* 오늘 날짜가 선택된 경우 배경색 제거 (테두리만 유지) */
+.react-calendar__tile--now.react-calendar__tile--active {
+  background-color: transparent !important;
+  color: #333 !important;
+}
+
+.react-calendar__tile--now.react-calendar__tile--active:hover {
+  background-color: #f9f9f9 !important;
+  color: #333 !important;
 }
 
 .react-calendar__tile:disabled {

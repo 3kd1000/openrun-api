@@ -3,6 +3,10 @@ import { format } from 'date-fns';
 import { scheduleService } from '../../../services/scheduleService';
 import { participantService } from '../../../services/participantService';
 import type { Schedule, CreateScheduleRequest, Participant } from '../../../types/schedule';
+import { DEV_USERS } from '../../../components/DevUserSwitcher';
+import DrawCreateModal from './DrawCreateModal';
+import DrawResultModal from './DrawResultModal';
+import type { DrawResponse } from '../../../services/drawService';
 import './ScheduleDetailModal.css';
 
 interface Props {
@@ -11,14 +15,18 @@ interface Props {
   onSuccess: () => void;
 }
 
-// 시간 옵션 생성 (30분 단위)
+// 시간 옵션 생성 (정시만, 06시부터 시작)
 const generateTimeOptions = () => {
   const options = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute of [0, 30]) {
-      const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      options.push(time);
-    }
+  // 06시부터 23시까지
+  for (let hour = 6; hour < 24; hour++) {
+    const time = `${String(hour).padStart(2, '0')}:00`;
+    options.push(time);
+  }
+  // 00시부터 05시까지 (뒤에 추가)
+  for (let hour = 0; hour < 6; hour++) {
+    const time = `${String(hour).padStart(2, '0')}:00`;
+    options.push(time);
   }
   return options;
 };
@@ -29,10 +37,18 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   const [error, setError] = useState('');
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [myParticipation, setMyParticipation] = useState<Participant | null>(null);
+  const [showDrawCreateModal, setShowDrawCreateModal] = useState(false);
+  const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
 
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem('devUserId');
   const currentUserId = userId ? parseInt(userId) : null;
+
+  // 사용자 ID로 이름 가져오기
+  const getUserName = (userId: number): string => {
+    const user = DEV_USERS.find(u => u.id === userId);
+    return user ? user.name : `User #${userId}`;
+  };
 
   // 초기 날짜 및 시간 분리
   const scheduledAtDate = new Date(schedule.scheduledAt);
@@ -219,7 +235,7 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
                       <ul>
                         {confirmedParticipants.map((p, idx) => (
                           <li key={p.id}>
-                            {idx + 1}. User #{p.userId}
+                            {idx + 1}. {getUserName(p.userId)}
                             {p.userId === currentUserId && <span className="me-badge"> (나)</span>}
                           </li>
                         ))}
@@ -233,7 +249,7 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
                       <ul>
                         {waitingParticipants.map((p, idx) => (
                           <li key={p.id} className="waiting">
-                            {idx + 1}. User #{p.userId}
+                            {idx + 1}. {getUserName(p.userId)}
                             {p.userId === currentUserId && <span className="me-badge"> (나)</span>}
                           </li>
                         ))}
@@ -257,6 +273,19 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
             )}
 
             {error && <div className="error-message">{error}</div>}
+
+            {/* 대진 생성 버튼 (확정 참가자 4명 이상 시 표시) */}
+            {confirmedParticipants.length >= 4 && (
+              <div className="draw-action-section">
+                <button
+                  type="button"
+                  onClick={() => setShowDrawCreateModal(true)}
+                  className="btn-create-draw"
+                >
+                  🎯 대진 생성
+                </button>
+              </div>
+            )}
 
             <div className="modal-actions">
               {currentUserId && myParticipation ? (
@@ -384,6 +413,35 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
           </form>
         )}
       </div>
+
+      {/* 대진 생성 모달 */}
+      {showDrawCreateModal && (
+        <DrawCreateModal
+          scheduleId={schedule.id}
+          participants={participants}
+          onClose={() => setShowDrawCreateModal(false)}
+          onSuccess={(result) => {
+            setShowDrawCreateModal(false);
+            setDrawResult(result);
+          }}
+        />
+      )}
+
+      {/* 대진 결과 모달 */}
+      {drawResult && (
+        <DrawResultModal
+          scheduleId={schedule.id}
+          drawResult={drawResult}
+          onClose={() => {
+            setDrawResult(null);
+            onSuccess();
+          }}
+          onRegenerate={() => {
+            setDrawResult(null);
+            setShowDrawCreateModal(true);
+          }}
+        />
+      )}
     </div>
   );
 };

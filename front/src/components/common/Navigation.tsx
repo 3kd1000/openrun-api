@@ -6,6 +6,7 @@ const Navigation: React.FC = () => {
   const navItems = [
     { path: '/', label: '대진생성', icon: '🎯' },
     { path: '/schedules', label: '일정관리', icon: '📅' },
+    { path: '/draws', label: '대진목록', icon: '📋' },
     { path: '/scoreboard', label: '스코어보드', icon: '🏆' },
   ];
 
