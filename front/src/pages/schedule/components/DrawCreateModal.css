@@ -1,5 +1,5 @@
 .draw-create-modal {
-  max-width: 600px;
+  max-width: 700px;
 }
 
 .draw-create-content {
@@ -39,61 +39,129 @@
   color: white;
 }
 
-/* 참가자 선택 */
-.participant-selection-group {
-  margin-bottom: 16px;
-}
-
-.participant-selection-group h4 {
-  font-size: 14px;
+/* 참가자 표시 (AA 타입) */
+.participants-display h4 {
+  font-size: 15px;
   font-weight: 600;
   color: #444;
   margin: 0 0 12px 0;
 }
 
-.participant-checkboxes {
-  display: flex;
-  flex-direction: column;
+/* 플레이어 그리드 (2열) */
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
-.participant-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+.player-card {
+  padding: 10px 14px;
   background: #f8f9fa;
   border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
   font-size: 14px;
+  font-weight: 500;
   color: #333;
+  text-align: center;
+  transition: all 0.2s ease;
 }
 
-.participant-checkbox:hover {
+.player-card.draggable {
+  cursor: grab;
+  border: 2px solid transparent;
+}
+
+.player-card.draggable:hover {
   background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.participant-checkbox.waiting {
-  background: #fff3cd;
+.player-card.draggable:active {
+  cursor: grabbing;
 }
 
-.participant-checkbox.waiting:hover {
-  background: #ffe8a1;
-}
-
-.participant-checkbox input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #007bff;
-}
-
-.warning-text {
-  font-size: 13px;
-  color: #ff6b6b;
+.player-card.seed {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
   font-weight: 600;
-  margin-left: 8px;
+}
+
+.player-card.waiting {
+  background: #fff3cd;
+  border-color: #ffc107;
+}
+
+/* 그룹 분할 레이아웃 */
+.group-division {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.group-box {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px dashed #ddd;
+  background: #fafafa;
+  min-height: 200px;
+  transition: all 0.2s ease;
+}
+
+.group-box:hover {
+  border-color: #007bff;
+  background: #f0f8ff;
+}
+
+.group-box h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+.group-box.group-a {
+  border-color: #007bff;
+  background: #e3f2fd;
+}
+
+.group-box.group-b {
+  border-color: #e91e63;
+  background: #fce4ec;
+}
+
+.group-box.seed-group {
+  border-color: #ffc107;
+  background: #fff8e1;
+}
+
+.group-box.normal-group {
+  border-color: #4caf50;
+  background: #f1f8f4;
+}
+
+.divider-arrow {
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+  color: #999;
+  font-weight: 700;
+}
+
+/* 대기 참가자 풀 */
+.waiting-players-pool {
+  padding: 16px;
+  background: #fffbf0;
+  border-radius: 12px;
+  border: 2px dashed #ffc107;
+}
+
+.waiting-players-pool h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #856404;
+  margin: 0 0 12px 0;
 }
 
 /* 모바일 대응 */
@@ -113,5 +181,18 @@
 
   .draw-type-btn {
     width: 100%;
+  }
+
+  .group-division {
+    flex-direction: column;
+  }
+
+  .divider-arrow {
+    transform: rotate(90deg);
+    margin: 8px 0;
+  }
+
+  .player-grid {
+    grid-template-columns: 1fr;
   }
 }
