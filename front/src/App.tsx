@@ -1,5 +1,6 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import DrawGenerationPage from './pages/draw/DrawGenerationPage';
+import DrawListPage from './pages/draw/DrawListPage';
 import ScheduleListPage from './pages/schedule/ScheduleListPage';
 import ScoreboardPage from './pages/scoreboard/ScoreboardPage';
 import AuthTestPage from './pages/AuthTestPage';
@@ -9,16 +10,24 @@ import ClubDetailPage from './pages/club/ClubDetailPage';
 import ClubAdminPage from './pages/club/ClubAdminPage';
 import Navigation from './components/common/Navigation';
 import Footer from './components/common/Footer';
+import DevUserSwitcher from './components/DevUserSwitcher';
 import './App.css';
 
 function App() {
+  const location = useLocation();
+
+  // "/" 경로에서는 Navigation 숨김 (일반 사용자용)
+  const shouldShowNavigation = location.pathname !== '/';
+
   return (
     <div className="App">
-      <Navigation />
+      <DevUserSwitcher />
+      {shouldShowNavigation && <Navigation />}
       <main className="App-content">
         <Routes>
           <Route path="/" element={<DrawGenerationPage />} />
           <Route path="/schedules" element={<ScheduleListPage />} />
+          <Route path="/draws" element={<DrawListPage />} />
           <Route path="/scoreboard" element={<ScoreboardPage />} />
           <Route path="/auth-test" element={<AuthTestPage />} />
           <Route path="/dev/login" element={<DevAuthPage />} />

@@ -10,14 +10,18 @@ interface Props {
   onSuccess: () => void;
 }
 
-// 시간 옵션 생성 (30분 단위)
+// 시간 옵션 생성 (정시만, 06시부터 시작)
 const generateTimeOptions = () => {
   const options = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute of [0, 30]) {
-      const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      options.push(time);
-    }
+  // 06시부터 23시까지
+  for (let hour = 6; hour < 24; hour++) {
+    const time = `${String(hour).padStart(2, '0')}:00`;
+    options.push(time);
+  }
+  // 00시부터 05시까지 (뒤에 추가)
+  for (let hour = 0; hour < 6; hour++) {
+    const time = `${String(hour).padStart(2, '0')}:00`;
+    options.push(time);
   }
   return options;
 };
@@ -26,7 +30,7 @@ const ScheduleCreateModal: React.FC<Props> = ({ initialDate, onClose, onSuccess 
   // 초기 날짜 및 시간 분리
   const now = new Date();
   const defaultDate = initialDate ? initialDate.split('T')[0] : format(now, 'yyyy-MM-dd');
-  const defaultTime = initialDate ? initialDate.split('T')[1]?.substring(0, 5) || '10:00' : '10:00';
+  const defaultTime = initialDate ? initialDate.split('T')[1]?.substring(0, 5) || '06:00' : '06:00';
 
   const [selectedDate, setSelectedDate] = useState(defaultDate);
   const [selectedTime, setSelectedTime] = useState(defaultTime);
