@@ -4,6 +4,10 @@
   "[yaml]": {
     "editor.formatOnSave": false
   },
+  "[markdown]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  },
   "files.exclude": {
     "helm/openrun/templates": true
   }
