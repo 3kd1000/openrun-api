@@ -7,6 +7,9 @@ export interface Schedule {
   currentParticipants: number;
   cost?: number;
   description?: string;
+  drawType?: 'AA' | 'AB' | 'SEED' | null;
+  isDrawValid?: boolean | null;
+  drawCreatedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

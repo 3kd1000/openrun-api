@@ -42,20 +42,24 @@ const ScheduleCalendarView: React.FC<Props> = ({
           {daySchedules.slice(0, 3).map((schedule) => {
             const isPast = new Date(schedule.scheduledAt) < new Date();
             const isParticipating = myParticipations.has(schedule.id);
+            const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
             return (
               <div
                 key={schedule.id}
-                className={`calendar-event ${isPast ? 'past-event' : ''} ${!isParticipating ? 'not-participating' : ''}`}
+                className={`calendar-event ${isPast ? 'past-event' : ''} ${!isParticipating ? 'not-participating' : ''} ${hasInvalidDraw ? 'invalid-draw' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onScheduleClick(schedule);
                 }}
-                title={`${schedule.courtName} - ${format(new Date(schedule.scheduledAt), 'HH:mm')}`}
+                title={`${schedule.courtName} - ${format(new Date(schedule.scheduledAt), 'HH:mm')}${hasInvalidDraw ? ' ⚠️ 대진표 무효' : ''}`}
               >
               <span className="event-time">
                 {format(new Date(schedule.scheduledAt), 'HH:mm')}
               </span>
-              <span className="event-name">{schedule.courtName}</span>
+              <span className="event-name">
+                {schedule.courtName}
+                {hasInvalidDraw && <span className="invalid-indicator">⚠️</span>}
+              </span>
             </div>
             );
           })}

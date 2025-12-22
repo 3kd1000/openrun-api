@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.model;
 
+import com.example.openrunapi.domain.draw.model.DrawType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -45,6 +46,16 @@ public class Schedule {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "draw_type", length = 10)
+    private DrawType drawType;
+
+    @Column(name = "is_draw_valid")
+    private Boolean isDrawValid = false;
+
+    @Column(name = "draw_created_at")
+    private LocalDateTime drawCreatedAt;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -89,5 +100,39 @@ public class Schedule {
 
     public boolean hasAvailableSlot() {
         return this.currentParticipants < this.maxCapacity;
+    }
+
+    // === Draw 관련 비즈니스 메서드 ===
+
+    /**
+     * 대진 생성 시 호출
+     */
+    public void createDraw(DrawType drawType) {
+        this.drawType = drawType;
+        this.isDrawValid = true;
+        this.drawCreatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 참가자 변경으로 대진 무효화
+     */
+    public void invalidateDraw() {
+        if (this.drawType != null) {
+            this.isDrawValid = false;
+        }
+    }
+
+    /**
+     * 대진 존재 여부
+     */
+    public boolean hasDraw() {
+        return this.drawType != null;
+    }
+
+    /**
+     * 유효한 대진 존재 여부
+     */
+    public boolean hasValidDraw() {
+        return this.drawType != null && Boolean.TRUE.equals(this.isDrawValid);
     }
 }

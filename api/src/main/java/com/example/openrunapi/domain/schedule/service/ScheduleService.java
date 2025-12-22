@@ -137,12 +137,20 @@ public class ScheduleService {
         log.info("scheduleId: {}, clubId: {}, games: {}",
                 scheduleId, scheduleResponse.getClubId(), drawResponse.getGames().size());
 
+        // 일정 조회
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
         // 기존 대진이 있으면 삭제 (재생성 대응)
         List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
         if (!existingMatches.isEmpty()) {
             log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
             matchRepository.deleteAll(existingMatches);
         }
+
+        // Schedule에 대진 정보 저장
+        schedule.createDraw(request.getDrawType());
+        log.info("Schedule에 대진 정보 저장: drawType={}, isDrawValid=true", request.getDrawType());
 
         // 선수 이름 -> userId 매핑 생성
         Map<String, Long> nameToUserId = buildNameToUserIdMap(request);

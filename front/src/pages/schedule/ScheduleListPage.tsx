@@ -172,13 +172,19 @@ const ScheduleListPage: React.FC = () => {
             const isPast = new Date(schedule.scheduledAt) < new Date();
             const isFirstFuture = !isPast && filteredSchedules.slice(0, index).every(s => new Date(s.scheduledAt) < new Date());
             const isParticipating = myParticipations.has(schedule.id);
+            const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
             return (
               <div
                 key={schedule.id}
                 ref={isFirstFuture ? todayScheduleRef : null}
-                className={`schedule-card ${isPast ? 'past-schedule' : ''} ${!isParticipating ? 'not-participating' : ''}`}
+                className={`schedule-card ${isPast ? 'past-schedule' : ''} ${!isParticipating ? 'not-participating' : ''} ${hasInvalidDraw ? 'invalid-draw' : ''}`}
                 onClick={() => handleScheduleClick(schedule)}
               >
+              {hasInvalidDraw && (
+                <div className="draw-warning">
+                  ⚠️ 대진표 무효 (참가자 변동)
+                </div>
+              )}
               <div className="schedule-info">
                 <h3>{schedule.courtName}</h3>
                 <p className="schedule-time">

@@ -223,6 +223,20 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
               </div>
             )}
 
+            {/* 대진표 상태 */}
+            {schedule.drawType && (
+              <div className="detail-item">
+                <label>대진표 상태</label>
+                <div className={`draw-status ${schedule.isDrawValid ? 'valid' : 'invalid'}`}>
+                  {schedule.isDrawValid ? (
+                    <>✓ 유효 ({schedule.drawType})</>
+                  ) : (
+                    <>⚠️ 무효 - 재생성 필요</>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* 참가자 목록 */}
             {participants.length > 0 && (
               <div className="participants-section">
