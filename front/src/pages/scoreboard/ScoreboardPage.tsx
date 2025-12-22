@@ -26,10 +26,7 @@ const ScoreboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 컬럼 표시 여부 (득실, 득점, 실점은 초기 false)
-  const [showGoalDiff, setShowGoalDiff] = useState(false);
-  const [showScored, setShowScored] = useState(false);
-  const [showConceded, setShowConceded] = useState(false);
+  // 모든 컬럼을 항상 표시 (체크박스 제거)
 
   const clubId = 1; // TODO: Context나 URL param에서 가져오기
 
@@ -101,34 +98,6 @@ const ScoreboardPage: React.FC = () => {
         <p className="subtitle">승점 순위</p>
       </div>
 
-      {/* 컬럼 표시 옵션 */}
-      <div className="column-options">
-        <label>
-          <input
-            type="checkbox"
-            checked={showGoalDiff}
-            onChange={(e) => setShowGoalDiff(e.target.checked)}
-          />
-          득실차
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={showScored}
-            onChange={(e) => setShowScored(e.target.checked)}
-          />
-          득점
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={showConceded}
-            onChange={(e) => setShowConceded(e.target.checked)}
-          />
-          실점
-        </label>
-      </div>
-
       {/* 스코어보드 테이블 */}
       <div className="scoreboard-table-container">
         <table className="scoreboard-table">
@@ -142,9 +111,9 @@ const ScoreboardPage: React.FC = () => {
               <th>승</th>
               <th>무</th>
               <th>패</th>
-              {showGoalDiff && <th>득실</th>}
-              {showScored && <th>득점</th>}
-              {showConceded && <th>실점</th>}
+              <th>득실</th>
+              <th>득점</th>
+              <th>실점</th>
             </tr>
           </thead>
           <tbody>
@@ -158,14 +127,12 @@ const ScoreboardPage: React.FC = () => {
                 <td className="wins">{entry.wins}</td>
                 <td>{entry.draws}</td>
                 <td>{entry.losses}</td>
-                {showGoalDiff && (
-                  <td className={entry.goalDifference >= 0 ? 'positive' : 'negative'}>
-                    {entry.goalDifference > 0 ? '+' : ''}
-                    {entry.goalDifference}
-                  </td>
-                )}
-                {showScored && <td>{entry.totalPointsScored}</td>}
-                {showConceded && <td>{entry.totalPointsConceded}</td>}
+                <td className={entry.goalDifference >= 0 ? 'positive' : 'negative'}>
+                  {entry.goalDifference > 0 ? '+' : ''}
+                  {entry.goalDifference}
+                </td>
+                <td>{entry.totalPointsScored}</td>
+                <td>{entry.totalPointsConceded}</td>
               </tr>
             ))}
           </tbody>

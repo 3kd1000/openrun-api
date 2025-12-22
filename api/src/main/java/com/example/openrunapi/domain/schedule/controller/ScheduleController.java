@@ -111,16 +111,14 @@ public class ScheduleController {
             @PathVariable Long scheduleId,
             @Valid @RequestBody CreateDrawRequest request) {
 
-        // 일정 존재 확인
-        scheduleService.getScheduleById(scheduleId);
+        // 일정 존재 확인 및 조회
+        ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
 
-        // 대진 생성 (일반 DrawService 사용)
+        // 대진 생성 (draw_statistics 자동 증가 포함)
         DrawResponse response = drawService.generateDrawSequence(request);
 
-        // TODO: DB 저장 로직 추가
-        // - schedule_draw 테이블에 저장
-        // - match 테이블에 경기들 저장
-        // - 현재는 대진만 생성하고 DB 저장은 나중에 구현
+        // Match 테이블에 저장
+        scheduleService.saveMatchesFromDraw(scheduleId, scheduleResponse, response, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
