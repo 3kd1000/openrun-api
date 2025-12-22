@@ -1,15 +1,18 @@
 # --- Stage 1: Backend 빌드 스테이지 ---
-FROM gradle:jdk17 as api-builder
+# 경량화: gradle 이미지(850MB) → eclipse-temurin alpine(350MB)
+# 프로젝트에 gradlew가 있으므로 Gradle 이미지 불필요
+FROM eclipse-temurin:17-jdk-alpine as api-builder
 
 WORKDIR /app
+
+# --- Gradle Wrapper 복사 ---
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
 
 # --- 의존성 다운로드 (효율적인 캐싱 전략) ---
 COPY build.gradle settings.gradle ./
 COPY api/build.gradle ./api/
-
-COPY gradlew .
-COPY gradle gradle
-RUN chmod +x ./gradlew
 
 # Gradle 의존성 캐시 활용
 RUN ./gradlew dependencies --no-daemon 2>/dev/null || true

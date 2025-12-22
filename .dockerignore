@@ -38,3 +38,15 @@ README.md
 Dockerfile
 docker-compose*.yml
 .dockerignore
+
+# Frontend (API 빌드에 불필요, 296MB 절약)
+front
+
+# CI/CD & Infrastructure (빌드에 불필요)
+.github
+k8s
+helm
+
+# OS files
+**/.DS_Store
+**/Thumbs.db

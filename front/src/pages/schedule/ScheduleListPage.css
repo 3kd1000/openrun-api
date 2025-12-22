@@ -212,6 +212,36 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* 무효 대진 스타일 */
+.schedule-card.invalid-draw {
+  border: 2px dashed #ff9800 !important;
+  background-color: #fff3e0 !important;
+}
+
+.schedule-card.invalid-draw:hover {
+  background-color: #ffe0b2 !important;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.draw-warning {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background-color: #ff9800;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .schedule-info h3 {
   margin: 0 0 10px 0;
   font-size: 17px;

@@ -84,7 +84,10 @@ public class ScheduleParticipantService {
         // 4. Schedule의 currentParticipants 감소 (상태 무관)
         schedule.decrementParticipants();
 
-        // 5. CONFIRMED 상태였다면 대기 중인 사람을 CONFIRMED로 변경
+        // 5. 대진 무효화 (참가자 변동으로 기존 대진은 더 이상 유효하지 않음)
+        schedule.invalidateDraw();
+
+        // 6. CONFIRMED 상태였다면 대기 중인 사람을 CONFIRMED로 변경
         if (wasConfirmed) {
             List<ScheduleParticipant> waitingList = participantRepository
                     .findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED)

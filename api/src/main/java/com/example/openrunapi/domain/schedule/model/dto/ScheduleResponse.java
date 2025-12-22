@@ -17,6 +17,9 @@ public class ScheduleResponse {
     private final Integer currentParticipants;
     private final BigDecimal cost;
     private final String description;
+    private final String drawType;
+    private final Boolean isDrawValid;
+    private final LocalDateTime drawCreatedAt;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -29,6 +32,9 @@ public class ScheduleResponse {
         this.currentParticipants = schedule.getCurrentParticipants();
         this.cost = schedule.getCost();
         this.description = schedule.getDescription();
+        this.drawType = schedule.getDrawType() != null ? schedule.getDrawType().name() : null;
+        this.isDrawValid = schedule.getIsDrawValid();
+        this.drawCreatedAt = schedule.getDrawCreatedAt();
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
     }
