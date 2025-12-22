@@ -1,7 +1,8 @@
 # --- Stage 1: Backend 빌드 스테이지 ---
-# 경량화: gradle 이미지(850MB) → eclipse-temurin alpine(350MB)
+# 경량화: gradle 이미지(850MB) → eclipse-temurin(450MB)
 # 프로젝트에 gradlew가 있으므로 Gradle 이미지 불필요
-FROM eclipse-temurin:17-jdk-alpine as api-builder
+# alpine은 arm64 미지원으로 일반 이미지 사용
+FROM eclipse-temurin:17-jdk as api-builder
 
 WORKDIR /app
 
