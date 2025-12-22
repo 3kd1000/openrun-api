@@ -122,4 +122,13 @@ public class ScheduleController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    /**
+     * 일정의 대진표 조회
+     */
+    @GetMapping("/{scheduleId}/draw")
+    public ResponseEntity<DrawResponse> getDrawForSchedule(@PathVariable Long scheduleId) {
+        DrawResponse response = scheduleService.getDrawForSchedule(scheduleId);
+        return ResponseEntity.ok(response);
+    }
 }

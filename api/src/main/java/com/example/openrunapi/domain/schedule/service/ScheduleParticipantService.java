@@ -77,11 +77,11 @@ public class ScheduleParticipantService {
                 .findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED)
                 .orElseThrow(() -> new EntityNotFoundException("참가 신청 내역을 찾을 수 없습니다."));
 
-        // 3. 참가 신청 취소 처리
+        // 3. 참가 신청 취소 처리 (레코드 삭제 - 재신청 가능하도록)
         boolean wasConfirmed = participant.isConfirmed();
-        participant.cancel();
+        participantRepository.delete(participant);
 
-        // 4. Schedule의 currentParticipants 감소 (상태 무관)
+        // 4. Schedule의 currentParticipants 감소
         schedule.decrementParticipants();
 
         // 5. 대진 무효화 (참가자 변동으로 기존 대진은 더 이상 유효하지 않음)

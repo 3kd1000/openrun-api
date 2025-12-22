@@ -38,6 +38,14 @@ class DrawService {
     );
     return response.data;
   }
+
+  // 일정의 대진표 조회
+  async getDraw(scheduleId: number): Promise<DrawResponse> {
+    const response = await axios.get<DrawResponse>(
+      `/schedules/${scheduleId}/draw`
+    );
+    return response.data;
+  }
 }
 
 export const drawService = new DrawService();

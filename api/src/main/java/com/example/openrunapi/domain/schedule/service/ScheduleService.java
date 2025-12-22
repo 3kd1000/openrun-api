@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Slf4j
 @Service
@@ -235,5 +236,75 @@ public class ScheduleService {
                 .playedAt(playedAt)
                 .isMigrated(false)
                 .build();
+    }
+
+    /**
+     * 일정의 대진표 조회 (Match -> DrawResponse 변환)
+     */
+    public DrawResponse getDrawForSchedule(Long scheduleId) {
+        // 일정 존재 확인
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 대진표가 없으면 404
+        if (schedule.getDrawType() == null) {
+            throw new EntityNotFoundException("해당 일정에 생성된 대진표가 없습니다.");
+        }
+
+        // Match 목록 조회
+        List<Match> matches = matchRepository.findByScheduleId(scheduleId);
+        if (matches.isEmpty()) {
+            throw new EntityNotFoundException("해당 일정의 대진 데이터를 찾을 수 없습니다.");
+        }
+
+        // Match -> DrawResponse.Game 변환
+        List<DrawResponse.Game> games = matches.stream()
+                .sorted(Comparator.comparing(Match::getMatchNumber))
+                .map(match -> {
+                    List<String> teamA = new ArrayList<>();
+                    teamA.add(getUserName(match.getTeamAPlayer1Id()));
+                    if (match.getTeamAPlayer2Id() != null) {
+                        teamA.add(getUserName(match.getTeamAPlayer2Id()));
+                    }
+
+                    List<String> teamB = new ArrayList<>();
+                    teamB.add(getUserName(match.getTeamBPlayer1Id()));
+                    if (match.getTeamBPlayer2Id() != null) {
+                        teamB.add(getUserName(match.getTeamBPlayer2Id()));
+                    }
+
+                    return DrawResponse.Game.builder()
+                            .gameNo(match.getMatchNumber())
+                            .roundNo(calculateRoundNumber(match.getMatchNumber(), matches.size()))
+                            .teamA(teamA)
+                            .teamB(teamB)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return new DrawResponse(games);
+    }
+
+    /**
+     * 사용자 ID로 이름 조회
+     */
+    private String getUserName(Long userId) {
+        return userRepository.findById(userId)
+                .map(User::getName)
+                .orElse("알 수 없음");
+    }
+
+    /**
+     * 경기 번호로 라운드 계산 (간단한 추정)
+     * 실제 로직은 대진표 생성 알고리즘에 따라 달라질 수 있음
+     */
+    private Integer calculateRoundNumber(Integer matchNumber, int totalMatches) {
+        // 간단한 추정: 총 경기 수에 따라 라운드 계산
+        // 예: 6경기 = 3라운드 (2경기씩)
+        if (totalMatches <= 2) return 1;
+        if (totalMatches <= 4) return matchNumber <= 2 ? 1 : 2;
+        if (totalMatches <= 6) return matchNumber <= 2 ? 1 : matchNumber <= 4 ? 2 : 3;
+        // 더 많은 경기는 matchNumber를 2로 나눈 값 + 1
+        return (matchNumber - 1) / 2 + 1;
     }
 }
