@@ -166,6 +166,45 @@
   background: #0056b3;
 }
 
+/* 과거 일정 스타일 */
+.calendar-event.past-event {
+  background: #9e9e9e;
+  opacity: 0.6;
+}
+
+.calendar-event.past-event:hover {
+  background: #757575;
+  opacity: 0.75;
+}
+
+/* 신청하지 않은 일정 스타일 (outline) */
+.calendar-event.not-participating {
+  background: white;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
+
+.calendar-event.not-participating:hover {
+  background: #f0f8ff;
+  color: #0056b3;
+  border-color: #0056b3;
+}
+
+/* 과거 + 신청하지 않은 일정 */
+.calendar-event.past-event.not-participating {
+  background: white;
+  color: #666;
+  border: 1px solid #9e9e9e;
+  opacity: 0.6;
+}
+
+.calendar-event.past-event.not-participating:hover {
+  background: #fafafa;
+  color: #555;
+  border-color: #757575;
+  opacity: 0.75;
+}
+
 .event-time {
   font-weight: 600;
   font-size: 10px;

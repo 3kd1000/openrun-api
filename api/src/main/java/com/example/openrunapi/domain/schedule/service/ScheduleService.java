@@ -5,6 +5,7 @@ import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
+import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
+    private final ScheduleParticipantRepository participantRepository;
 
     /**
      * 일정 생성
@@ -105,5 +107,12 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         scheduleRepository.delete(schedule);
+    }
+
+    /**
+     * 특정 사용자가 참여한 일정 ID 목록 조회
+     */
+    public List<Long> getMyParticipatingScheduleIds(Long userId) {
+        return participantRepository.findScheduleIdsByUserId(userId);
     }
 }

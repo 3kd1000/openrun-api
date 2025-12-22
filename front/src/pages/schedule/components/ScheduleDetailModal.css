@@ -61,6 +61,42 @@
   cursor: not-allowed;
 }
 
+/* 참가 현황 스타일 */
+.participant-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-item {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.stat-total {
+  color: #495057;
+  background: #e9ecef;
+}
+
+.stat-confirmed {
+  color: #28a745;
+  background: #d4edda;
+}
+
+.stat-waiting {
+  color: #fd7e14;
+  background: #fff3cd;
+}
+
+.stat-divider {
+  color: #dee2e6;
+  font-weight: 300;
+}
+
 .badge-full {
   display: inline-block;
   margin-left: 8px;

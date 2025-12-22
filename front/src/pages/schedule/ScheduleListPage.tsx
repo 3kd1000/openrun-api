@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { scheduleService } from '../../services/scheduleService';
 import type { Schedule } from '../../types/schedule';
@@ -19,21 +19,44 @@ const ScheduleListPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [myParticipations, setMyParticipations] = useState<Set<number>>(new Set());
+  const todayScheduleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadSchedules();
   }, []);
 
+  // 리스트뷰에서 오늘 날짜 기준으로 스크롤
+  useEffect(() => {
+    if (viewMode === 'list' && !filterDate && todayScheduleRef.current) {
+      setTimeout(() => {
+        todayScheduleRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 100);
+    }
+  }, [viewMode, schedules, filterDate]);
+
   const loadSchedules = async () => {
     try {
       setLoading(true);
       setError('');
+
+      // 일정 목록 조회
       const data = await scheduleService.getAllSchedules();
       // 일정날짜순으로 정렬 (오름차순)
       const sortedData = data.sort((a, b) =>
         new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
       );
       setSchedules(sortedData);
+
+      // 내가 참여한 일정 목록 조회 (로그인한 경우에만)
+      const userId = localStorage.getItem('devUserId');
+      if (userId) {
+        const participationIds = await scheduleService.getMyParticipations(parseInt(userId));
+        setMyParticipations(new Set(participationIds));
+      }
     } catch (err) {
       console.error('일정 조회 실패:', err);
       setError('일정을 불러오는데 실패했습니다.');
@@ -135,6 +158,7 @@ const ScheduleListPage: React.FC = () => {
           onDateClick={handleDateClick}
           onDateDoubleClick={handleDateDoubleClick}
           onScheduleClick={handleScheduleClick}
+          myParticipations={myParticipations}
         />
       ) : filteredSchedules.length === 0 ? (
         <div className="empty-state">
@@ -144,12 +168,17 @@ const ScheduleListPage: React.FC = () => {
         </div>
       ) : (
         <div className="schedule-list">
-          {filteredSchedules.map((schedule) => (
-            <div
-              key={schedule.id}
-              className="schedule-card"
-              onClick={() => handleScheduleClick(schedule)}
-            >
+          {filteredSchedules.map((schedule, index) => {
+            const isPast = new Date(schedule.scheduledAt) < new Date();
+            const isFirstFuture = !isPast && filteredSchedules.slice(0, index).every(s => new Date(s.scheduledAt) < new Date());
+            const isParticipating = myParticipations.has(schedule.id);
+            return (
+              <div
+                key={schedule.id}
+                ref={isFirstFuture ? todayScheduleRef : null}
+                className={`schedule-card ${isPast ? 'past-schedule' : ''} ${!isParticipating ? 'not-participating' : ''}`}
+                onClick={() => handleScheduleClick(schedule)}
+              >
               <div className="schedule-info">
                 <h3>{schedule.courtName}</h3>
                 <p className="schedule-time">
@@ -161,12 +190,11 @@ const ScheduleListPage: React.FC = () => {
                     minute: '2-digit'
                   })}
                 </p>
-                <p className="schedule-participants">
-                  {schedule.currentParticipants} / {schedule.maxCapacity}명
-                  {schedule.currentParticipants >= schedule.maxCapacity && (
-                    <span className="badge-full"> 마감</span>
-                  )}
-                </p>
+                <div className="schedule-participants">
+                  <span className="stat-confirmed">신청 {schedule.currentParticipants}명</span>
+                  <span className="stat-divider">/</span>
+                  <span className="stat-total">총원 {schedule.maxCapacity}명</span>
+                </div>
                 {schedule.cost && (
                   <p className="schedule-cost">{schedule.cost.toLocaleString()}원</p>
                 )}
@@ -175,7 +203,8 @@ const ScheduleListPage: React.FC = () => {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -55,46 +55,101 @@ INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined
 -- 미래 일정 참가자 데이터 (진행 중인 모집)
 -- ============================================
 
--- Schedule 6: 골드 1번 코트 (max 8, current 2 → CONFIRMED 2명)
+-- Schedule 6: 골드 1번 코트 (max 8, current 6 → CONFIRMED 6명, 정원-2)
 INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
-(6, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '2 hours'),
-(6, 3, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '1 hour');
+(6, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(6, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '9 hours'),
+(6, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+(6, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '7 hours'),
+(6, 5, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '6 hours'),
+(6, 6, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '5 hours');
 
--- Schedule 7: 골드 2번 코트 (max 6, current 0 → 참가자 없음)
--- 참가자 없음
-
--- Schedule 8: 골드 3번 코트 (max 8, current 1 → CONFIRMED 1명)
+-- Schedule 7: 골드 2번 코트 (max 6, current 7 → CONFIRMED 6명 + WAITING 1명, 정원 초과)
 INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
-(8, 5, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '3 hours');
+(7, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(7, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '11 hours'),
+(7, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(7, 7, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '9 hours'),
+(7, 8, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+(7, 9, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '7 hours'),
+(7, 10, 'WAITING', 7, CURRENT_TIMESTAMP - INTERVAL '6 hours');
 
--- Schedule 9: 실버 A코트 (max 8, current 3 → CONFIRMED 3명)
+-- Schedule 8: 골드 3번 코트 (max 8, current 8 → CONFIRMED 8명, 정원 마감)
 INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
-(9, 2, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '5 hours'),
-(9, 4, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '4 hours'),
-(9, 6, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '3 hours');
+(8, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '14 hours'),
+(8, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '13 hours'),
+(8, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(8, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '11 hours'),
+(8, 5, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(8, 6, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '9 hours'),
+(8, 7, 'CONFIRMED', 7, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+(8, 8, 'CONFIRMED', 8, CURRENT_TIMESTAMP - INTERVAL '7 hours');
 
--- Schedule 10: 실버 B코트 (max 10, current 0 → 참가자 없음)
--- 참가자 없음
-
--- Schedule 11: 실버 C코트 (max 6, current 2 → CONFIRMED 2명)
+-- Schedule 9: 실버 A코트 (max 8, current 9 → CONFIRMED 8명 + WAITING 1명)
 INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
-(11, 7, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '6 hours'),
-(11, 8, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '4 hours');
+(9, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '16 hours'),
+(9, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '15 hours'),
+(9, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '14 hours'),
+(9, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '13 hours'),
+(9, 5, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(9, 6, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '11 hours'),
+(9, 7, 'CONFIRMED', 7, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(9, 8, 'CONFIRMED', 8, CURRENT_TIMESTAMP - INTERVAL '9 hours'),
+(9, 9, 'WAITING', 9, CURRENT_TIMESTAMP - INTERVAL '8 hours');
 
--- Schedule 12: 브론즈 1번 코트 (max 6, current 1 → CONFIRMED 1명)
+-- Schedule 10: 실버 B코트 (max 10, current 10 → CONFIRMED 10명, 정원 마감)
 INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
-(12, 9, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '2 hours');
+(10, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '18 hours'),
+(10, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '17 hours'),
+(10, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '16 hours'),
+(10, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '15 hours'),
+(10, 5, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '14 hours'),
+(10, 6, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '13 hours'),
+(10, 7, 'CONFIRMED', 7, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(10, 8, 'CONFIRMED', 8, CURRENT_TIMESTAMP - INTERVAL '11 hours'),
+(10, 9, 'CONFIRMED', 9, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(10, 10, 'CONFIRMED', 10, CURRENT_TIMESTAMP - INTERVAL '9 hours');
 
--- Schedule 13: 브론즈 2번 코트 (max 8, current 4 → CONFIRMED 4명, WAITING 2명 추가!)
--- 정원 미만이지만 대기자 테스트를 위해 추가
+-- Schedule 11: 실버 C코트 (max 6, current 8 → CONFIRMED 6명 + WAITING 2명)
 INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
-(13, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
-(13, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '7 hours'),
-(13, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '6 hours'),
-(13, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '5 hours');
+(11, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '20 hours'),
+(11, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '19 hours'),
+(11, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '18 hours'),
+(11, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '17 hours'),
+(11, 5, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '16 hours'),
+(11, 6, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '15 hours'),
+(11, 7, 'WAITING', 7, CURRENT_TIMESTAMP - INTERVAL '14 hours'),
+(11, 8, 'WAITING', 8, CURRENT_TIMESTAMP - INTERVAL '13 hours');
 
--- Schedule 14: 브론즈 3번 코트 (max 10, current 0 → 참가자 없음)
--- 참가자 없음
+-- Schedule 12: 브론즈 1번 코트 (max 6, current 5 → CONFIRMED 5명, 정원-1)
+INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
+(12, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(12, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '9 hours'),
+(12, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+(12, 9, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '7 hours'),
+(12, 10, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '6 hours');
+
+-- Schedule 13: 브론즈 2번 코트 (max 8, current 7 → CONFIRMED 7명, 정원-1)
+INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
+(13, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(13, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '11 hours'),
+(13, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(13, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '9 hours'),
+(13, 5, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+(13, 6, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '7 hours'),
+(13, 7, 'CONFIRMED', 7, CURRENT_TIMESTAMP - INTERVAL '6 hours');
+
+-- Schedule 14: 브론즈 3번 코트 (max 10, current 9 → CONFIRMED 9명, 정원-1)
+INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined_at) VALUES
+(14, 1, 'CONFIRMED', 1, CURRENT_TIMESTAMP - INTERVAL '14 hours'),
+(14, 2, 'CONFIRMED', 2, CURRENT_TIMESTAMP - INTERVAL '13 hours'),
+(14, 3, 'CONFIRMED', 3, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(14, 4, 'CONFIRMED', 4, CURRENT_TIMESTAMP - INTERVAL '11 hours'),
+(14, 5, 'CONFIRMED', 5, CURRENT_TIMESTAMP - INTERVAL '10 hours'),
+(14, 6, 'CONFIRMED', 6, CURRENT_TIMESTAMP - INTERVAL '9 hours'),
+(14, 7, 'CONFIRMED', 7, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+(14, 8, 'CONFIRMED', 8, CURRENT_TIMESTAMP - INTERVAL '7 hours'),
+(14, 9, 'CONFIRMED', 9, CURRENT_TIMESTAMP - INTERVAL '6 hours');
 
 -- Schedule 15: 골드 VIP 코트 (max 4, current 0 → CONFIRMED 4명, WAITING 3명 추가!)
 -- 정원 마감 + 대기자 시나리오
@@ -110,26 +165,25 @@ INSERT INTO schedule_participant (schedule_id, user_id, status, position, joined
 (15, 7, 'WAITING', 7, CURRENT_TIMESTAMP - INTERVAL '4 hours');
 
 -- ============================================
--- Schedule 15의 current_participants 업데이트
+-- 주석: 총 참가신청 데이터 (current_participants)
 -- ============================================
--- V8에서 0으로 설정되어 있었는데, 실제로는 4명이 확정되어 있음
-UPDATE schedule SET current_participants = 4 WHERE id = 15;
-
--- ============================================
--- 주석: 총 참가신청 데이터
--- ============================================
--- Schedule 1: 6명 (CONFIRMED)
--- Schedule 2: 6명 (CONFIRMED, 정원 마감)
--- Schedule 3: 4명 (CONFIRMED)
--- Schedule 4: 10명 (CONFIRMED, 정원 마감)
--- Schedule 5: 5명 (CONFIRMED)
--- Schedule 6: 2명 (CONFIRMED)
--- Schedule 7: 0명
--- Schedule 8: 1명 (CONFIRMED)
--- Schedule 9: 3명 (CONFIRMED)
--- Schedule 10: 0명
--- Schedule 11: 2명 (CONFIRMED)
--- Schedule 12: 1명 (CONFIRMED)
--- Schedule 13: 4명 (CONFIRMED)
--- Schedule 14: 0명
--- Schedule 15: 4명 CONFIRMED + 3명 WAITING (정원 마감 + 대기열)
+-- current_participants = CONFIRMED + WAITING (CANCELLED 제외)
+--
+-- 과거 일정:
+-- Schedule 1: 6명 (CONFIRMED 6)
+-- Schedule 2: 6명 (CONFIRMED 6, 정원 마감)
+-- Schedule 3: 4명 (CONFIRMED 4)
+-- Schedule 4: 10명 (CONFIRMED 10, 정원 마감)
+-- Schedule 5: 5명 (CONFIRMED 5)
+--
+-- 미래 일정 (다양한 케이스):
+-- Schedule 6: 6명 (max 8, CONFIRMED 6, 정원-2)
+-- Schedule 7: 7명 (max 6, CONFIRMED 6 + WAITING 1, 정원+1)
+-- Schedule 8: 8명 (max 8, CONFIRMED 8, 정원 마감)
+-- Schedule 9: 9명 (max 8, CONFIRMED 8 + WAITING 1, 정원+1)
+-- Schedule 10: 10명 (max 10, CONFIRMED 10, 정원 마감)
+-- Schedule 11: 8명 (max 6, CONFIRMED 6 + WAITING 2, 정원+2)
+-- Schedule 12: 5명 (max 6, CONFIRMED 5, 정원-1)
+-- Schedule 13: 7명 (max 8, CONFIRMED 7, 정원-1)
+-- Schedule 14: 9명 (max 10, CONFIRMED 9, 정원-1)
+-- Schedule 15: 7명 (max 4, CONFIRMED 4 + WAITING 3, 정원+3)
