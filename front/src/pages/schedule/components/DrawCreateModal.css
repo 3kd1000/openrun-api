@@ -1,5 +1,5 @@
 .draw-create-modal {
-  max-width: 700px;
+  max-width: 800px;
 }
 
 .draw-create-content {
@@ -190,6 +190,19 @@
   align-items: stretch;
 }
 
+/* AB/SEED 타입: Grid 레이아웃으로 대기열을 하단에 배치 */
+.group-division-ab,
+.group-division-seed {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* 대기열은 전체 너비 차지 */
+.waiting-group-full {
+  grid-column: 1 / -1;
+}
+
 .group-box {
   flex: 1;
   padding: 16px;
@@ -231,6 +244,25 @@
 .group-box.normal-group {
   border-color: #2196f3;
   background: #e3f2fd;
+}
+
+.group-box.confirmed-group {
+  border-color: #4caf50;
+  background: #e8f5e9;
+}
+
+.group-box.waiting-group {
+  border-color: #ff9800;
+  background: #fff3e0;
+}
+
+.btn-move-waiting {
+  background: #ff9800;
+}
+
+.btn-move-waiting:hover:not(:disabled) {
+  background: #e68900;
+  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
 }
 
 .divider-arrow {
@@ -418,8 +450,15 @@
     width: 100%;
   }
 
-  .group-division {
+  .group-division,
+  .group-division-ab,
+  .group-division-seed {
+    display: flex;
     flex-direction: column;
+  }
+
+  .waiting-group-full {
+    grid-column: auto;
   }
 
   .divider-arrow {
