@@ -21,6 +21,10 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // AA 타입: 참가/대기
+  const [confirmedGroup, setConfirmedGroup] = useState<number[]>([]);
+  const [waitingGroup, setWaitingGroup] = useState<number[]>([]);
+
   // AB 타입: 그룹 A/B
   const [groupA, setGroupA] = useState<number[]>([]);
   const [groupB, setGroupB] = useState<number[]>([]);
@@ -56,28 +60,36 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   useEffect(() => {
     const totalCount = confirmedUserIds.length;
     const half = Math.ceil(totalCount / 2);
+    const allParticipantIds = participants.map(p => p.userId);
+    const waitingIds = allParticipantIds.filter(id => !confirmedUserIds.includes(id));
 
-    if (drawType === 'AB') {
-      // AB: 반반 나누기
-      setGroupA(confirmedUserIds.slice(0, half));
-      setGroupB(confirmedUserIds.slice(half));
+    if (drawType === 'AA') {
+      // AA: 참가 확정자는 confirmedGroup, 나머지는 waitingGroup
+      setConfirmedGroup(confirmedUserIds);
+      setWaitingGroup(waitingIds);
+      setGroupA([]);
+      setGroupB([]);
       setSeedPlayers([]);
       setNormalPlayers([]);
+    } else if (drawType === 'AB') {
+      // AB: 반반 나누기 + 대기열
+      setGroupA(confirmedUserIds.slice(0, half));
+      setGroupB(confirmedUserIds.slice(half));
+      setWaitingGroup(waitingIds);
+      setSeedPlayers([]);
+      setNormalPlayers([]);
+      setConfirmedGroup([]);
     } else if (drawType === 'SEED') {
-      // SEED: 시드 수에 맞춰 분할
+      // SEED: 시드 수에 맞춰 분할 + 대기열
       const seedCount = getSeedCount(totalCount);
       setSeedPlayers(confirmedUserIds.slice(0, seedCount));
       setNormalPlayers(confirmedUserIds.slice(seedCount));
+      setWaitingGroup(waitingIds);
       setGroupA([]);
       setGroupB([]);
-    } else {
-      // AA: 초기화
-      setGroupA([]);
-      setGroupB([]);
-      setSeedPlayers([]);
-      setNormalPlayers([]);
+      setConfirmedGroup([]);
     }
-  }, [drawType]);
+  }, [drawType, participants]);
 
   // 체크박스 토글
   const toggleUserSelection = (userId: number) => {
@@ -88,38 +100,80 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
     );
   };
 
-  // AB: 선택된 사용자들을 그룹으로 이동
-  const moveSelectedToGroup = (targetGroup: 'A' | 'B') => {
+  // AA: 선택된 사용자들을 참가/대기열로 이동
+  const moveSelectedToAAGroup = (targetGroup: 'CONFIRMED' | 'WAITING') => {
+    if (selectedUsers.length === 0) return;
+
+    if (targetGroup === 'CONFIRMED') {
+      const newConfirmedGroup = [...confirmedGroup, ...selectedUsers.filter(id => !confirmedGroup.includes(id))];
+      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
+      setConfirmedGroup(newConfirmedGroup);
+      setWaitingGroup(newWaitingGroup);
+    } else {
+      const newWaitingGroup = [...waitingGroup, ...selectedUsers.filter(id => !waitingGroup.includes(id))];
+      const newConfirmedGroup = confirmedGroup.filter(id => !selectedUsers.includes(id));
+      setWaitingGroup(newWaitingGroup);
+      setConfirmedGroup(newConfirmedGroup);
+    }
+    setSelectedUsers([]);
+  };
+
+  // AB: 선택된 사용자들을 그룹으로 이동 (A, B, 대기열)
+  const moveSelectedToABGroup = (targetGroup: 'A' | 'B' | 'WAITING') => {
     if (selectedUsers.length === 0) return;
 
     if (targetGroup === 'A') {
       const newGroupA = [...groupA, ...selectedUsers.filter(id => !groupA.includes(id))];
       const newGroupB = groupB.filter(id => !selectedUsers.includes(id));
+      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
       setGroupA(newGroupA);
       setGroupB(newGroupB);
-    } else {
+      setWaitingGroup(newWaitingGroup);
+    } else if (targetGroup === 'B') {
       const newGroupB = [...groupB, ...selectedUsers.filter(id => !groupB.includes(id))];
       const newGroupA = groupA.filter(id => !selectedUsers.includes(id));
+      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
+      setGroupA(newGroupA);
+      setGroupB(newGroupB);
+      setWaitingGroup(newWaitingGroup);
+    } else {
+      // WAITING
+      const newWaitingGroup = [...waitingGroup, ...selectedUsers.filter(id => !waitingGroup.includes(id))];
+      const newGroupA = groupA.filter(id => !selectedUsers.includes(id));
+      const newGroupB = groupB.filter(id => !selectedUsers.includes(id));
+      setWaitingGroup(newWaitingGroup);
       setGroupA(newGroupA);
       setGroupB(newGroupB);
     }
     setSelectedUsers([]);
   };
 
-  // SEED: 선택된 사용자들을 시드/일반으로 이동
-  const moveSelectedToSeedGroup = (targetGroup: 'SEED' | 'NORMAL') => {
+  // SEED: 선택된 사용자들을 시드/일반/대기열로 이동
+  const moveSelectedToSeedGroup = (targetGroup: 'SEED' | 'NORMAL' | 'WAITING') => {
     if (selectedUsers.length === 0) return;
 
     if (targetGroup === 'SEED') {
       const newSeedPlayers = [...seedPlayers, ...selectedUsers.filter(id => !seedPlayers.includes(id))];
       const newNormalPlayers = normalPlayers.filter(id => !selectedUsers.includes(id));
+      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
       setSeedPlayers(newSeedPlayers);
       setNormalPlayers(newNormalPlayers);
-    } else {
+      setWaitingGroup(newWaitingGroup);
+    } else if (targetGroup === 'NORMAL') {
       const newNormalPlayers = [...normalPlayers, ...selectedUsers.filter(id => !normalPlayers.includes(id))];
       const newSeedPlayers = seedPlayers.filter(id => !selectedUsers.includes(id));
+      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
       setNormalPlayers(newNormalPlayers);
       setSeedPlayers(newSeedPlayers);
+      setWaitingGroup(newWaitingGroup);
+    } else {
+      // WAITING
+      const newWaitingGroup = [...waitingGroup, ...selectedUsers.filter(id => !waitingGroup.includes(id))];
+      const newSeedPlayers = seedPlayers.filter(id => !selectedUsers.includes(id));
+      const newNormalPlayers = normalPlayers.filter(id => !selectedUsers.includes(id));
+      setWaitingGroup(newWaitingGroup);
+      setSeedPlayers(newSeedPlayers);
+      setNormalPlayers(newNormalPlayers);
     }
     setSelectedUsers([]);
   };
@@ -132,11 +186,11 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
 
       let request: any = {
         drawType,
-        numberOfTotalPlayer: confirmedUserIds.length
+        numberOfTotalPlayer: drawType === 'AA' ? confirmedGroup.length : confirmedUserIds.length
       };
 
       if (drawType === 'AA') {
-        request.userNames = confirmedUserIds.map(id => getUserName(id));
+        request.userNames = confirmedGroup.map(id => getUserName(id));
         request.seedUserNames = [];
         request.groupAUserNames = [];
         request.groupBUserNames = [];
@@ -189,16 +243,20 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   };
 
   // 현재 선택된 총 인원
-  const totalSelected = drawType === 'AB'
+  const totalSelected = drawType === 'AA'
+    ? confirmedGroup.length
+    : drawType === 'AB'
     ? groupA.length + groupB.length
-    : drawType === 'SEED'
-    ? seedPlayers.length + normalPlayers.length
-    : confirmedUserIds.length;
+    : seedPlayers.length + normalPlayers.length;
 
   // 유효성 검사
   const isValid = totalSelected >= 4 && totalSelected % 2 === 0 &&
-    (drawType === 'AB' ? groupA.length > 0 && groupB.length > 0 : true) &&
-    (drawType === 'SEED' ? seedPlayers.length > 0 && normalPlayers.length > 0 : true);
+    (drawType === 'AB' ? groupA.length > 0 && groupB.length > 0 && groupA.length === groupB.length : true) &&
+    (drawType === 'SEED' ?
+      seedPlayers.length > 0 &&
+      normalPlayers.length > 0 &&
+      seedPlayers.length === getSeedCount(totalSelected)
+      : true);
 
   const confirmedParticipants = participants.filter(p => p.status === 'CONFIRMED');
   const waitingParticipants = participants.filter(p => p.status === 'WAITING');
@@ -242,18 +300,72 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
             </div>
           </div>
 
-          {/* AA 타입: 참가자 목록만 표시 */}
+          {/* AA 타입: 참가자/대기열 관리 */}
           {drawType === 'AA' && (
-            <div className="participants-display">
-              <h4>참가자 ({confirmedUserIds.length}명)</h4>
-              <div className="player-grid">
-                {confirmedUserIds.map(userId => (
-                  <div key={userId} className="player-card">
-                    {getUserName(userId)}
-                  </div>
-                ))}
+            <>
+              <div className="move-buttons">
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToAAGroup('CONFIRMED')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group"
+                >
+                  참가로 이동 ({selectedUsers.length}명)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToAAGroup('WAITING')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group"
+                >
+                  대기열로 이동 ({selectedUsers.length}명)
+                </button>
               </div>
-            </div>
+
+              <div className="group-division">
+                <div className="group-box confirmed-group">
+                  <h4>참가 확정 ({confirmedGroup.length}명)</h4>
+                  <div className="player-grid">
+                    {confirmedGroup.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>{getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="group-box waiting-group">
+                  <h4>대기열 ({waitingGroup.length}명)</h4>
+                  <div className="player-grid">
+                    {waitingGroup.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox waiting ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>{getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
           {/* AB 타입: 그룹 A/B 분할 */}
@@ -262,7 +374,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
               <div className="move-buttons">
                 <button
                   type="button"
-                  onClick={() => moveSelectedToGroup('A')}
+                  onClick={() => moveSelectedToABGroup('A')}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
@@ -270,15 +382,23 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveSelectedToGroup('B')}
+                  onClick={() => moveSelectedToABGroup('B')}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
                   그룹 B로 이동 ({selectedUsers.length}명)
                 </button>
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToABGroup('WAITING')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group btn-move-waiting"
+                >
+                  대기열로 이동 ({selectedUsers.length}명)
+                </button>
               </div>
 
-              <div className="group-division">
+              <div className="group-division group-division-ab">
                 <div className="group-box group-a">
                   <h4>그룹 A ({groupA.length}명)</h4>
                   <div className="player-grid">
@@ -320,6 +440,27 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                     ))}
                   </div>
                 </div>
+
+                <div className="group-box waiting-group waiting-group-full">
+                  <h4>대기열 ({waitingGroup.length}명)</h4>
+                  <div className="player-grid">
+                    {waitingGroup.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox waiting ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>{getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </>
           )}
@@ -344,11 +485,21 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 >
                   일반으로 이동 ({selectedUsers.length}명)
                 </button>
+                <button
+                  type="button"
+                  onClick={() => moveSelectedToSeedGroup('WAITING')}
+                  disabled={selectedUsers.length === 0}
+                  className="btn-move-group btn-move-waiting"
+                >
+                  대기열로 이동 ({selectedUsers.length}명)
+                </button>
               </div>
 
-              <div className="group-division">
+              <div className="group-division group-division-seed">
                 <div className="group-box seed-group">
-                  <h4>시드 플레이어 ({seedPlayers.length}명)</h4>
+                  <h4>
+                    시드 플레이어 ({seedPlayers.length}/{getSeedCount(seedPlayers.length + normalPlayers.length)}명)
+                  </h4>
                   <div className="player-grid">
                     {seedPlayers.map(userId => (
                       <div
@@ -388,38 +539,29 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                     ))}
                   </div>
                 </div>
+
+                <div className="group-box waiting-group waiting-group-full">
+                  <h4>대기열 ({waitingGroup.length}명)</h4>
+                  <div className="player-grid">
+                    {waitingGroup.map(userId => (
+                      <div
+                        key={userId}
+                        className={`player-card-with-checkbox waiting ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        onClick={() => toggleUserSelection(userId)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(userId)}
+                          onChange={() => toggleUserSelection(userId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span>{getUserName(userId)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </>
-          )}
-
-          {/* 대기 참가자 (AB/SEED에서만 추가 가능) */}
-          {(drawType === 'AB' || drawType === 'SEED') && waitingParticipants.length > 0 && (
-            <div className="waiting-players-pool">
-              <h4>대기 참가자 ({waitingParticipants.length}명) - 선택하여 추가</h4>
-              <div className="player-grid">
-                {waitingParticipants
-                  .filter(p => {
-                    const isInAB = groupA.includes(p.userId) || groupB.includes(p.userId);
-                    const isInSEED = seedPlayers.includes(p.userId) || normalPlayers.includes(p.userId);
-                    return !isInAB && !isInSEED;
-                  })
-                  .map(p => (
-                    <div
-                      key={p.userId}
-                      className={`player-card-with-checkbox waiting ${selectedUsers.includes(p.userId) ? 'selected' : ''}`}
-                      onClick={() => toggleUserSelection(p.userId)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.includes(p.userId)}
-                        onChange={() => toggleUserSelection(p.userId)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <span>{getUserName(p.userId)}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
           )}
 
           {/* 대진 생성 결과 */}
