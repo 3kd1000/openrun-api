@@ -199,12 +199,14 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
             </div>
 
             <div className="detail-item">
-              <label>정원</label>
-              <p>{schedule.currentParticipants} / {schedule.maxCapacity}명
-                {schedule.currentParticipants >= schedule.maxCapacity && (
-                  <span className="badge-full"> 마감</span>
-                )}
-              </p>
+              <label>참가 현황</label>
+              <div className="participant-stats">
+                <span className="stat-item stat-total">총원: {schedule.maxCapacity}명</span>
+                <span className="stat-divider">|</span>
+                <span className="stat-item stat-confirmed">신청: {confirmedParticipants.length}명</span>
+                <span className="stat-divider">|</span>
+                <span className="stat-item stat-waiting">대기: {waitingParticipants.length}명</span>
+              </div>
             </div>
 
             {schedule.cost && (

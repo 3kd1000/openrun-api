@@ -303,6 +303,11 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
           {/* AA 타입: 참가자/대기열 관리 */}
           {drawType === 'AA' && (
             <>
+              {selectedUsers.length > 0 && (
+                <div className="selected-count-badge">
+                  {selectedUsers.length}명 선택됨
+                </div>
+              )}
               <div className="move-buttons">
                 <button
                   type="button"
@@ -310,7 +315,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
-                  참가로 이동 ({selectedUsers.length}명)
+                  참가로 이동
                 </button>
                 <button
                   type="button"
@@ -318,7 +323,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
-                  대기열로 이동 ({selectedUsers.length}명)
+                  대기열로 이동
                 </button>
               </div>
 
@@ -371,6 +376,11 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
           {/* AB 타입: 그룹 A/B 분할 */}
           {drawType === 'AB' && (
             <>
+              {selectedUsers.length > 0 && (
+                <div className="selected-count-badge">
+                  {selectedUsers.length}명 선택됨
+                </div>
+              )}
               <div className="move-buttons">
                 <button
                   type="button"
@@ -378,7 +388,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
-                  그룹 A로 이동 ({selectedUsers.length}명)
+                  A로 이동
                 </button>
                 <button
                   type="button"
@@ -386,7 +396,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
-                  그룹 B로 이동 ({selectedUsers.length}명)
+                  B로 이동
                 </button>
                 <button
                   type="button"
@@ -394,7 +404,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group btn-move-waiting"
                 >
-                  대기열로 이동 ({selectedUsers.length}명)
+                  대기로 이동
                 </button>
               </div>
 
@@ -468,6 +478,11 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
           {/* SEED 타입: 시드/일반 분할 */}
           {drawType === 'SEED' && (
             <>
+              {selectedUsers.length > 0 && (
+                <div className="selected-count-badge">
+                  {selectedUsers.length}명 선택됨
+                </div>
+              )}
               <div className="move-buttons">
                 <button
                   type="button"
@@ -475,7 +490,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
-                  시드로 이동 ({selectedUsers.length}명)
+                  시드로 이동
                 </button>
                 <button
                   type="button"
@@ -483,7 +498,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
-                  일반으로 이동 ({selectedUsers.length}명)
+                  일반으로 이동
                 </button>
                 <button
                   type="button"
@@ -491,7 +506,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group btn-move-waiting"
                 >
-                  대기열로 이동 ({selectedUsers.length}명)
+                  대기로 이동
                 </button>
               </div>
 
@@ -628,7 +643,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   onClick={handleCopy}
                   className="btn-copy"
                 >
-                  {copied ? '✓ 복사됨' : '📋 복사하기'}
+                  {copied ? '✓ 복사됨' : '📋 복사'}
                 </button>
                 <button
                   type="button"
@@ -636,7 +651,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   className="btn-regenerate"
                   disabled={loading}
                 >
-                  🔄 다시 생성
+                  🔄 재생성
                 </button>
                 <button
                   type="button"

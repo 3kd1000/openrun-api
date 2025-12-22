@@ -57,10 +57,8 @@ public class ScheduleParticipantService {
 
         ScheduleParticipant savedParticipant = participantRepository.save(participant);
 
-        // 7. Schedule의 currentParticipants 업데이트 (CONFIRMED인 경우에만)
-        if (status == ParticipantStatus.CONFIRMED) {
-            schedule.incrementParticipants();
-        }
+        // 7. Schedule의 currentParticipants 업데이트 (상태 무관, 신청한 모든 사람 카운트)
+        schedule.incrementParticipants();
 
         return new ParticipantResponse(savedParticipant);
     }
@@ -83,11 +81,11 @@ public class ScheduleParticipantService {
         boolean wasConfirmed = participant.isConfirmed();
         participant.cancel();
 
-        // 4. CONFIRMED 상태였다면 Schedule의 currentParticipants 감소
-        if (wasConfirmed) {
-            schedule.decrementParticipants();
+        // 4. Schedule의 currentParticipants 감소 (상태 무관)
+        schedule.decrementParticipants();
 
-            // 5. 대기 중인 사람이 있으면 첫 번째 대기자를 CONFIRMED로 변경
+        // 5. CONFIRMED 상태였다면 대기 중인 사람을 CONFIRMED로 변경
+        if (wasConfirmed) {
             List<ScheduleParticipant> waitingList = participantRepository
                     .findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED)
                     .stream()
@@ -97,7 +95,7 @@ public class ScheduleParticipantService {
             if (!waitingList.isEmpty()) {
                 ScheduleParticipant firstWaiting = waitingList.get(0);
                 firstWaiting.confirm();
-                schedule.incrementParticipants();
+                // currentParticipants는 이미 카운트되어 있으므로 증가시키지 않음
             }
         }
     }

@@ -10,13 +10,15 @@ interface Props {
   onDateClick: (date: Date) => void;
   onDateDoubleClick: (date: Date) => void;
   onScheduleClick: (schedule: Schedule) => void;
+  myParticipations: Set<number>;
 }
 
 const ScheduleCalendarView: React.FC<Props> = ({
   schedules,
   onDateClick,
   onDateDoubleClick,
-  onScheduleClick
+  onScheduleClick,
+  myParticipations
 }) => {
   const [date, setDate] = useState(new Date());
   const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -37,22 +39,26 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
       return (
         <div className="calendar-tile-content">
-          {daySchedules.slice(0, 3).map((schedule) => (
-            <div
-              key={schedule.id}
-              className="calendar-event"
-              onClick={(e) => {
-                e.stopPropagation();
-                onScheduleClick(schedule);
-              }}
-              title={`${schedule.courtName} - ${format(new Date(schedule.scheduledAt), 'HH:mm')}`}
-            >
+          {daySchedules.slice(0, 3).map((schedule) => {
+            const isPast = new Date(schedule.scheduledAt) < new Date();
+            const isParticipating = myParticipations.has(schedule.id);
+            return (
+              <div
+                key={schedule.id}
+                className={`calendar-event ${isPast ? 'past-event' : ''} ${!isParticipating ? 'not-participating' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onScheduleClick(schedule);
+                }}
+                title={`${schedule.courtName} - ${format(new Date(schedule.scheduledAt), 'HH:mm')}`}
+              >
               <span className="event-time">
                 {format(new Date(schedule.scheduledAt), 'HH:mm')}
               </span>
               <span className="event-name">{schedule.courtName}</span>
             </div>
-          ))}
+            );
+          })}
           {daySchedules.length > 3 && (
             <div className="calendar-event-more">
               +{daySchedules.length - 3} more

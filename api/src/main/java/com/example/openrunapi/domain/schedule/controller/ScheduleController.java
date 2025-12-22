@@ -95,6 +95,15 @@ public class ScheduleController {
     }
 
     /**
+     * 내가 참여한 일정 ID 목록 조회
+     */
+    @GetMapping("/my-participations")
+    public ResponseEntity<List<Long>> getMyParticipations(@RequestParam Long userId) {
+        List<Long> scheduleIds = scheduleService.getMyParticipatingScheduleIds(userId);
+        return ResponseEntity.ok(scheduleIds);
+    }
+
+    /**
      * 클럽용 대진 생성 (DB 저장)
      */
     @PostMapping("/{scheduleId}/draw")

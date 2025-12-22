@@ -32,4 +32,8 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
 
     // 특정 사용자가 특정 일정에 신청했는지 확인 (취소 포함)
     boolean existsByScheduleIdAndUserId(Long scheduleId, Long userId);
+
+    // 특정 사용자가 참여한 일정 ID 목록 조회 (CONFIRMED, WAITING만)
+    @Query("SELECT sp.scheduleId FROM ScheduleParticipant sp WHERE sp.userId = :userId AND sp.status IN ('CONFIRMED', 'WAITING')")
+    List<Long> findScheduleIdsByUserId(@Param("userId") Long userId);
 }

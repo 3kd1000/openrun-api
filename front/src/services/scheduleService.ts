@@ -57,5 +57,13 @@ export const scheduleService = {
   // 일정 삭제
   deleteSchedule: async (scheduleId: number): Promise<void> => {
     await axiosInstance.delete(`/schedules/${scheduleId}`);
+  },
+
+  // 내가 참여한 일정 ID 목록 조회
+  getMyParticipations: async (userId: number): Promise<number[]> => {
+    const response = await axiosInstance.get('/schedules/my-participations', {
+      params: { userId }
+    });
+    return response.data;
   }
 };
