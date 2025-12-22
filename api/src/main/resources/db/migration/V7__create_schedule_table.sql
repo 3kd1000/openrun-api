@@ -1,3 +1,28 @@
+
+-- 1. Users 테이블에 1명의 사용자 추가
+INSERT INTO users (uid, social_id, email, name, deleted, created_at, updated_at) VALUES
+('test-uid-a', 'test-social-a', '3kd1000@gmail.com', '정주상', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- 오픈런 테니스 클럽 데이터 (ID = 1 고정)
+-- schedule 테이블이 club_id FK를 참조하므로 먼저 생성
+INSERT INTO club (id, name, description, region, owner_user_id, deleted, created_at, updated_at)
+VALUES (
+    1,
+    '오픈런 테니스 클럽',
+    '테니스를 사랑하는 사람들의 모임',
+    '용인',
+    1,  -- owner_user_id는 나중에 실제 관리자 ID로 변경 가능
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+)
+ON CONFLICT (id) DO NOTHING;  -- 이미 존재하면 무시 (멱등성 보장)
+
+-- ID 시퀀스를 2부터 시작하도록 설정 (향후 다른 클럽 추가 대비)
+SELECT setval('club_id_seq', GREATEST(1, (SELECT MAX(id) FROM club)), true);
+
+
+-- schedule 테이블 생성
 CREATE TABLE schedule (
     id BIGSERIAL PRIMARY KEY,
     club_id BIGINT NOT NULL,
