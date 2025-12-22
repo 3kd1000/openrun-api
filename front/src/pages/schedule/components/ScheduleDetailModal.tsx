@@ -5,6 +5,7 @@ import { participantService } from '../../../services/participantService';
 import type { Schedule, CreateScheduleRequest, Participant } from '../../../types/schedule';
 import { DEV_USERS } from '../../../components/DevUserSwitcher';
 import DrawCreateModal from './DrawCreateModal';
+import DrawViewModal from './DrawViewModal';
 import './ScheduleDetailModal.css';
 
 interface Props {
@@ -36,6 +37,7 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [myParticipation, setMyParticipation] = useState<Participant | null>(null);
   const [showDrawCreateModal, setShowDrawCreateModal] = useState(false);
+  const [showDrawViewModal, setShowDrawViewModal] = useState(false);
 
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem('devUserId');
@@ -224,16 +226,33 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
             )}
 
             {/* 대진표 상태 */}
-            {schedule.drawType && (
-              <div className="detail-item">
-                <label>대진표 상태</label>
+            <div className="detail-item">
+              <label>대진표 상태</label>
+              {schedule.drawType ? (
                 <div className={`draw-status ${schedule.isDrawValid ? 'valid' : 'invalid'}`}>
                   {schedule.isDrawValid ? (
                     <>✓ 유효 ({schedule.drawType})</>
                   ) : (
-                    <>⚠️ 무효 - 재생성 필요</>
+                    <>⚠️ 참가자 변동으로 인한 재생성 필요</>
                   )}
                 </div>
+              ) : (
+                <div className="draw-status empty">
+                  생성된 대진이 없습니다
+                </div>
+              )}
+            </div>
+
+            {/* 대진표 보기 버튼 */}
+            {schedule.drawType && (
+              <div className="draw-view-action">
+                <button
+                  type="button"
+                  onClick={() => setShowDrawViewModal(true)}
+                  className="btn-view-draw"
+                >
+                  📋 대진표 보기
+                </button>
               </div>
             )}
 
@@ -433,6 +452,16 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
           scheduleId={schedule.id}
           participants={participants}
           onClose={() => setShowDrawCreateModal(false)}
+          onSuccess={onSuccess}
+        />
+      )}
+
+      {/* 대진표 보기 모달 */}
+      {showDrawViewModal && (
+        <DrawViewModal
+          schedule={schedule}
+          participants={participants}
+          onClose={() => setShowDrawViewModal(false)}
           onSuccess={onSuccess}
         />
       )}

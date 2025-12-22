@@ -250,13 +250,29 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
     : seedPlayers.length + normalPlayers.length;
 
   // 유효성 검사
-  const isValid = totalSelected >= 4 && totalSelected % 2 === 0 &&
-    (drawType === 'AB' ? groupA.length > 0 && groupB.length > 0 && groupA.length === groupB.length : true) &&
-    (drawType === 'SEED' ?
-      seedPlayers.length > 0 &&
-      normalPlayers.length > 0 &&
-      seedPlayers.length === getSeedCount(totalSelected)
-      : true);
+  const isValid = (() => {
+    // 공통: 최대 16명
+    if (totalSelected > 16) return false;
+
+    if (drawType === 'AA') {
+      // AA: 최소 6명, 최대 16명, 홀짝 무관
+      return totalSelected >= 6 && confirmedGroup.length >= 6;
+    } else if (drawType === 'AB') {
+      // AB: 최소 8명, 최대 16명, 짝수만, A/B 그룹 비어있지 않아야 함
+      return totalSelected >= 8 &&
+             totalSelected % 2 === 0 &&
+             groupA.length > 0 &&
+             groupB.length > 0;
+    } else if (drawType === 'SEED') {
+      // SEED: 최소 6명, 최대 16명, 홀짝 무관, seed/normal 비어있지 않고 seed 수가 맞아야 함
+      return totalSelected >= 6 &&
+             seedPlayers.length > 0 &&
+             normalPlayers.length > 0 &&
+             seedPlayers.length === getSeedCount(totalSelected);
+    }
+
+    return false;
+  })();
 
   const confirmedParticipants = participants.filter(p => p.status === 'CONFIRMED');
   const waitingParticipants = participants.filter(p => p.status === 'WAITING');
