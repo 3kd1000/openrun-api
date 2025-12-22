@@ -3,6 +3,7 @@ package com.example.openrunapi.domain.user.repository;
 import com.example.openrunapi.domain.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -11,4 +12,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findBySocialId(String socialId);
 
     Optional<User> findByEmail(String email);
+
+    // 마이그레이션용: 이름으로 조회
+    Optional<User> findByName(String name);
 }
