@@ -253,11 +253,16 @@
 
   .calendar-event {
     font-size: 10px;
-    padding: 2px 4px;
+    padding: 2px 2px;
+    gap: 2px;
   }
 
   .event-time,
   .event-name {
     font-size: 9px;
+  }
+
+  .event-time {
+    flex-shrink: 0;
   }
 }

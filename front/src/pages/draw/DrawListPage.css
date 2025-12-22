@@ -23,20 +23,180 @@
   margin: 0;
 }
 
-.draw-list-container {
+/* 검색 필터 섹션 */
+.filter-section {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 40px 20px;
-  min-height: 400px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.search-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.search-button,
+.reset-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button {
+  background: #4CAF50;
+  color: white;
+}
+
+.search-button:hover {
+  background: #45a049;
+}
+
+.reset-button {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.reset-button:hover {
+  background: #e0e0e0;
+}
+
+.date-range-filter {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+}
+
+.date-range-filter label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.date-range-filter select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* 매치 목록 */
+.match-list-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  min-height: 400px;
+}
+
+.match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.match-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fafafa;
+  transition: box-shadow 0.2s;
+}
+
+.match-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.match-number {
+  font-weight: 700;
+  color: #4CAF50;
+  font-size: 16px;
+}
+
+.match-date {
+  font-size: 13px;
+  color: #666;
+}
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.team {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.team-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.players {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.vs {
+  font-weight: 700;
+  color: #999;
+  font-size: 14px;
+}
+
+.match-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.result-label {
+  font-size: 13px;
+  color: #666;
+}
+
+.result-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
 }
 
 .empty-state {
   text-align: center;
   max-width: 400px;
+  margin: 60px auto;
 }
 
 .empty-icon {
@@ -63,6 +223,7 @@
 @media (max-width: 768px) {
   .draw-list-page {
     padding: 16px;
+    padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
   }
 
   .page-header h1 {
@@ -73,9 +234,62 @@
     font-size: 14px;
   }
 
-  .draw-list-container {
-    padding: 30px 16px;
-    min-height: 300px;
+  .filter-section {
+    padding: 15px;
+  }
+
+  .search-form {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .search-button,
+  .reset-button {
+    width: 100%;
+  }
+
+  .date-range-filter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .date-range-filter select {
+    width: 100%;
+  }
+
+  .match-list-container {
+    padding: 15px;
+  }
+
+  .match-card {
+    padding: 12px;
+  }
+
+  .match-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .match-number {
+    font-size: 14px;
+  }
+
+  .match-date {
+    font-size: 12px;
+  }
+
+  .match-teams {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .vs {
+    transform: rotate(90deg);
   }
 
   .empty-icon {
