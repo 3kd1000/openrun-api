@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { DEV_USERS } from '../../../components/DevUserSwitcher';
-import type { Participant } from '../../../types/schedule';
-import { drawService } from '../../../services/drawService';
-import type { DrawResponse } from '../../../services/drawService';
-import './DrawCreateModal.css';
+import React, { useState, useEffect } from "react";
+import { DEV_USERS } from "../../../components/DevUserSwitcher";
+import type { Participant } from "../../../types/schedule";
+import { drawService } from "../../../services/drawService";
+import type { DrawResponse } from "../../../services/drawService";
+import { useEscapeKey } from "../../../hooks/useEscapeKey";
+import "./DrawCreateModal.css";
 
 interface Props {
   scheduleId: number;
@@ -12,14 +13,21 @@ interface Props {
   onSuccess: () => void;
 }
 
-type DrawType = 'AA' | 'AB' | 'SEED';
+type DrawType = "AA" | "AB" | "SEED";
 
-const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, onSuccess }) => {
-  const confirmedUserIds = participants.filter(p => p.status === 'CONFIRMED').map(p => p.userId);
+const DrawCreateModal: React.FC<Props> = ({
+  scheduleId,
+  participants,
+  onClose,
+  onSuccess,
+}) => {
+  const confirmedUserIds = participants
+    .filter((p) => p.status === "CONFIRMED")
+    .map((p) => p.userId);
 
-  const [drawType, setDrawType] = useState<DrawType>('AA');
+  const [drawType, setDrawType] = useState<DrawType>("AA");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // AA 타입: 참가/대기
   const [confirmedGroup, setConfirmedGroup] = useState<number[]>([]);
@@ -42,7 +50,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
 
   // 사용자 ID로 이름 가져오기
   const getUserName = (userId: number): string => {
-    const user = DEV_USERS.find(u => u.id === userId);
+    const user = DEV_USERS.find((u) => u.id === userId);
     return user ? user.name : `User #${userId}`;
   };
 
@@ -60,10 +68,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   useEffect(() => {
     const totalCount = confirmedUserIds.length;
     const half = Math.ceil(totalCount / 2);
-    const allParticipantIds = participants.map(p => p.userId);
-    const waitingIds = allParticipantIds.filter(id => !confirmedUserIds.includes(id));
+    const allParticipantIds = participants.map((p) => p.userId);
+    const waitingIds = allParticipantIds.filter(
+      (id) => !confirmedUserIds.includes(id)
+    );
 
-    if (drawType === 'AA') {
+    if (drawType === "AA") {
       // AA: 참가 확정자는 confirmedGroup, 나머지는 waitingGroup
       setConfirmedGroup(confirmedUserIds);
       setWaitingGroup(waitingIds);
@@ -71,7 +81,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
       setGroupB([]);
       setSeedPlayers([]);
       setNormalPlayers([]);
-    } else if (drawType === 'AB') {
+    } else if (drawType === "AB") {
       // AB: 반반 나누기 + 대기열
       setGroupA(confirmedUserIds.slice(0, half));
       setGroupB(confirmedUserIds.slice(half));
@@ -79,7 +89,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
       setSeedPlayers([]);
       setNormalPlayers([]);
       setConfirmedGroup([]);
-    } else if (drawType === 'SEED') {
+    } else if (drawType === "SEED") {
       // SEED: 시드 수에 맞춰 분할 + 대기열
       const seedCount = getSeedCount(totalCount);
       setSeedPlayers(confirmedUserIds.slice(0, seedCount));
@@ -93,25 +103,35 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
 
   // 체크박스 토글
   const toggleUserSelection = (userId: number) => {
-    setSelectedUsers(prev =>
+    setSelectedUsers((prev) =>
       prev.includes(userId)
-        ? prev.filter(id => id !== userId)
+        ? prev.filter((id) => id !== userId)
         : [...prev, userId]
     );
   };
 
   // AA: 선택된 사용자들을 참가/대기열로 이동
-  const moveSelectedToAAGroup = (targetGroup: 'CONFIRMED' | 'WAITING') => {
+  const moveSelectedToAAGroup = (targetGroup: "CONFIRMED" | "WAITING") => {
     if (selectedUsers.length === 0) return;
 
-    if (targetGroup === 'CONFIRMED') {
-      const newConfirmedGroup = [...confirmedGroup, ...selectedUsers.filter(id => !confirmedGroup.includes(id))];
-      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
+    if (targetGroup === "CONFIRMED") {
+      const newConfirmedGroup = [
+        ...confirmedGroup,
+        ...selectedUsers.filter((id) => !confirmedGroup.includes(id)),
+      ];
+      const newWaitingGroup = waitingGroup.filter(
+        (id) => !selectedUsers.includes(id)
+      );
       setConfirmedGroup(newConfirmedGroup);
       setWaitingGroup(newWaitingGroup);
     } else {
-      const newWaitingGroup = [...waitingGroup, ...selectedUsers.filter(id => !waitingGroup.includes(id))];
-      const newConfirmedGroup = confirmedGroup.filter(id => !selectedUsers.includes(id));
+      const newWaitingGroup = [
+        ...waitingGroup,
+        ...selectedUsers.filter((id) => !waitingGroup.includes(id)),
+      ];
+      const newConfirmedGroup = confirmedGroup.filter(
+        (id) => !selectedUsers.includes(id)
+      );
       setWaitingGroup(newWaitingGroup);
       setConfirmedGroup(newConfirmedGroup);
     }
@@ -119,28 +139,41 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   };
 
   // AB: 선택된 사용자들을 그룹으로 이동 (A, B, 대기열)
-  const moveSelectedToABGroup = (targetGroup: 'A' | 'B' | 'WAITING') => {
+  const moveSelectedToABGroup = (targetGroup: "A" | "B" | "WAITING") => {
     if (selectedUsers.length === 0) return;
 
-    if (targetGroup === 'A') {
-      const newGroupA = [...groupA, ...selectedUsers.filter(id => !groupA.includes(id))];
-      const newGroupB = groupB.filter(id => !selectedUsers.includes(id));
-      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
+    if (targetGroup === "A") {
+      const newGroupA = [
+        ...groupA,
+        ...selectedUsers.filter((id) => !groupA.includes(id)),
+      ];
+      const newGroupB = groupB.filter((id) => !selectedUsers.includes(id));
+      const newWaitingGroup = waitingGroup.filter(
+        (id) => !selectedUsers.includes(id)
+      );
       setGroupA(newGroupA);
       setGroupB(newGroupB);
       setWaitingGroup(newWaitingGroup);
-    } else if (targetGroup === 'B') {
-      const newGroupB = [...groupB, ...selectedUsers.filter(id => !groupB.includes(id))];
-      const newGroupA = groupA.filter(id => !selectedUsers.includes(id));
-      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
+    } else if (targetGroup === "B") {
+      const newGroupB = [
+        ...groupB,
+        ...selectedUsers.filter((id) => !groupB.includes(id)),
+      ];
+      const newGroupA = groupA.filter((id) => !selectedUsers.includes(id));
+      const newWaitingGroup = waitingGroup.filter(
+        (id) => !selectedUsers.includes(id)
+      );
       setGroupA(newGroupA);
       setGroupB(newGroupB);
       setWaitingGroup(newWaitingGroup);
     } else {
       // WAITING
-      const newWaitingGroup = [...waitingGroup, ...selectedUsers.filter(id => !waitingGroup.includes(id))];
-      const newGroupA = groupA.filter(id => !selectedUsers.includes(id));
-      const newGroupB = groupB.filter(id => !selectedUsers.includes(id));
+      const newWaitingGroup = [
+        ...waitingGroup,
+        ...selectedUsers.filter((id) => !waitingGroup.includes(id)),
+      ];
+      const newGroupA = groupA.filter((id) => !selectedUsers.includes(id));
+      const newGroupB = groupB.filter((id) => !selectedUsers.includes(id));
       setWaitingGroup(newWaitingGroup);
       setGroupA(newGroupA);
       setGroupB(newGroupB);
@@ -149,28 +182,51 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   };
 
   // SEED: 선택된 사용자들을 시드/일반/대기열로 이동
-  const moveSelectedToSeedGroup = (targetGroup: 'SEED' | 'NORMAL' | 'WAITING') => {
+  const moveSelectedToSeedGroup = (
+    targetGroup: "SEED" | "NORMAL" | "WAITING"
+  ) => {
     if (selectedUsers.length === 0) return;
 
-    if (targetGroup === 'SEED') {
-      const newSeedPlayers = [...seedPlayers, ...selectedUsers.filter(id => !seedPlayers.includes(id))];
-      const newNormalPlayers = normalPlayers.filter(id => !selectedUsers.includes(id));
-      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
+    if (targetGroup === "SEED") {
+      const newSeedPlayers = [
+        ...seedPlayers,
+        ...selectedUsers.filter((id) => !seedPlayers.includes(id)),
+      ];
+      const newNormalPlayers = normalPlayers.filter(
+        (id) => !selectedUsers.includes(id)
+      );
+      const newWaitingGroup = waitingGroup.filter(
+        (id) => !selectedUsers.includes(id)
+      );
       setSeedPlayers(newSeedPlayers);
       setNormalPlayers(newNormalPlayers);
       setWaitingGroup(newWaitingGroup);
-    } else if (targetGroup === 'NORMAL') {
-      const newNormalPlayers = [...normalPlayers, ...selectedUsers.filter(id => !normalPlayers.includes(id))];
-      const newSeedPlayers = seedPlayers.filter(id => !selectedUsers.includes(id));
-      const newWaitingGroup = waitingGroup.filter(id => !selectedUsers.includes(id));
+    } else if (targetGroup === "NORMAL") {
+      const newNormalPlayers = [
+        ...normalPlayers,
+        ...selectedUsers.filter((id) => !normalPlayers.includes(id)),
+      ];
+      const newSeedPlayers = seedPlayers.filter(
+        (id) => !selectedUsers.includes(id)
+      );
+      const newWaitingGroup = waitingGroup.filter(
+        (id) => !selectedUsers.includes(id)
+      );
       setNormalPlayers(newNormalPlayers);
       setSeedPlayers(newSeedPlayers);
       setWaitingGroup(newWaitingGroup);
     } else {
       // WAITING
-      const newWaitingGroup = [...waitingGroup, ...selectedUsers.filter(id => !waitingGroup.includes(id))];
-      const newSeedPlayers = seedPlayers.filter(id => !selectedUsers.includes(id));
-      const newNormalPlayers = normalPlayers.filter(id => !selectedUsers.includes(id));
+      const newWaitingGroup = [
+        ...waitingGroup,
+        ...selectedUsers.filter((id) => !waitingGroup.includes(id)),
+      ];
+      const newSeedPlayers = seedPlayers.filter(
+        (id) => !selectedUsers.includes(id)
+      );
+      const newNormalPlayers = normalPlayers.filter(
+        (id) => !selectedUsers.includes(id)
+      );
       setWaitingGroup(newWaitingGroup);
       setSeedPlayers(newSeedPlayers);
       setNormalPlayers(newNormalPlayers);
@@ -182,36 +238,39 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
   const handleCreateDraw = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       let request: any = {
         drawType,
-        numberOfTotalPlayer: drawType === 'AA' ? confirmedGroup.length : confirmedUserIds.length
+        numberOfTotalPlayer:
+          drawType === "AA" ? confirmedGroup.length : confirmedUserIds.length,
       };
 
-      if (drawType === 'AA') {
-        request.userNames = confirmedGroup.map(id => getUserName(id));
+      if (drawType === "AA") {
+        request.userNames = confirmedGroup.map((id) => getUserName(id));
         request.seedUserNames = [];
         request.groupAUserNames = [];
         request.groupBUserNames = [];
-      } else if (drawType === 'AB') {
-        request.userNames = [...groupA, ...groupB].map(id => getUserName(id));
-        request.groupAUserNames = groupA.map(id => getUserName(id));
-        request.groupBUserNames = groupB.map(id => getUserName(id));
+      } else if (drawType === "AB") {
+        request.userNames = [...groupA, ...groupB].map((id) => getUserName(id));
+        request.groupAUserNames = groupA.map((id) => getUserName(id));
+        request.groupBUserNames = groupB.map((id) => getUserName(id));
         request.seedUserNames = [];
-      } else if (drawType === 'SEED') {
-        request.userNames = normalPlayers.map(id => getUserName(id));
-        request.seedUserNames = seedPlayers.map(id => getUserName(id));
+      } else if (drawType === "SEED") {
+        request.userNames = normalPlayers.map((id) => getUserName(id));
+        request.seedUserNames = seedPlayers.map((id) => getUserName(id));
         request.groupAUserNames = [];
         request.groupBUserNames = [];
       }
 
-      const result = await drawService.createDrawWithSchedule(scheduleId, request);
+      const result = await drawService.createDrawWithSchedule(
+        scheduleId,
+        request
+      );
       setDrawResult(result);
-
     } catch (err: any) {
-      console.error('대진 생성 실패:', err);
-      setError(err.response?.data?.message || '대진 생성에 실패했습니다.');
+      console.error("대진 생성 실패:", err);
+      setError(err.response?.data?.message || "대진 생성에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -219,13 +278,13 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
 
   // 대진표 텍스트로 포맷팅
   const formatDrawAsText = (): string => {
-    if (!drawResult) return '';
-    let text = '🎯 대진표\n\n';
+    if (!drawResult) return "";
+    let text = "🎯 대진표\n\n";
 
-    drawResult.games.forEach(game => {
+    drawResult.games.forEach((game) => {
       text += `경기 ${game.gameNo} (${game.roundNo}R)\n`;
-      text += `  Team A: ${game.teamA.join(', ')}\n`;
-      text += `  Team B: ${game.teamB.join(', ')}\n\n`;
+      text += `  Team A: ${game.teamA.join(", ")}\n`;
+      text += `  Team B: ${game.teamB.join(", ")}\n\n`;
     });
 
     return text;
@@ -238,51 +297,68 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('복사 실패:', err);
+      console.error("복사 실패:", err);
     }
   };
 
   // 현재 선택된 총 인원
-  const totalSelected = drawType === 'AA'
-    ? confirmedGroup.length
-    : drawType === 'AB'
-    ? groupA.length + groupB.length
-    : seedPlayers.length + normalPlayers.length;
+  const totalSelected =
+    drawType === "AA"
+      ? confirmedGroup.length
+      : drawType === "AB"
+      ? groupA.length + groupB.length
+      : seedPlayers.length + normalPlayers.length;
 
   // 유효성 검사
   const isValid = (() => {
     // 공통: 최대 16명
     if (totalSelected > 16) return false;
 
-    if (drawType === 'AA') {
+    if (drawType === "AA") {
       // AA: 최소 6명, 최대 16명, 홀짝 무관
       return totalSelected >= 6 && confirmedGroup.length >= 6;
-    } else if (drawType === 'AB') {
+    } else if (drawType === "AB") {
       // AB: 최소 8명, 최대 16명, 짝수만, A/B 그룹 비어있지 않아야 함
-      return totalSelected >= 8 &&
-             totalSelected % 2 === 0 &&
-             groupA.length > 0 &&
-             groupB.length > 0;
-    } else if (drawType === 'SEED') {
+      return (
+        totalSelected >= 8 &&
+        totalSelected % 2 === 0 &&
+        groupA.length > 0 &&
+        groupB.length > 0
+      );
+    } else if (drawType === "SEED") {
       // SEED: 최소 6명, 최대 16명, 홀짝 무관, seed/normal 비어있지 않고 seed 수가 맞아야 함
-      return totalSelected >= 6 &&
-             seedPlayers.length > 0 &&
-             normalPlayers.length > 0 &&
-             seedPlayers.length === getSeedCount(totalSelected);
+      return (
+        totalSelected >= 6 &&
+        seedPlayers.length > 0 &&
+        normalPlayers.length > 0 &&
+        seedPlayers.length === getSeedCount(totalSelected)
+      );
     }
 
     return false;
   })();
 
-  const confirmedParticipants = participants.filter(p => p.status === 'CONFIRMED');
-  const waitingParticipants = participants.filter(p => p.status === 'WAITING');
+  const confirmedParticipants = participants.filter(
+    (p) => p.status === "CONFIRMED"
+  );
+  const waitingParticipants = participants.filter(
+    (p) => p.status === "WAITING"
+  );
+
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content draw-create-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-content draw-create-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <h2>대진 생성</h2>
-          <button className="btn-close" onClick={onClose}>&times;</button>
+          <button className="btn-close" onClick={onClose}>
+            &times;
+          </button>
         </div>
 
         <div className="draw-create-content">
@@ -294,22 +370,24 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
             <div className="draw-type-buttons">
               <button
                 type="button"
-                className={`draw-type-btn ${drawType === 'AA' ? 'active' : ''}`}
-                onClick={() => setDrawType('AA')}
+                className={`draw-type-btn ${drawType === "AA" ? "active" : ""}`}
+                onClick={() => setDrawType("AA")}
               >
                 AA (랜덤)
               </button>
               <button
                 type="button"
-                className={`draw-type-btn ${drawType === 'AB' ? 'active' : ''}`}
-                onClick={() => setDrawType('AB')}
+                className={`draw-type-btn ${drawType === "AB" ? "active" : ""}`}
+                onClick={() => setDrawType("AB")}
               >
                 AB (그룹별)
               </button>
               <button
                 type="button"
-                className={`draw-type-btn ${drawType === 'SEED' ? 'active' : ''}`}
-                onClick={() => setDrawType('SEED')}
+                className={`draw-type-btn ${
+                  drawType === "SEED" ? "active" : ""
+                }`}
+                onClick={() => setDrawType("SEED")}
               >
                 SEED (시드)
               </button>
@@ -317,7 +395,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
           </div>
 
           {/* AA 타입: 참가자/대기열 관리 */}
-          {drawType === 'AA' && (
+          {drawType === "AA" && (
             <>
               {selectedUsers.length > 0 && (
                 <div className="selected-count-badge">
@@ -327,7 +405,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
               <div className="move-buttons">
                 <button
                   type="button"
-                  onClick={() => moveSelectedToAAGroup('CONFIRMED')}
+                  onClick={() => moveSelectedToAAGroup("CONFIRMED")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
@@ -335,7 +413,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveSelectedToAAGroup('WAITING')}
+                  onClick={() => moveSelectedToAAGroup("WAITING")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
@@ -347,10 +425,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 <div className="group-box confirmed-group">
                   <h4>참가 확정 ({confirmedGroup.length}명)</h4>
                   <div className="player-grid">
-                    {confirmedGroup.map(userId => (
+                    {confirmedGroup.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -368,10 +448,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 <div className="group-box waiting-group">
                   <h4>대기열 ({waitingGroup.length}명)</h4>
                   <div className="player-grid">
-                    {waitingGroup.map(userId => (
+                    {waitingGroup.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox waiting ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox waiting ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -390,7 +472,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
           )}
 
           {/* AB 타입: 그룹 A/B 분할 */}
-          {drawType === 'AB' && (
+          {drawType === "AB" && (
             <>
               {selectedUsers.length > 0 && (
                 <div className="selected-count-badge">
@@ -400,7 +482,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
               <div className="move-buttons">
                 <button
                   type="button"
-                  onClick={() => moveSelectedToABGroup('A')}
+                  onClick={() => moveSelectedToABGroup("A")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
@@ -408,7 +490,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveSelectedToABGroup('B')}
+                  onClick={() => moveSelectedToABGroup("B")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
@@ -416,7 +498,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveSelectedToABGroup('WAITING')}
+                  onClick={() => moveSelectedToABGroup("WAITING")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group btn-move-waiting"
                 >
@@ -428,10 +510,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 <div className="group-box group-a">
                   <h4>그룹 A ({groupA.length}명)</h4>
                   <div className="player-grid">
-                    {groupA.map(userId => (
+                    {groupA.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -449,10 +533,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 <div className="group-box group-b">
                   <h4>그룹 B ({groupB.length}명)</h4>
                   <div className="player-grid">
-                    {groupB.map(userId => (
+                    {groupB.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -470,10 +556,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 <div className="group-box waiting-group waiting-group-full">
                   <h4>대기열 ({waitingGroup.length}명)</h4>
                   <div className="player-grid">
-                    {waitingGroup.map(userId => (
+                    {waitingGroup.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox waiting ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox waiting ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -492,7 +580,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
           )}
 
           {/* SEED 타입: 시드/일반 분할 */}
-          {drawType === 'SEED' && (
+          {drawType === "SEED" && (
             <>
               {selectedUsers.length > 0 && (
                 <div className="selected-count-badge">
@@ -502,7 +590,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
               <div className="move-buttons">
                 <button
                   type="button"
-                  onClick={() => moveSelectedToSeedGroup('SEED')}
+                  onClick={() => moveSelectedToSeedGroup("SEED")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
@@ -510,7 +598,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveSelectedToSeedGroup('NORMAL')}
+                  onClick={() => moveSelectedToSeedGroup("NORMAL")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group"
                 >
@@ -518,7 +606,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveSelectedToSeedGroup('WAITING')}
+                  onClick={() => moveSelectedToSeedGroup("WAITING")}
                   disabled={selectedUsers.length === 0}
                   className="btn-move-group btn-move-waiting"
                 >
@@ -529,13 +617,16 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
               <div className="group-division group-division-seed">
                 <div className="group-box seed-group">
                   <h4>
-                    시드 플레이어 ({seedPlayers.length}/{getSeedCount(seedPlayers.length + normalPlayers.length)}명)
+                    시드 플레이어 ({seedPlayers.length}/
+                    {getSeedCount(seedPlayers.length + normalPlayers.length)}명)
                   </h4>
                   <div className="player-grid">
-                    {seedPlayers.map(userId => (
+                    {seedPlayers.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox seed ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox seed ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -553,10 +644,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 <div className="group-box normal-group">
                   <h4>일반 플레이어 ({normalPlayers.length}명)</h4>
                   <div className="player-grid">
-                    {normalPlayers.map(userId => (
+                    {normalPlayers.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -574,10 +667,12 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                 <div className="group-box waiting-group waiting-group-full">
                   <h4>대기열 ({waitingGroup.length}명)</h4>
                   <div className="player-grid">
-                    {waitingGroup.map(userId => (
+                    {waitingGroup.map((userId) => (
                       <div
                         key={userId}
-                        className={`player-card-with-checkbox waiting ${selectedUsers.includes(userId) ? 'selected' : ''}`}
+                        className={`player-card-with-checkbox waiting ${
+                          selectedUsers.includes(userId) ? "selected" : ""
+                        }`}
                         onClick={() => toggleUserSelection(userId)}
                       >
                         <input
@@ -600,7 +695,7 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
             <div className="draw-result-section">
               <h3>🎯 대진표 생성 완료</h3>
               <div className="draw-games-list">
-                {drawResult.games.map(game => (
+                {drawResult.games.map((game) => (
                   <div key={game.gameNo} className="draw-game-card">
                     <div className="game-header">
                       <span className="game-number">경기 {game.gameNo}</span>
@@ -611,7 +706,9 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                         <div className="team-label">Team A</div>
                         <div className="team-players">
                           {game.teamA.map((player, idx) => (
-                            <span key={idx} className="player-name">{player}</span>
+                            <span key={idx} className="player-name">
+                              {player}
+                            </span>
                           ))}
                         </div>
                       </div>
@@ -620,7 +717,9 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                         <div className="team-label">Team B</div>
                         <div className="team-players">
                           {game.teamB.map((player, idx) => (
-                            <span key={idx} className="player-name">{player}</span>
+                            <span key={idx} className="player-name">
+                              {player}
+                            </span>
                           ))}
                         </div>
                       </div>
@@ -649,17 +748,13 @@ const DrawCreateModal: React.FC<Props> = ({ scheduleId, participants, onClose, o
                   className="btn-primary"
                   disabled={loading || !isValid}
                 >
-                  {loading ? '생성 중...' : '대진 생성'}
+                  {loading ? "생성 중..." : "대진 생성"}
                 </button>
               </>
             ) : (
               <>
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="btn-copy"
-                >
-                  {copied ? '✓ 복사됨' : '📋 복사'}
+                <button type="button" onClick={handleCopy} className="btn-copy">
+                  {copied ? "✓ 복사됨" : "📋 복사"}
                 </button>
                 <button
                   type="button"

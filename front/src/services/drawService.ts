@@ -6,6 +6,10 @@ export interface DrawGame {
   teamA: string[];
   teamB: string[];
   matchId?: number;  // 경기 결과 입력을 위한 Match ID
+  teamAScore?: number;
+  teamBScore?: number;
+  result?: 'TEAM_A_WIN' | 'TEAM_B_WIN' | 'DRAW';
+  playedAt?: string;
 }
 
 export interface DrawResponse {
@@ -25,6 +29,22 @@ export interface UpdateMatchRequest {
   teamAScore: number;
   teamBScore: number;
   result: 'TEAM_A_WIN' | 'TEAM_B_WIN' | 'DRAW';
+  playedAt?: string;
+}
+
+export interface MatchResponse {
+  id: number;
+  clubId: number;
+  scheduleId: number;
+  drawId: number;
+  matchNumber: number;
+  teamAPlayer1Name: string;
+  teamAPlayer2Name?: string;
+  teamBPlayer1Name: string;
+  teamBPlayer2Name?: string;
+  teamAScore?: number;
+  teamBScore?: number;
+  result?: string;
   playedAt?: string;
 }
 
@@ -60,11 +80,12 @@ class DrawService {
     clubId: number,
     matchId: number,
     request: UpdateMatchRequest
-  ): Promise<void> {
-    await axios.put(
+  ): Promise<MatchResponse> {
+    const response = await axios.put<MatchResponse>(
       `/clubs/${clubId}/matches/${matchId}`,
       request
     );
+    return response.data;
   }
 }
 

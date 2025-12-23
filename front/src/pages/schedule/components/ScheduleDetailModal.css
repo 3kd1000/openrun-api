@@ -243,35 +243,36 @@
   border-top: none !important;
 }
 
-/* 대진 생성 버튼 */
-.draw-action-section {
-  padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 8px;
-  text-align: center;
+/* 대진 관련 액션 버튼 영역 */
+.draw-create-action {
+  margin-top: -8px;
+  margin-bottom: 8px;
 }
 
+/* 대진 생성 버튼 (대진이 없을 때) */
 .btn-create-draw {
-  padding: 14px 28px;
-  background: white;
-  color: #667eea;
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .btn-create-draw:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .btn-create-draw:active {
   transform: translateY(0);
 }
+
 
 /* 대진표 상태 표시 */
 .draw-status {
@@ -341,9 +342,5 @@
 @media (max-width: 768px) {
   .schedule-detail-view {
     padding: 16px;
-  }
-
-  .btn-create-draw {
-    width: 100%;
   }
 }

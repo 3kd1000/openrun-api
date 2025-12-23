@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { DrawResponse } from '../../../services/drawService';
+import { useEscapeKey } from '../../../hooks/useEscapeKey';
 import './DrawResultModal.css';
 
 interface Props {
@@ -11,6 +12,9 @@ interface Props {
 
 const DrawResultModal: React.FC<Props> = ({ scheduleId, drawResult, onClose, onRegenerate }) => {
   const [copied, setCopied] = useState(false);
+
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose);
 
   // 대진표 텍스트로 포맷팅
   const formatDrawAsText = (): string => {

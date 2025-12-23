@@ -279,6 +279,10 @@ public class ScheduleService {
                             .teamA(teamA)
                             .teamB(teamB)
                             .matchId(match.getId())
+                            .teamAScore(match.getTeamAScore())
+                            .teamBScore(match.getTeamBScore())
+                            .result(match.getResult() != null ? match.getResult().name() : null)
+                            .playedAt(match.getPlayedAt() != null ? match.getPlayedAt().toString() : null)
                             .build();
                 })
                 .collect(Collectors.toList());
