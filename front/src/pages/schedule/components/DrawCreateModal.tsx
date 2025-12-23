@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { DEV_USERS } from "../../../components/DevUserSwitcher";
 import type { Participant } from "../../../types/schedule";
 import { drawService } from "../../../services/drawService";
-import type { DrawResponse } from "../../../services/drawService";
+import type {
+  DrawResponse,
+  CreateDrawRequest,
+} from "../../../services/drawService";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import "./DrawCreateModal.css";
 
@@ -21,9 +24,11 @@ const DrawCreateModal: React.FC<Props> = ({
   onClose,
   onSuccess,
 }) => {
-  const confirmedUserIds = participants
-    .filter((p) => p.status === "CONFIRMED")
-    .map((p) => p.userId);
+  const confirmedUserIds = useMemo(
+    () =>
+      participants.filter((p) => p.status === "CONFIRMED").map((p) => p.userId),
+    [participants]
+  );
 
   const [drawType, setDrawType] = useState<DrawType>("AA");
   const [loading, setLoading] = useState(false);
@@ -99,7 +104,7 @@ const DrawCreateModal: React.FC<Props> = ({
       setGroupB([]);
       setConfirmedGroup([]);
     }
-  }, [drawType, participants]);
+  }, [drawType, participants, confirmedUserIds]);
 
   // 체크박스 토글
   const toggleUserSelection = (userId: number) => {
@@ -240,27 +245,41 @@ const DrawCreateModal: React.FC<Props> = ({
       setLoading(true);
       setError("");
 
-      let request: any = {
+      const baseRequest: Omit<
+        CreateDrawRequest,
+        "userNames" | "seedUserNames" | "groupAUserNames" | "groupBUserNames"
+      > = {
         drawType,
         numberOfTotalPlayer:
           drawType === "AA" ? confirmedGroup.length : confirmedUserIds.length,
       };
 
+      let request: CreateDrawRequest;
       if (drawType === "AA") {
-        request.userNames = confirmedGroup.map((id) => getUserName(id));
-        request.seedUserNames = [];
-        request.groupAUserNames = [];
-        request.groupBUserNames = [];
+        request = {
+          ...baseRequest,
+          userNames: confirmedGroup.map((id) => getUserName(id)),
+          seedUserNames: [],
+          groupAUserNames: [],
+          groupBUserNames: [],
+        };
       } else if (drawType === "AB") {
-        request.userNames = [...groupA, ...groupB].map((id) => getUserName(id));
-        request.groupAUserNames = groupA.map((id) => getUserName(id));
-        request.groupBUserNames = groupB.map((id) => getUserName(id));
-        request.seedUserNames = [];
-      } else if (drawType === "SEED") {
-        request.userNames = normalPlayers.map((id) => getUserName(id));
-        request.seedUserNames = seedPlayers.map((id) => getUserName(id));
-        request.groupAUserNames = [];
-        request.groupBUserNames = [];
+        request = {
+          ...baseRequest,
+          userNames: [...groupA, ...groupB].map((id) => getUserName(id)),
+          groupAUserNames: groupA.map((id) => getUserName(id)),
+          groupBUserNames: groupB.map((id) => getUserName(id)),
+          seedUserNames: [],
+        };
+      } else {
+        // drawType === "SEED"
+        request = {
+          ...baseRequest,
+          userNames: normalPlayers.map((id) => getUserName(id)),
+          seedUserNames: seedPlayers.map((id) => getUserName(id)),
+          groupAUserNames: [],
+          groupBUserNames: [],
+        };
       }
 
       const result = await drawService.createDrawWithSchedule(
@@ -268,9 +287,12 @@ const DrawCreateModal: React.FC<Props> = ({
         request
       );
       setDrawResult(result);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("대진 생성 실패:", err);
-      setError(err.response?.data?.message || "대진 생성에 실패했습니다.");
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "대진 생성에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -337,13 +359,6 @@ const DrawCreateModal: React.FC<Props> = ({
 
     return false;
   })();
-
-  const confirmedParticipants = participants.filter(
-    (p) => p.status === "CONFIRMED"
-  );
-  const waitingParticipants = participants.filter(
-    (p) => p.status === "WAITING"
-  );
 
   // ESC 키로 모달 닫기
   useEscapeKey(onClose);

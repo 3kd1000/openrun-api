@@ -45,11 +45,12 @@ const DrawViewModal: React.FC<Props> = ({
       setError("");
       const result = await drawService.getDraw(schedule.id);
       setDrawResult(result);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("대진표 조회 실패:", err);
-      setError(
-        err.response?.data?.message || "대진표를 불러오는데 실패했습니다."
-      );
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "대진표를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
@@ -161,9 +162,12 @@ const DrawViewModal: React.FC<Props> = ({
       setIsEditMode(false);
       setMatchScores(new Map());
       // 경기 결과 저장 시에는 onSuccess() 호출하지 않음 (일정 정보는 변경되지 않았으므로)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("경기 결과 저장 실패:", err);
-      setError(err.response?.data?.message || "경기 결과 저장에 실패했습니다.");
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "경기 결과 저장에 실패했습니다.");
     } finally {
       setSaving(false);
     }
