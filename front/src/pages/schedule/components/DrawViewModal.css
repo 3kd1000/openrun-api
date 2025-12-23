@@ -386,7 +386,7 @@
   }
 
   .draw-game-card {
-    padding: 8px 10px;
+    padding: 6px 8px;
   }
 
   .game-header {
@@ -413,34 +413,36 @@
   /* 모바일에서는 가로 배치 유지하되 더 compact하게 */
   .game-teams {
     flex-direction: row;
-    gap: 8px;
+    gap: 6px;
     align-items: stretch;
   }
 
   .vs-divider {
     align-self: center;
+    font-size: 10px;
+    padding: 0 3px;
   }
 
   .team {
-    gap: 3px;
-    padding: 6px 8px;
+    gap: 2px;
+    padding: 5px 6px;
   }
 
   .team.winner {
-    padding: 6px 8px;
+    padding: 5px 6px;
   }
 
   .team-label {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .team-content {
-    gap: 4px;
+    gap: 3px;
   }
 
   .player-name {
-    padding: 3px 6px;
-    font-size: 11px;
+    padding: 2px 4px;
+    font-size: 9px;
   }
 
   .team-players {
@@ -448,12 +450,7 @@
   }
 
   .team-players-inline {
-    gap: 3px;
-  }
-
-  .player-name {
-    padding: 4px 6px;
-    font-size: 11px;
+    gap: 2px;
   }
 
   .vs-divider {
@@ -463,15 +460,15 @@
   }
 
   .score-input-inline {
-    width: 28px;
-    padding: 3px;
-    font-size: 11px;
+    width: 26px;
+    padding: 2px;
+    font-size: 10px;
   }
 
   .score-display-inline {
-    font-size: 12px;
-    padding: 3px 5px;
-    min-width: 28px;
+    font-size: 10px;
+    padding: 2px 4px;
+    min-width: 26px;
   }
 
   .modal-actions {
