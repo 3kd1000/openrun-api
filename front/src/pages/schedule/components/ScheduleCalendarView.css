@@ -71,10 +71,10 @@
   height: 140px;
   min-height: 140px;
   max-height: 140px;
-  padding: 8px;
+  padding: 4px 8px;
   background: none;
   border: 1px solid #d0d0d0 !important;
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -93,8 +93,8 @@
 
 .react-calendar__tile--now {
   background-color: transparent !important;
-  border: 2px solid #ff9800 !important;
-  box-shadow: 0 0 0 1px #ff9800 inset;
+  border: 1px solid #ff9800 !important;
+  box-shadow: 0 0 0 0.5px #ff9800 inset;
 }
 
 .react-calendar__tile--now:hover {
@@ -132,11 +132,12 @@
   font-weight: 500;
   margin-bottom: 0;
   flex-shrink: 0;
+  font-size: 13px;
 }
 
 /* 캘린더 타일 콘텐츠 */
 .calendar-tile-content {
-  margin-top: 4px;
+  margin-top: 2px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -207,7 +208,7 @@
 
 /* 무효 대진 스타일 */
 .calendar-event.invalid-draw {
-  border: 2px dashed #ff9800 !important;
+  border: 1px dashed #ff9800 !important;
   background: #fff3e0 !important;
   color: #e65100 !important;
 }
@@ -230,7 +231,7 @@
 
 /* 유효한 대진 스타일 */
 .calendar-event.has-valid-draw {
-  border: 2px solid #28a745 !important;
+  border: 1px solid #28a745 !important;
   background: #28a745 !important;
   color: white !important;
 }
@@ -243,7 +244,7 @@
 .calendar-event.has-valid-draw.not-participating {
   background: white !important;
   color: #28a745 !important;
-  border: 2px solid #28a745 !important;
+  border: 1px solid #28a745 !important;
 }
 
 .calendar-event.has-valid-draw.not-participating:hover {
@@ -291,28 +292,33 @@
     height: 110px;
     min-height: 110px;
     max-height: 110px;
-    padding: 6px;
-    font-size: 12px;
+    padding: 3px 6px;
+    font-size: 11px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
   }
 
+  .react-calendar__tile abbr {
+    font-size: 11px;
+  }
+
   .calendar-tile-content {
+    margin-top: 1px;
     max-height: 80px;
     width: 100%;
     flex-shrink: 0;
   }
 
   .calendar-event {
-    font-size: 10px;
-    padding: 2px 2px;
+    font-size: 9px;
+    padding: 1px 2px;
     gap: 2px;
   }
 
   .event-time,
   .event-name {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .event-time {
