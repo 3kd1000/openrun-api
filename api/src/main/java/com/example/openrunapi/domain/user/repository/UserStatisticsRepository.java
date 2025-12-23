@@ -2,6 +2,8 @@ package com.example.openrunapi.domain.user.repository;
 
 import com.example.openrunapi.domain.user.model.UserStatistics;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +24,21 @@ public interface UserStatisticsRepository extends JpaRepository<UserStatistics, 
      * 특정 클럽의 전체 통계 조회
      */
     List<UserStatistics> findByClubId(Long clubId);
+
+    /**
+     * 특정 클럽의 전체 랭킹 조회 (게스트 제외, 승점 내림차순)
+     */
+    @Query("SELECT us FROM UserStatistics us " +
+           "JOIN User u ON us.userId = u.id " +
+           "WHERE us.clubId = :clubId AND u.isGuest = false " +
+           "ORDER BY us.points DESC, us.goalDifference DESC")
+    List<UserStatistics> findByClubIdExcludingGuestsOrderByPointsDescGoalDifferenceDesc(@Param("clubId") Long clubId);
+
+    /**
+     * 특정 클럽의 전체 통계 조회 (게스트 제외)
+     */
+    @Query("SELECT us FROM UserStatistics us " +
+           "JOIN User u ON us.userId = u.id " +
+           "WHERE us.clubId = :clubId AND u.isGuest = false")
+    List<UserStatistics> findByClubIdExcludingGuests(@Param("clubId") Long clubId);
 }

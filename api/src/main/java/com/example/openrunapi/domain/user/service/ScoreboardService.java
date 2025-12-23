@@ -27,14 +27,15 @@ public class ScoreboardService {
      * 클럽 스코어보드 조회
      * - 승점 내림차순 → 득실차 내림차순 정렬
      * - 사용자 이름 포함
+     * - 게스트 사용자 제외
      */
     @Transactional(readOnly = true)
     public ScoreboardResponse getClubScoreboard(Long clubId) {
         log.info("클럽 스코어보드 조회: club_id={}", clubId);
 
-        // 1. 통계 조회 (승점 순 정렬)
+        // 1. 통계 조회 (승점 순 정렬, 게스트 제외)
         List<UserStatistics> statistics = userStatisticsRepository
-                .findByClubIdOrderByPointsDescGoalDifferenceDesc(clubId);
+                .findByClubIdExcludingGuestsOrderByPointsDescGoalDifferenceDesc(clubId);
 
         if (statistics.isEmpty()) {
             log.info("통계 데이터 없음: club_id={}", clubId);

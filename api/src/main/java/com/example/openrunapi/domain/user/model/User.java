@@ -41,6 +41,9 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
+    @Column(name = "is_guest", nullable = false)
+    private boolean isGuest = false; // 게스트 사용자 여부 (스코어보드 집계 제외)
+
     private boolean deleted = false;
 
     @CreatedDate
@@ -52,12 +55,13 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Builder
-    public User(String firebaseUid, String socialId, String email, String name, String imageUrl) {
+    public User(String firebaseUid, String socialId, String email, String name, String imageUrl, Boolean isGuest) {
         this.firebaseUid = firebaseUid;
         this.socialId = socialId;
         this.email = email;
         this.name = name;
         this.imageUrl = imageUrl;
+        this.isGuest = isGuest != null ? isGuest : false;
     }
 
     public void updateProfile(String name, String imageUrl) {

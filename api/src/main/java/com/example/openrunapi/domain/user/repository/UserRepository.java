@@ -15,4 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 마이그레이션용: 이름으로 조회
     Optional<User> findByName(String name);
+
+    // 게스트 사용자 목록 조회 (ID 오름차순)
+    List<User> findByIsGuestOrderByIdAsc(boolean isGuest);
 }

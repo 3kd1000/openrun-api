@@ -49,18 +49,11 @@ public class MigrationService {
         Set<String> playerNames = csvParser.extractAllPlayerNames(csvRecords);
         log.info("선수 추출 완료: {} 명", playerNames.size());
 
-        // 3. 임시 User 생성 (이미 존재하면 스킵, 게스트는 제외)
+        // 3. 임시 User 생성 (이미 존재하면 스킵, 게스트 포함)
         int createdUsers = 0;
         Map<String, Long> nameToUserIdMap = new HashMap<>();
 
         for (String name : playerNames) {
-            // 게스트는 User 생성 건너뛰기
-            if (name != null && name.contains("게스트")) {
-                nameToUserIdMap.put(name, null);
-                log.debug("게스트 사용자 스킵: {}", name);
-                continue;
-            }
-
             Optional<User> existing = userRepository.findByName(name);
             if (existing.isPresent()) {
                 nameToUserIdMap.put(name, existing.get().getId());
@@ -82,7 +75,7 @@ public class MigrationService {
         List<Match> matches = new ArrayList<>();
 
         for (CsvMatchRecord record : csvRecords) {
-            // 선수 ID 조회
+            // 선수 ID 조회 (게스트 포함)
             Long player1Id = nameToUserIdMap.get(record.getTeamAPlayer1());
             Long player2Id = nameToUserIdMap.get(record.getTeamAPlayer2());
             Long player3Id = nameToUserIdMap.get(record.getTeamBPlayer1());
@@ -90,10 +83,9 @@ public class MigrationService {
 
             // 유효성 검사: player1과 player3는 필수 (복식 1번 자리는 NOT NULL)
             if (player1Id == null || player3Id == null) {
-                log.warn("필수 선수가 게스트라 경기 스킵: {} vs {}", record.getTeamAPlayer1(), record.getTeamBPlayer1());
+                log.warn("필수 선수 정보 없음, 경기 스킵: {} vs {}", record.getTeamAPlayer1(), record.getTeamBPlayer1());
                 continue;
             }
-            // player2Id, player4Id는 게스트(null)여도 OK
 
             // played_at: 날짜 + 08:00 (기본 시간)
             LocalDateTime playedAt = LocalDateTime.of(record.getDate(), LocalTime.of(8, 0));
@@ -163,13 +155,6 @@ public class MigrationService {
         int createdUsers = 0;
 
         for (String name : relatedPlayers) {
-            // 게스트는 User 생성 건너뛰기
-            if (name != null && name.contains("게스트")) {
-                nameToUserIdMap.put(name, null);
-                log.debug("게스트 사용자 스킵: {}", name);
-                continue;
-            }
-
             Optional<User> existing = userRepository.findByName(name);
             if (existing.isPresent()) {
                 nameToUserIdMap.put(name, existing.get().getId());
@@ -194,10 +179,9 @@ public class MigrationService {
 
             // 유효성 검사: player1과 player3는 필수 (복식 1번 자리는 NOT NULL)
             if (player1Id == null || player3Id == null) {
-                log.warn("필수 선수가 게스트라 경기 스킵: {} vs {}", record.getTeamAPlayer1(), record.getTeamBPlayer1());
+                log.warn("필수 선수 정보 없음, 경기 스킵: {} vs {}", record.getTeamAPlayer1(), record.getTeamBPlayer1());
                 continue;
             }
-            // player2Id, player4Id는 게스트(null)여도 OK
 
             LocalDateTime playedAt = LocalDateTime.of(record.getDate(), LocalTime.of(8, 0));
 

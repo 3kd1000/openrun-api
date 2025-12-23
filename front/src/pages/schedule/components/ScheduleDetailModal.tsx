@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
+import { userService, type UserResponse } from "../../../services/userService";
 import type {
   Schedule,
   CreateScheduleRequest,
@@ -51,12 +52,33 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const [showDrawViewModal, setShowDrawViewModal] = useState(false);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
 
+  // 게스트 사용자 목록
+  const [guestUsers, setGuestUsers] = useState<UserResponse[]>([]);
+
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem("devUserId");
   const currentUserId = userId ? parseInt(userId) : null;
 
+  // 게스트 사용자 목록 로드
+  useEffect(() => {
+    const fetchGuestUsers = async () => {
+      try {
+        const guests = await userService.getGuestUsers();
+        setGuestUsers(guests);
+      } catch (err) {
+        console.error("게스트 사용자 목록 조회 실패:", err);
+      }
+    };
+    fetchGuestUsers();
+  }, []);
+
   // 사용자 ID로 이름 가져오기
   const getUserName = (userId: number): string => {
+    // 게스트 사용자 확인 (우선순위 1)
+    const guest = guestUsers.find((g) => g.id === userId);
+    if (guest) return guest.name;
+
+    // 일반 사용자 확인
     const user = DEV_USERS.find((u) => u.id === userId);
     return user ? user.name : `User #${userId}`;
   };

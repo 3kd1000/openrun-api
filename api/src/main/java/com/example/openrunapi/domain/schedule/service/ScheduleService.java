@@ -173,6 +173,9 @@ public class ScheduleService {
 
         matchRepository.saveAll(matches);
         log.info("Match 저장 완료: {} 건", matches.size());
+
+        // 참가자 상태 업데이트: 대진에 포함된 선수는 CONFIRMED, 나머지는 WAITING
+        updateParticipantStatusBasedOnDraw(scheduleId, nameToUserId);
     }
 
     /**
@@ -311,5 +314,64 @@ public class ScheduleService {
         if (totalMatches <= 6) return matchNumber <= 2 ? 1 : matchNumber <= 4 ? 2 : 3;
         // 더 많은 경기는 matchNumber를 2로 나눈 값 + 1
         return (matchNumber - 1) / 2 + 1;
+    }
+
+    /**
+     * 대진 생성 시 참가자 상태 업데이트
+     * - 대진에 포함된 선수 → CONFIRMED
+     * - 대진에 포함되지 않은 선수 → WAITING
+     */
+    private void updateParticipantStatusBasedOnDraw(Long scheduleId, Map<String, Long> nameToUserId) {
+        log.info("=== 참가자 상태 업데이트 시작 ===");
+        log.info("scheduleId: {}, 대진 참여 선수: {}", scheduleId, nameToUserId.size());
+
+        // 대진에 포함된 userId 집합
+        Set<Long> participatingUserIds = new HashSet<>(nameToUserId.values());
+        log.info("대진 참여 userId: {}", participatingUserIds);
+
+        // 해당 일정의 모든 참가자 조회 (취소된 사람 제외)
+        List<com.example.openrunapi.domain.schedule.model.ScheduleParticipant> allParticipants =
+                participantRepository.findByScheduleIdOrderByPositionAsc(scheduleId)
+                        .stream()
+                        .filter(p -> !p.isCancelled())
+                        .collect(Collectors.toList());
+
+        int confirmedCount = 0;
+        int waitingCount = 0;
+        List<com.example.openrunapi.domain.schedule.model.ScheduleParticipant> updatedParticipants = new ArrayList<>();
+
+        for (com.example.openrunapi.domain.schedule.model.ScheduleParticipant participant : allParticipants) {
+            boolean needsUpdate = false;
+
+            if (participatingUserIds.contains(participant.getUserId())) {
+                // 대진에 포함됨 → CONFIRMED
+                if (!participant.isConfirmed()) {
+                    participant.confirm();
+                    confirmedCount++;
+                    needsUpdate = true;
+                    log.debug("userId={} CONFIRMED로 변경", participant.getUserId());
+                }
+            } else {
+                // 대진에 포함되지 않음 → WAITING
+                if (!participant.isWaiting()) {
+                    participant.waitlist();
+                    waitingCount++;
+                    needsUpdate = true;
+                    log.debug("userId={} WAITING으로 변경", participant.getUserId());
+                }
+            }
+
+            if (needsUpdate) {
+                updatedParticipants.add(participant);
+            }
+        }
+
+        // 변경된 참가자만 저장
+        if (!updatedParticipants.isEmpty()) {
+            participantRepository.saveAll(updatedParticipants);
+            log.info("참가자 상태 저장 완료: {} 명", updatedParticipants.size());
+        }
+
+        log.info("참가자 상태 업데이트 완료: CONFIRMED {} 명, WAITING {} 명", confirmedCount, waitingCount);
     }
 }
