@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { drawService } from "../../../services/drawService";
-import type { DrawResponse } from "../../../services/drawService";
+import type {
+  DrawResponse,
+  BatchUpdateMatchRequest,
+} from "../../../services/drawService";
 import type { Schedule, Participant } from "../../../types/schedule";
 import DrawCreateModal from "./DrawCreateModal";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
@@ -131,29 +134,39 @@ const DrawViewModal: React.FC<Props> = ({
       setSaving(true);
       setError("");
 
-      // 스코어가 모두 입력된 매치만 수집
-      const updatePromises = Array.from(matchScores.entries())
+      // 스코어가 모두 입력된 매치만 수집하여 배치 업데이트 요청 생성
+      const updateItems = Array.from(matchScores.entries())
         .filter(([matchId, scores]) => {
           const game = drawResult.games.find((g) => g.matchId === matchId);
           return game && scores.teamAScore !== "" && scores.teamBScore !== "";
         })
-        .map(async ([matchId, scores]) => {
+        .map(([matchId, scores]) => {
           const teamAScore = parseInt(scores.teamAScore);
           const teamBScore = parseInt(scores.teamBScore);
           const result = calculateResult(teamAScore, teamBScore);
 
-          return drawService.updateMatchResult(schedule.clubId, matchId, {
-            teamAScore,
-            teamBScore,
-            result,
-            playedAt: new Date().toISOString(),
-          });
+          return {
+            matchId,
+            request: {
+              teamAScore,
+              teamBScore,
+              result,
+              playedAt: new Date().toISOString(),
+            },
+          };
         });
 
-      // 입력된 스코어가 있으면 저장, 없으면 그냥 모드만 전환
-      if (updatePromises.length > 0) {
-        // 모든 업데이트 실행
-        await Promise.all(updatePromises);
+      // 입력된 스코어가 있으면 배치 업데이트 실행, 없으면 그냥 모드만 전환
+      if (updateItems.length > 0) {
+        const batchRequest: BatchUpdateMatchRequest = {
+          matches: updateItems,
+        };
+
+        // 배치 업데이트 한 번에 실행
+        await drawService.updateMatchResultsBatch(
+          schedule.clubId,
+          batchRequest
+        );
         // 성공 시 대진표 다시 로드
         await loadDraw();
       }

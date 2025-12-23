@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.match.controller;
 
+import com.example.openrunapi.domain.match.model.dto.BatchUpdateMatchRequest;
 import com.example.openrunapi.domain.match.model.dto.MatchResponse;
 import com.example.openrunapi.domain.match.model.dto.UpdateMatchRequest;
 import com.example.openrunapi.domain.match.service.MatchService;
@@ -66,5 +67,25 @@ public class MatchController {
 
         MatchResponse response = matchService.updateMatchResult(matchId, request);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 경기 결과 배치 업데이트
+     * PUT /api/clubs/{clubId}/matches/batch
+     *
+     * @param clubId 클럽 ID (경로 파라미터, 현재는 검증용)
+     * @param request 배치 업데이트 요청
+     * @return 업데이트된 경기 정보 목록
+     */
+    @PutMapping("/batch")
+    public ResponseEntity<List<MatchResponse>> updateMatchResultsBatch(
+            @PathVariable Long clubId,
+            @Valid @RequestBody BatchUpdateMatchRequest request
+    ) {
+        log.info("=== PUT /api/clubs/{}/matches/batch ===", clubId);
+        log.info("업데이트할 경기 수: {}", request.getMatches().size());
+
+        List<MatchResponse> responses = matchService.updateMatchResultsBatch(clubId, request);
+        return ResponseEntity.ok(responses);
     }
 }

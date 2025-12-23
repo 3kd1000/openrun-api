@@ -27,7 +27,8 @@ const DrawCreateModal: React.FC<Props> = ({
   onSuccess,
 }) => {
   // 로컬 참가자 목록 (게스트 추가 시 업데이트용)
-  const [localParticipants, setLocalParticipants] = useState<Participant[]>(participants);
+  const [localParticipants, setLocalParticipants] =
+    useState<Participant[]>(participants);
 
   // props가 변경되면 로컬 상태도 업데이트
   useEffect(() => {
@@ -36,7 +37,9 @@ const DrawCreateModal: React.FC<Props> = ({
 
   const confirmedUserIds = useMemo(
     () =>
-      localParticipants.filter((p) => p.status === "CONFIRMED").map((p) => p.userId),
+      localParticipants
+        .filter((p) => p.status === "CONFIRMED")
+        .map((p) => p.userId),
     [localParticipants]
   );
 
@@ -117,7 +120,9 @@ const DrawCreateModal: React.FC<Props> = ({
       await participantService.joinSchedule(scheduleId, nextGuest.id);
 
       // 참가자 목록 다시 가져오기 (모달은 열린 상태 유지)
-      const updatedParticipants = await participantService.getParticipants(scheduleId);
+      const updatedParticipants = await participantService.getParticipants(
+        scheduleId
+      );
       setLocalParticipants(updatedParticipants);
 
       console.log(`✅ ${nextGuest.name} 추가 완료`);
@@ -802,7 +807,6 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* 대진 생성 결과 */}
           {drawResult && (
             <div className="draw-result-section">
-              <h3>🎯 대진표 생성 완료</h3>
               <div className="draw-games-list">
                 {drawResult.games.map((game) => (
                   <div key={game.gameNo} className="draw-game-card">
@@ -812,24 +816,28 @@ const DrawCreateModal: React.FC<Props> = ({
                     </div>
                     <div className="game-teams">
                       <div className="team team-a">
-                        <div className="team-label">Team A</div>
-                        <div className="team-players">
-                          {game.teamA.map((player, idx) => (
-                            <span key={idx} className="player-name">
-                              {player}
-                            </span>
-                          ))}
+                        <span className="team-label">Team A</span>
+                        <div className="team-content">
+                          <div className="team-players-inline">
+                            {game.teamA.map((player, idx) => (
+                              <span key={idx} className="player-name">
+                                {player}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="vs-divider">VS</div>
                       <div className="team team-b">
-                        <div className="team-label">Team B</div>
-                        <div className="team-players">
-                          {game.teamB.map((player, idx) => (
-                            <span key={idx} className="player-name">
-                              {player}
-                            </span>
-                          ))}
+                        <span className="team-label">Team B</span>
+                        <div className="team-content">
+                          <div className="team-players-inline">
+                            {game.teamB.map((player, idx) => (
+                              <span key={idx} className="player-name">
+                                {player}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>

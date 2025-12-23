@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.match.service;
 
 import com.example.openrunapi.domain.match.model.Match;
+import com.example.openrunapi.domain.match.model.dto.BatchUpdateMatchRequest;
 import com.example.openrunapi.domain.match.model.dto.MatchResponse;
 import com.example.openrunapi.domain.match.model.dto.UpdateMatchRequest;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
@@ -113,6 +114,33 @@ public class MatchService {
         log.info("경기 결과 업데이트 완료: matchId={}", savedMatch.getId());
 
         return toMatchResponse(savedMatch);
+    }
+
+    /**
+     * 경기 결과 배치 업데이트
+     *
+     * @param clubId 클럽 ID
+     * @param request 배치 업데이트 요청
+     * @return 업데이트된 경기 정보 목록
+     */
+    @Transactional
+    public List<MatchResponse> updateMatchResultsBatch(Long clubId, BatchUpdateMatchRequest request) {
+        log.info("=== 경기 결과 배치 업데이트 ===");
+        log.info("clubId: {}, 업데이트할 경기 수: {}", clubId, request.getMatches().size());
+
+        return request.getMatches().stream()
+                .map(item -> {
+                    // 클럽 ID 검증 (보안을 위해)
+                    Match match = matchRepository.findById(item.getMatchId())
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 경기입니다: " + item.getMatchId()));
+                    
+                    if (!match.getClubId().equals(clubId)) {
+                        throw new IllegalArgumentException("클럽 ID가 일치하지 않습니다.");
+                    }
+                    
+                    return updateMatchResult(item.getMatchId(), item.getRequest());
+                })
+                .collect(Collectors.toList());
     }
 
     /**
