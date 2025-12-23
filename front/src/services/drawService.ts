@@ -1,14 +1,14 @@
-import axios from './api/axiosInstance';
+import axios from "./api/axiosInstance";
 
 export interface DrawGame {
   gameNo: number;
   roundNo: number;
   teamA: string[];
   teamB: string[];
-  matchId?: number;  // 경기 결과 입력을 위한 Match ID
+  matchId?: number; // 경기 결과 입력을 위한 Match ID
   teamAScore?: number;
   teamBScore?: number;
-  result?: 'TEAM_A_WIN' | 'TEAM_B_WIN' | 'DRAW';
+  result?: "TEAM_A_WIN" | "TEAM_B_WIN" | "DRAW";
   playedAt?: string;
 }
 
@@ -19,7 +19,7 @@ export interface DrawResponse {
 export interface CreateDrawRequest {
   userNames: string[];
   seedUserNames?: string[];
-  drawType: 'AA' | 'AB' | 'SEED';
+  drawType: "AA" | "AB" | "SEED";
   groupAUserNames?: string[];
   groupBUserNames?: string[];
   numberOfTotalPlayer: number;
@@ -28,8 +28,17 @@ export interface CreateDrawRequest {
 export interface UpdateMatchRequest {
   teamAScore: number;
   teamBScore: number;
-  result: 'TEAM_A_WIN' | 'TEAM_B_WIN' | 'DRAW';
+  result: "TEAM_A_WIN" | "TEAM_B_WIN" | "DRAW";
   playedAt?: string;
+}
+
+export interface BatchUpdateMatchItem {
+  matchId: number;
+  request: UpdateMatchRequest;
+}
+
+export interface BatchUpdateMatchRequest {
+  matches: BatchUpdateMatchItem[];
 }
 
 export interface MatchResponse {
@@ -51,7 +60,7 @@ export interface MatchResponse {
 class DrawService {
   // 일반 사용자용 대진 생성 (DB 저장 안함)
   async createDraw(request: CreateDrawRequest): Promise<DrawResponse> {
-    const response = await axios.post<DrawResponse>('/draw', request);
+    const response = await axios.post<DrawResponse>("/draw", request);
     return response.data;
   }
 
@@ -83,6 +92,18 @@ class DrawService {
   ): Promise<MatchResponse> {
     const response = await axios.put<MatchResponse>(
       `/clubs/${clubId}/matches/${matchId}`,
+      request
+    );
+    return response.data;
+  }
+
+  // 경기 결과 배치 업데이트
+  async updateMatchResultsBatch(
+    clubId: number,
+    request: BatchUpdateMatchRequest
+  ): Promise<MatchResponse[]> {
+    const response = await axios.put<MatchResponse[]>(
+      `/clubs/${clubId}/matches/batch`,
       request
     );
     return response.data;
