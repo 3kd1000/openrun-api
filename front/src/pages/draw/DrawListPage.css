@@ -626,8 +626,8 @@
   }
 
   .match-card {
-    padding: 14px 12px;
-    padding-top: 32px;
+    padding: 12px 10px;
+    padding-top: 30px;
   }
 
   .match-status-badge {
@@ -648,8 +648,8 @@
 
   .match-teams-inline {
     flex-direction: row;
-    gap: 6px;
-    padding: 6px;
+    gap: 4px;
+    padding: 4px;
     align-items: center;
   }
 
@@ -658,29 +658,30 @@
   }
 
   .team-inline {
-    padding: 6px 8px;
-    gap: 6px;
+    padding: 4px 5px;
+    gap: 3px;
     flex: 1;
     min-width: 0;
   }
 
   .team-label-inline {
-    font-size: 9px;
-    min-width: 45px;
+    font-size: 8px;
+    min-width: 40px;
     display: inline-block;
   }
 
   .players-inline {
-    font-size: 11px;
+    font-size: 9px;
     flex: 1;
     min-width: 0;
-    gap: 3px;
+    gap: 2px;
   }
 
   .score-inline {
-    font-size: 12px;
-    padding: 2px 4px;
-    margin-left: 3px;
+    font-size: 10px;
+    padding: 1px 3px;
+    margin-left: 2px;
+    min-width: 28px;
   }
 
   .vs {
@@ -689,8 +690,8 @@
   }
 
   .vs-inline {
-    font-size: 10px;
-    padding: 0 4px;
+    font-size: 9px;
+    padding: 0 3px;
     flex-shrink: 0;
   }
 
