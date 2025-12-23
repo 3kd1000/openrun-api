@@ -14,5 +14,12 @@
   .App-content {
     margin-left: 200px; /* 좌측 네비게이션 너비만큼 */
     padding-bottom: 0;
+    min-height: 100vh;
+  }
+
+  .App-content-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 }

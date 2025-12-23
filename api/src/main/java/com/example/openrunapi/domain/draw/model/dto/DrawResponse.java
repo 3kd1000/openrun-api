@@ -24,5 +24,6 @@ public class DrawResponse {
         private int roundNo;
         private List<String> teamA;
         private List<String> teamB;
+        private Long matchId;  // 경기 결과 입력을 위한 Match ID
     }
 }

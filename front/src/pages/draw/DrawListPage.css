@@ -1,8 +1,8 @@
 .draw-list-page {
   padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   min-height: calc(100vh - 140px);
+  box-sizing: border-box;
 }
 
 .page-header {
@@ -164,8 +164,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* 검색 필터 섹션 */
@@ -203,7 +208,7 @@
 }
 
 .search-button {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
 }
 
@@ -278,7 +283,7 @@
 
 .match-number {
   font-weight: 700;
-  color: #4CAF50;
+  color: #4caf50;
   font-size: 16px;
 }
 

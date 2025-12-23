@@ -17,7 +17,7 @@ const ScheduleListPage: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null);
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [myParticipations, setMyParticipations] = useState<Set<number>>(new Set());
   const todayScheduleRef = useRef<HTMLDivElement>(null);
@@ -94,7 +94,7 @@ const ScheduleListPage: React.FC = () => {
   };
 
   const handleScheduleClick = (schedule: Schedule) => {
-    setSelectedSchedule(schedule);
+    setSelectedScheduleId(schedule.id);
     setShowDetailModal(true);
   };
 
@@ -109,7 +109,7 @@ const ScheduleListPage: React.FC = () => {
 
   const handleDetailModalClose = () => {
     setShowDetailModal(false);
-    setSelectedSchedule(null);
+    setSelectedScheduleId(null);
   };
 
   // 필터링된 일정 목록
@@ -173,16 +173,22 @@ const ScheduleListPage: React.FC = () => {
             const isFirstFuture = !isPast && filteredSchedules.slice(0, index).every(s => new Date(s.scheduledAt) < new Date());
             const isParticipating = myParticipations.has(schedule.id);
             const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
+            const hasValidDraw = schedule.drawType && schedule.isDrawValid;
             return (
               <div
                 key={schedule.id}
                 ref={isFirstFuture ? todayScheduleRef : null}
-                className={`schedule-card ${isPast ? 'past-schedule' : ''} ${!isParticipating ? 'not-participating' : ''} ${hasInvalidDraw ? 'invalid-draw' : ''}`}
+                className={`schedule-card ${isPast ? 'past-schedule' : ''} ${!isParticipating ? 'not-participating' : ''} ${hasInvalidDraw ? 'invalid-draw' : ''} ${hasValidDraw ? 'has-valid-draw' : ''}`}
                 onClick={() => handleScheduleClick(schedule)}
               >
               {hasInvalidDraw && (
                 <div className="draw-warning">
                   ⚠️ 대진표 무효 (참가자 변동)
+                </div>
+              )}
+              {hasValidDraw && (
+                <div className="draw-success">
+                  ✓ 대진표 생성 완료
                 </div>
               )}
               <div className="schedule-info">
@@ -224,9 +230,9 @@ const ScheduleListPage: React.FC = () => {
         />
       )}
 
-      {showDetailModal && selectedSchedule && (
+      {showDetailModal && selectedScheduleId && (
         <ScheduleDetailModal
-          schedule={selectedSchedule}
+          scheduleId={selectedScheduleId}
           onClose={handleDetailModalClose}
           onSuccess={() => {
             loadSchedules();

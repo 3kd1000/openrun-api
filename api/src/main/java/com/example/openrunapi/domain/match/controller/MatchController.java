@@ -1,7 +1,9 @@
 package com.example.openrunapi.domain.match.controller;
 
 import com.example.openrunapi.domain.match.model.dto.MatchResponse;
+import com.example.openrunapi.domain.match.model.dto.UpdateMatchRequest;
 import com.example.openrunapi.domain.match.service.MatchService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -41,5 +43,28 @@ public class MatchController {
 
         List<MatchResponse> matches = matchService.getMatches(clubId, playerName, startDate, endDate);
         return ResponseEntity.ok(matches);
+    }
+
+    /**
+     * 경기 결과 업데이트
+     * PUT /api/clubs/{clubId}/matches/{matchId}
+     *
+     * @param clubId 클럽 ID (경로 파라미터, 현재는 검증용)
+     * @param matchId 경기 ID
+     * @param request 경기 결과 업데이트 요청
+     * @return 업데이트된 경기 정보
+     */
+    @PutMapping("/{matchId}")
+    public ResponseEntity<MatchResponse> updateMatchResult(
+            @PathVariable Long clubId,
+            @PathVariable Long matchId,
+            @Valid @RequestBody UpdateMatchRequest request
+    ) {
+        log.info("=== PUT /api/clubs/{}/matches/{} ===", clubId, matchId);
+        log.info("request: teamAScore={}, teamBScore={}, result={}",
+                request.getTeamAScore(), request.getTeamBScore(), request.getResult());
+
+        MatchResponse response = matchService.updateMatchResult(matchId, request);
+        return ResponseEntity.ok(response);
     }
 }

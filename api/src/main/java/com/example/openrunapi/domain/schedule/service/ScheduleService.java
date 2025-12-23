@@ -278,6 +278,7 @@ public class ScheduleService {
                             .roundNo(calculateRoundNumber(match.getMatchNumber(), matches.size()))
                             .teamA(teamA)
                             .teamB(teamB)
+                            .matchId(match.getId())
                             .build();
                 })
                 .collect(Collectors.toList());
