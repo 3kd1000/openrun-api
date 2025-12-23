@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import axiosInstance from "../../services/api/axiosInstance";
 import "./ScoreboardPage.css";
 
@@ -29,12 +29,13 @@ const ScoreboardPage: React.FC = () => {
   // 모든 컬럼을 항상 표시 (체크박스 제거)
 
   const clubId = 1; // TODO: Context나 URL param에서 가져오기
+  const isLoadingRef = useRef(false);
 
-  useEffect(() => {
-    fetchScoreboard();
-  }, []);
+  const fetchScoreboard = useCallback(async () => {
+    // 이미 로딩 중이면 중복 호출 방지
+    if (isLoadingRef.current) return;
 
-  const fetchScoreboard = async () => {
+    isLoadingRef.current = true;
     try {
       setLoading(true);
       setError(null);
@@ -47,8 +48,13 @@ const ScoreboardPage: React.FC = () => {
       setError("스코어보드를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
-  };
+  }, [clubId]);
+
+  useEffect(() => {
+    fetchScoreboard();
+  }, [fetchScoreboard]);
 
   if (loading) {
     return (

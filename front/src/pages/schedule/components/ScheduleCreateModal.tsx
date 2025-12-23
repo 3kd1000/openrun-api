@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { scheduleService } from '../../../services/scheduleService';
 import type { CreateScheduleRequest } from '../../../types/schedule';
+import { useEscapeKey } from '../../../hooks/useEscapeKey';
 import './ScheduleCreateModal.css';
 
 interface Props {
@@ -43,6 +44,9 @@ const ScheduleCreateModal: React.FC<Props> = ({ initialDate, onClose, onSuccess 
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // ESC 키로 모달 닫기
+  useEscapeKey(onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -67,7 +67,13 @@ public class DrawService {
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
             int gameNo = i + 1;
             int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
-            games.add(new DrawResponse.Game(gameNo, roundNo, teamA, teamB, null));
+            games.add(DrawResponse.Game.builder()
+                    .gameNo(gameNo)
+                    .roundNo(roundNo)
+                    .teamA(teamA)
+                    .teamB(teamB)
+                    .matchId(null)
+                    .build());
         }
         return new DrawResponse(games);
     }
@@ -100,7 +106,13 @@ public class DrawService {
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
             int gameNo = i + 1;
             int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
-            games.add(new DrawResponse.Game(gameNo, roundNo, teamA, teamB, null));
+            games.add(DrawResponse.Game.builder()
+                    .gameNo(gameNo)
+                    .roundNo(roundNo)
+                    .teamA(teamA)
+                    .teamB(teamB)
+                    .matchId(null)
+                    .build());
         }
         return new DrawResponse(games);
     }
@@ -144,7 +156,13 @@ public class DrawService {
             List<String> teamB = mapTeamToNames(teams[1], numberToName);
             int gameNo = i + 1;
             int roundNo = (i / gamesPerRound) + 1; // ★ 라운드 번호 계산
-            games.add(new DrawResponse.Game(gameNo, roundNo, teamA, teamB, null));
+            games.add(DrawResponse.Game.builder()
+                    .gameNo(gameNo)
+                    .roundNo(roundNo)
+                    .teamA(teamA)
+                    .teamB(teamB)
+                    .matchId(null)
+                    .build());
         }
         return new DrawResponse(games);
     }

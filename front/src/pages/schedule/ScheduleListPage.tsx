@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { format } from 'date-fns';
 import { scheduleService } from '../../services/scheduleService';
 import type { Schedule } from '../../types/schedule';
@@ -21,24 +21,13 @@ const ScheduleListPage: React.FC = () => {
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [myParticipations, setMyParticipations] = useState<Set<number>>(new Set());
   const todayScheduleRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
 
-  useEffect(() => {
-    loadSchedules();
-  }, []);
-
-  // 리스트뷰에서 오늘 날짜 기준으로 스크롤
-  useEffect(() => {
-    if (viewMode === 'list' && !filterDate && todayScheduleRef.current) {
-      setTimeout(() => {
-        todayScheduleRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }, 100);
-    }
-  }, [viewMode, schedules, filterDate]);
-
-  const loadSchedules = async () => {
+  const loadSchedules = useCallback(async () => {
+    // 이미 로딩 중이면 중복 호출 방지
+    if (isLoadingRef.current) return;
+    
+    isLoadingRef.current = true;
     try {
       setLoading(true);
       setError('');
@@ -62,8 +51,25 @@ const ScheduleListPage: React.FC = () => {
       setError('일정을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSchedules();
+  }, [loadSchedules]);
+
+  // 리스트뷰에서 오늘 날짜 기준으로 스크롤
+  useEffect(() => {
+    if (viewMode === 'list' && !filterDate && todayScheduleRef.current) {
+      setTimeout(() => {
+        todayScheduleRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 100);
+    }
+  }, [viewMode, schedules, filterDate]);
 
   if (loading) {
     return <div className="schedule-page"><div className="loading">로딩 중...</div></div>;

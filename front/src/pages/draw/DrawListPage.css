@@ -257,90 +257,250 @@
 .match-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .match-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
-  background: #fafafa;
-  transition: box-shadow 0.2s;
+  position: relative;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 18px;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .match-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  border-color: #667eea;
+  transform: translateY(-2px);
 }
 
-.match-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
+/* 미래 경기 */
+.match-card.future-match {
+  background: linear-gradient(to bottom, #e3f2fd 0%, #e8eaf6 100%);
+  border-color: #64b5f6;
 }
 
-.match-number {
+.match-card.future-match:hover {
+  border-color: #42a5f5;
+  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.25);
+}
+
+/* 완료된 경기 */
+.match-card.completed-match {
+  background: linear-gradient(to bottom, #f1f8e9 0%, #f9fbe7 100%);
+  border-color: #aed581;
+}
+
+.match-card.completed-match:hover {
+  border-color: #9ccc65;
+  box-shadow: 0 4px 12px rgba(156, 204, 101, 0.25);
+}
+
+/* 대기 중인 경기 (과거 시점이지만 결과 미입력) */
+.match-card.pending-match {
+  background: linear-gradient(to bottom, #fff3e0 0%, #ffe0b2 100%);
+  border-color: #ffb74d;
+}
+
+.match-card.pending-match:hover {
+  border-color: #ffa726;
+  box-shadow: 0 4px 12px rgba(255, 167, 38, 0.25);
+}
+
+/* 상태 배지 */
+.match-status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
   font-weight: 700;
-  color: #4caf50;
-  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.match-status-badge.future {
+  background: #42a5f5;
+  color: white;
+}
+
+.match-status-badge.completed {
+  background: #66bb6a;
+  color: white;
 }
 
 .match-date {
   font-size: 13px;
-  color: #666;
+  color: #667eea;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .match-teams {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.match-teams-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 12px;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
 }
 
 .team {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 8px;
+  background: white;
+  border: 2px solid #f0f0f0;
+  transition: all 0.2s;
+}
+
+.team-inline {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f8f9fa;
+  transition: all 0.2s;
+}
+
+.team-inline.team-a {
+  border-left: 3px solid #28a745;
+}
+
+.team-inline.team-b {
+  border-left: 3px solid #dc3545;
+}
+
+.team-inline.winner {
+  background: #d4edda;
+  border-color: #28a745;
+}
+
+.team-inline.loser {
+  opacity: 0.7;
+  background: #f8f9fa;
+}
+
+.team.team-a {
+  border-left: 4px solid #28a745;
+}
+
+.team.team-b {
+  border-left: 4px solid #dc3545;
 }
 
 .team-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+}
+
+.team-label-inline {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6c757d;
+  flex-shrink: 0;
+  min-width: 50px;
 }
 
 .players {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: #222;
+  line-height: 1.4;
+}
+
+.players-inline {
+  font-size: 13px;
+  font-weight: 600;
+  color: #212529;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.team-inline.team-a .players-inline {
+  justify-content: flex-end;
+}
+
+.score-inline {
+  font-size: 16px;
+  font-weight: 700;
+  color: #495057;
+  padding: 4px 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  flex-shrink: 0;
+  min-width: 35px;
+  text-align: center;
 }
 
 .vs {
   font-weight: 700;
-  color: #999;
-  font-size: 14px;
+  color: #aaa;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.vs-inline {
+  font-weight: 700;
+  color: #6c757d;
+  font-size: 12px;
+  flex-shrink: 0;
+  padding: 0 8px;
 }
 
 .match-result {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #e0e0e0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
 }
 
 .result-label {
-  font-size: 13px;
-  color: #666;
+  font-size: 12px;
+  color: #999;
+  font-weight: 600;
 }
 
 .result-value {
   font-size: 14px;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #667eea;
 }
 
 .empty-state {
@@ -461,18 +621,20 @@
     padding: 15px;
   }
 
+  .match-list {
+    max-width: 100%;
+  }
+
   .match-card {
-    padding: 12px;
+    padding: 14px 12px;
+    padding-top: 32px;
   }
 
-  .match-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .match-number {
-    font-size: 14px;
+  .match-status-badge {
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    padding: 3px 8px;
   }
 
   .match-date {
@@ -481,11 +643,55 @@
 
   .match-teams {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+  }
+
+  .match-teams-inline {
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px;
+    align-items: center;
+  }
+
+  .team {
+    padding: 10px;
+  }
+
+  .team-inline {
+    padding: 6px 8px;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .team-label-inline {
+    font-size: 9px;
+    min-width: 45px;
+    display: inline-block;
+  }
+
+  .players-inline {
+    font-size: 11px;
+    flex: 1;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .score-inline {
+    font-size: 12px;
+    padding: 2px 4px;
+    margin-left: 3px;
   }
 
   .vs {
     transform: rotate(90deg);
+    margin: -4px 0;
+  }
+
+  .vs-inline {
+    font-size: 10px;
+    padding: 0 4px;
+    flex-shrink: 0;
   }
 
   .empty-icon {

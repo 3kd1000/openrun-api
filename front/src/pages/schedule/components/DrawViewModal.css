@@ -52,14 +52,14 @@
 .draw-games-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .draw-game-card {
   background: #f8f9fa;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px 12px;
   transition: box-shadow 0.2s;
 }
 
@@ -71,8 +71,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 2px solid #dee2e6;
 }
 
@@ -80,6 +80,7 @@
   font-size: 16px;
   font-weight: 700;
   color: #495057;
+  margin-right: 8px;
 }
 
 .round-badge {
@@ -89,6 +90,7 @@
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
+  margin-left: 8px;
 }
 
 .game-teams {
@@ -101,15 +103,28 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f8f9fa;
 }
 
 .team-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #6c757d;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #6c757d;
+  flex-shrink: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.team-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .team-players {
@@ -118,29 +133,137 @@
   gap: 4px;
 }
 
-.player-name {
-  padding: 8px 12px;
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #212529;
+.team-players-inline {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
 }
 
-.team-a .player-name {
+.team-a .team-players-inline {
+  justify-content: flex-end;
+}
+
+.player-name {
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #212529;
+  white-space: nowrap;
+}
+
+.team-a {
   border-left: 3px solid #28a745;
 }
 
-.team-b .player-name {
+.team-b {
   border-left: 3px solid #dc3545;
 }
 
+.team-a .player-name {
+  border-left: 2px solid #28a745;
+}
+
+.team-b .player-name {
+  border-left: 2px solid #dc3545;
+}
+
 .vs-divider {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #6c757d;
   padding: 0 8px;
+  flex-shrink: 0;
+  align-self: center;
+  display: flex;
+  align-items: center;
+}
+
+/* 경기 결과 관련 스타일 */
+.result-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.result-badge.team_a_win {
+  background: #d4edda;
+  color: #155724;
+}
+
+.result-badge.team_b_win {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.result-badge.draw {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* 인라인 스코어 스타일 */
+.score-input-inline {
+  width: 32px;
+  padding: 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  border: 2px solid #667eea;
+  border-radius: 4px;
+  background: white;
+  outline: none;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.score-input-inline:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.score-display-inline {
+  font-size: 14px;
+  font-weight: 700;
+  color: #495057;
+  padding: 4px 6px;
+  background: #e9ecef;
+  border-radius: 4px;
+  flex-shrink: 0;
+  min-width: 32px;
+  text-align: center;
+}
+
+/* 승자/패자 하이라이트 */
+.team.winner {
+  background: #d4edda;
+  border-color: #28a745;
+}
+
+.team.winner .player-name {
+  background: #c3e6cb;
+  border-color: #28a745;
+  font-weight: 600;
+}
+
+.team.loser {
+  opacity: 0.7;
+  background: #f8f9fa;
+}
+
+.team.loser .player-name {
+  opacity: 0.6;
+}
+
+.draw-game-card.has-result {
+  background: linear-gradient(to right, #f8f9fa 0%, #e9ecef 100%);
 }
 
 /* 액션 버튼 */
@@ -152,8 +275,14 @@
   border-top: 1px solid #e0e0e0;
 }
 
+.btn-wrapper {
+  display: inline-block;
+}
+
 .btn-copy,
-.btn-regenerate {
+.btn-regenerate,
+.btn-edit,
+.btn-save {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -181,8 +310,28 @@
   background: #e0a800;
 }
 
+.btn-edit {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background: #138496;
+}
+
+.btn-save {
+  background: #28a745;
+  color: white;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #218838;
+}
+
 .btn-copy:disabled,
-.btn-regenerate:disabled {
+.btn-regenerate:disabled,
+.btn-edit:disabled,
+.btn-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -207,28 +356,141 @@
 @media (max-width: 768px) {
   .draw-view-modal {
     max-width: 95%;
+    max-height: 95vh;
   }
 
   .draw-view-content {
-    padding: 16px;
+    padding: 12px;
   }
 
+  .schedule-info-section {
+    padding: 12px;
+  }
+
+  .schedule-info-section h3 {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .schedule-info-section .schedule-datetime {
+    font-size: 12px;
+  }
+
+  .draw-type-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .draw-games-list {
+    gap: 8px;
+  }
+
+  .draw-game-card {
+    padding: 8px 10px;
+  }
+
+  .game-header {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+
+  .game-number {
+    font-size: 13px;
+    margin-right: 6px;
+  }
+
+  .round-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    margin-left: 6px;
+  }
+
+  .result-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  /* 모바일에서는 가로 배치 유지하되 더 compact하게 */
   .game-teams {
-    flex-direction: column;
+    flex-direction: row;
+    gap: 8px;
+    align-items: stretch;
   }
 
   .vs-divider {
-    transform: rotate(90deg);
-    padding: 8px 0;
+    align-self: center;
+  }
+
+  .team {
+    gap: 3px;
+    padding: 6px 8px;
+  }
+
+  .team.winner {
+    padding: 6px 8px;
+  }
+
+  .team-label {
+    font-size: 9px;
+  }
+
+  .team-content {
+    gap: 4px;
+  }
+
+  .player-name {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  .team-players {
+    gap: 2px;
+  }
+
+  .team-players-inline {
+    gap: 3px;
+  }
+
+  .player-name {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .vs-divider {
+    font-size: 11px;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  .score-input-inline {
+    width: 28px;
+    padding: 3px;
+    font-size: 11px;
+  }
+
+  .score-display-inline {
+    font-size: 12px;
+    padding: 3px 5px;
+    min-width: 28px;
   }
 
   .modal-actions {
     flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  .btn-wrapper {
+    width: 100%;
   }
 
   .btn-copy,
   .btn-regenerate,
+  .btn-edit,
+  .btn-save,
   .btn-primary {
     width: 100%;
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }
