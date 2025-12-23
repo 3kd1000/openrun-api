@@ -83,6 +83,16 @@ public class Match {
         updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * 경기 결과 업데이트
+     */
+    public void updateResult(Integer teamAScore, Integer teamBScore, MatchResult result, LocalDateTime playedAt) {
+        this.teamAScore = teamAScore;
+        this.teamBScore = teamBScore;
+        this.result = result;
+        this.playedAt = playedAt != null ? playedAt : LocalDateTime.now();
+    }
+
     public enum MatchResult {
         TEAM_A_WIN,
         TEAM_B_WIN,

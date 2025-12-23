@@ -1,9 +1,8 @@
 .scoreboard-page {
   padding: 20px;
-  max-width: 100%;
   width: 100%;
-  margin: 0 auto;
   padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+  box-sizing: border-box;
 }
 
 .scoreboard-header {
@@ -59,7 +58,7 @@
 }
 
 .scoreboard-table thead {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   position: sticky;
   top: 0;
@@ -88,7 +87,7 @@
 }
 
 .scoreboard-table td {
-  padding: 8px;
+  padding: 6px;
   text-align: center;
   white-space: nowrap;
   border-right: 1px solid #eee;
@@ -101,28 +100,28 @@
 /* 특정 컬럼 강조 */
 .scoreboard-table td.rank {
   font-weight: 700;
-  color: #4CAF50;
+  color: #4caf50;
   font-size: 16px;
 }
 
 .scoreboard-table td.name {
   font-weight: 600;
   color: #333;
-  text-align: left;
+  /* text-align: left; */
 }
 
 .scoreboard-table td.points {
   font-weight: 700;
-  color: #FF9800;
+  color: #ff9800;
 }
 
 .scoreboard-table td.wins {
-  color: #2196F3;
+  color: #2196f3;
   font-weight: 600;
 }
 
 .scoreboard-table td.positive {
-  color: #4CAF50;
+  color: #4caf50;
   font-weight: 600;
 }
 

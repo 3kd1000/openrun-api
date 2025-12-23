@@ -38,13 +38,15 @@ public class MatchEntityListener {
 
     /**
      * Match 수정 후 실행
+     *
+     * 주의: 경기 결과 수정 시 통계 업데이트는 MatchService.updateMatchResult()에서 명시적으로 처리됩니다.
+     * 리스너에서는 중복 처리를 방지하기 위해 아무것도 하지 않습니다.
      */
     @PostUpdate
     public void onMatchUpdated(Match match) {
-        log.debug("Match 수정 감지: id={}, club={}", match.getId(), match.getClubId());
-        // TODO: 수정 시에는 이전 통계를 차감하고 새로운 통계를 추가해야 함
-        // 현재는 재계산 필요 (복잡도 증가)
-        log.warn("Match 수정은 현재 통계 재계산이 필요합니다. match_id={}", match.getId());
+        log.debug("Match 수정 감지: id={}, club={} (통계 업데이트는 Service에서 처리)", match.getId(), match.getClubId());
+        // 통계 업데이트는 MatchService.updateMatchResult()에서 명시적으로 처리
+        // 여기서는 중복 처리 방지를 위해 아무것도 하지 않음
     }
 
     /**

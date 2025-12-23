@@ -1,5 +1,6 @@
 .draw-create-modal {
-  max-width: 800px;
+  max-width: 800px !important;
+  width: 95vw;
 }
 
 .draw-create-content {
@@ -63,6 +64,9 @@
   color: #333;
   text-align: center;
   transition: all 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .player-card.draggable {
@@ -149,6 +153,10 @@
 .player-card-with-checkbox span {
   flex: 1;
   user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 /* 선택 인원 배지 */

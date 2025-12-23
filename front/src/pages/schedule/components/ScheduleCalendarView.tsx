@@ -43,15 +43,16 @@ const ScheduleCalendarView: React.FC<Props> = ({
             const isPast = new Date(schedule.scheduledAt) < new Date();
             const isParticipating = myParticipations.has(schedule.id);
             const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
+            const hasValidDraw = schedule.drawType && schedule.isDrawValid;
             return (
               <div
                 key={schedule.id}
-                className={`calendar-event ${isPast ? 'past-event' : ''} ${!isParticipating ? 'not-participating' : ''} ${hasInvalidDraw ? 'invalid-draw' : ''}`}
+                className={`calendar-event ${isPast ? 'past-event' : ''} ${!isParticipating ? 'not-participating' : ''} ${hasInvalidDraw ? 'invalid-draw' : ''} ${hasValidDraw ? 'has-valid-draw' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onScheduleClick(schedule);
                 }}
-                title={`${schedule.courtName} - ${format(new Date(schedule.scheduledAt), 'HH:mm')}${hasInvalidDraw ? ' ⚠️ 대진표 무효' : ''}`}
+                title={`${schedule.courtName} - ${format(new Date(schedule.scheduledAt), 'HH:mm')}${hasInvalidDraw ? ' ⚠️ 대진표 무효' : hasValidDraw ? ' ✓ 대진표 생성 완료' : ''}`}
               >
               <span className="event-time">
                 {format(new Date(schedule.scheduledAt), 'HH:mm')}
@@ -59,6 +60,7 @@ const ScheduleCalendarView: React.FC<Props> = ({
               <span className="event-name">
                 {schedule.courtName}
                 {hasInvalidDraw && <span className="invalid-indicator">⚠️</span>}
+                {hasValidDraw && <span className="valid-indicator">✓</span>}
               </span>
             </div>
             );

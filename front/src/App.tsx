@@ -24,17 +24,19 @@ function App() {
       <DevUserSwitcher />
       {shouldShowNavigation && <Navigation />}
       <main className="App-content">
-        <Routes>
-          <Route path="/" element={<DrawGenerationPage />} />
-          <Route path="/schedules" element={<ScheduleListPage />} />
-          <Route path="/draws" element={<DrawListPage />} />
-          <Route path="/scoreboard" element={<ScoreboardPage />} />
-          <Route path="/auth-test" element={<AuthTestPage />} />
-          <Route path="/dev/login" element={<DevAuthPage />} />
-          <Route path="/clubs" element={<ClubListPage />} />
-          <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
-          <Route path="/clubs/:clubId/admin" element={<ClubAdminPage />} />
-        </Routes>
+        <div className="App-content-wrapper">
+          <Routes>
+            <Route path="/" element={<DrawGenerationPage />} />
+            <Route path="/schedules" element={<ScheduleListPage />} />
+            <Route path="/draws" element={<DrawListPage />} />
+            <Route path="/scoreboard" element={<ScoreboardPage />} />
+            <Route path="/auth-test" element={<AuthTestPage />} />
+            <Route path="/dev/login" element={<DevAuthPage />} />
+            <Route path="/clubs" element={<ClubListPage />} />
+            <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
+            <Route path="/clubs/:clubId/admin" element={<ClubAdminPage />} />
+          </Routes>
+        </div>
       </main>
       <Footer />
     </div>

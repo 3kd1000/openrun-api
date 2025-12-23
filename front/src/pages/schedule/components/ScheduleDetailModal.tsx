@@ -9,7 +9,7 @@ import DrawViewModal from './DrawViewModal';
 import './ScheduleDetailModal.css';
 
 interface Props {
-  schedule: Schedule;
+  scheduleId: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -30,7 +30,7 @@ const generateTimeOptions = () => {
   return options;
 };
 
-const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) => {
+const ScheduleDetailModal: React.FC<Props> = ({ scheduleId, onClose, onSuccess }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,6 +38,7 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   const [myParticipation, setMyParticipation] = useState<Participant | null>(null);
   const [showDrawCreateModal, setShowDrawCreateModal] = useState(false);
   const [showDrawViewModal, setShowDrawViewModal] = useState(false);
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
 
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem('devUserId');
@@ -50,41 +51,67 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   };
 
   // 초기 날짜 및 시간 분리
-  const scheduledAtDate = new Date(schedule.scheduledAt);
+  const scheduledAtDate = schedule ? new Date(schedule.scheduledAt) : new Date();
   const defaultDate = format(scheduledAtDate, 'yyyy-MM-dd');
   const defaultTime = format(scheduledAtDate, 'HH:mm');
 
   const [selectedDate, setSelectedDate] = useState(defaultDate);
   const [selectedTime, setSelectedTime] = useState(defaultTime);
   const [formData, setFormData] = useState({
-    clubId: schedule.clubId,
-    courtName: schedule.courtName,
-    maxCapacity: schedule.maxCapacity,
-    cost: schedule.cost || undefined,
-    description: schedule.description || ''
+    clubId: schedule?.clubId || 1,
+    courtName: schedule?.courtName || '',
+    maxCapacity: schedule?.maxCapacity || 0,
+    cost: schedule?.cost || undefined,
+    description: schedule?.description || ''
   });
 
-  // 참가자 목록 및 내 참가 상태 로드
+  // 일정 정보 및 참가자 목록 로드
   useEffect(() => {
-    loadParticipants();
-  }, [schedule.id]);
+    loadScheduleAndParticipants();
+  }, [scheduleId]);
 
-  const loadParticipants = async () => {
+  const loadScheduleAndParticipants = async () => {
     try {
-      const [participantsList, myStatus] = await Promise.all([
-        participantService.getParticipants(schedule.id),
-        currentUserId ? participantService.getMyParticipation(schedule.id, currentUserId) : Promise.resolve(null)
+      setLoading(true);
+
+      // 일정 정보와 참가자 정보를 병렬로 가져오기
+      const [scheduleData, participantsList, myStatus] = await Promise.all([
+        scheduleService.getScheduleById(scheduleId),
+        participantService.getParticipants(scheduleId),
+        currentUserId ? participantService.getMyParticipation(scheduleId, currentUserId) : Promise.resolve(null)
       ]);
 
+      setSchedule(scheduleData);
       setParticipants(participantsList);
       setMyParticipation(myStatus);
+
+      // 폼 데이터 초기화
+      const scheduledAt = new Date(scheduleData.scheduledAt);
+      setSelectedDate(format(scheduledAt, 'yyyy-MM-dd'));
+      setSelectedTime(format(scheduledAt, 'HH:mm'));
+      setFormData({
+        clubId: scheduleData.clubId,
+        courtName: scheduleData.courtName,
+        maxCapacity: scheduleData.maxCapacity,
+        cost: scheduleData.cost || undefined,
+        description: scheduleData.description || ''
+      });
     } catch (err) {
-      console.error('참가자 정보 로드 실패:', err);
+      console.error('일정 정보 로드 실패:', err);
+      setError('일정 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
 
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!schedule) {
+      setError('일정 정보를 불러오는 중입니다.');
+      return;
+    }
 
     if (!formData.courtName || !selectedDate || !selectedTime) {
       setError('코트명, 날짜, 시간은 필수입니다.');
@@ -114,6 +141,10 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   };
 
   const handleDelete = async () => {
+    if (!schedule) {
+      return;
+    }
+
     if (!window.confirm('정말 이 일정을 삭제하시겠습니까?')) {
       return;
     }
@@ -138,12 +169,16 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
       return;
     }
 
+    if (!schedule) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
       await participantService.joinSchedule(schedule.id, currentUserId);
-      await loadParticipants();
-      onSuccess(); // 일정 목록 새로고침
+      await loadScheduleAndParticipants(); // 전체 데이터 새로고침
+      onSuccess(); // 부모 컴포넌트 일정 목록 새로고침
     } catch (err: any) {
       console.error('참가 신청 실패:', err);
       setError(err.response?.data?.message || '참가 신청에 실패했습니다.');
@@ -153,7 +188,7 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   };
 
   const handleCancel = async () => {
-    if (!currentUserId) {
+    if (!currentUserId || !schedule) {
       return;
     }
 
@@ -165,8 +200,8 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
       setLoading(true);
       setError('');
       await participantService.cancelParticipation(schedule.id, currentUserId);
-      await loadParticipants();
-      onSuccess(); // 일정 목록 새로고침
+      await loadScheduleAndParticipants(); // 전체 데이터 새로고침
+      onSuccess(); // 부모 컴포넌트 일정 목록 새로고침
     } catch (err) {
       console.error('신청 취소 실패:', err);
       setError('신청 취소에 실패했습니다.');
@@ -179,6 +214,45 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
   const waitingParticipants = participants.filter(p => p.status === 'WAITING');
 
   const timeOptions = generateTimeOptions();
+
+  // 일정 정보 로딩 중
+  if (loading && !schedule) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content schedule-detail-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>일정 상세</h2>
+            <button className="btn-close" onClick={onClose}>&times;</button>
+          </div>
+          <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>
+            로딩 중...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 일정 정보 로드 실패
+  if (!schedule) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content schedule-detail-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>일정 상세</h2>
+            <button className="btn-close" onClick={onClose}>&times;</button>
+          </div>
+          <div className="error-message" style={{ padding: '20px' }}>
+            {error || '일정 정보를 불러오는데 실패했습니다.'}
+          </div>
+          <div className="modal-actions">
+            <button type="button" onClick={onClose} className="btn-secondary">
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -355,6 +429,13 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
               >
                 수정
               </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-secondary"
+              >
+                닫기
+              </button>
             </div>
           </div>
         ) : (
@@ -451,8 +532,14 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
         <DrawCreateModal
           scheduleId={schedule.id}
           participants={participants}
-          onClose={() => setShowDrawCreateModal(false)}
-          onSuccess={onSuccess}
+          onClose={() => {
+            setShowDrawCreateModal(false);
+          }}
+          onSuccess={async () => {
+            setShowDrawCreateModal(false);
+            await loadScheduleAndParticipants();
+            onSuccess();
+          }}
         />
       )}
 
@@ -461,8 +548,14 @@ const ScheduleDetailModal: React.FC<Props> = ({ schedule, onClose, onSuccess }) 
         <DrawViewModal
           schedule={schedule}
           participants={participants}
-          onClose={() => setShowDrawViewModal(false)}
-          onSuccess={onSuccess}
+          onClose={() => {
+            setShowDrawViewModal(false);
+          }}
+          onSuccess={async () => {
+            setShowDrawViewModal(false);
+            await loadScheduleAndParticipants();
+            onSuccess();
+          }}
         />
       )}
     </div>

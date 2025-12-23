@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axiosInstance from '../../services/api/axiosInstance';
-import './ScoreboardPage.css';
+import React, { useEffect, useState } from "react";
+import axiosInstance from "../../services/api/axiosInstance";
+import "./ScoreboardPage.css";
 
 interface RankingEntry {
   rank: number;
@@ -43,8 +43,8 @@ const ScoreboardPage: React.FC = () => {
       );
       setRankings(response.data.rankings);
     } catch (err) {
-      console.error('Failed to fetch scoreboard:', err);
-      setError('스코어보드를 불러오는데 실패했습니다.');
+      console.error("Failed to fetch scoreboard:", err);
+      setError("스코어보드를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -123,12 +123,16 @@ const ScoreboardPage: React.FC = () => {
                 <td className="name">{entry.userName}</td>
                 <td>{entry.totalMatches}</td>
                 <td className="points">{entry.points}</td>
-                <td>{entry.winRate.toFixed(2)}%</td>
+                <td>{entry.winRate}%</td>
                 <td className="wins">{entry.wins}</td>
                 <td>{entry.draws}</td>
                 <td>{entry.losses}</td>
-                <td className={entry.goalDifference >= 0 ? 'positive' : 'negative'}>
-                  {entry.goalDifference > 0 ? '+' : ''}
+                <td
+                  className={
+                    entry.goalDifference >= 0 ? "positive" : "negative"
+                  }
+                >
+                  {entry.goalDifference > 0 ? "+" : ""}
                   {entry.goalDifference}
                 </td>
                 <td>{entry.totalPointsScored}</td>
