@@ -208,9 +208,12 @@ const ScheduleDetailModal: React.FC<Props> = ({
       await participantService.joinSchedule(schedule.id, currentUserId);
       await loadScheduleAndParticipants(); // 전체 데이터 새로고침
       onSuccess(); // 부모 컴포넌트 일정 목록 새로고침
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("참가 신청 실패:", err);
-      setError(err.response?.data?.message || "참가 신청에 실패했습니다.");
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "참가 신청에 실패했습니다.");
     } finally {
       setLoading(false);
     }
