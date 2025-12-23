@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/**").permitAll() // 클럽 목록 조회 API
                         .requestMatchers("/api/schedules/**").permitAll() // 일정 관리 API (개발 단계)
                         .requestMatchers("/api/migration/**").permitAll() // CSV 마이그레이션 API (개발/관리용)
-                        .requestMatchers("/api/clubs/*/scoreboard").permitAll() // 스코어보드 조회 API
+                        .requestMatchers("/api/clubs/**").permitAll() // 클럽 조회 API
                         .requestMatchers("/api/users/**").permitAll() // 사용자 정보 조회 API
                         // 그 외 모든 API 요청은 인증 필요
                         .requestMatchers("/api/**").authenticated()
