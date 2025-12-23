@@ -184,21 +184,33 @@ class ScheduleControllerDrawTest {
                 8
         );
 
-        DrawResponse.Game game1 = new DrawResponse.Game(
-                1,
-                1,
-                Arrays.asList("정주상", "최승연"),
-                Arrays.asList("김민수", "이지원")
-        );
+        DrawResponse.Game game1 = DrawResponse.Game.builder()
+                .gameNo(1)
+                .roundNo(1)
+                .teamA(Arrays.asList("정주상", "최승연"))
+                .teamB(Arrays.asList("김민수", "이지원"))
+                .matchId(null)
+                .teamAScore(null)
+                .teamBScore(null)
+                .result(null)
+                .playedAt(null)
+                .build();
 
-        DrawResponse.Game game2 = new DrawResponse.Game(
-                2,
-                1,
-                Arrays.asList("박서준", "홍길동"),
-                Arrays.asList("이영희", "김철수")
-        );
+        DrawResponse.Game game2 = DrawResponse.Game.builder()
+                .gameNo(2)
+                .roundNo(1)
+                .teamA(Arrays.asList("박서준", "홍길동"))
+                .teamB(Arrays.asList("이영희", "김철수"))
+                .matchId(null)
+                .teamAScore(null)
+                .teamBScore(null)
+                .result(null)
+                .playedAt(null)
+                .build();
 
-        DrawResponse drawResponse = new DrawResponse(Arrays.asList(game1, game2));
+        DrawResponse drawResponse = DrawResponse.builder()
+                .games(Arrays.asList(game1, game2))
+                .build();
         given(drawService.generateDrawSequence(any(CreateDrawRequest.class))).willReturn(drawResponse);
 
         // when & then
@@ -261,13 +273,20 @@ class ScheduleControllerDrawTest {
     }
 
     private DrawResponse createMockDrawResponse() {
-        DrawResponse.Game game = new DrawResponse.Game(
-                1,
-                1,
-                Arrays.asList("정주상", "최승연"),
-                Arrays.asList("김민수", "이지원")
-        );
+        DrawResponse.Game game = DrawResponse.Game.builder()
+                .gameNo(1)
+                .roundNo(1)
+                .teamA(Arrays.asList("정주상", "최승연"))
+                .teamB(Arrays.asList("김민수", "이지원"))
+                .matchId(null)
+                .teamAScore(null)
+                .teamBScore(null)
+                .result(null)
+                .playedAt(null)
+                .build();
 
-        return new DrawResponse(Collections.singletonList(game));
+        return DrawResponse.builder()
+                .games(Collections.singletonList(game))
+                .build();
     }
 }

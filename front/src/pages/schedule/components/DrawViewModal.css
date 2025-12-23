@@ -4,6 +4,12 @@
   overflow-y: auto;
 }
 
+/* DrawViewModal 전용 modal-header 스타일 */
+.draw-view-modal .modal-header {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 .draw-view-content {
   padding: 20px;
   display: flex;
@@ -44,9 +50,42 @@
   font-weight: 600;
 }
 
+@media (max-width: 768px) {
+  .schedule-info-section {
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+
+  .schedule-info-section h3 {
+    margin: 0 0 3px 0;
+    font-size: 16px;
+  }
+
+  .schedule-info-section .schedule-datetime {
+    margin: 2px 0;
+    font-size: 11px;
+  }
+
+  .draw-type-badge {
+    margin-top: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+  }
+}
+
 /* 대진 결과 섹션 */
 .draw-result-section {
   flex: 1;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .draw-result-section {
+    margin-top: 0;
+    padding-top: 0;
+  }
 }
 
 .draw-games-list {
@@ -271,8 +310,16 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  padding-top: 16px;
+  padding-top: 8px;
   border-top: 1px solid #e0e0e0;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .modal-actions {
+    padding-top: 4px;
+    margin-top: 4px;
+  }
 }
 
 .btn-wrapper {
@@ -360,29 +407,32 @@
   }
 
   .draw-view-content {
-    padding: 12px;
+    padding: 8px 12px;
+    gap: 8px;
   }
 
   .schedule-info-section {
-    padding: 12px;
+    padding: 8px 10px;
   }
 
   .schedule-info-section h3 {
-    font-size: 18px;
-    margin-bottom: 6px;
+    font-size: 16px;
+    margin-bottom: 3px;
   }
 
   .schedule-info-section .schedule-datetime {
-    font-size: 12px;
+    font-size: 11px;
+    margin: 2px 0;
   }
 
   .draw-type-badge {
-    font-size: 11px;
-    padding: 4px 10px;
+    font-size: 10px;
+    padding: 3px 8px;
+    margin-top: 4px;
   }
 
   .draw-games-list {
-    gap: 8px;
+    gap: 6px;
   }
 
   .draw-game-card {
@@ -474,7 +524,8 @@
   .modal-actions {
     flex-direction: column;
     gap: 8px;
-    padding-top: 12px;
+    padding-top: 4px;
+    margin-top: 4px;
   }
 
   .btn-wrapper {

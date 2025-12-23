@@ -95,6 +95,7 @@
 .stat-divider {
   color: #dee2e6;
   font-weight: 300;
+  margin: 0 2px;
 }
 
 .badge-full {
@@ -342,5 +343,21 @@
 @media (max-width: 768px) {
   .schedule-detail-view {
     padding: 16px;
+  }
+
+  /* 참가 현황 컴팩트하게 */
+  .participant-stats {
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .stat-item {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  .stat-divider {
+    margin: 0 1px;
+    font-size: 10px;
   }
 }
