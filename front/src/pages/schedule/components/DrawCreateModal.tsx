@@ -94,6 +94,11 @@ const DrawCreateModal: React.FC<Props> = ({
     return user ? user.name : `User #${userId}`;
   };
 
+  // 게스트인지 확인
+  const isGuest = (userId: number): boolean => {
+    return guestUsers.some((g) => g.id === userId);
+  };
+
   // 게스트 추가 핸들러
   const handleAddGuest = async () => {
     try {
@@ -134,6 +139,37 @@ const DrawCreateModal: React.FC<Props> = ({
       setError(errorMessage || "게스트 추가에 실패했습니다.");
     } finally {
       setAddingGuest(false);
+    }
+  };
+
+  // 게스트 삭제 핸들러
+  const handleRemoveGuest = async (userId: number) => {
+    try {
+      setError("");
+
+      // 게스트인지 확인
+      if (!isGuest(userId)) {
+        setError("게스트만 삭제할 수 있습니다.");
+        return;
+      }
+
+      // 참가 취소 API 호출
+      await participantService.cancelParticipation(scheduleId, userId);
+
+      // 참가자 목록 다시 가져오기
+      const updatedParticipants = await participantService.getParticipants(
+        scheduleId
+      );
+      setLocalParticipants(updatedParticipants);
+
+      const guestName = getUserName(userId);
+      console.log(`✅ ${guestName} 삭제 완료`);
+    } catch (err: unknown) {
+      console.error("게스트 삭제 실패:", err);
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "게스트 삭제에 실패했습니다.");
     }
   };
 
@@ -569,6 +605,7 @@ const DrawCreateModal: React.FC<Props> = ({
                           selectedUsers.includes(userId) ? "selected" : ""
                         }`}
                         onClick={() => toggleUserSelection(userId)}
+                        style={{ position: "relative" }}
                       >
                         <input
                           type="checkbox"
@@ -577,6 +614,37 @@ const DrawCreateModal: React.FC<Props> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                         <span>{getUserName(userId)}</span>
+                        {isGuest(userId) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveGuest(userId);
+                            }}
+                            className="btn-remove-guest"
+                            style={{
+                              position: "absolute",
+                              top: "2px",
+                              right: "2px",
+                              width: "20px",
+                              height: "20px",
+                              padding: "0",
+                              background: "#dc3545",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "50%",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                              lineHeight: "1",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                            title="게스트 삭제"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -677,6 +745,7 @@ const DrawCreateModal: React.FC<Props> = ({
                           selectedUsers.includes(userId) ? "selected" : ""
                         }`}
                         onClick={() => toggleUserSelection(userId)}
+                        style={{ position: "relative" }}
                       >
                         <input
                           type="checkbox"
@@ -685,6 +754,37 @@ const DrawCreateModal: React.FC<Props> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                         <span>{getUserName(userId)}</span>
+                        {isGuest(userId) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveGuest(userId);
+                            }}
+                            className="btn-remove-guest"
+                            style={{
+                              position: "absolute",
+                              top: "2px",
+                              right: "2px",
+                              width: "20px",
+                              height: "20px",
+                              padding: "0",
+                              background: "#dc3545",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "50%",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                              lineHeight: "1",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                            title="게스트 삭제"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -788,6 +888,7 @@ const DrawCreateModal: React.FC<Props> = ({
                           selectedUsers.includes(userId) ? "selected" : ""
                         }`}
                         onClick={() => toggleUserSelection(userId)}
+                        style={{ position: "relative" }}
                       >
                         <input
                           type="checkbox"
@@ -796,6 +897,37 @@ const DrawCreateModal: React.FC<Props> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                         <span>{getUserName(userId)}</span>
+                        {isGuest(userId) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveGuest(userId);
+                            }}
+                            className="btn-remove-guest"
+                            style={{
+                              position: "absolute",
+                              top: "2px",
+                              right: "2px",
+                              width: "20px",
+                              height: "20px",
+                              padding: "0",
+                              background: "#dc3545",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "50%",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                              lineHeight: "1",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                            title="게스트 삭제"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -853,7 +985,10 @@ const DrawCreateModal: React.FC<Props> = ({
               <>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => {
+                    onSuccess(); // 부모 갱신
+                    onClose();
+                  }}
                   className="btn-secondary"
                   disabled={loading}
                 >
