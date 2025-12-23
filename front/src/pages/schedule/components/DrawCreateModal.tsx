@@ -6,6 +6,8 @@ import type {
   DrawResponse,
   CreateDrawRequest,
 } from "../../../services/drawService";
+import { participantService } from "../../../services/participantService";
+import { userService, type UserResponse } from "../../../services/userService";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import "./DrawCreateModal.css";
 
@@ -24,15 +26,27 @@ const DrawCreateModal: React.FC<Props> = ({
   onClose,
   onSuccess,
 }) => {
+  // 로컬 참가자 목록 (게스트 추가 시 업데이트용)
+  const [localParticipants, setLocalParticipants] = useState<Participant[]>(participants);
+
+  // props가 변경되면 로컬 상태도 업데이트
+  useEffect(() => {
+    setLocalParticipants(participants);
+  }, [participants]);
+
   const confirmedUserIds = useMemo(
     () =>
-      participants.filter((p) => p.status === "CONFIRMED").map((p) => p.userId),
-    [participants]
+      localParticipants.filter((p) => p.status === "CONFIRMED").map((p) => p.userId),
+    [localParticipants]
   );
 
   const [drawType, setDrawType] = useState<DrawType>("AA");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 게스트 사용자 목록
+  const [guestUsers, setGuestUsers] = useState<UserResponse[]>([]);
+  const [addingGuest, setAddingGuest] = useState(false);
 
   // AA 타입: 참가/대기
   const [confirmedGroup, setConfirmedGroup] = useState<number[]>([]);
@@ -53,10 +67,69 @@ const DrawCreateModal: React.FC<Props> = ({
   const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // 게스트 사용자 목록 로드
+  useEffect(() => {
+    const fetchGuestUsers = async () => {
+      try {
+        const guests = await userService.getGuestUsers();
+        setGuestUsers(guests);
+      } catch (err) {
+        console.error("게스트 사용자 목록 조회 실패:", err);
+      }
+    };
+    fetchGuestUsers();
+  }, []);
+
   // 사용자 ID로 이름 가져오기
   const getUserName = (userId: number): string => {
+    // 게스트 사용자 확인
+    const guest = guestUsers.find((g) => g.id === userId);
+    if (guest) return guest.name;
+
+    // 일반 사용자 확인
     const user = DEV_USERS.find((u) => u.id === userId);
     return user ? user.name : `User #${userId}`;
+  };
+
+  // 게스트 추가 핸들러
+  const handleAddGuest = async () => {
+    try {
+      setAddingGuest(true);
+      setError("");
+
+      // 현재 참가자 중 게스트 사용자 찾기
+      const currentParticipantIds = localParticipants.map((p) => p.userId);
+      const usedGuestIds = new Set(
+        guestUsers
+          .filter((g) => currentParticipantIds.includes(g.id))
+          .map((g) => g.id)
+      );
+
+      // 아직 추가되지 않은 첫 번째 게스트 찾기
+      const nextGuest = guestUsers.find((g) => !usedGuestIds.has(g.id));
+
+      if (!nextGuest) {
+        setError("더 이상 추가할 수 있는 게스트가 없습니다. (최대 16명)");
+        return;
+      }
+
+      // 게스트를 일정에 추가 (대기열 상태로)
+      await participantService.joinSchedule(scheduleId, nextGuest.id);
+
+      // 참가자 목록 다시 가져오기 (모달은 열린 상태 유지)
+      const updatedParticipants = await participantService.getParticipants(scheduleId);
+      setLocalParticipants(updatedParticipants);
+
+      console.log(`✅ ${nextGuest.name} 추가 완료`);
+    } catch (err: unknown) {
+      console.error("게스트 추가 실패:", err);
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "게스트 추가에 실패했습니다.");
+    } finally {
+      setAddingGuest(false);
+    }
   };
 
   // SEED 타입의 시드 수 계산
@@ -73,7 +146,7 @@ const DrawCreateModal: React.FC<Props> = ({
   useEffect(() => {
     const totalCount = confirmedUserIds.length;
     const half = Math.ceil(totalCount / 2);
-    const allParticipantIds = participants.map((p) => p.userId);
+    const allParticipantIds = localParticipants.map((p) => p.userId);
     const waitingIds = allParticipantIds.filter(
       (id) => !confirmedUserIds.includes(id)
     );
@@ -104,7 +177,7 @@ const DrawCreateModal: React.FC<Props> = ({
       setGroupB([]);
       setConfirmedGroup([]);
     }
-  }, [drawType, participants, confirmedUserIds]);
+  }, [drawType, localParticipants, confirmedUserIds]);
 
   // 체크박스 토글
   const toggleUserSelection = (userId: number) => {
@@ -407,6 +480,27 @@ const DrawCreateModal: React.FC<Props> = ({
                 SEED (시드)
               </button>
             </div>
+          </div>
+
+          {/* 게스트 추가 버튼 */}
+          <div className="form-group">
+            <button
+              type="button"
+              onClick={handleAddGuest}
+              disabled={addingGuest || guestUsers.length === 0}
+              className="btn-add-guest"
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#6c757d",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: addingGuest ? "not-allowed" : "pointer",
+                opacity: addingGuest || guestUsers.length === 0 ? 0.6 : 1,
+              }}
+            >
+              {addingGuest ? "추가 중..." : "게스트 추가 (대기열)"}
+            </button>
           </div>
 
           {/* AA 타입: 참가자/대기열 관리 */}

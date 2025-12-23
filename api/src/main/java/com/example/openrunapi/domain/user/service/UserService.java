@@ -86,4 +86,15 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
         userRepository.delete(user);
     }
+
+    /**
+     * 게스트 사용자 목록 조회 (is_guest=true)
+     * - 게스트1~16 반환
+     */
+    public java.util.List<UserResponse> getGuestUsers() {
+        java.util.List<User> guests = userRepository.findByIsGuestOrderByIdAsc(true);
+        return guests.stream()
+                .map(UserResponse::new)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }
