@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import DrawGenerationPage from './pages/draw/DrawGenerationPage';
 import DrawListPage from './pages/draw/DrawListPage';
@@ -15,6 +16,15 @@ import './App.css';
 
 function App() {
   const location = useLocation();
+
+  // Dev 환경에서만 user_id를 1로 고정 (클럽 공개용)
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
+    if (apiUrl.includes('dev-api')) {
+      localStorage.setItem('user_id', '1');
+      console.log('🔧 Dev 환경: user_id를 1로 고정');
+    }
+  }, []);
 
   // "/" 경로에서는 Navigation 숨김 (일반 사용자용)
   const shouldShowNavigation = location.pathname !== '/';
