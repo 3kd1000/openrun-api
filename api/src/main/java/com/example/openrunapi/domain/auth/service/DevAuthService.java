@@ -18,16 +18,12 @@ public class DevAuthService {
     public User login(String email, String name) {
         return userRepository.findByEmail(email)
                 .orElseGet(() -> {
-                    // 개발용 계정 생성
-                    // Firebase UID는 임의로 생성 (dev_ prefix)
-                    String devUid = "dev_" + UUID.randomUUID().toString();
-
+                    // 개발용 계정 생성 (OAuth 없이 간단히)
                     User newUser = User.builder()
-                            .firebaseUid(devUid)
                             .email(email)
                             .name(name)
-                            .imageUrl(null) // 개발용은 이미지 없음
-                            .socialId("dev")
+                            .imageUrl(null)
+                            .isGuest(false)
                             .build();
 
                     return userRepository.save(newUser);

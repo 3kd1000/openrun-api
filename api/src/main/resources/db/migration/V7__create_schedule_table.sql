@@ -1,7 +1,8 @@
 
--- 1. Users 테이블에 1명의 사용자 추가
+-- 1. Users 테이블에 1명의 사용자 추가 (실제 구글 이메일로 생성)
+-- OAuth 로그인 시 이메일 일치하면 user_oauth_provider만 추가됨
 INSERT INTO users (uid, social_id, email, name, deleted, created_at, updated_at) VALUES
-('test-uid-a', 'test-social-a', '3kd1000@gmail.com', '정주상', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('temp-uid-3kd1000', 'temp-social-3kd1000', '3kd1000@gmail.com', '정주상', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 오픈런 테니스 클럽 데이터 (ID = 1 고정)
 -- schedule 테이블이 club_id FK를 참조하므로 먼저 생성
