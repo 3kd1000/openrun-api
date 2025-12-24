@@ -7,4 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class LoginResponse {
     private String firebaseCustomToken;
+    private boolean newUser;  // is 제거 → Jackson이 "newUser"로 직렬화
 }

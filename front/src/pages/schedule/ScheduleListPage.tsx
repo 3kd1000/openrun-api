@@ -41,7 +41,7 @@ const ScheduleListPage: React.FC = () => {
       setSchedules(sortedData);
 
       // 내가 참여한 일정 목록 조회 (로그인한 경우에만)
-      const userId = localStorage.getItem('devUserId');
+      const userId = localStorage.getItem('user_id');
       if (userId) {
         const participationIds = await scheduleService.getMyParticipations(parseInt(userId));
         setMyParticipations(new Set(participationIds));

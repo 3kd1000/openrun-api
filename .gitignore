@@ -52,6 +52,10 @@ temp/
 # API specific ignores
 api/build/
 
+# Environment files with secrets
 .env
+.env.*
+!.env.example
+
 api/src/main/resources/openrun-ed7a1-firebase-adminsdk-fbsvc-4e67d9a55a.json
 openrun-ed7a1-firebase-adminsdk-fbsvc-4e67d9a55a.json

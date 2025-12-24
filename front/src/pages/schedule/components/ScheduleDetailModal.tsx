@@ -56,7 +56,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const [guestUsers, setGuestUsers] = useState<UserResponse[]>([]);
 
   // 로그인한 사용자 ID 가져오기
-  const userId = localStorage.getItem("devUserId");
+  const userId = localStorage.getItem("user_id");
   const currentUserId = userId ? parseInt(userId) : null;
 
   // 게스트 사용자 목록 로드

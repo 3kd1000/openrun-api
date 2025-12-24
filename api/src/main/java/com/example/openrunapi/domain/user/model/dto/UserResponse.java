@@ -8,18 +8,20 @@ import java.time.LocalDateTime;
 @Getter
 public class UserResponse {
     private final Long id;
-    private final String uid;
     private final String email;
-    private final String name; // nickname 대신 name
+    private final String name;
     private final String imageUrl;
     private final LocalDateTime createdAt;
+    private final String lastLoginProvider;
+    private final LocalDateTime lastLoginAt;
 
     public UserResponse(User user) {
         this.id = user.getId();
-        this.uid = user.getFirebaseUid();
         this.email = user.getEmail();
-        this.name = user.getName(); // getName 사용
+        this.name = user.getName();
         this.imageUrl = user.getImageUrl();
         this.createdAt = user.getCreatedAt();
+        this.lastLoginProvider = user.getLastLoginProvider();
+        this.lastLoginAt = user.getLastLoginAt();
     }
 }
