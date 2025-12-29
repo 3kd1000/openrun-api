@@ -11,8 +11,25 @@ export default defineConfig({
       includeAssets: ['icon-192x192.png', 'icon-512x512.png', 'openrun_logo.jpeg'],
       manifest: false, // 이미 수동으로 생성한 manifest.json 사용
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpeg}'],
+        // JS/CSS/이미지만 precache (HTML 제외)
+        globPatterns: ['**/*.{js,css,ico,png,svg,jpeg}'],
+        // 구버전 캐시 자동 삭제
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
+          // HTML 문서: 항상 네트워크 우선 (배포 시 최신 버전 즉시 반영)
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-cache',
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60, // 1시간
+              },
+            },
+          },
+          // API 캐싱: 네트워크 우선, 실패 시 캐시 사용
           {
             urlPattern: /^https:\/\/api\.openrun\.app\/.*/i,
             handler: 'NetworkFirst',
