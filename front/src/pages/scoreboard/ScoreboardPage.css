@@ -53,8 +53,9 @@
 .scoreboard-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: #ffffff;
   font-size: 14px;
+  color: #212529; /* 명시적인 기본 텍스트 색상 */
 }
 
 .scoreboard-table thead {
@@ -91,6 +92,7 @@
   text-align: center;
   white-space: nowrap;
   border-right: 1px solid #eee;
+  color: #212529; /* 명시적인 기본 텍스트 색상 - 다크테마에서도 보이도록 */
 }
 
 .scoreboard-table td:last-child {
@@ -106,7 +108,7 @@
 
 .scoreboard-table td.name {
   font-weight: 600;
-  color: #333;
+  color: #212529; /* 다크테마에서도 잘 보이도록 더 진한 색상 */
   /* text-align: left; */
 }
 
@@ -128,6 +130,12 @@
 .scoreboard-table td.negative {
   color: #f44336;
   font-weight: 600;
+}
+
+/* 일반 숫자 컬럼 (경기수, 승률, 무, 패, 득점, 실점) 명시적 색상 지정 */
+.scoreboard-table td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(.name) {
+  color: #212529;
+  font-weight: 500;
 }
 
 /* 모바일 대응 */
@@ -190,6 +198,33 @@
 
   .scoreboard-table td.name {
     font-size: 13px;
+  }
+}
+
+/* 다크테마 대응 - 브라우저 다크모드 설정 무시하고 항상 밝은 배경 유지 */
+@media (prefers-color-scheme: dark) {
+  .scoreboard-table {
+    background: #ffffff !important;
+    color: #212529 !important;
+  }
+
+  .scoreboard-table td {
+    color: #212529 !important;
+  }
+
+  .scoreboard-table td.name {
+    color: #212529 !important;
+  }
+
+  /* 숫자 컬럼들도 명시적으로 색상 지정 */
+  .scoreboard-table td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(.name) {
+    color: #212529 !important;
+    font-weight: 500 !important;
+  }
+
+  .scoreboard-table-container {
+    background: #ffffff !important;
+    border-color: #ddd !important;
   }
 }
 

@@ -68,13 +68,14 @@
 }
 
 .schedule-card {
-  background: white;
+  background: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  color: #212529; /* 명시적인 텍스트 색상 */
 }
 
 .schedule-card:hover {
@@ -705,5 +706,25 @@
 
   .empty-state p {
     font-size: 14px;
+  }
+}
+
+/* 다크테마 대응 - 브라우저 다크모드 설정 무시하고 항상 밝은 배경 유지 */
+@media (prefers-color-scheme: dark) {
+  .schedule-card {
+    background: #ffffff !important;
+    color: #212529 !important;
+  }
+
+  .schedule-court {
+    color: #212529 !important;
+  }
+
+  .schedule-datetime {
+    color: #555 !important;
+  }
+
+  .info-item {
+    color: #666 !important;
   }
 }

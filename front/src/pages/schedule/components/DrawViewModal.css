@@ -10,6 +10,10 @@
   padding-bottom: 5px;
 }
 
+.draw-view-modal .modal-header h2 {
+  color: #212529 !important; /* 명시적인 텍스트 색상 - 다크테마에서도 보이도록 */
+}
+
 .draw-view-content {
   padding: 20px;
   display: flex;
@@ -218,7 +222,7 @@
 
 .player-name {
   padding: 4px 6px;
-  background: white;
+  background: #ffffff;
   border: 1px solid #dee2e6;
   border-radius: 4px;
   font-size: 12px;
@@ -288,7 +292,8 @@
   font-weight: 700;
   border: 2px solid #667eea;
   border-radius: 4px;
-  background: white;
+  background: #ffffff;
+  color: #212529;
   outline: none;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -635,5 +640,31 @@
       padding: 6px 4px;
       font-size: 9px;
     }
+  }
+}
+
+/* 다크테마 대응 - 브라우저 다크모드 설정 무시하고 항상 밝은 배경 유지 */
+@media (prefers-color-scheme: dark) {
+  .draw-view-modal .modal-header {
+    background: #ffffff !important;
+  }
+
+  .draw-view-modal .modal-header h2 {
+    color: #212529 !important;
+  }
+
+  .player-name {
+    background: #ffffff !important;
+    color: #212529 !important;
+  }
+
+  .score-input-inline {
+    background: #ffffff !important;
+    color: #212529 !important;
+  }
+
+  .score-display-inline {
+    background: #e9ecef !important;
+    color: #495057 !important;
   }
 }
