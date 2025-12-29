@@ -4,7 +4,10 @@
       "Bash(mv:*)",
       "Bash(mkdir:*)",
       "Bash(grep:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(kubectl get:*)",
+      "Bash(git reset:*)",
+      "Bash(kubectl apply:*)"
     ],
     "deny": [],
     "ask": []

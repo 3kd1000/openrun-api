@@ -137,20 +137,59 @@
   }
 
   .scoreboard-table {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .scoreboard-table th,
   .scoreboard-table td {
-    padding: 6px 3px;
+    padding: 8px 6px;
+    min-width: 45px;
+  }
+
+  /* 순위 컬럼 */
+  .scoreboard-table th:nth-child(1),
+  .scoreboard-table td:nth-child(1) {
+    min-width: 38px;
+  }
+
+  /* 이름 컬럼 */
+  .scoreboard-table th:nth-child(2),
+  .scoreboard-table td:nth-child(2) {
+    min-width: 60px;
+  }
+
+  /* 경기수, 승점, 승률, 승무패 */
+  .scoreboard-table th:nth-child(3),
+  .scoreboard-table td:nth-child(3),
+  .scoreboard-table th:nth-child(4),
+  .scoreboard-table td:nth-child(4),
+  .scoreboard-table th:nth-child(5),
+  .scoreboard-table td:nth-child(5),
+  .scoreboard-table th:nth-child(6),
+  .scoreboard-table td:nth-child(6),
+  .scoreboard-table th:nth-child(7),
+  .scoreboard-table td:nth-child(7),
+  .scoreboard-table th:nth-child(8),
+  .scoreboard-table td:nth-child(8) {
+    min-width: 45px;
+  }
+
+  /* 득실, 득점, 실점 */
+  .scoreboard-table th:nth-child(9),
+  .scoreboard-table td:nth-child(9),
+  .scoreboard-table th:nth-child(10),
+  .scoreboard-table td:nth-child(10),
+  .scoreboard-table th:nth-child(11),
+  .scoreboard-table td:nth-child(11) {
+    min-width: 50px;
   }
 
   .scoreboard-table td.rank {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .scoreboard-table td.name {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 

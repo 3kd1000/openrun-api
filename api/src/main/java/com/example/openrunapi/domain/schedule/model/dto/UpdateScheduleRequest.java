@@ -28,4 +28,8 @@ public class UpdateScheduleRequest {
     private BigDecimal cost;
 
     private String description;
+
+    private Long reservedByUserId;
+
+    private LocalDateTime participationStartAt;
 }

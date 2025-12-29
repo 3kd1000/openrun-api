@@ -41,7 +41,7 @@ public class ScheduleService {
     public ScheduleResponse createSchedule(CreateScheduleRequest request) {
         Schedule schedule = request.toEntity();
         Schedule savedSchedule = scheduleRepository.save(schedule);
-        return new ScheduleResponse(savedSchedule);
+        return new ScheduleResponse(savedSchedule, userRepository);
     }
 
     /**
@@ -49,7 +49,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getAllSchedules() {
         return scheduleRepository.findAll().stream()
-                .map(ScheduleResponse::new)
+                .map(schedule -> new ScheduleResponse(schedule, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -59,7 +59,7 @@ public class ScheduleService {
     public ScheduleResponse getScheduleById(Long scheduleId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
-        return new ScheduleResponse(schedule);
+        return new ScheduleResponse(schedule, userRepository);
     }
 
     /**
@@ -67,7 +67,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getSchedulesByClubId(Long clubId) {
         return scheduleRepository.findByClubId(clubId).stream()
-                .map(ScheduleResponse::new)
+                .map(schedule -> new ScheduleResponse(schedule, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -77,7 +77,7 @@ public class ScheduleService {
     public List<ScheduleResponse> getUpcomingSchedules(Long clubId) {
         LocalDateTime now = LocalDateTime.now();
         return scheduleRepository.findByClubIdAndScheduledAtAfterOrderByScheduledAtAsc(clubId, now).stream()
-                .map(ScheduleResponse::new)
+                .map(schedule -> new ScheduleResponse(schedule, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -86,7 +86,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getSchedulesByDateRange(Long clubId, LocalDateTime start, LocalDateTime end) {
         return scheduleRepository.findByClubIdAndScheduledAtBetween(clubId, start, end).stream()
-                .map(ScheduleResponse::new)
+                .map(schedule -> new ScheduleResponse(schedule, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -103,10 +103,12 @@ public class ScheduleService {
                 request.getScheduledAt(),
                 request.getMaxCapacity(),
                 request.getCost(),
-                request.getDescription()
+                request.getDescription(),
+                request.getReservedByUserId(),
+                request.getParticipationStartAt()
         );
 
-        return new ScheduleResponse(schedule);
+        return new ScheduleResponse(schedule, userRepository);
     }
 
     /**
