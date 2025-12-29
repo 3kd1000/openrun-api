@@ -35,7 +35,7 @@ database:
 # OAuth2 설정
 oauth2:
   kakao:
-    redirectUri: "https://front.openrun.app/auth/callback"
+    redirectUri: "https://front.openrun.app/login"
     authorizationGrantType: "authorization_code"
     clientAuthenticationMethod: "client_secret_post"
     scope: "profile_nickname, account_email"

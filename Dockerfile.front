@@ -7,11 +7,8 @@ WORKDIR /app/front
 COPY front/package.json front/package-lock.json ./
 RUN npm ci --prefer-offline --no-audit
 
-# --- 환경 파일 복사 ---
-COPY front/.env .
-COPY front/.env.localhost .env.localhost
-COPY front/.env.develop .env.develop
-COPY front/.env.production .env.production
+# --- 환경 파일 복사 (존재하는 파일만) ---
+COPY front/.env* ./
 
 
 # --- 소스코드 복사 및 빌드 ---
