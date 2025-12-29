@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { DEV_USERS } from "../../../components/DevUserSwitcher";
 import type { Participant } from "../../../types/schedule";
 import { drawService } from "../../../services/drawService";
 import type {
@@ -8,6 +7,7 @@ import type {
 } from "../../../services/drawService";
 import { participantService } from "../../../services/participantService";
 import { userService, type UserResponse } from "../../../services/userService";
+import { clubService } from "../../../services/clubService";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import "./DrawCreateModal.css";
 
@@ -51,6 +51,9 @@ const DrawCreateModal: React.FC<Props> = ({
   const [guestUsers, setGuestUsers] = useState<UserResponse[]>([]);
   const [addingGuest, setAddingGuest] = useState(false);
 
+  // 클럽 회원 목록
+  const [clubMembers, setClubMembers] = useState<UserResponse[]>([]);
+
   // AA 타입: 참가/대기
   const [confirmedGroup, setConfirmedGroup] = useState<number[]>([]);
   const [waitingGroup, setWaitingGroup] = useState<number[]>([]);
@@ -83,15 +86,32 @@ const DrawCreateModal: React.FC<Props> = ({
     fetchGuestUsers();
   }, []);
 
+  // 클럽 회원 목록 로드
+  useEffect(() => {
+    const fetchClubMembers = async () => {
+      try {
+        const currentClubId = parseInt(localStorage.getItem('current_club_id') || '1');
+        const members = await clubService.getClubMembers(currentClubId);
+        setClubMembers(members);
+      } catch (err) {
+        console.error("클럽 회원 목록 조회 실패:", err);
+      }
+    };
+    fetchClubMembers();
+  }, []);
+
   // 사용자 ID로 이름 가져오기
   const getUserName = (userId: number): string => {
-    // 게스트 사용자 확인
+    // 게스트 사용자 확인 (우선순위 1)
     const guest = guestUsers.find((g) => g.id === userId);
     if (guest) return guest.name;
 
-    // 일반 사용자 확인
-    const user = DEV_USERS.find((u) => u.id === userId);
-    return user ? user.name : `User #${userId}`;
+    // 클럽 회원 확인 (우선순위 2)
+    const clubMember = clubMembers.find((m) => m.id === userId);
+    if (clubMember) return clubMember.name;
+
+    // 찾지 못한 경우 (API에서 조회 중이거나 데이터 불일치)
+    return `User #${userId}`;
   };
 
   // 게스트인지 확인

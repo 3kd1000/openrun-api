@@ -9,7 +9,6 @@ import type {
   CreateScheduleRequest,
   Participant,
 } from "../../../types/schedule";
-import { DEV_USERS } from "../../../components/DevUserSwitcher";
 import DrawCreateModal from "./DrawCreateModal";
 import DrawViewModal from "./DrawViewModal";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
@@ -81,7 +80,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
   useEffect(() => {
     const fetchClubMembers = async () => {
       try {
-        const members = await clubService.getClubMembers(1); // TODO: 실제 클럽 ID로 변경
+        const currentClubId = parseInt(localStorage.getItem('current_club_id') || '1');
+        const members = await clubService.getClubMembers(currentClubId);
         setClubMembers(members);
       } catch (err) {
         console.error('클럽 회원 목록 조회 실패:', err);
@@ -96,9 +96,12 @@ const ScheduleDetailModal: React.FC<Props> = ({
     const guest = guestUsers.find((g) => g.id === userId);
     if (guest) return guest.name;
 
-    // 일반 사용자 확인
-    const user = DEV_USERS.find((u) => u.id === userId);
-    return user ? user.name : `User #${userId}`;
+    // 클럽 회원 확인 (우선순위 2 - 신규 가입한 회원 포함)
+    const clubMember = clubMembers.find((m) => m.id === userId);
+    if (clubMember) return clubMember.name;
+
+    // 찾지 못한 경우 (API에서 조회 중이거나 데이터 불일치)
+    return `User #${userId}`;
   };
 
   // 초기 날짜 및 시간 분리
