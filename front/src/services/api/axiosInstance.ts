@@ -15,12 +15,6 @@ axiosInstance.interceptors.request.use((config) => {
     config.headers['Authorization'] = `Bearer ${firebaseToken}`;
   }
 
-  // 개발용 user ID (dev mode)
-  const devUserId = localStorage.getItem('devUserId');
-  if (devUserId) {
-    config.headers['X-DEV-USER-ID'] = devUserId;
-  }
-
   return config;
 });
 

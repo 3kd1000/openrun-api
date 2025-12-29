@@ -17,10 +17,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // localStorage에서 로그인 정보 확인
   const userId = localStorage.getItem('user_id');
   const firebaseToken = localStorage.getItem('firebase_token');
-  const devUserId = localStorage.getItem('devUserId');
 
-  // 개발 모드 또는 OAuth 로그인 확인
-  const isAuthenticated = !!userId || !!firebaseToken || !!devUserId;
+  // OAuth 로그인 확인
+  const isAuthenticated = !!userId || !!firebaseToken;
 
   if (!isAuthenticated) {
     console.warn('⚠️ 로그인이 필요합니다. /login으로 리다이렉트');
