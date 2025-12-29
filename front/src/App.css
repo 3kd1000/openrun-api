@@ -2,15 +2,29 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  /* 모바일 웹브라우저 safe area 고려 */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .App-content {
   flex: 1;
   padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+  /* 모바일 웹브라우저 하단 safe area 추가 고려 */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
 /* PC: 좌측 네비게이션 여백 */
 @media (min-width: 768px) {
+  .App {
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .App-content {
     margin-left: 200px; /* 좌측 네비게이션 너비만큼 */
     padding-bottom: 0;

@@ -10,6 +10,11 @@
   justify-content: center;
   z-index: 2000;
   padding: 20px;
+  /* 모바일 웹브라우저 safe area 고려 */
+  padding-top: max(20px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
 }
 
 .modal-content {
