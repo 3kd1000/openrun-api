@@ -636,3 +636,21 @@
     text-overflow: ellipsis;
   }
 }
+
+/* 다크테마 대응 - 브라우저 다크모드 설정 무시하고 항상 밝은 배경 유지 */
+@media (prefers-color-scheme: dark) {
+  .draw-type-btn {
+    background: #ffffff !important;
+    color: #666 !important;
+  }
+
+  .draw-type-btn.active {
+    background: #007bff !important;
+    color: white !important;
+  }
+
+  .participant-group li {
+    background: #ffffff !important;
+    color: #333 !important;
+  }
+}
