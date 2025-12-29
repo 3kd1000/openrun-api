@@ -335,6 +335,28 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* 스크롤바 스타일링 */
+.draw-games-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.draw-games-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.draw-games-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.draw-games-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .draw-game-card {
@@ -539,6 +561,7 @@
 
   .draw-games-list {
     gap: 6px;
+    max-height: 60vh;
   }
 
   .draw-game-card {
@@ -576,6 +599,8 @@
   .team {
     gap: 2px;
     padding: 5px 6px;
+    min-height: 50px;
+    align-items: stretch;
   }
 
   .team-label {
@@ -584,6 +609,7 @@
 
   .team-content {
     gap: 2px;
+    align-items: center;
   }
 
   .team-players-inline {
@@ -593,5 +619,20 @@
   .player-name {
     padding: 2px 4px;
     font-size: 9px;
+  }
+
+  /* 모바일 버튼 스타일 */
+  .modal-actions {
+    gap: 4px;
+  }
+
+  .btn-copy,
+  .btn-regenerate,
+  .btn-primary {
+    padding: 6px 2px;
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

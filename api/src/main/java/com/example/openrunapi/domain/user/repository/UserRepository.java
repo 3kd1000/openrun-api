@@ -7,13 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByFirebaseUid(String firebaseUid);
-
-    Optional<User> findBySocialId(String socialId);
-
     Optional<User> findByEmail(String email);
 
-    // 마이그레이션용: 이름으로 조회
     Optional<User> findByName(String name);
 
     // 게스트 사용자 목록 조회 (ID 오름차순)

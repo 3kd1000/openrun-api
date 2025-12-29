@@ -46,6 +46,12 @@ public class Schedule {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "reserved_by_user_id")
+    private Long reservedByUserId;
+
+    @Column(name = "participation_start_at")
+    private LocalDateTime participationStartAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "draw_type", length = 10)
     private DrawType drawType;
@@ -66,22 +72,28 @@ public class Schedule {
 
     @Builder
     public Schedule(Long clubId, String courtName, LocalDateTime scheduledAt,
-                    Integer maxCapacity, BigDecimal cost, String description) {
+                    Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
+                    LocalDateTime participationStartAt) {
         this.clubId = clubId;
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
         this.maxCapacity = maxCapacity;
         this.cost = cost;
         this.description = description;
+        this.reservedByUserId = reservedByUserId;
+        this.participationStartAt = participationStartAt;
     }
 
     public void update(String courtName, LocalDateTime scheduledAt,
-                       Integer maxCapacity, BigDecimal cost, String description) {
+                       Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
+                       LocalDateTime participationStartAt) {
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
         this.maxCapacity = maxCapacity;
         this.cost = cost;
         this.description = description;
+        this.reservedByUserId = reservedByUserId;
+        this.participationStartAt = participationStartAt;
     }
 
     public void incrementParticipants() {

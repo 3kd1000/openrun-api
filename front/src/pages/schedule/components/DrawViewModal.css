@@ -92,6 +92,28 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* 스크롤바 스타일링 */
+.draw-games-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.draw-games-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.draw-games-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.draw-games-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .draw-game-card {
@@ -147,6 +169,9 @@
   border-radius: 6px;
   background: #f8f9fa;
   min-width: 0;
+  /* 모든 팀이 동일한 높이를 가지도록 설정 */
+  min-height: 60px;
+  justify-content: space-between;
 }
 
 .team-label {
@@ -166,6 +191,8 @@
   gap: 4px;
   flex-wrap: nowrap;
   min-width: 0;
+  /* 팀 컨텐츠 높이 일관성 유지 */
+  min-height: 32px;
 }
 
 .team-players {
@@ -286,23 +313,27 @@
 
 /* 승자/패자 하이라이트 */
 .team.winner {
-  background: #d4edda;
-  border-color: #28a745;
+  background: #fff8e1;
+  border-left-width: 4px;
+  /* padding과 높이는 유지하여 동일한 높이 보장 */
 }
 
 .team.winner .player-name {
-  background: #c3e6cb;
-  border-color: #28a745;
+  background: #fffbf0;
   font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .team.loser {
-  opacity: 0.7;
-  background: #f8f9fa;
+  background: #f5f5f5;
+  /* opacity는 제거하여 높이 유지 */
+  /* padding과 높이는 유지하여 동일한 높이 보장 */
 }
 
 .team.loser .player-name {
-  opacity: 0.6;
+  background: #fafafa;
+  opacity: 0.7;
+  /* opacity는 약간만 적용하여 가독성 유지 */
 }
 
 .draw-game-card.has-result {
@@ -333,7 +364,8 @@
 .btn-copy,
 .btn-regenerate,
 .btn-edit,
-.btn-save {
+.btn-save,
+.draw-view-modal .btn-primary {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -382,9 +414,19 @@
 .btn-copy:disabled,
 .btn-regenerate:disabled,
 .btn-edit:disabled,
-.btn-save:disabled {
+.btn-save:disabled,
+.draw-view-modal .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.draw-view-modal .btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.draw-view-modal .btn-primary:hover:not(:disabled) {
+  background: #0056b3;
 }
 
 .loading {
@@ -437,6 +479,7 @@
 
   .draw-games-list {
     gap: 6px;
+    max-height: 60vh;
   }
 
   .draw-game-card {
@@ -480,9 +523,13 @@
   .team {
     gap: 2px;
     padding: 5px 6px;
+    min-height: 50px;
+    align-items: stretch;
   }
 
-  .team.winner {
+  /* 승리팀/패배팀도 동일한 padding 유지 */
+  .team.winner,
+  .team.loser {
     padding: 5px 6px;
   }
 
@@ -492,6 +539,7 @@
 
   .team-content {
     gap: 2px;
+    align-items: center;
   }
 
   .team-players-inline {
@@ -530,13 +578,23 @@
   }
 
   .modal-actions {
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 3px;
     padding-top: 4px;
     margin-top: 4px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: stretch;
   }
 
   .btn-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+  }
+
+  .btn-wrapper > button {
+    flex: 1;
     width: 100%;
   }
 
@@ -544,9 +602,38 @@
   .btn-regenerate,
   .btn-edit,
   .btn-save,
-  .btn-primary {
-    width: 100%;
-    padding: 8px 16px;
-    font-size: 13px;
+  .draw-view-modal .btn-primary {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 3px;
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 정말 작은 화면에서는 2개씩 2줄로 배치 */
+  @media (max-width: 360px) {
+    .modal-actions {
+      flex-wrap: wrap;
+    }
+
+    .btn-wrapper {
+      flex: 1 1 calc(50% - 2px);
+      min-width: calc(50% - 2px);
+      max-width: calc(50% - 2px);
+    }
+
+    .btn-copy,
+    .btn-regenerate,
+    .btn-edit,
+    .btn-save,
+    .draw-view-modal .btn-primary {
+      flex: 1 1 calc(50% - 2px);
+      min-width: calc(50% - 2px);
+      max-width: calc(50% - 2px);
+      padding: 6px 4px;
+      font-size: 9px;
+    }
   }
 }
