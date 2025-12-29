@@ -38,6 +38,7 @@ public class SecurityConfig {
                         // 인증 불필요한 API 엔드포인트
                         .requestMatchers("/api/auth/**").permitAll() // 소셜 로그인 API
                         .requestMatchers("/api/dev/**").permitAll() // 개발용 로그인 API
+                        .requestMatchers("/api/webauthn/login").permitAll() // WebAuthn 로그인 API
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API
                         .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/**").permitAll() // 클럽 목록 조회 API
                         .requestMatchers("/api/schedules/**").permitAll() // 일정 관리 API (개발 단계)

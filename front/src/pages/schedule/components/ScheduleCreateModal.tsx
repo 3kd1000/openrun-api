@@ -5,6 +5,7 @@ import { clubService } from "../../../services/clubService";
 import type { CreateScheduleRequest } from "../../../types/schedule";
 import type { UserResponse } from "../../../services/userService";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
+import { validateScheduleCreation } from "../../../utils/scheduleValidation";
 import "./ScheduleCreateModal.css";
 
 interface Props {
@@ -87,11 +88,19 @@ const ScheduleCreateModal: React.FC<Props> = ({
       return;
     }
 
+    const scheduledAt = `${selectedDate}T${selectedTime}:00`;
+
+    // 과거 날짜 체크
+    const validation = validateScheduleCreation(scheduledAt);
+    if (!validation.isValid) {
+      setError(validation.errorMessage || "일정 생성에 실패했습니다.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
 
-      const scheduledAt = `${selectedDate}T${selectedTime}:00`;
       const participationStartAt = participationStartEnabled
         ? `${participationStartDate}T${participationStartTime}:00`
         : null;

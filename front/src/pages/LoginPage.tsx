@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   signInWithGooglePopup,
   auth,
@@ -7,6 +7,7 @@ import {
 } from "../services/firebase";
 import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../services/api/axiosInstance";
+import { webauthnService } from "../services/webauthnService";
 
 interface UserInfo {
   id: number;
@@ -21,6 +22,8 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kakaoAuthCode, setKakaoAuthCode] = useState<string | null>(null);
+  const [showWebAuthnModal, setShowWebAuthnModal] = useState(false);
+  const [registering, setRegistering] = useState(false);
 
   // Kakao SDK 초기화
   useEffect(() => {
@@ -67,7 +70,7 @@ const LoginPage: React.FC = () => {
         localStorage.setItem("firebase_uid", firebaseUser.uid);
 
         // 4. 백엔드에서 사용자 정보 조회
-        const userInfo = await fetchUserInfo(firebaseUser.uid);
+        const userInfo = await fetchUserInfo();
 
         // 5. 사용자 정보를 localStorage에 저장
         localStorage.setItem("user_id", userInfo.id.toString());
@@ -98,8 +101,22 @@ const LoginPage: React.FC = () => {
             },
           });
         } else {
-          console.log("✅ 기존 사용자 → 메인 화면으로 이동");
-          navigate("/schedules");
+          console.log("✅ 기존 사용자 → WebAuthn 등록 여부 확인");
+          // WebAuthn 등록 여부 확인
+          try {
+            const hasWebAuthn = await webauthnService.hasWebAuthn();
+            if (!hasWebAuthn && webauthnService.isSupported()) {
+              console.log("🔐 WebAuthn 미등록 → 등록 권장 모달 표시");
+              setShowWebAuthnModal(true);
+            } else {
+              console.log("✅ 메인 화면으로 이동");
+              navigate("/schedules");
+            }
+          } catch (error) {
+            console.error("WebAuthn 등록 여부 확인 실패:", error);
+            // 에러가 나도 메인 화면으로 이동
+            navigate("/schedules");
+          }
         }
       } catch (err: unknown) {
         console.error("카카오 로그인 실패:", err);
@@ -145,7 +162,7 @@ const LoginPage: React.FC = () => {
 
       console.log("🔵 [3/4] 사용자 정보 조회...");
       // 4. 백엔드에서 사용자 정보 조회
-      const userInfo = await fetchUserInfo(firebaseUser.uid);
+      const userInfo = await fetchUserInfo();
 
       // 5. 사용자 정보를 localStorage에 저장
       localStorage.setItem("user_id", userInfo.id.toString());
@@ -179,8 +196,22 @@ const LoginPage: React.FC = () => {
           },
         });
       } else {
-        console.log("✅ 기존 사용자 → 메인 화면으로 이동");
-        navigate("/schedules");
+        console.log("✅ 기존 사용자 → WebAuthn 등록 여부 확인");
+        // WebAuthn 등록 여부 확인
+        try {
+          const hasWebAuthn = await webauthnService.hasWebAuthn();
+          if (!hasWebAuthn && webauthnService.isSupported()) {
+            console.log("🔐 WebAuthn 미등록 → 등록 권장 모달 표시");
+            setShowWebAuthnModal(true);
+          } else {
+            console.log("✅ 메인 화면으로 이동");
+            navigate("/schedules");
+          }
+        } catch (error) {
+          console.error("WebAuthn 등록 여부 확인 실패:", error);
+          // 에러가 나도 메인 화면으로 이동
+          navigate("/schedules");
+        }
       }
     } catch (err: unknown) {
       console.error("❌ 구글 로그인 실패:", err);
@@ -205,8 +236,92 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  // WebAuthn 생체인증 로그인
+  const handleWebAuthnSignIn = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔐 [1/5] WebAuthn 생체인증 시작...");
+
+      // 1. WebAuthn 브라우저 지원 확인
+      if (!webauthnService.isSupported()) {
+        throw new Error("이 브라우저는 생체인증을 지원하지 않습니다.");
+      }
+
+      // 2. WebAuthn 로그인 → Firebase Custom Token 받기
+      const loginResponse = await webauthnService.loginWithWebAuthn();
+      console.log("✅ [1/5] WebAuthn 인증 완료, Custom Token 받기 완료");
+
+      console.log("🔐 [2/5] Firebase 로그인 처리...");
+      // 3. Firebase Custom Token으로 Firebase 로그인
+      const userCredential = await signInWithCustomToken(
+        auth,
+        loginResponse.customToken
+      );
+      const idToken = await userCredential.user.getIdToken();
+      const firebaseUser = userCredential.user;
+      console.log("✅ [2/5] Firebase 로그인 완료");
+
+      // 4. Firebase token을 localStorage에 저장
+      localStorage.setItem("firebase_token", idToken);
+      localStorage.setItem("firebase_uid", firebaseUser.uid);
+
+      console.log("🔐 [3/5] 사용자 정보 조회...");
+      // 5. 백엔드에서 사용자 정보 조회
+      const userInfo = await fetchUserInfo();
+
+      console.log("🔐 [4/5] localStorage 저장...");
+      // 6. 사용자 정보를 localStorage에 저장
+      localStorage.setItem("user_id", userInfo.id.toString());
+      localStorage.setItem("user_name", userInfo.name);
+      if (userInfo.email) {
+        localStorage.setItem("user_email", userInfo.email);
+      }
+      if (userInfo.imageUrl) {
+        localStorage.setItem("user_image_url", userInfo.imageUrl);
+      }
+
+      // 7. 현재 클럽 ID 저장
+      localStorage.setItem("current_club_id", "1");
+
+      console.log("✅ [4/5] localStorage 저장 완료");
+
+      console.log("🔐 [5/5] 로그인 세션 설정...");
+      // 8. 로그인 세션 만료 시간 설정 (7일 후)
+      setLoginExpiry(true);
+
+      console.log("✅ [5/5] WebAuthn 로그인 완료!");
+      console.log("✅ 사용자 정보:", userInfo);
+
+      // 9. 메인 화면으로 이동 (WebAuthn은 이미 등록된 사용자만 사용 가능)
+      navigate("/schedules");
+    } catch (err: unknown) {
+      console.error("❌ WebAuthn 로그인 실패:", err);
+      if (err instanceof Error) {
+        // 사용자가 취소하거나 타임아웃된 경우
+        if (
+          err.message.includes("timed out") ||
+          err.message.includes("not allowed")
+        ) {
+          setError("생체인증이 취소되었거나 지원되지 않습니다.");
+        } else if (err.message.includes("등록되지 않은")) {
+          setError(
+            "등록된 생체인증이 없습니다. 먼저 소셜 로그인으로 로그인해주세요."
+          );
+        } else {
+          setError(`생체인증 로그인 실패: ${err.message}`);
+        }
+      } else {
+        setError("생체인증 로그인 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 백엔드에서 사용자 정보 조회
-  const fetchUserInfo = async (firebaseUid: string): Promise<UserInfo> => {
+  const fetchUserInfo = async (): Promise<UserInfo> => {
     try {
       // GET /api/users/me 호출
       const response = await axiosInstance.get("/users/me");
@@ -215,6 +330,57 @@ const LoginPage: React.FC = () => {
       console.error("❌ 사용자 정보 조회 실패:", error);
       throw new Error("사용자 정보를 가져올 수 없습니다.");
     }
+  };
+
+  // WebAuthn 등록 처리
+  const handleWebAuthnRegistration = async () => {
+    setRegistering(true);
+    setError(null);
+
+    try {
+      console.log("🔐 [1/2] WebAuthn 등록 시작...");
+
+      // 1. 등록 challenge 받기
+      const challenge = await webauthnService.registerStart();
+      console.log("✅ [1/2] Challenge 받기 완료");
+
+      console.log("🔐 [2/2] 생체인증 등록 중...");
+      // 2. 기기 이름 생성 (브라우저 정보 사용)
+      const deviceName = `${
+        navigator.platform
+      } - ${new Date().toLocaleDateString()}`;
+
+      // 3. 생체인증 등록
+      await webauthnService.registerFinish(challenge, deviceName);
+      console.log("✅ [2/2] WebAuthn 등록 완료!");
+
+      // 4. 모달 닫고 메인 화면으로 이동
+      setShowWebAuthnModal(false);
+      navigate("/schedules");
+    } catch (err: unknown) {
+      console.error("❌ WebAuthn 등록 실패:", err);
+      if (err instanceof Error) {
+        // 사용자가 취소한 경우
+        if (
+          err.message.includes("timed out") ||
+          err.message.includes("not allowed")
+        ) {
+          setError("생체인증 등록이 취소되었습니다.");
+        } else {
+          setError(`생체인증 등록 실패: ${err.message}`);
+        }
+      } else {
+        setError("생체인증 등록 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  // WebAuthn 등록 건너뛰기
+  const handleSkipWebAuthn = () => {
+    setShowWebAuthnModal(false);
+    navigate("/schedules");
   };
 
   return (
@@ -285,6 +451,7 @@ const LoginPage: React.FC = () => {
           style={{
             width: "100%",
             padding: "12px",
+            marginBottom: "12px",
             backgroundColor: "#fee500",
             color: "#000",
             border: "none",
@@ -298,6 +465,52 @@ const LoginPage: React.FC = () => {
           {loading ? "로그인 중..." : "Kakao로 로그인"}
         </button>
 
+        {/* 구분선 */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            margin: "20px 0",
+          }}
+        >
+          <div style={{ flex: 1, height: "1px", backgroundColor: "#ddd" }} />
+          <span
+            style={{
+              padding: "0 10px",
+              fontSize: "12px",
+              color: "#999",
+            }}
+          >
+            또는
+          </span>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "#ddd" }} />
+        </div>
+
+        {/* WebAuthn 생체인증 로그인 버튼 */}
+        <button
+          onClick={handleWebAuthnSignIn}
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: "12px",
+            backgroundColor: "#6c5ce7",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "16px",
+            fontWeight: "500",
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.6 : 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
+        >
+          <span style={{ fontSize: "20px" }}>🔐</span>
+          {loading ? "로그인 중..." : "생체인증으로 로그인"}
+        </button>
+
         <p
           style={{
             textAlign: "center",
@@ -306,9 +519,123 @@ const LoginPage: React.FC = () => {
             color: "#999",
           }}
         >
-          로그인하면 서비스 약관에 동의하는 것으로 간주됩니다.
+          로그인하면{" "}
+          <Link
+            to="/terms"
+            style={{
+              color: "#007bff",
+              textDecoration: "underline",
+            }}
+          >
+            서비스 이용약관
+          </Link>
+          에 동의하는 것으로 간주됩니다.
         </p>
       </div>
+
+      {/* WebAuthn 등록 권장 모달 */}
+      {showWebAuthnModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "30px",
+              borderRadius: "12px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+              maxWidth: "400px",
+              width: "90%",
+            }}
+          >
+            <h2
+              style={{
+                textAlign: "center",
+                marginBottom: "10px",
+                fontSize: "24px",
+              }}
+            >
+              🔐 생체인증 설정
+            </h2>
+            <p
+              style={{
+                textAlign: "center",
+                color: "#666",
+                marginBottom: "24px",
+                lineHeight: "1.5",
+              }}
+            >
+              다음 로그인부터 Face ID, Touch ID, 또는 패스키로 간편하게
+              로그인하실 수 있습니다.
+            </p>
+
+            {error && (
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#fee",
+                  color: "#c33",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                  fontSize: "14px",
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button
+                onClick={handleSkipWebAuthn}
+                disabled={registering}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#333",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  cursor: registering ? "not-allowed" : "pointer",
+                  opacity: registering ? 0.6 : 1,
+                }}
+              >
+                나중에
+              </button>
+              <button
+                onClick={handleWebAuthnRegistration}
+                disabled={registering}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  backgroundColor: "#6c5ce7",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  cursor: registering ? "not-allowed" : "pointer",
+                  opacity: registering ? 0.6 : 1,
+                }}
+              >
+                {registering ? "등록 중..." : "등록하기"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

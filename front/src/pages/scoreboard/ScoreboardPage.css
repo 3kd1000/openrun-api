@@ -133,7 +133,10 @@
 }
 
 /* 일반 숫자 컬럼 (경기수, 승률, 무, 패, 득점, 실점) 명시적 색상 지정 */
-.scoreboard-table td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(.name) {
+.scoreboard-table
+  td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(
+    .name
+  ) {
   color: #212529;
   font-weight: 500;
 }
@@ -216,8 +219,37 @@
     color: #212529 !important;
   }
 
+  /* 색상 효과가 있는 컬럼들은 원래 색상 유지 */
+  .scoreboard-table td.rank {
+    color: #4caf50 !important; /* 초록색 - 순위 */
+    font-weight: 700 !important;
+  }
+
+  .scoreboard-table td.points {
+    color: #ff9800 !important; /* 주황색 - 승점 */
+    font-weight: 700 !important;
+  }
+
+  .scoreboard-table td.wins {
+    color: #2196f3 !important; /* 파란색 - 승 */
+    font-weight: 600 !important;
+  }
+
+  .scoreboard-table td.positive {
+    color: #4caf50 !important; /* 초록색 - 양수 득실 */
+    font-weight: 600 !important;
+  }
+
+  .scoreboard-table td.negative {
+    color: #f44336 !important; /* 빨간색 - 음수 득실 */
+    font-weight: 600 !important;
+  }
+
   /* 숫자 컬럼들도 명시적으로 색상 지정 */
-  .scoreboard-table td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(.name) {
+  .scoreboard-table
+    td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(
+      .name
+    ) {
     color: #212529 !important;
     font-weight: 500 !important;
   }

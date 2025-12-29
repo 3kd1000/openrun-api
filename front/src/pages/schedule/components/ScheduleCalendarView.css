@@ -135,6 +135,115 @@
   font-size: 13px;
 }
 
+/* 일요일 및 공휴일 스타일 - 빨간색 표시 (모든 상태에서 우선 적용) */
+.react-calendar__tile.holiday-sunday,
+.react-calendar__tile.holiday,
+.react-calendar__tile.holiday-sunday:hover,
+.react-calendar__tile.holiday:hover {
+  color: #dc3545 !important; /* 빨간색 텍스트 */
+}
+
+.react-calendar__tile.holiday-sunday abbr,
+.react-calendar__tile.holiday abbr,
+.react-calendar__tile.holiday-sunday:hover abbr,
+.react-calendar__tile.holiday:hover abbr,
+.react-calendar__tile.holiday-sunday .react-calendar__month-view__days__day,
+.react-calendar__tile.holiday .react-calendar__month-view__days__day,
+.react-calendar__tile.holiday-sunday > *,
+.react-calendar__tile.holiday > * {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
+/* 공휴일이면서 선택된 상태에서도 빨간색 유지 (배경색만 변경) */
+.react-calendar__tile.holiday-sunday.react-calendar__tile--active,
+.react-calendar__tile.holiday.react-calendar__tile--active {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+.react-calendar__tile.holiday-sunday.react-calendar__tile--active abbr,
+.react-calendar__tile.holiday.react-calendar__tile--active abbr {
+  color: white !important;
+}
+
+/* 공휴일이면서 오늘 날짜인 경우 */
+.react-calendar__tile.holiday-sunday.react-calendar__tile--now,
+.react-calendar__tile.holiday.react-calendar__tile--now {
+  color: #dc3545 !important;
+  border: 1px solid #ff9800 !important;
+}
+
+.react-calendar__tile.holiday-sunday.react-calendar__tile--now abbr,
+.react-calendar__tile.holiday.react-calendar__tile--now abbr {
+  color: #dc3545 !important;
+}
+
+/* 공휴일이면서 오늘 날짜이면서 선택된 경우 */
+.react-calendar__tile.holiday-sunday.react-calendar__tile--now.react-calendar__tile--active,
+.react-calendar__tile.holiday.react-calendar__tile--now.react-calendar__tile--active {
+  background-color: transparent !important;
+  color: #dc3545 !important;
+}
+
+.react-calendar__tile.holiday-sunday.react-calendar__tile--now.react-calendar__tile--active
+  abbr,
+.react-calendar__tile.holiday.react-calendar__tile--now.react-calendar__tile--active
+  abbr {
+  color: #dc3545 !important;
+}
+
+/* 다크테마에서도 빨간색 유지 */
+@media (prefers-color-scheme: dark) {
+  .react-calendar__tile.holiday-sunday,
+  .react-calendar__tile.holiday,
+  .react-calendar__tile.holiday-sunday:hover,
+  .react-calendar__tile.holiday:hover {
+    color: #dc3545 !important;
+  }
+
+  .react-calendar__tile.holiday-sunday abbr,
+  .react-calendar__tile.holiday abbr,
+  .react-calendar__tile.holiday-sunday:hover abbr,
+  .react-calendar__tile.holiday:hover abbr {
+    color: #dc3545 !important;
+  }
+
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--active,
+  .react-calendar__tile.holiday.react-calendar__tile--active {
+    background-color: #007bff !important;
+    color: white !important;
+  }
+
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--active abbr,
+  .react-calendar__tile.holiday.react-calendar__tile--active abbr {
+    color: white !important;
+  }
+
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--now,
+  .react-calendar__tile.holiday.react-calendar__tile--now {
+    color: #dc3545 !important;
+  }
+
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--now abbr,
+  .react-calendar__tile.holiday.react-calendar__tile--now abbr {
+    color: #dc3545 !important;
+  }
+
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--now.react-calendar__tile--active,
+  .react-calendar__tile.holiday.react-calendar__tile--now.react-calendar__tile--active {
+    background-color: transparent !important;
+    color: #dc3545 !important;
+  }
+
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--now.react-calendar__tile--active
+    abbr,
+  .react-calendar__tile.holiday.react-calendar__tile--now.react-calendar__tile--active
+    abbr {
+    color: #dc3545 !important;
+  }
+}
+
 /* 캘린더 타일 콘텐츠 */
 .calendar-tile-content {
   margin-top: 2px;
@@ -208,14 +317,14 @@
 
 /* 무효 대진 스타일 */
 .calendar-event.invalid-draw {
-  border: 1px dashed #ff9800 !important;
-  background: #fff3e0 !important;
-  color: #e65100 !important;
+  border: 1px dashed #f44336 !important;
+  background: #ffebee !important;
+  color: #c62828 !important;
 }
 
 .calendar-event.invalid-draw:hover {
-  background: #ffe0b2 !important;
-  border-color: #f57c00 !important;
+  background: #ffcdd2 !important;
+  border-color: #d32f2f !important;
 }
 
 .invalid-indicator {
@@ -225,8 +334,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* 유효한 대진 스타일 */

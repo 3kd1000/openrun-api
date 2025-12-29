@@ -28,6 +28,10 @@ dependencies {
     // Firebase
     implementation 'com.google.firebase:firebase-admin:9.3.0'
 
+    // WebAuthn
+    implementation 'com.webauthn4j:webauthn4j-core:0.24.0.RELEASE'
+    implementation 'com.webauthn4j:webauthn4j-util:0.24.0.RELEASE'
+
     // Database & Migration
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.flywaydb:flyway-core'

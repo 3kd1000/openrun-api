@@ -3,16 +3,18 @@ import type { Participant } from "../../../types/schedule";
 import { drawService } from "../../../services/drawService";
 import type {
   DrawResponse,
-  CreateDrawRequest,
+  CreateDrawRequestWithIds,
 } from "../../../services/drawService";
 import { participantService } from "../../../services/participantService";
-import { userService, type UserResponse } from "../../../services/userService";
-import { clubService } from "../../../services/clubService";
+import { userService } from "../../../services/userService";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
+import { validateDrawCreation } from "../../../utils/scheduleValidation";
+import type { Schedule } from "../../../types/schedule";
 import "./DrawCreateModal.css";
 
 interface Props {
   scheduleId: number;
+  schedule: Schedule;
   participants: Participant[];
   onClose: () => void;
   onSuccess: () => void;
@@ -22,6 +24,7 @@ type DrawType = "AA" | "AB" | "SEED";
 
 const DrawCreateModal: React.FC<Props> = ({
   scheduleId,
+  schedule,
   participants,
   onClose,
   onSuccess,
@@ -47,12 +50,8 @@ const DrawCreateModal: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 게스트 사용자 목록
-  const [guestUsers, setGuestUsers] = useState<UserResponse[]>([]);
+  // 게스트 추가 상태
   const [addingGuest, setAddingGuest] = useState(false);
-
-  // 클럽 회원 목록
-  const [clubMembers, setClubMembers] = useState<UserResponse[]>([]);
 
   // AA 타입: 참가/대기
   const [confirmedGroup, setConfirmedGroup] = useState<number[]>([]);
@@ -73,50 +72,16 @@ const DrawCreateModal: React.FC<Props> = ({
   const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // 게스트 사용자 목록 로드
-  useEffect(() => {
-    const fetchGuestUsers = async () => {
-      try {
-        const guests = await userService.getGuestUsers();
-        setGuestUsers(guests);
-      } catch (err) {
-        console.error("게스트 사용자 목록 조회 실패:", err);
-      }
-    };
-    fetchGuestUsers();
-  }, []);
-
-  // 클럽 회원 목록 로드
-  useEffect(() => {
-    const fetchClubMembers = async () => {
-      try {
-        const currentClubId = parseInt(localStorage.getItem('current_club_id') || '1');
-        const members = await clubService.getClubMembers(currentClubId);
-        setClubMembers(members);
-      } catch (err) {
-        console.error("클럽 회원 목록 조회 실패:", err);
-      }
-    };
-    fetchClubMembers();
-  }, []);
-
-  // 사용자 ID로 이름 가져오기
-  const getUserName = (userId: number): string => {
-    // 게스트 사용자 확인 (우선순위 1)
-    const guest = guestUsers.find((g) => g.id === userId);
-    if (guest) return guest.name;
-
-    // 클럽 회원 확인 (우선순위 2)
-    const clubMember = clubMembers.find((m) => m.id === userId);
-    if (clubMember) return clubMember.name;
-
-    // 찾지 못한 경우 (API에서 조회 중이거나 데이터 불일치)
-    return `User #${userId}`;
+  // userName으로 게스트인지 확인 (게스트1~게스트16 패턴)
+  const isGuest = (userId: number): boolean => {
+    const participant = localParticipants.find((p) => p.userId === userId);
+    return participant ? participant.userName.startsWith("게스트") : false;
   };
 
-  // 게스트인지 확인
-  const isGuest = (userId: number): boolean => {
-    return guestUsers.some((g) => g.id === userId);
+  // userId로 userName 가져오기
+  const getUserName = (userId: number): string => {
+    const participant = localParticipants.find((p) => p.userId === userId);
+    return participant?.userName || `User #${userId}`;
   };
 
   // 게스트 추가 핸들러
@@ -124,6 +89,9 @@ const DrawCreateModal: React.FC<Props> = ({
     try {
       setAddingGuest(true);
       setError("");
+
+      // 게스트 사용자 목록 조회 (매번 호출)
+      const guestUsers = await userService.getGuestUsers();
 
       // 현재 참가자 중 게스트 사용자 찾기
       const currentParticipantIds = localParticipants.map((p) => p.userId);
@@ -182,8 +150,8 @@ const DrawCreateModal: React.FC<Props> = ({
       );
       setLocalParticipants(updatedParticipants);
 
-      const guestName = getUserName(userId);
-      console.log(`✅ ${guestName} 삭제 완료`);
+      const participant = localParticipants.find((p) => p.userId === userId);
+      console.log(`✅ ${participant?.userName} 삭제 완료`);
     } catch (err: unknown) {
       console.error("게스트 삭제 실패:", err);
       const errorMessage = (
@@ -375,50 +343,52 @@ const DrawCreateModal: React.FC<Props> = ({
 
   // 대진 생성 (또는 재생성)
   const handleCreateDraw = async () => {
+    // 과거 일정 체크
+    const validation = validateDrawCreation(schedule.scheduledAt);
+    if (!validation.isValid) {
+      setError(validation.errorMessage || "대진 생성에 실패했습니다.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
 
-      const baseRequest: Omit<
-        CreateDrawRequest,
-        "userNames" | "seedUserNames" | "groupAUserNames" | "groupBUserNames"
-      > = {
-        drawType,
-        numberOfTotalPlayer:
-          drawType === "AA" ? confirmedGroup.length : confirmedUserIds.length,
-      };
-
-      let request: CreateDrawRequest;
+      // userId 기반으로 대진 생성 (동명이인 문제 해결)
+      let requestWithIds: CreateDrawRequestWithIds;
       if (drawType === "AA") {
-        request = {
-          ...baseRequest,
-          userNames: confirmedGroup.map((id) => getUserName(id)),
-          seedUserNames: [],
-          groupAUserNames: [],
-          groupBUserNames: [],
+        requestWithIds = {
+          drawType,
+          numberOfTotalPlayer: confirmedGroup.length,
+          userIds: confirmedGroup,
+          seedUserIds: [],
+          groupAUserIds: [],
+          groupBUserIds: [],
         };
       } else if (drawType === "AB") {
-        request = {
-          ...baseRequest,
-          userNames: [...groupA, ...groupB].map((id) => getUserName(id)),
-          groupAUserNames: groupA.map((id) => getUserName(id)),
-          groupBUserNames: groupB.map((id) => getUserName(id)),
-          seedUserNames: [],
+        requestWithIds = {
+          drawType,
+          numberOfTotalPlayer: confirmedUserIds.length,
+          userIds: [...groupA, ...groupB],
+          groupAUserIds: groupA,
+          groupBUserIds: groupB,
+          seedUserIds: [],
         };
       } else {
         // drawType === "SEED"
-        request = {
-          ...baseRequest,
-          userNames: normalPlayers.map((id) => getUserName(id)),
-          seedUserNames: seedPlayers.map((id) => getUserName(id)),
-          groupAUserNames: [],
-          groupBUserNames: [],
+        requestWithIds = {
+          drawType,
+          numberOfTotalPlayer: confirmedUserIds.length,
+          userIds: normalPlayers,
+          seedUserIds: seedPlayers,
+          groupAUserIds: [],
+          groupBUserIds: [],
         };
       }
 
-      const result = await drawService.createDrawWithSchedule(
+      const result = await drawService.createDrawWithScheduleByIds(
         scheduleId,
-        request
+        requestWithIds
       );
       setDrawResult(result);
     } catch (err: unknown) {
@@ -448,7 +418,9 @@ const DrawCreateModal: React.FC<Props> = ({
     });
 
     // 라운드 순서대로 정렬
-    const sortedRounds = Object.keys(gamesByRound).map(Number).sort((a, b) => a - b);
+    const sortedRounds = Object.keys(gamesByRound)
+      .map(Number)
+      .sort((a, b) => a - b);
 
     sortedRounds.forEach((round) => {
       text += `라운드 ${round}\n`;
@@ -565,16 +537,17 @@ const DrawCreateModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={handleAddGuest}
-              disabled={addingGuest || guestUsers.length === 0}
+              disabled={addingGuest}
               className="btn-add-guest"
               style={{
-                padding: "8px 16px",
+                padding: "8px 12px",
                 backgroundColor: "#6c757d",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
                 cursor: addingGuest ? "not-allowed" : "pointer",
-                opacity: addingGuest || guestUsers.length === 0 ? 0.6 : 1,
+                opacity: addingGuest ? 0.6 : 1,
+                fontSize: "13px",
               }}
             >
               {addingGuest ? "추가 중..." : "게스트 추가 (대기열)"}

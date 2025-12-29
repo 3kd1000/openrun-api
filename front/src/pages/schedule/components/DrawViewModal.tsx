@@ -81,7 +81,9 @@ const DrawViewModal: React.FC<Props> = ({
     });
 
     // 라운드 순서대로 정렬
-    const sortedRounds = Object.keys(gamesByRound).map(Number).sort((a, b) => a - b);
+    const sortedRounds = Object.keys(gamesByRound)
+      .map(Number)
+      .sort((a, b) => a - b);
 
     sortedRounds.forEach((round) => {
       text += `라운드 ${round}\n`;
@@ -90,8 +92,12 @@ const DrawViewModal: React.FC<Props> = ({
         const teamBNames = game.teamB.join(", ");
 
         // 스코어가 있으면 포함, 없으면 팀 이름만
-        if (game.teamAScore !== null && game.teamAScore !== undefined &&
-            game.teamBScore !== null && game.teamBScore !== undefined) {
+        if (
+          game.teamAScore !== null &&
+          game.teamAScore !== undefined &&
+          game.teamBScore !== null &&
+          game.teamBScore !== undefined
+        ) {
           text += `게임${game.gameNo} ${teamANames} ${game.teamAScore} : ${game.teamBScore} ${teamBNames}\n`;
         } else {
           text += `게임${game.gameNo} ${teamANames} : ${teamBNames}\n`;
@@ -128,7 +134,8 @@ const DrawViewModal: React.FC<Props> = ({
   ) => {
     const numValue = value === "" ? "" : value.replace(/[^0-9]/g, "");
     // 최댓값 7로 제한
-    const limitedValue = numValue === "" ? "" : Math.min(parseInt(numValue), 7).toString();
+    const limitedValue =
+      numValue === "" ? "" : Math.min(parseInt(numValue), 7).toString();
 
     setMatchScores((prev) => {
       const newMap = new Map(prev);
@@ -237,6 +244,7 @@ const DrawViewModal: React.FC<Props> = ({
     return (
       <DrawCreateModal
         scheduleId={schedule.id}
+        schedule={schedule}
         participants={participants}
         onClose={() => setShowRegenerateModal(false)}
         onSuccess={handleRegenerateSuccess}

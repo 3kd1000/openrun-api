@@ -6,11 +6,14 @@ import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.Particip
 import com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse;
 import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepository;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
+import com.example.openrunapi.domain.user.model.User;
+import com.example.openrunapi.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +24,7 @@ public class ScheduleParticipantService {
 
     private final ScheduleParticipantRepository participantRepository;
     private final ScheduleRepository scheduleRepository;
+    private final UserRepository userRepository;
 
     /**
      * 일정 참가 신청
@@ -31,23 +35,39 @@ public class ScheduleParticipantService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // 2. 이미 신청한 사용자인지 확인 (취소하지 않은 신청이 있는지)
+        // 2. 과거 일정 체크
+        if (schedule.getScheduledAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("이미 지난 일정에는 참가신청할 수 없습니다.");
+        }
+
+        // 3. 참가신청 시작시간 체크 (participationStartAt이 설정되어 있고, 아직 시간이 도래하지 않았으면 예외 발생)
+        if (schedule.getParticipationStartAt() != null) {
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isBefore(schedule.getParticipationStartAt())) {
+                throw new IllegalStateException(
+                    String.format("참가신청 시작 시간이 아직 도래하지 않았습니다. 시작 시간: %s",
+                        schedule.getParticipationStartAt())
+                );
+            }
+        }
+
+        // 3. 이미 신청한 사용자인지 확인 (취소하지 않은 신청이 있는지)
         if (participantRepository.findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED).isPresent()) {
             throw new IllegalStateException("이미 참가 신청한 일정입니다.");
         }
 
-        // 3. 현재 참가자 수 (취소 제외) 확인
+        // 4. 현재 참가자 수 (취소 제외) 확인
         Long currentParticipants = participantRepository.countActiveParticipants(scheduleId, ParticipantStatus.CANCELLED);
 
-        // 4. 상태 결정: maxCapacity 미만이면 CONFIRMED, 이상이면 WAITING
+        // 5. 상태 결정: maxCapacity 미만이면 CONFIRMED, 이상이면 WAITING
         ParticipantStatus status = currentParticipants < schedule.getMaxCapacity()
                 ? ParticipantStatus.CONFIRMED
                 : ParticipantStatus.WAITING;
 
-        // 5. 다음 position 번호 가져오기
+        // 6. 다음 position 번호 가져오기
         Integer nextPosition = participantRepository.getNextPosition(scheduleId);
 
-        // 6. 참가자 생성 및 저장
+        // 7. 참가자 생성 및 저장
         ScheduleParticipant participant = ScheduleParticipant.builder()
                 .scheduleId(scheduleId)
                 .userId(userId)
@@ -57,10 +77,14 @@ public class ScheduleParticipantService {
 
         ScheduleParticipant savedParticipant = participantRepository.save(participant);
 
-        // 7. Schedule의 currentParticipants 업데이트 (상태 무관, 신청한 모든 사람 카운트)
+        // 8. Schedule의 currentParticipants 업데이트 (상태 무관, 신청한 모든 사람 카운트)
         schedule.incrementParticipants();
 
-        return new ParticipantResponse(savedParticipant);
+        // 9. User 조회하여 userName 포함된 Response 반환
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
+
+        return new ParticipantResponse(savedParticipant, user.getName());
     }
 
     /**
@@ -104,22 +128,19 @@ public class ScheduleParticipantService {
     }
 
     /**
-     * 특정 일정의 참가자 목록 조회
+     * 특정 일정의 참가자 목록 조회 (userName 포함)
      */
     public List<ParticipantResponse> getParticipants(Long scheduleId) {
-        // 취소되지 않은 참가자만 조회
-        return participantRepository.findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED)
-                .stream()
-                .map(ParticipantResponse::new)
-                .collect(Collectors.toList());
+        // User와 JOIN하여 userName 포함하여 조회
+        return participantRepository.findActiveParticipantsWithUserName(scheduleId, ParticipantStatus.CANCELLED);
     }
 
     /**
-     * 사용자의 특정 일정 참가 신청 내역 조회
+     * 사용자의 특정 일정 참가 신청 내역 조회 (userName 포함)
      */
     public ParticipantResponse getMyParticipation(Long scheduleId, Long userId) {
-        return participantRepository.findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED)
-                .map(ParticipantResponse::new)
+        // User와 JOIN하여 userName 포함하여 조회
+        return participantRepository.findActiveParticipationWithUserName(scheduleId, userId, ParticipantStatus.CANCELLED)
                 .orElse(null);
     }
 }
