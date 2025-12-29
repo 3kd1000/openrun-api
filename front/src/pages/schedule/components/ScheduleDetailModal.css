@@ -279,6 +279,24 @@
 }
 
 /* 모달 내부 액션 버튼 영역 여백 */
+/* 참가신청 시작 시간 안내 */
+.participation-start-info {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  background-color: #e3f2fd;
+  border: 1px solid #2196f3;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.participation-start-info p {
+  margin: 0;
+  font-size: 13px;
+  color: #1565c0;
+  font-weight: 500;
+}
+
 .schedule-detail-view .modal-actions {
   margin-top: 0;
   padding: 0;
@@ -315,6 +333,19 @@
   transform: translateY(0);
 }
 
+.btn-create-draw:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.btn-create-draw:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
 
 /* 대진표 상태 표시 */
 .draw-status {
@@ -334,9 +365,9 @@
 }
 
 .draw-status.invalid {
-  background-color: #fff3e0;
-  color: #e65100;
-  border: 2px dashed #ff9800;
+  background-color: #ffebee;
+  color: #c62828;
+  border: 2px dashed #f44336;
   animation: pulse 2s infinite;
 }
 
@@ -347,8 +378,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* 대진표 보기 버튼 */

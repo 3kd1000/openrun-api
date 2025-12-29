@@ -1,32 +1,57 @@
 .draw-create-modal {
   max-width: 800px !important;
   width: 95vw;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
 }
 
 .draw-create-content {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.draw-create-content > .form-group {
+  margin-bottom: 0;
+}
+
+.draw-create-content .modal-actions {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 /* 대진 타입 버튼 */
 .draw-type-buttons {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .draw-type-btn {
   flex: 1;
-  padding: 12px 16px;
+  padding: 10px 8px;
   background: white;
   border: 2px solid #ddd;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #666;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .draw-type-btn:hover {
@@ -53,6 +78,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+  align-content: start;
 }
 
 .player-card {
@@ -175,18 +201,18 @@
 /* 이동 버튼 */
 .move-buttons {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .btn-move-group {
   flex: 1;
-  padding: 12px 16px;
+  padding: 10px 12px;
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -207,8 +233,11 @@
 /* 그룹 분할 레이아웃 */
 .group-division {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* AB/SEED 타입: Grid 레이아웃으로 대기열을 하단에 배치 */
@@ -226,11 +255,15 @@
 
 .group-box {
   flex: 1;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 12px;
+  border-radius: 8px;
   border: 2px dashed #ddd;
   background: #fafafa;
-  min-height: 200px;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   transition: all 0.2s ease;
 }
 
@@ -240,11 +273,18 @@
 }
 
 .group-box h4 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #555;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
   text-align: center;
+  flex-shrink: 0;
+}
+
+.group-box .player-grid {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .group-box.group-a {
@@ -518,19 +558,23 @@
 @media (max-width: 768px) {
   .draw-create-modal {
     max-width: 100%;
+    max-height: 100vh;
   }
 
   .draw-create-content {
-    padding: 16px;
+    padding: 12px;
+    gap: 12px;
   }
 
   .draw-type-buttons {
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 6px;
   }
 
   .draw-type-btn {
-    width: 100%;
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 11px;
   }
 
   .group-division,
@@ -622,18 +666,29 @@
   }
 
   /* 모바일 버튼 스타일 */
-  .modal-actions {
-    gap: 4px;
+  .draw-create-content .modal-actions {
+    gap: 6px;
+    padding: 10px 0 0 0;
+    margin-top: auto;
   }
 
   .btn-copy,
   .btn-regenerate,
-  .btn-primary {
-    padding: 6px 2px;
-    font-size: 9px;
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 8px;
+    font-size: 12px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  }
+
+  .move-buttons {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .btn-move-group {
+    padding: 8px 10px;
+    font-size: 12px;
   }
 }
 

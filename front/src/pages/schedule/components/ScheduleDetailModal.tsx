@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
-import { userService, type UserResponse } from "../../../services/userService";
 import { clubService } from "../../../services/clubService";
+import type { UserResponse } from "../../../services/userService";
 import type {
   Schedule,
   CreateScheduleRequest,
@@ -12,6 +12,11 @@ import type {
 import DrawCreateModal from "./DrawCreateModal";
 import DrawViewModal from "./DrawViewModal";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
+import {
+  validateParticipation,
+  validateScheduleCreation,
+  isPastDate,
+} from "../../../utils/scheduleValidation";
 import "./ScheduleDetailModal.css";
 
 interface Props {
@@ -46,63 +51,39 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const [showDrawViewModal, setShowDrawViewModal] = useState(false);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
 
-  // 게스트 사용자 목록
-  const [guestUsers, setGuestUsers] = useState<UserResponse[]>([]);
-
-  // 클럽 회원 관련 state
+  // 클럽 회원 검색 관련 state (예약자 선택용)
   const [clubMembers, setClubMembers] = useState<UserResponse[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedReservedBy, setSelectedReservedBy] = useState<UserResponse | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedReservedBy, setSelectedReservedBy] =
+    useState<UserResponse | null>(null);
 
   // 참가신청 시작시간 관련 state
-  const [participationStartEnabled, setParticipationStartEnabled] = useState(false);
-  const [participationStartDate, setParticipationStartDate] = useState('');
-  const [participationStartTime, setParticipationStartTime] = useState('06:00');
+  const [participationStartEnabled, setParticipationStartEnabled] =
+    useState(false);
+  const [participationStartDate, setParticipationStartDate] = useState("");
+  const [participationStartTime, setParticipationStartTime] = useState("06:00");
 
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem("user_id");
   const currentUserId = userId ? parseInt(userId) : null;
 
-  // 게스트 사용자 목록 로드
+  // 클럽 회원 목록 조회 (수정 모드 진입 시에만)
   useEffect(() => {
-    const fetchGuestUsers = async () => {
-      try {
-        const guests = await userService.getGuestUsers();
-        setGuestUsers(guests);
-      } catch (err) {
-        console.error("게스트 사용자 목록 조회 실패:", err);
-      }
-    };
-    fetchGuestUsers();
-  }, []);
+    if (!isEditMode) return; // 수정 모드 아니면 조회 안 함
 
-  // 클럽 회원 목록 조회
-  useEffect(() => {
     const fetchClubMembers = async () => {
       try {
-        const currentClubId = parseInt(localStorage.getItem('current_club_id') || '1');
+        const currentClubId = parseInt(
+          localStorage.getItem("current_club_id") || "1"
+        );
         const members = await clubService.getClubMembers(currentClubId);
         setClubMembers(members);
       } catch (err) {
-        console.error('클럽 회원 목록 조회 실패:', err);
+        console.error("클럽 회원 목록 조회 실패:", err);
       }
     };
     fetchClubMembers();
-  }, []);
-
-  // 사용자 ID로 이름 가져오기
-  const getUserName = (userId: number): string => {
-    // 게스트 사용자 확인 (우선순위 1)
-    const guest = guestUsers.find((g) => g.id === userId);
-    if (guest) return guest.name;
-
-    // 클럽 회원 확인 (우선순위 2 - 신규 가입한 회원 포함)
-    const clubMember = clubMembers.find((m) => m.id === userId);
-    if (clubMember) return clubMember.name;
-
-    // 찾지 못한 경우 (API에서 조회 중이거나 데이터 불일치)
-    return `User #${userId}`;
-  };
+  }, [isEditMode]); // isEditMode가 true될 때 조회
 
   // 초기 날짜 및 시간 분리
   const scheduledAtDate = schedule
@@ -168,7 +149,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
       // 예약자 정보 초기화
       if (scheduleData.reservedByUserId) {
-        const reservedUser = clubMembers.find(m => m.id === scheduleData.reservedByUserId);
+        const reservedUser = clubMembers.find(
+          (m) => m.id === scheduleData.reservedByUserId
+        );
         setSelectedReservedBy(reservedUser || null);
       } else {
         setSelectedReservedBy(null);
@@ -183,7 +166,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
       } else {
         setParticipationStartEnabled(false);
         setParticipationStartDate(format(scheduledAt, "yyyy-MM-dd"));
-        setParticipationStartTime('06:00');
+        setParticipationStartTime("06:00");
       }
     } catch (err) {
       console.error("일정 정보 로드 실패:", err);
@@ -212,11 +195,19 @@ const ScheduleDetailModal: React.FC<Props> = ({
       return;
     }
 
+    const scheduledAt = `${selectedDate}T${selectedTime}:00`;
+
+    // 과거 날짜 체크
+    const validation = validateScheduleCreation(scheduledAt);
+    if (!validation.isValid) {
+      setError(validation.errorMessage || "일정 수정에 실패했습니다.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
 
-      const scheduledAt = `${selectedDate}T${selectedTime}:00`;
       const participationStartAt = participationStartEnabled
         ? `${participationStartDate}T${participationStartTime}:00`
         : null;
@@ -224,7 +215,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
       const requestData: CreateScheduleRequest = {
         ...formData,
         scheduledAt,
-        participationStartAt
+        participationStartAt,
       };
 
       await scheduleService.updateSchedule(schedule.id, requestData);
@@ -268,6 +259,16 @@ const ScheduleDetailModal: React.FC<Props> = ({
     }
 
     if (!schedule) {
+      return;
+    }
+
+    // 참가신청 가능 여부 체크
+    const validation = validateParticipation(
+      schedule.scheduledAt,
+      schedule.participationStartAt
+    );
+    if (!validation.isValid) {
+      setError(validation.errorMessage || "참가 신청에 실패했습니다.");
       return;
     }
 
@@ -315,7 +316,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const handleSelectReservedBy = (member: UserResponse) => {
     setSelectedReservedBy(member);
     setFormData({ ...formData, reservedByUserId: member.id });
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   // 예약자 선택 해제
@@ -326,7 +327,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
   // LIKE 검색 (이름에 검색어가 포함된 회원 필터링)
   const filteredMembers = searchQuery.trim()
-    ? clubMembers.filter(member =>
+    ? clubMembers.filter((member) =>
         member.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
@@ -426,6 +427,18 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </p>
             </div>
 
+            {schedule.participationStartAt && (
+              <div className="detail-item">
+                <label>참가신청 시작</label>
+                <p>
+                  {format(
+                    new Date(schedule.participationStartAt),
+                    "yyyy년 M월 d일 HH:mm"
+                  )}
+                </p>
+              </div>
+            )}
+
             <div className="detail-item">
               <label>참가 현황</label>
               <div className="participant-stats">
@@ -480,6 +493,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
             {/* 대진 관련 액션 버튼 */}
             {schedule.drawType ? (
               // 대진이 있는 경우: 보기 버튼만 (수정/재생성은 대진표 보기 모달에서)
+              // 과거 일정이어도 대진이 있으면 보기 가능 (경기 결과 입력/수정을 위해)
               <div className="draw-view-action">
                 <button
                   type="button"
@@ -491,17 +505,27 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </div>
             ) : (
               // 대진이 없는 경우: 생성 버튼
-              confirmedParticipants.length >= 4 && (
-                <div className="draw-create-action">
-                  <button
-                    type="button"
-                    onClick={() => setShowDrawCreateModal(true)}
-                    className="btn-create-draw"
-                  >
-                    🎯 대진 생성
-                  </button>
-                </div>
-              )
+              <div className="draw-create-action">
+                <button
+                  type="button"
+                  onClick={() => setShowDrawCreateModal(true)}
+                  className="btn-create-draw"
+                  disabled={
+                    !!(
+                      schedule.scheduledAt &&
+                      new Date() >= new Date(schedule.scheduledAt)
+                    )
+                  }
+                  title={
+                    schedule.scheduledAt &&
+                    new Date() >= new Date(schedule.scheduledAt)
+                      ? "이미 지난 일정에는 대진을 생성할 수 없습니다."
+                      : undefined
+                  }
+                >
+                  🎯 대진 생성
+                </button>
+              </div>
             )}
 
             {/* 참가자 목록 */}
@@ -515,7 +539,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                       <ul>
                         {confirmedParticipants.map((p, idx) => (
                           <li key={p.id}>
-                            {idx + 1}. {getUserName(p.userId)}
+                            {idx + 1}. {p.userName}
                             {p.userId === currentUserId && (
                               <span className="me-badge"> (나)</span>
                             )}
@@ -531,7 +555,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                       <ul>
                         {waitingParticipants.map((p, idx) => (
                           <li key={p.id} className="waiting">
-                            {idx + 1}. {getUserName(p.userId)}
+                            {idx + 1}. {p.userName}
                             {p.userId === currentUserId && (
                               <span className="me-badge"> (나)</span>
                             )}
@@ -564,13 +588,34 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
             {error && <div className="error-message">{error}</div>}
 
+            {/* 참가신청 시작 시간 안내 */}
+            {schedule?.participationStartAt &&
+              new Date() < new Date(schedule.participationStartAt) && (
+                <div className="participation-start-info">
+                  <p>
+                    참가신청 시작 시간:{" "}
+                    {format(
+                      new Date(schedule.participationStartAt),
+                      "yyyy년 M월 d일 HH:mm"
+                    )}
+                  </p>
+                </div>
+              )}
+
             <div className="modal-actions">
               {currentUserId && myParticipation ? (
                 <button
                   type="button"
                   onClick={handleCancel}
                   className="btn-cancel-participation"
-                  disabled={loading}
+                  disabled={
+                    loading || !schedule || isPastDate(schedule.scheduledAt)
+                  }
+                  title={
+                    schedule && isPastDate(schedule.scheduledAt)
+                      ? "이미 지난 일정에는 신청 취소할 수 없습니다."
+                      : undefined
+                  }
                 >
                   {loading ? "취소 중..." : "신청 취소"}
                 </button>
@@ -579,7 +624,15 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   type="button"
                   onClick={handleJoin}
                   className="btn-join"
-                  disabled={loading || !currentUserId}
+                  disabled={
+                    loading ||
+                    !currentUserId ||
+                    !schedule ||
+                    !validateParticipation(
+                      schedule.scheduledAt,
+                      schedule.participationStartAt
+                    ).isValid
+                  }
                 >
                   {loading ? "신청 중..." : "참가 신청"}
                 </button>
@@ -595,8 +648,20 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setIsEditMode(true)}
+                onClick={() => {
+                  if (schedule && isPastDate(schedule.scheduledAt)) {
+                    setError("과거 날짜에는 일정을 수정할 수 없습니다.");
+                    return;
+                  }
+                  setIsEditMode(true);
+                }}
                 className="btn-primary"
+                disabled={!schedule || isPastDate(schedule.scheduledAt)}
+                title={
+                  schedule && isPastDate(schedule.scheduledAt)
+                    ? "과거 날짜에는 일정을 수정할 수 없습니다."
+                    : undefined
+                }
               >
                 수정
               </button>
@@ -610,7 +675,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
             {error && <div className="error-message">{error}</div>}
 
             <div className="form-row">
-              <div className="form-group" style={{ flex: '1.5' }}>
+              <div className="form-group" style={{ flex: "1.5" }}>
                 <label>날짜 *</label>
                 <input
                   type="date"
@@ -619,7 +684,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   required
                 />
               </div>
-              <div className="form-group" style={{ flex: '1' }}>
+              <div className="form-group" style={{ flex: "1" }}>
                 <label>시간 *</label>
                 <select
                   value={selectedTime}
@@ -637,12 +702,16 @@ const ScheduleDetailModal: React.FC<Props> = ({
             </div>
 
             <div className="form-group">
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <input
                   type="checkbox"
                   checked={participationStartEnabled}
-                  onChange={(e) => setParticipationStartEnabled(e.target.checked)}
-                  style={{ width: 'auto', margin: 0 }}
+                  onChange={(e) =>
+                    setParticipationStartEnabled(e.target.checked)
+                  }
+                  style={{ width: "auto", margin: 0 }}
                 />
                 참가신청 시작시간 설정
               </label>
@@ -650,7 +719,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
             {participationStartEnabled && (
               <div className="form-row">
-                <div className="form-group" style={{ flex: '1.5' }}>
+                <div className="form-group" style={{ flex: "1.5" }}>
                   <label>참가신청 시작 날짜 *</label>
                   <input
                     type="date"
@@ -659,7 +728,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     required
                   />
                 </div>
-                <div className="form-group" style={{ flex: '1' }}>
+                <div className="form-group" style={{ flex: "1" }}>
                   <label>참가신청 시작 시간 *</label>
                   <select
                     value={participationStartTime}
@@ -724,14 +793,29 @@ const ScheduleDetailModal: React.FC<Props> = ({
             <div className="form-group">
               <label>예약자 (선택)</label>
               {selectedReservedBy ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ padding: '8px 12px', background: '#f0f0f0', borderRadius: '4px' }}>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <span
+                    style={{
+                      padding: "8px 12px",
+                      background: "#f0f0f0",
+                      borderRadius: "4px",
+                    }}
+                  >
                     {selectedReservedBy.name}
                   </span>
                   <button
                     type="button"
                     onClick={handleClearReservedBy}
-                    style={{ padding: '4px 8px', background: '#ff6b6b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    style={{
+                      padding: "4px 8px",
+                      background: "#ff6b6b",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
                   >
                     ✕
                   </button>
@@ -743,32 +827,38 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         e.preventDefault(); // 엔터키로 form submit 방지
                       }
                     }}
                     placeholder="클럽원 이름 검색... (타이핑하면 자동 검색됩니다)"
                   />
                   {filteredMembers.length > 0 && (
-                    <div style={{
-                      marginTop: '4px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      maxHeight: '150px',
-                      overflowY: 'auto',
-                      background: 'white'
-                    }}>
-                      {filteredMembers.map(member => (
+                    <div
+                      style={{
+                        marginTop: "4px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        maxHeight: "150px",
+                        overflowY: "auto",
+                        background: "white",
+                      }}
+                    >
+                      {filteredMembers.map((member) => (
                         <div
                           key={member.id}
                           onClick={() => handleSelectReservedBy(member)}
                           style={{
-                            padding: '8px 12px',
-                            cursor: 'pointer',
-                            borderBottom: '1px solid #eee'
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            borderBottom: "1px solid #eee",
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = "#f5f5f5")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = "white")
+                          }
                         >
                           {member.name}
                         </div>
@@ -809,9 +899,10 @@ const ScheduleDetailModal: React.FC<Props> = ({
       </div>
 
       {/* 대진 생성 모달 */}
-      {showDrawCreateModal && (
+      {showDrawCreateModal && schedule && (
         <DrawCreateModal
           scheduleId={schedule.id}
+          schedule={schedule}
           participants={participants}
           onClose={() => {
             setShowDrawCreateModal(false);

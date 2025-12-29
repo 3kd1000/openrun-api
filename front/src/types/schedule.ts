@@ -32,6 +32,7 @@ export interface Participant {
   id: number;
   scheduleId: number;
   userId: number;
+  userName: string; // 추가
   status: 'CONFIRMED' | 'WAITING' | 'CANCELLED';
   position: number;
   joinedAt: string;

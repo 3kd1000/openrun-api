@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.schedule.service;
 
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
+import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequestWithIds;
 import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
@@ -39,6 +40,11 @@ public class ScheduleService {
      */
     @Transactional
     public ScheduleResponse createSchedule(CreateScheduleRequest request) {
+        // 과거 날짜 체크
+        if (request.getScheduledAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("과거 날짜에는 일정을 생성할 수 없습니다.");
+        }
+
         Schedule schedule = request.toEntity();
         Schedule savedSchedule = scheduleRepository.save(schedule);
         return new ScheduleResponse(savedSchedule, userRepository);
@@ -98,6 +104,11 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
+        // 과거 날짜 체크
+        if (request.getScheduledAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("과거 날짜에는 일정을 수정할 수 없습니다.");
+        }
+
         schedule.update(
                 request.getCourtName(),
                 request.getScheduledAt(),
@@ -127,6 +138,156 @@ public class ScheduleService {
      */
     public List<Long> getMyParticipatingScheduleIds(Long userId) {
         return participantRepository.findScheduleIdsByUserId(userId);
+    }
+
+    /**
+     * userId 기반 대진 생성 후 Match 테이블에 저장
+     * 동일 schedule_id의 기존 대진이 있으면 삭제 후 새로 생성
+     */
+    @Transactional
+    public void saveMatchesFromDrawWithIds(Long scheduleId, ScheduleResponse scheduleResponse,
+                                            DrawResponse drawResponse, CreateDrawRequestWithIds request) {
+        log.info("=== Match 저장 시작 (userId 기반) ===");
+        log.info("scheduleId: {}, clubId: {}, games: {}",
+                scheduleId, scheduleResponse.getClubId(), drawResponse.getGames().size());
+
+        // 일정 조회
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 기존 대진이 있으면 삭제 (재생성 대응)
+        List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
+        if (!existingMatches.isEmpty()) {
+            log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
+            matchRepository.deleteAll(existingMatches);
+        }
+
+        // Schedule에 대진 정보 저장
+        schedule.createDraw(request.getDrawType());
+        log.info("Schedule에 대진 정보 저장: drawType={}, isDrawValid=true", request.getDrawType());
+
+        // userId -> userName 매핑 생성 (DrawResponse의 userName을 userId로 변환하기 위해)
+        Map<Long, String> userIdToName = buildUserIdToNameMap(request);
+        // userName -> userId 역매핑 생성
+        Map<String, Long> nameToUserId = new HashMap<>();
+        for (Map.Entry<Long, String> entry : userIdToName.entrySet()) {
+            nameToUserId.put(entry.getValue(), entry.getKey());
+        }
+
+        Long clubId = scheduleResponse.getClubId();
+        LocalDateTime playedAt = scheduleResponse.getScheduledAt();
+
+        // 각 게임을 Match 엔티티로 변환하여 저장
+        List<Match> matches = new ArrayList<>();
+        for (DrawResponse.Game game : drawResponse.getGames()) {
+            try {
+                Match match = buildMatchFromGame(game, clubId, scheduleId, playedAt, nameToUserId);
+                matches.add(match);
+            } catch (IllegalArgumentException e) {
+                log.error("게임 {} Match 생성 실패: {}", game.getGameNo(), e.getMessage());
+                throw e;
+            }
+        }
+
+        matchRepository.saveAll(matches);
+        log.info("Match 저장 완료: {} 건", matches.size());
+
+        // 참가자 상태 업데이트: 대진에 포함된 선수는 CONFIRMED, 나머지는 WAITING
+        updateParticipantStatusBasedOnDrawWithIds(scheduleId, request);
+    }
+
+    /**
+     * userId 리스트를 userName 리스트로 변환
+     */
+    public List<String> convertUserIdsToNames(List<Long> userIds) {
+        if (userIds == null) {
+            return null;
+        }
+        return userIds.stream()
+                .map(userId -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userId));
+                    return user.getName();
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * userId -> userName 매핑 생성
+     */
+    private Map<Long, String> buildUserIdToNameMap(CreateDrawRequestWithIds request) {
+        Set<Long> allUserIds = new HashSet<>();
+
+        if (request.getUserIds() != null) {
+            allUserIds.addAll(request.getUserIds());
+        }
+        if (request.getSeedUserIds() != null) {
+            allUserIds.addAll(request.getSeedUserIds());
+        }
+        if (request.getGroupAUserIds() != null) {
+            allUserIds.addAll(request.getGroupAUserIds());
+        }
+        if (request.getGroupBUserIds() != null) {
+            allUserIds.addAll(request.getGroupBUserIds());
+        }
+
+        Map<Long, String> userIdToName = new HashMap<>();
+        for (Long userId : allUserIds) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userId));
+            userIdToName.put(userId, user.getName());
+        }
+
+        return userIdToName;
+    }
+
+    /**
+     * userId 기반 참가자 상태 업데이트
+     */
+    private void updateParticipantStatusBasedOnDrawWithIds(Long scheduleId, CreateDrawRequestWithIds request) {
+        log.info("참가자 상태 업데이트 시작 (userId 기반)");
+        log.info("scheduleId: {}, 대진 참여 선수 수: {}", scheduleId, 
+                (request.getUserIds() != null ? request.getUserIds().size() : 0) +
+                (request.getSeedUserIds() != null ? request.getSeedUserIds().size() : 0) +
+                (request.getGroupAUserIds() != null ? request.getGroupAUserIds().size() : 0) +
+                (request.getGroupBUserIds() != null ? request.getGroupBUserIds().size() : 0));
+
+        // 대진에 포함된 userId 집합
+        Set<Long> participatingUserIds = new HashSet<>();
+        if (request.getUserIds() != null) {
+            participatingUserIds.addAll(request.getUserIds());
+        }
+        if (request.getSeedUserIds() != null) {
+            participatingUserIds.addAll(request.getSeedUserIds());
+        }
+        if (request.getGroupAUserIds() != null) {
+            participatingUserIds.addAll(request.getGroupAUserIds());
+        }
+        if (request.getGroupBUserIds() != null) {
+            participatingUserIds.addAll(request.getGroupBUserIds());
+        }
+        log.info("대진 참여 userId: {}", participatingUserIds);
+
+        // 해당 일정의 모든 참가자 조회
+        List<com.example.openrunapi.domain.schedule.model.ScheduleParticipant> participants =
+                participantRepository.findByScheduleIdOrderByPositionAsc(scheduleId);
+
+        for (com.example.openrunapi.domain.schedule.model.ScheduleParticipant participant : participants) {
+            if (participatingUserIds.contains(participant.getUserId())) {
+                if (participant.getStatus() != com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus.CONFIRMED) {
+                    participant.confirm();
+                    log.debug("userId={} CONFIRMED로 변경", participant.getUserId());
+                }
+            } else {
+                if (participant.getStatus() != com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus.WAITING) {
+                    participant.waitlist();
+                    log.debug("userId={} WAITING으로 변경", participant.getUserId());
+                }
+            }
+        }
+
+        participantRepository.saveAll(participants);
+        log.info("참가자 상태 업데이트 완료");
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.schedule.controller;
 
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
+import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequestWithIds;
 import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
 import com.example.openrunapi.domain.draw.service.DrawService;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
@@ -104,7 +105,7 @@ public class ScheduleController {
     }
 
     /**
-     * 클럽용 대진 생성 (DB 저장)
+     * 클럽용 대진 생성 (DB 저장) - userName 기반 (기존 API)
      */
     @PostMapping("/{scheduleId}/draw")
     public ResponseEntity<DrawResponse> createDrawForSchedule(
@@ -121,6 +122,58 @@ public class ScheduleController {
         scheduleService.saveMatchesFromDraw(scheduleId, scheduleResponse, response, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 클럽용 대진 생성 (DB 저장) - userId 기반 (신규 API, 동명이인 문제 해결)
+     */
+    @PostMapping("/{scheduleId}/draw/with-ids")
+    public ResponseEntity<DrawResponse> createDrawForScheduleWithIds(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody CreateDrawRequestWithIds request) {
+
+        // 일정 존재 확인 및 조회
+        ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
+        
+        // 과거 일정 체크
+        if (scheduleResponse.getScheduledAt().isBefore(java.time.LocalDateTime.now())) {
+            throw new IllegalStateException("이미 지난 일정에는 대진을 생성할 수 없습니다.");
+        }
+
+        // userId를 userName으로 변환하여 CreateDrawRequest 생성
+        CreateDrawRequest drawRequest = convertToCreateDrawRequest(request);
+
+        // 대진 생성 (draw_statistics 자동 증가 포함)
+        DrawResponse response = drawService.generateDrawSequence(drawRequest);
+
+        // Match 테이블에 저장 (userId 기반)
+        scheduleService.saveMatchesFromDrawWithIds(scheduleId, scheduleResponse, response, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * CreateDrawRequestWithIds를 CreateDrawRequest로 변환
+     */
+    private CreateDrawRequest convertToCreateDrawRequest(
+            CreateDrawRequestWithIds request) {
+        // userId를 userName으로 변환
+        List<String> userNames = scheduleService.convertUserIdsToNames(request.getUserIds());
+        List<String> seedUserNames = request.getSeedUserIds() != null 
+                ? scheduleService.convertUserIdsToNames(request.getSeedUserIds()) : null;
+        List<String> groupAUserNames = request.getGroupAUserIds() != null 
+                ? scheduleService.convertUserIdsToNames(request.getGroupAUserIds()) : null;
+        List<String> groupBUserNames = request.getGroupBUserIds() != null 
+                ? scheduleService.convertUserIdsToNames(request.getGroupBUserIds()) : null;
+
+        return new CreateDrawRequest(
+                userNames,
+                seedUserNames,
+                request.getDrawType(),
+                groupAUserNames,
+                groupBUserNames,
+                request.getNumberOfTotalPlayer()
+        );
     }
 
     /**

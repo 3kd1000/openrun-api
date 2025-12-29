@@ -25,6 +25,15 @@ export interface CreateDrawRequest {
   numberOfTotalPlayer: number;
 }
 
+export interface CreateDrawRequestWithIds {
+  userIds: number[];
+  seedUserIds?: number[];
+  drawType: "AA" | "AB" | "SEED";
+  groupAUserIds?: number[];
+  groupBUserIds?: number[];
+  numberOfTotalPlayer: number;
+}
+
 export interface UpdateMatchRequest {
   teamAScore: number;
   teamBScore: number;
@@ -64,13 +73,25 @@ class DrawService {
     return response.data;
   }
 
-  // 클럽용 대진 생성 (DB 저장)
+  // 클럽용 대진 생성 (DB 저장) - userName 기반 (기존 API)
   async createDrawWithSchedule(
     scheduleId: number,
     request: CreateDrawRequest
   ): Promise<DrawResponse> {
     const response = await axios.post<DrawResponse>(
       `/schedules/${scheduleId}/draw`,
+      request
+    );
+    return response.data;
+  }
+
+  // 클럽용 대진 생성 (DB 저장) - userId 기반 (신규 API, 동명이인 문제 해결)
+  async createDrawWithScheduleByIds(
+    scheduleId: number,
+    request: CreateDrawRequestWithIds
+  ): Promise<DrawResponse> {
+    const response = await axios.post<DrawResponse>(
+      `/schedules/${scheduleId}/draw/with-ids`,
       request
     );
     return response.data;
