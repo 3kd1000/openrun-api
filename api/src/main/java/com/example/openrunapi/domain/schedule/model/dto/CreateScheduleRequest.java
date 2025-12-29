@@ -36,6 +36,10 @@ public class CreateScheduleRequest {
     @Size(max = 5000, message = "설명은 5000자를 초과할 수 없습니다.")
     private String description;
 
+    private Long reservedByUserId;
+
+    private LocalDateTime participationStartAt;
+
     /**
      * Schedule 엔티티로 변환하는 메소드
      */
@@ -47,6 +51,8 @@ public class CreateScheduleRequest {
                 .maxCapacity(this.maxCapacity)
                 .cost(this.cost)
                 .description(this.description)
+                .reservedByUserId(this.reservedByUserId)
+                .participationStartAt(this.participationStartAt)
                 .build();
     }
 }

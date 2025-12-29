@@ -199,6 +199,9 @@ const ScheduleListPage: React.FC = () => {
               )}
               <div className="schedule-info">
                 <h3>{schedule.courtName}</h3>
+                {schedule.reservedByUserName && (
+                  <p className="schedule-reserved-by">예약자: {schedule.reservedByUserName}</p>
+                )}
                 <p className="schedule-time">
                   {new Date(schedule.scheduledAt).toLocaleString('ko-KR', {
                     year: 'numeric',
@@ -228,7 +231,7 @@ const ScheduleListPage: React.FC = () => {
 
       {showCreateModal && (
         <ScheduleCreateModal
-          initialDate={selectedDate ? format(selectedDate, "yyyy-MM-dd'T'HH:mm") : undefined}
+          initialDate={selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined}
           onClose={handleCreateModalClose}
           onSuccess={() => {
             loadSchedules();

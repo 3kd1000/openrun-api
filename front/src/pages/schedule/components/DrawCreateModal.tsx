@@ -415,12 +415,29 @@ const DrawCreateModal: React.FC<Props> = ({
   // 대진표 텍스트로 포맷팅
   const formatDrawAsText = (): string => {
     if (!drawResult) return "";
-    let text = "🎯 대진표\n\n";
+    let text = `🎯 대진표\n`;
+    text += `대진 타입: ${drawType}\n\n`;
 
+    // 라운드별로 그룹화
+    const gamesByRound: { [round: number]: typeof drawResult.games } = {};
     drawResult.games.forEach((game) => {
-      text += `경기 ${game.gameNo} (${game.roundNo}R)\n`;
-      text += `  Team A: ${game.teamA.join(", ")}\n`;
-      text += `  Team B: ${game.teamB.join(", ")}\n\n`;
+      if (!gamesByRound[game.roundNo]) {
+        gamesByRound[game.roundNo] = [];
+      }
+      gamesByRound[game.roundNo].push(game);
+    });
+
+    // 라운드 순서대로 정렬
+    const sortedRounds = Object.keys(gamesByRound).map(Number).sort((a, b) => a - b);
+
+    sortedRounds.forEach((round) => {
+      text += `라운드 ${round}\n`;
+      gamesByRound[round].forEach((game) => {
+        const teamANames = game.teamA.join(", ");
+        const teamBNames = game.teamB.join(", ");
+        text += `게임${game.gameNo} ${teamANames} : ${teamBNames}\n`;
+      });
+      text += "\n";
     });
 
     return text;
