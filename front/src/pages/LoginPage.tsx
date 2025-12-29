@@ -533,6 +533,20 @@ const LoginPage: React.FC = () => {
           {loading ? "로그인 중..." : "생체인증으로 로그인"}
         </button>
 
+        {/* 생체인증 안내 */}
+        <p
+          style={{
+            fontSize: "12px",
+            color: "#6c757d",
+            textAlign: "center",
+            marginTop: "8px",
+            marginBottom: "12px",
+            lineHeight: "1.4",
+          }}
+        >
+          ℹ️ 처음 방문하신 경우 Google 또는 Kakao 로그인이 필요합니다.
+        </p>
+
         {/* 자동 로그인 안내 */}
         <div
           style={{
