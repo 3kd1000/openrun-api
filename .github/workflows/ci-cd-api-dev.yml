@@ -8,6 +8,7 @@ on:
       - "gradle/**"
       - "build.gradle"
       - "Dockerfile.api"
+      - "helm/openrun-api/**"
       - ".github/workflows/ci-cd-api-dev.yml"
 
 jobs:

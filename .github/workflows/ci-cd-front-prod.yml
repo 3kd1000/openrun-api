@@ -6,6 +6,7 @@ on:
     paths:
       - "front/**"
       - "Dockerfile.front"
+      - "helm/openrun-frontend/**"
       - ".github/workflows/ci-cd-front-prod.yml"
 
 jobs:
