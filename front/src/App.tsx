@@ -14,6 +14,7 @@ import ClubAdminPage from "./pages/club/ClubAdminPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { setupAuthListener } from "./services/firebase";
 import "./App.css";
 
@@ -42,22 +43,63 @@ function App() {
       <main className="App-content">
         <div className="App-content-wrapper">
           <Routes>
+            {/* Public 페이지 (로그인 불필요) */}
             <Route path="/" element={<DrawGenerationPage />} />
-            <Route path="/schedules" element={<ScheduleListPage />} />
-            <Route path="/draws" element={<DrawListPage />} />
-            <Route path="/scoreboard" element={<ScoreboardPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/setup-profile" element={<SetupProfilePage />} />
-            <Route path="/auth-test" element={<AuthTestPage />} />
-            <Route path="/dev/login" element={<DevAuthPage />} />
+            <Route path="/terms" element={<TermsOfServicePage />} />
             <Route path="/clubs" element={<ClubListPage />} />
             <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
-            <Route path="/clubs/:clubId/admin" element={<ClubAdminPage />} />
-            <Route path="/terms" element={<TermsOfServicePage />} />
+
+            {/* Protected 페이지 (로그인 필수) */}
+            <Route
+              path="/schedules"
+              element={
+                <ProtectedRoute>
+                  <ScheduleListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/draws"
+              element={
+                <ProtectedRoute>
+                  <DrawListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/scoreboard"
+              element={
+                <ProtectedRoute>
+                  <ScoreboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/setup-profile"
+              element={
+                <ProtectedRoute>
+                  <SetupProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clubs/:clubId/admin"
+              element={
+                <ProtectedRoute>
+                  <ClubAdminPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* 개발용 페이지 */}
+            <Route path="/auth-test" element={<AuthTestPage />} />
+            <Route path="/dev/login" element={<DevAuthPage />} />
           </Routes>
         </div>
       </main>
-      <Footer />
+      {/* 네비게이션 바가 있을 때는 Footer 숨김 (네비게이션 바에 통합) */}
+      {!shouldShowNavigation && <Footer />}
     </div>
   );
 }

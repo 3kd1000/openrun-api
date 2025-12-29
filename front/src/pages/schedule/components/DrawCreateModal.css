@@ -137,6 +137,45 @@
   transition: all 0.2s ease;
 }
 
+/* 모바일에서 AB/SEED 타입의 플레이어 카드 더 작게 */
+@media (max-width: 768px) {
+  .group-division-ab .player-card-with-checkbox,
+  .group-division-seed .player-card-with-checkbox {
+    padding: 4px 6px;
+    font-size: 11px;
+    gap: 4px;
+    border-width: 1px;
+    border-radius: 4px;
+  }
+
+  .group-division-ab .player-card-with-checkbox input[type="checkbox"],
+  .group-division-seed .player-card-with-checkbox input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  .group-division-ab .player-card-with-checkbox span,
+  .group-division-seed .player-card-with-checkbox span {
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* AB/SEED 타입의 그룹 박스 패딩 줄이기 */
+  .group-division-ab .group-box,
+  .group-division-seed .group-box {
+    padding: 8px;
+  }
+
+  .group-division-ab .group-box h4,
+  .group-division-seed .group-box h4 {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+}
+
 .player-card-with-checkbox:hover {
   background: #e9ecef;
   transform: translateY(-1px);
@@ -149,14 +188,15 @@
 }
 
 .player-card-with-checkbox.seed {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: #f3e5f5;
   color: #333;
   font-weight: 600;
+  border-color: #ce93d8;
 }
 
 .player-card-with-checkbox.seed.selected {
-  background: linear-gradient(135deg, #ffb700 0%, #ffd700 100%);
-  border-color: #ff9800;
+  background: #e1bee7;
+  border-color: #9c27b0;
 }
 
 .player-card-with-checkbox.waiting {
@@ -235,7 +275,7 @@
   display: flex;
   gap: 12px;
   align-items: stretch;
-  flex: 1;
+  flex: 2;
   min-height: 0;
   overflow: hidden;
 }
@@ -298,8 +338,8 @@
 }
 
 .group-box.seed-group {
-  border-color: #ffc107;
-  background: #fff8e1;
+  border-color: #9c27b0;
+  background: #f3e5f5;
 }
 
 .group-box.normal-group {
@@ -366,18 +406,24 @@
 
 /* 대진 결과 섹션 (DrawViewModal과 동일한 스타일) */
 .draw-result-section {
-  flex: 1;
+  flex: 0 0 auto;
   margin-top: 0;
   padding-top: 0;
+  max-height: 35vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .draw-games-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 50vh;
+  max-height: 30vh;
   overflow-y: auto;
   padding-right: 4px;
+  flex: 1;
+  min-height: 0;
 }
 
 /* 스크롤바 스타일링 */
@@ -564,6 +610,17 @@
   .draw-create-content {
     padding: 12px;
     gap: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 모바일에서 참가확정/대기열 영역이 항상 보이도록 */
+  .group-division,
+  .group-division-ab,
+  .group-division-seed {
+    flex-shrink: 0;
+    margin-bottom: 8px;
   }
 
   .draw-type-buttons {
@@ -577,15 +634,36 @@
     font-size: 11px;
   }
 
-  .group-division,
-  .group-division-ab,
-  .group-division-seed {
+  /* AA 타입: 세로 배치 유지 */
+  .group-division {
     display: flex;
     flex-direction: column;
+    gap: 12px;
+  }
+
+  /* AB/SEED 타입: 그룹A와 그룹B를 같은 라인에 배치 */
+  .group-division-ab,
+  .group-division-seed {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .waiting-group-full {
-    grid-column: auto;
+    grid-column: 1 / -1;
+  }
+
+  /* 모바일에서 그룹 박스가 스크롤 가능하도록 */
+  .group-box {
+    max-height: 180px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  /* 모바일에서 AB/SEED 타입의 그룹 박스 높이 조정 */
+  .group-division-ab .group-box:not(.waiting-group-full),
+  .group-division-seed .group-box:not(.waiting-group-full) {
+    max-height: 200px;
   }
 
   .divider-arrow {
@@ -593,19 +671,23 @@
     margin: 8px 0;
   }
 
+  /* 모든 타입에서 2열 그리드 유지 (그룹 A와 그룹 B를 나란히 배치하여 한 줄에 총 4명 표시) */
   .player-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
   /* 모바일 대진결과 compact (DrawViewModal과 동일) */
   .draw-result-section {
-    margin-top: 0;
-    padding-top: 0;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #e0e0e0;
+    flex-shrink: 0;
   }
 
   .draw-games-list {
-    gap: 6px;
-    max-height: 60vh;
+    gap: 12px;
+    max-height: 35vh;
+    overflow-y: auto;
   }
 
   .draw-game-card {
@@ -677,7 +759,7 @@
   .btn-primary,
   .btn-secondary {
     padding: 10px 8px;
-    font-size: 12px;
+    font-size: 11px;
     white-space: nowrap;
   }
 

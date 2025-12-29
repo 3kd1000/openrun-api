@@ -95,10 +95,180 @@
 .draw-games-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
   max-height: 50vh;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+/* 라운드 그룹 */
+.round-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.round-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.round-indicator {
+  font-size: 14px;
+  font-weight: 700;
+  color: #667eea;
+  padding: 4px 0;
+  border-bottom: 2px solid #667eea;
+  min-width: 80px;
+}
+
+.round-games {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 12px;
+}
+
+/* 경기 행 (한 줄 형태) */
+.game-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: #f8f9fa;
+  border-left: 3px solid transparent;
+  transition: background-color 0.2s;
+  font-size: 13px;
+}
+
+.game-row:hover {
+  background: #e9ecef;
+}
+
+.game-row.has-result {
+  background: #f0f0f0;
+}
+
+.game-row.team-a-winner {
+  border-left-color: #28a745;
+  background: #f0fff4;
+}
+
+.game-row.team-b-winner {
+  border-left-color: #dc3545;
+  background: #fff5f5;
+}
+
+.game-row.draw {
+  border-left-color: #ffc107;
+  background: #fffbf0;
+}
+
+.game-number {
+  font-weight: 700;
+  color: #495057;
+  min-width: 50px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.game-content {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.team-a-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.team-b-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.team-a-names,
+.team-b-names {
+  color: #212529;
+  font-weight: 500;
+}
+
+.team-a-names.winner,
+.team-b-names.winner {
+  color: #28a745;
+  font-weight: 700;
+}
+
+.game-separator {
+  color: #6c757d;
+  font-weight: 700;
+  padding: 0 2px;
+}
+
+.score-input-compact {
+  width: 32px;
+  padding: 2px 4px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid #667eea;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #212529;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.score-input-compact:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.score-display-compact {
+  font-size: 12px;
+  font-weight: 700;
+  color: #495057;
+  padding: 2px 6px;
+  background: #e9ecef;
+  border-radius: 4px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.result-badge-compact {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.result-badge-compact.team_a_win {
+  background: #d4edda;
+  color: #155724;
+}
+
+.result-badge-compact.team_b_win {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.result-badge-compact.draw {
+  background: #fff3cd;
+  color: #856404;
 }
 
 /* 스크롤바 스타일링 */
@@ -120,230 +290,7 @@
   background: #555;
 }
 
-.draw-game-card {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 10px 12px;
-  transition: box-shadow 0.2s;
-}
-
-.draw-game-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.game-number {
-  font-size: 16px;
-  font-weight: 700;
-  color: #495057;
-  margin-right: 8px;
-}
-
-.round-badge {
-  padding: 4px 12px;
-  background: #667eea;
-  color: white;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
-  margin-left: 8px;
-}
-
-.game-teams {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.team {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 6px;
-  border-radius: 6px;
-  background: #f8f9fa;
-  min-width: 0;
-  /* 모든 팀이 동일한 높이를 가지도록 설정 */
-  min-height: 60px;
-  justify-content: space-between;
-}
-
-.team-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #6c757d;
-  flex-shrink: 0;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.team-content {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: nowrap;
-  min-width: 0;
-  /* 팀 컨텐츠 높이 일관성 유지 */
-  min-height: 32px;
-}
-
-.team-players {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.team-players-inline {
-  display: flex;
-  flex-direction: row;
-  gap: 3px;
-  flex-wrap: nowrap;
-  flex: 1;
-  align-items: center;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.team-a .team-players-inline {
-  justify-content: flex-end;
-}
-
-.player-name {
-  padding: 4px 6px;
-  background: #ffffff;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #212529;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.team-a {
-  border-left: 3px solid #28a745;
-}
-
-.team-b {
-  border-left: 3px solid #dc3545;
-}
-
-.team-a .player-name {
-  border-left: 2px solid #28a745;
-}
-
-.team-b .player-name {
-  border-left: 2px solid #dc3545;
-}
-
-.vs-divider {
-  font-size: 12px;
-  font-weight: 700;
-  color: #6c757d;
-  padding: 0 4px;
-  flex-shrink: 0;
-  align-self: center;
-  display: flex;
-  align-items: center;
-}
-
-/* 경기 결과 관련 스타일 */
-.result-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.result-badge.team_a_win {
-  background: #d4edda;
-  color: #155724;
-}
-
-.result-badge.team_b_win {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.result-badge.draw {
-  background: #fff3cd;
-  color: #856404;
-}
-
-/* 인라인 스코어 스타일 */
-.score-input-inline {
-  width: 28px;
-  padding: 3px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  border: 2px solid #667eea;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #212529;
-  outline: none;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.score-input-inline:focus {
-  border-color: #764ba2;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-}
-
-.score-display-inline {
-  font-size: 14px;
-  font-weight: 700;
-  color: #495057;
-  padding: 3px 5px;
-  background: #e9ecef;
-  border-radius: 4px;
-  flex-shrink: 0;
-  min-width: 28px;
-  text-align: center;
-}
-
-/* 승자/패자 하이라이트 */
-.team.winner {
-  background: #fff8e1;
-  border-left-width: 4px;
-  /* padding과 높이는 유지하여 동일한 높이 보장 */
-}
-
-.team.winner .player-name {
-  background: #fffbf0;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.team.loser {
-  background: #f5f5f5;
-  /* opacity는 제거하여 높이 유지 */
-  /* padding과 높이는 유지하여 동일한 높이 보장 */
-}
-
-.team.loser .player-name {
-  background: #fafafa;
-  opacity: 0.7;
-  /* opacity는 약간만 적용하여 가독성 유지 */
-}
-
-.draw-game-card.has-result {
-  background: linear-gradient(to right, #f8f9fa 0%, #e9ecef 100%);
-}
+/* 기존 카드 스타일은 제거하고 간결한 한 줄 형태로 변경됨 */
 
 /* 액션 버튼 */
 .modal-actions {
@@ -483,103 +430,69 @@
   }
 
   .draw-games-list {
-    gap: 6px;
+    gap: 12px;
     max-height: 60vh;
   }
 
-  .draw-game-card {
-    padding: 6px 8px;
+  .round-group {
+    gap: 4px;
   }
 
-  .game-header {
-    margin-bottom: 6px;
-    padding-bottom: 4px;
+  .round-indicator {
+    font-size: 12px;
+    min-width: 70px;
+  }
+
+  .round-games {
+    padding-left: 8px;
+    gap: 3px;
+  }
+
+  .game-row {
+    padding: 5px 6px;
+    font-size: 11px;
+    gap: 6px;
   }
 
   .game-number {
-    font-size: 13px;
-    margin-right: 6px;
-  }
-
-  .round-badge {
     font-size: 11px;
-    padding: 3px 8px;
-    margin-left: 6px;
+    min-width: 45px;
   }
 
-  .result-badge {
-    font-size: 10px;
-    padding: 3px 8px;
-  }
-
-  /* 모바일에서는 가로 배치 유지하되 더 compact하게 */
-  .game-teams {
-    flex-direction: row;
+  .game-content {
     gap: 4px;
-    align-items: stretch;
-  }
-
-  .vs-divider {
-    align-self: center;
-    font-size: 10px;
-    padding: 0 2px;
-  }
-
-  .team {
-    gap: 2px;
-    padding: 5px 6px;
-    min-height: 50px;
-    align-items: stretch;
-  }
-
-  /* 승리팀/패배팀도 동일한 padding 유지 */
-  .team.winner,
-  .team.loser {
-    padding: 5px 6px;
-  }
-
-  .team-label {
-    font-size: 8px;
-  }
-
-  .team-content {
-    gap: 2px;
-    align-items: center;
-  }
-
-  .team-players-inline {
-    gap: 2px;
-  }
-
-  .player-name {
-    padding: 2px 4px;
-    font-size: 9px;
-  }
-
-  .team-players {
-    gap: 2px;
-  }
-
-  .team-players-inline {
-    gap: 2px;
-  }
-
-  .vs-divider {
     font-size: 11px;
-    padding: 0 4px;
-    flex-shrink: 0;
   }
 
-  .score-input-inline {
-    width: 26px;
-    padding: 2px;
-    font-size: 10px;
+  .team-a-section,
+  .team-b-section {
+    gap: 4px;
   }
 
-  .score-display-inline {
-    font-size: 10px;
+  .team-a-names,
+  .team-b-names {
+    font-size: 11px;
+  }
+
+  .game-separator {
+    padding: 0 1px;
+  }
+
+  .score-input-compact {
+    width: 28px;
+    padding: 2px 3px;
+    font-size: 11px;
+  }
+
+  .score-display-compact {
+    font-size: 11px;
     padding: 2px 4px;
-    min-width: 26px;
+    min-width: 20px;
+  }
+
+  .result-badge-compact {
+    font-size: 9px;
+    padding: 2px 6px;
   }
 
   .modal-actions {

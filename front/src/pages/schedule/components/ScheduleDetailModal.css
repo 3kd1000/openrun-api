@@ -298,27 +298,27 @@
 }
 
 .schedule-detail-view .modal-actions {
-  margin-top: 0;
+  margin-top: -8px;
   padding: 0;
   border-top: none !important;
 }
 
 /* 대진 관련 액션 버튼 영역 */
 .draw-create-action {
-  margin-top: -8px;
-  margin-bottom: 8px;
+  margin-top: -4px;
+  margin-bottom: 4px;
 }
 
 /* 대진 생성 버튼 (대진이 없을 때) */
 .btn-create-draw {
   width: 100%;
-  padding: 12px 24px;
+  padding: 8px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
@@ -352,10 +352,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 6px 12px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
+  margin-bottom: 4px;
 }
 
 .draw-status.valid {
@@ -389,19 +390,19 @@
 
 /* 대진표 보기 버튼 */
 .draw-view-action {
-  margin-top: -8px;
-  margin-bottom: 8px;
+  margin-top: -4px;
+  margin-bottom: 4px;
 }
 
 .btn-view-draw {
   width: 100%;
-  padding: 12px 24px;
+  padding: 8px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);

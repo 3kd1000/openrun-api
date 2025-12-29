@@ -290,143 +290,160 @@ const DrawViewModal: React.FC<Props> = ({
           ) : drawResult ? (
             <div className="draw-result-section">
               <div className="draw-games-list">
-                {drawResult.games.map((game) => {
-                  const matchId = game.matchId;
-                  const scores = matchId ? matchScores.get(matchId) : undefined;
-                  const hasExistingResult =
-                    game.teamAScore !== undefined &&
-                    game.teamBScore !== undefined;
+                {(() => {
+                  // 라운드별로 그룹화
+                  const gamesByRound: {
+                    [round: number]: typeof drawResult.games;
+                  } = {};
+                  drawResult.games.forEach((game) => {
+                    if (!gamesByRound[game.roundNo]) {
+                      gamesByRound[game.roundNo] = [];
+                    }
+                    gamesByRound[game.roundNo].push(game);
+                  });
 
-                  // 표시할 스코어 (입력 중이면 입력값, 아니면 기존값)
-                  const displayTeamAScore =
-                    isEditMode && scores?.teamAScore !== undefined
-                      ? scores.teamAScore
-                      : game.teamAScore?.toString() || "";
-                  const displayTeamBScore =
-                    isEditMode && scores?.teamBScore !== undefined
-                      ? scores.teamBScore
-                      : game.teamBScore?.toString() || "";
+                  // 라운드 순서대로 정렬
+                  const sortedRounds = Object.keys(gamesByRound)
+                    .map(Number)
+                    .sort((a, b) => a - b);
 
-                  return (
-                    <div
-                      key={game.gameNo}
-                      className={`draw-game-card ${
-                        hasExistingResult ? "has-result" : ""
-                      }`}
-                    >
-                      <div className="game-header">
-                        <span className="game-number">경기 {game.gameNo}</span>
-                        <span className="round-badge">{game.roundNo}R</span>
-                        {!isEditMode && hasExistingResult && (
-                          <span
-                            className={`result-badge ${game.result?.toLowerCase()}`}
-                          >
-                            {game.result === "TEAM_A_WIN"
-                              ? "A 승"
-                              : game.result === "TEAM_B_WIN"
-                              ? "B 승"
-                              : "무"}
-                          </span>
-                        )}
+                  return sortedRounds.map((round) => (
+                    <div key={round} className="round-group">
+                      <div className="round-header">
+                        <span className="round-indicator">라운드 {round}</span>
                       </div>
-                      <div className="game-teams">
-                        <div
-                          className={`team team-a ${
-                            !isEditMode && game.result === "TEAM_A_WIN"
-                              ? "winner"
-                              : game.result === "TEAM_B_WIN"
-                              ? "loser"
-                              : ""
-                          }`}
-                        >
-                          <span className="team-label">Team A</span>
-                          <div className="team-content">
-                            <div className="team-players-inline">
-                              {game.teamA.map((player, idx) => (
-                                <span key={idx} className="player-name">
-                                  {player}
-                                </span>
-                              ))}
-                            </div>
-                            {matchId && (
-                              <>
-                                {isEditMode ? (
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    max="7"
-                                    className="score-input-inline"
-                                    value={displayTeamAScore}
-                                    onChange={(e) =>
-                                      handleScoreChange(
-                                        matchId,
-                                        "A",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="0"
-                                  />
-                                ) : (
-                                  <span className="score-display-inline">
-                                    {displayTeamAScore || "-"}
+                      <div className="round-games">
+                        {gamesByRound[round].map((game) => {
+                          const matchId = game.matchId;
+                          const scores = matchId
+                            ? matchScores.get(matchId)
+                            : undefined;
+                          const hasExistingResult =
+                            game.teamAScore !== undefined &&
+                            game.teamBScore !== undefined;
+
+                          // 표시할 스코어 (입력 중이면 입력값, 아니면 기존값)
+                          const displayTeamAScore =
+                            isEditMode && scores?.teamAScore !== undefined
+                              ? scores.teamAScore
+                              : game.teamAScore?.toString() || "";
+                          const displayTeamBScore =
+                            isEditMode && scores?.teamBScore !== undefined
+                              ? scores.teamBScore
+                              : game.teamBScore?.toString() || "";
+
+                          const teamANames = game.teamA.join(", ");
+                          const teamBNames = game.teamB.join(", ");
+
+                          const isTeamAWinner =
+                            !isEditMode && game.result === "TEAM_A_WIN";
+                          const isTeamBWinner =
+                            !isEditMode && game.result === "TEAM_B_WIN";
+                          const isDraw = !isEditMode && game.result === "DRAW";
+
+                          return (
+                            <div
+                              key={game.gameNo}
+                              className={`game-row ${
+                                hasExistingResult ? "has-result" : ""
+                              } ${isTeamAWinner ? "team-a-winner" : ""} ${
+                                isTeamBWinner ? "team-b-winner" : ""
+                              } ${isDraw ? "draw" : ""}`}
+                            >
+                              <span className="game-number">
+                                게임{game.gameNo}
+                              </span>
+                              <div className="game-content">
+                                <div className="team-a-section">
+                                  <span
+                                    className={`team-a-names ${
+                                      isTeamAWinner ? "winner" : ""
+                                    }`}
+                                  >
+                                    {teamANames}
                                   </span>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="vs-divider">VS</div>
-                        <div
-                          className={`team team-b ${
-                            !isEditMode && game.result === "TEAM_B_WIN"
-                              ? "winner"
-                              : game.result === "TEAM_A_WIN"
-                              ? "loser"
-                              : ""
-                          }`}
-                        >
-                          <span className="team-label">Team B</span>
-                          <div className="team-content">
-                            {matchId && (
-                              <>
-                                {isEditMode ? (
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    max="7"
-                                    className="score-input-inline"
-                                    value={displayTeamBScore}
-                                    onChange={(e) =>
-                                      handleScoreChange(
-                                        matchId,
-                                        "B",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="0"
-                                  />
-                                ) : (
-                                  <span className="score-display-inline">
-                                    {displayTeamBScore || "-"}
+                                  {matchId && (
+                                    <>
+                                      {isEditMode ? (
+                                        <input
+                                          type="text"
+                                          inputMode="numeric"
+                                          pattern="[0-9]*"
+                                          max="7"
+                                          className="score-input-compact"
+                                          value={displayTeamAScore}
+                                          onChange={(e) =>
+                                            handleScoreChange(
+                                              matchId,
+                                              "A",
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="0"
+                                        />
+                                      ) : hasExistingResult ? (
+                                        <span className="score-display-compact">
+                                          {displayTeamAScore}
+                                        </span>
+                                      ) : null}
+                                    </>
+                                  )}
+                                </div>
+                                <span className="game-separator">:</span>
+                                <div className="team-b-section">
+                                  {matchId && (
+                                    <>
+                                      {isEditMode ? (
+                                        <input
+                                          type="text"
+                                          inputMode="numeric"
+                                          pattern="[0-9]*"
+                                          max="7"
+                                          className="score-input-compact"
+                                          value={displayTeamBScore}
+                                          onChange={(e) =>
+                                            handleScoreChange(
+                                              matchId,
+                                              "B",
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="0"
+                                        />
+                                      ) : hasExistingResult ? (
+                                        <span className="score-display-compact">
+                                          {displayTeamBScore}
+                                        </span>
+                                      ) : null}
+                                    </>
+                                  )}
+                                  <span
+                                    className={`team-b-names ${
+                                      isTeamBWinner ? "winner" : ""
+                                    }`}
+                                  >
+                                    {teamBNames}
                                   </span>
-                                )}
-                              </>
-                            )}
-                            <div className="team-players-inline">
-                              {game.teamB.map((player, idx) => (
-                                <span key={idx} className="player-name">
-                                  {player}
-                                </span>
-                              ))}
+                                  {!isEditMode && hasExistingResult && (
+                                    <span
+                                      className={`result-badge-compact ${game.result?.toLowerCase()}`}
+                                    >
+                                      {game.result === "TEAM_A_WIN"
+                                        ? "A 승"
+                                        : game.result === "TEAM_B_WIN"
+                                        ? "B 승"
+                                        : "무"}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  );
-                })}
+                  ));
+                })()}
               </div>
             </div>
           ) : null}

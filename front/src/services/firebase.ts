@@ -34,19 +34,30 @@ setPersistence(auth, browserLocalPersistence).catch((error) => {
 });
 
 // 자동 로그인 유효 기간 (일 단위, 환경변수에서 가져오기)
-const AUTO_LOGIN_DAYS = Number(import.meta.env.VITE_AUTO_LOGIN_DAYS) || 7;
+const AUTO_LOGIN_DAYS = Number(import.meta.env.VITE_AUTO_LOGIN_DAYS) || 30;
+// 자동 로그인 비활성화 시 유효 기간 (시간 단위)
+const SHORT_LOGIN_HOURS = 1;
 
 /**
- * 로그인 세션 만료 시간 계산 및 저장
- * @param isNewLogin 새로운 로그인인지 여부 (true면 만료시간 새로 생성, false면 기존 유지)
+ * 로그인 세션 만료 시간 설정
+ * @param autoLoginEnabled - true: 슬라이딩 윈도우 30일, false: 절대 1시간
  */
-export const setLoginExpiry = (isNewLogin: boolean = true) => {
-  if (isNewLogin) {
-    const expiryDate = new Date();
+export const setLoginExpiry = (autoLoginEnabled: boolean = true) => {
+  const expiryDate = new Date();
+
+  if (autoLoginEnabled) {
+    // 슬라이딩 윈도우 방식: 접속 시마다 30일 연장
     expiryDate.setDate(expiryDate.getDate() + AUTO_LOGIN_DAYS);
     localStorage.setItem("login_expiry", expiryDate.toISOString());
     console.log(
-      `✅ 로그인 만료 시간 설정: ${expiryDate.toLocaleString()} (${AUTO_LOGIN_DAYS}일 후)`
+      `✅ 로그인 만료 시간 설정 (슬라이딩 30일): ${expiryDate.toLocaleString()}`
+    );
+  } else {
+    // 절대 만료 방식: 최초 로그인 시각 기준 1시간 고정
+    expiryDate.setHours(expiryDate.getHours() + SHORT_LOGIN_HOURS);
+    localStorage.setItem("login_expiry", expiryDate.toISOString());
+    console.log(
+      `✅ 로그인 만료 시간 설정 (절대 1시간): ${expiryDate.toLocaleString()}`
     );
   }
 };
@@ -111,7 +122,17 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         localStorage.setItem("firebase_token", idToken);
         localStorage.setItem("firebase_uid", user.uid);
 
-        console.log("✅ Firebase 토큰 자동 갱신:", user.email);
+        // 자동 로그인 설정 확인
+        const autoLoginEnabled =
+          localStorage.getItem("auto_login_enabled") === "true";
+
+        // 슬라이딩 윈도우: 자동 로그인 활성화 시에만 만료 시간 갱신
+        if (autoLoginEnabled) {
+          setLoginExpiry(true);
+          console.log("✅ Firebase 토큰 자동 갱신 + 만료 시간 연장:", user.email);
+        } else {
+          console.log("✅ Firebase 토큰 자동 갱신 (만료 시간 유지):", user.email);
+        }
 
         // 콜백이 있으면 실행 (필요시 axiosInstance 헤더 업데이트 등)
         if (onTokenRefresh) {
@@ -140,7 +161,7 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
       try {
         const idToken = await user.getIdToken(true);
         localStorage.setItem("firebase_token", idToken);
-        console.log("🔄 Firebase 토큰 자동 갱신 (55분 주기)");
+        console.log("🔄 Firebase 토큰 자동 갱신 (55분 주기, 만료 시간 유지)");
 
         if (onTokenRefresh) {
           onTokenRefresh(idToken);

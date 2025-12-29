@@ -11,6 +11,7 @@ import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { validateDrawCreation } from "../../../utils/scheduleValidation";
 import type { Schedule } from "../../../types/schedule";
 import "./DrawCreateModal.css";
+import "./DrawViewModal.css";
 
 interface Props {
   scheduleId: number;
@@ -859,7 +860,7 @@ const DrawCreateModal: React.FC<Props> = ({
                           onChange={() => toggleUserSelection(userId)}
                           onClick={(e) => e.stopPropagation()}
                         />
-                        <span>⭐ {getUserName(userId)}</span>
+                        <span>{getUserName(userId)}</span>
                       </div>
                     ))}
                   </div>
@@ -950,41 +951,58 @@ const DrawCreateModal: React.FC<Props> = ({
           {drawResult && (
             <div className="draw-result-section">
               <div className="draw-games-list">
-                {drawResult.games.map((game) => (
-                  <div key={game.gameNo} className="draw-game-card">
-                    <div className="game-header">
-                      <span className="game-number">경기 {game.gameNo}</span>
-                      <span className="round-badge">{game.roundNo}R</span>
-                    </div>
-                    <div className="game-teams">
-                      <div className="team team-a">
-                        <span className="team-label">Team A</span>
-                        <div className="team-content">
-                          <div className="team-players-inline">
-                            {game.teamA.map((player, idx) => (
-                              <span key={idx} className="player-name">
-                                {player}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
+                {(() => {
+                  // 라운드별로 그룹화
+                  const gamesByRound: {
+                    [round: number]: typeof drawResult.games;
+                  } = {};
+                  drawResult.games.forEach((game) => {
+                    if (!gamesByRound[game.roundNo]) {
+                      gamesByRound[game.roundNo] = [];
+                    }
+                    gamesByRound[game.roundNo].push(game);
+                  });
+
+                  // 라운드 순서대로 정렬
+                  const sortedRounds = Object.keys(gamesByRound)
+                    .map(Number)
+                    .sort((a, b) => a - b);
+
+                  return sortedRounds.map((round) => (
+                    <div key={round} className="round-group">
+                      <div className="round-header">
+                        <span className="round-indicator">라운드 {round}</span>
                       </div>
-                      <div className="vs-divider">VS</div>
-                      <div className="team team-b">
-                        <span className="team-label">Team B</span>
-                        <div className="team-content">
-                          <div className="team-players-inline">
-                            {game.teamB.map((player, idx) => (
-                              <span key={idx} className="player-name">
-                                {player}
+                      <div className="round-games">
+                        {gamesByRound[round].map((game) => {
+                          const teamANames = game.teamA.join(", ");
+                          const teamBNames = game.teamB.join(", ");
+
+                          return (
+                            <div key={game.gameNo} className="game-row">
+                              <span className="game-number">
+                                게임{game.gameNo}
                               </span>
-                            ))}
-                          </div>
-                        </div>
+                              <div className="game-content">
+                                <div className="team-a-section">
+                                  <span className="team-a-names">
+                                    {teamANames}
+                                  </span>
+                                </div>
+                                <span className="game-separator">:</span>
+                                <div className="team-b-section">
+                                  <span className="team-b-names">
+                                    {teamBNames}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
           )}

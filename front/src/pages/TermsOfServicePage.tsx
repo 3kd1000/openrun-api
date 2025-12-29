@@ -160,7 +160,37 @@ const TermsOfServicePage: React.FC = () => {
           </section>
 
           <section>
-            <h2>제8조 (회원의 의무)</h2>
+            <h2>제8조 (자동 로그인 기능)</h2>
+            <ol>
+              <li>
+                서비스 제공자는 회원의 편의를 위해 자동 로그인 기능을
+                제공합니다.
+              </li>
+              <li>
+                자동 로그인 기능은 슬라이딩 윈도우 방식으로 작동하며, 마지막
+                접속일로부터 30일간 로그인 상태를 유지합니다.
+              </li>
+              <li>
+                회원이 서비스를 이용할 때마다 자동 로그인 유효기간이 자동으로
+                연장됩니다.
+              </li>
+              <li>
+                회원은 언제든지 로그아웃 기능을 통해 자동 로그인 상태를 해제할
+                수 있습니다.
+              </li>
+              <li>
+                기기를 분실하거나 도난당한 경우, 다른 기기에서 로그인하여 기존
+                세션을 무효화할 수 있습니다.
+              </li>
+              <li>
+                자동 로그인 기능은 회원의 기기에 로그인 정보를 안전하게
+                저장하며, 서비스 제공자는 이를 암호화하여 보호합니다.
+              </li>
+            </ol>
+          </section>
+
+          <section>
+            <h2>제9조 (회원의 의무)</h2>
             <ol>
               <li>
                 회원은 다음 행위를 하여서는 안 됩니다:
@@ -190,7 +220,7 @@ const TermsOfServicePage: React.FC = () => {
           </section>
 
           <section>
-            <h2>제9조 (회원의 ID 및 비밀번호에 대한 의무)</h2>
+            <h2>제10조 (회원의 ID 및 비밀번호에 대한 의무)</h2>
             <ol>
               <li>ID와 비밀번호에 관한 관리책임은 회원에게 있습니다.</li>
               <li>
@@ -206,7 +236,7 @@ const TermsOfServicePage: React.FC = () => {
           </section>
 
           <section>
-            <h2>제10조 (이용자의 의무)</h2>
+            <h2>제11조 (이용자의 의무)</h2>
             <ol>
               <li>
                 이용자는 다음 행위를 하여서는 안 됩니다:
@@ -236,7 +266,7 @@ const TermsOfServicePage: React.FC = () => {
           </section>
 
           <section>
-            <h2>제11조 (저작권의 귀속 및 이용제한)</h2>
+            <h2>제12조 (저작권의 귀속 및 이용제한)</h2>
             <ol>
               <li>
                 서비스 제공자가 작성한 저작물에 대한 저작권 기타 지적재산권은
@@ -252,7 +282,7 @@ const TermsOfServicePage: React.FC = () => {
           </section>
 
           <section>
-            <h2>제12조 (면책조항)</h2>
+            <h2>제13조 (면책조항)</h2>
             <ol>
               <li>
                 서비스 제공자는 천재지변 또는 이에 준하는 불가항력으로 인하여
@@ -276,7 +306,7 @@ const TermsOfServicePage: React.FC = () => {
           </section>
 
           <section>
-            <h2>제13조 (분쟁의 해결)</h2>
+            <h2>제14조 (분쟁의 해결)</h2>
             <ol>
               <li>
                 서비스 제공자와 이용자는 서비스와 관련하여 발생한 분쟁을
@@ -290,7 +320,7 @@ const TermsOfServicePage: React.FC = () => {
           </section>
 
           <section>
-            <h2>제14조 (기타)</h2>
+            <h2>제15조 (기타)</h2>
             <p>
               본 약관에서 정하지 아니한 사항에 대해서는 관련법령 또는 상관례에
               따릅니다.
@@ -299,7 +329,7 @@ const TermsOfServicePage: React.FC = () => {
         </div>
 
         <div className="terms-footer">
-          <Link to="/" className="back-link">
+          <Link to="/login" className="back-link">
             ← 홈으로 돌아가기
           </Link>
         </div>
