@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(mv:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(./gradlew:*)",
+      "Bash(kubectl get:*)",
+      "Bash(git reset:*)",
+      "Bash(kubectl apply:*)"
     ],
     "deny": [],
     "ask": []

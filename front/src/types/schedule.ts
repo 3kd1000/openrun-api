@@ -7,6 +7,9 @@ export interface Schedule {
   currentParticipants: number;
   cost?: number;
   description?: string;
+  reservedByUserId?: number;
+  reservedByUserName?: string;
+  participationStartAt?: string | null; // ISO 8601 format
   drawType?: 'AA' | 'AB' | 'SEED' | null;
   isDrawValid?: boolean | null;
   drawCreatedAt?: string | null;
@@ -21,6 +24,8 @@ export interface CreateScheduleRequest {
   maxCapacity: number;
   cost?: number;
   description?: string;
+  reservedByUserId?: number;
+  participationStartAt?: string | null; // ISO 8601 format: "2025-12-25T14:00:00"
 }
 
 export interface Participant {

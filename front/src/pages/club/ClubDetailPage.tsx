@@ -10,7 +10,7 @@ const ClubDetailPage: React.FC = () => {
     const [joinStatus, setJoinStatus] = useState<'NONE' | 'PENDING' | 'ACTIVE' | 'REJECTED'>('NONE');
     const [loading, setLoading] = useState(true);
 
-    const currentUserId = Number(localStorage.getItem('devUserId'));
+    const currentUserId = Number(localStorage.getItem('user_id'));
 
     useEffect(() => {
         if (clubId) {

@@ -72,6 +72,17 @@ openrun/
 - [ ] 실시간 알림 시스템 (WebSocket)
 - [ ] 모바일 반응형 UI 개선
 
+## ⚠️ Claude Code 작업 가이드라인
+
+**중요**: Claude Code와 작업할 때는 반드시 **`@docs/guides/claude-code-guidelines.md`**를 준수할 것
+
+### 핵심 원칙
+- **중요한 로직 결정은 반드시 사전 동의 필요**
+- 여러 옵션 제시 → 사용자 선택 → 구현 시작
+- 임의로 판단하지 말 것 (API 비용 낭비 방지)
+
+자세한 내용: `@docs/guides/claude-code-guidelines.md`
+
 ## 📚 문서화 가이드
 
 ### 문서 생성 시
