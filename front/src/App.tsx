@@ -33,7 +33,7 @@ function App() {
 
   return (
     <div className="App">
-      <DevUserSwitcher />
+      {/* <DevUserSwitcher /> */}
       {shouldShowNavigation && <Navigation />}
       <main className="App-content">
         <div className="App-content-wrapper">
