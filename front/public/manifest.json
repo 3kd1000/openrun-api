@@ -2,7 +2,7 @@
   "name": "OpenRun - 테니스 클럽 관리",
   "short_name": "OpenRun",
   "description": "테니스 클럽 일정 관리 및 대진표 생성 서비스",
-  "start_url": "/",
+  "start_url": "/schedules",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
