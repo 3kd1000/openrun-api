@@ -5,6 +5,13 @@
   position: relative;
   overflow: hidden;
   touch-action: pan-y pinch-zoom; /* 수직 스크롤과 핀치 줌은 허용, 수평 스크롤은 제어 */
+  padding-bottom: 40px; /* Footer 링크 영역을 위한 여백 */
+}
+
+@media (max-width: 768px) {
+  .calendar-view {
+    padding-bottom: 50px; /* 모바일에서 Footer 링크 + 네비게이션 바 여백 */
+  }
 }
 
 .calendar-wrapper {
