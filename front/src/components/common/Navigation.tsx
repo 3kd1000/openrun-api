@@ -1,17 +1,31 @@
-import React from 'react';
-import { NavLink, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
 import { auth, clearLoginSession } from '../../services/firebase';
 import { signOut } from 'firebase/auth';
 import './Navigation.css';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 로그인 상태를 React state로 관리
+  const [userName, setUserName] = useState<string | null>(null);
 
   const navItems = [
     { path: '/schedules', label: '일정관리', icon: '📅' },
     { path: '/draws', label: '대진목록', icon: '📋' },
     { path: '/scoreboard', label: '스코어보드', icon: '🏆' },
   ];
+
+  // 로그인 상태 체크 (페이지 이동 시마다)
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const name = localStorage.getItem('user_name') || localStorage.getItem('devUserName');
+      setUserName(name);
+    };
+
+    checkLoginStatus();
+  }, [location]); // 페이지 이동 시마다 체크
 
   const handleLogout = async () => {
     try {
@@ -26,12 +40,12 @@ const Navigation: React.FC = () => {
 
     console.log('✅ 로그아웃 완료');
 
+    // 로그인 상태 즉시 업데이트
+    setUserName(null);
+
     // 로그인 페이지로 이동
     navigate('/login');
   };
-
-  // 로그인 여부 확인 (간단히)
-  const userName = localStorage.getItem('user_name') || localStorage.getItem('devUserName');
 
   return (
     <>
