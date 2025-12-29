@@ -79,6 +79,9 @@ const LoginPage: React.FC = () => {
           localStorage.setItem("user_image_url", userInfo.imageUrl);
         }
 
+        // 6. 현재 클럽 ID 저장 (향후 클럽 전환 기능 추가 시 동적으로 변경)
+        localStorage.setItem("current_club_id", "1"); // openrun 클럽 ID
+
         console.log("✅ 카카오 로그인 성공:", userInfo);
 
         // 6. 로그인 세션 만료 시간 설정 (7일 후)
@@ -153,6 +156,10 @@ const LoginPage: React.FC = () => {
       if (userInfo.imageUrl) {
         localStorage.setItem("user_image_url", userInfo.imageUrl);
       }
+
+      // 6. 현재 클럽 ID 저장 (향후 클럽 전환 기능 추가 시 동적으로 변경)
+      localStorage.setItem("current_club_id", "1"); // openrun 클럽 ID
+
       console.log("✅ [3/4] localStorage 저장 완료");
 
       console.log("🔵 [4/4] 로그인 세션 만료 시간 설정...");
