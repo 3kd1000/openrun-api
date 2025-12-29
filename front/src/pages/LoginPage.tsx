@@ -191,7 +191,7 @@ const LoginPage: React.FC = () => {
   const handleKakaoSignIn = () => {
     if (window.Kakao) {
       window.Kakao.Auth.authorize({
-        redirectUri: import.meta.env.VITE_KAKAO_REDIRECT_URL,
+        redirectUri: import.meta.env.VITE_KAKAO_REDIRECT_URI,
       });
     } else {
       setError("Kakao SDK가 로드되지 않았습니다.");
