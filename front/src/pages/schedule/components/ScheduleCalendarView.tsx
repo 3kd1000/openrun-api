@@ -32,7 +32,12 @@ const ScheduleCalendarView: React.FC<Props> = ({
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(
     null
   );
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
+    null
+  );
   const calendarRef = React.useRef<HTMLDivElement>(null);
+  const isHorizontalSwipe = React.useRef(false);
 
   // 외부에서 전달된 calendarDate가 변경되면 내부 상태도 업데이트
   useEffect(() => {
@@ -175,17 +180,44 @@ const ScheduleCalendarView: React.FC<Props> = ({
     if (!value) return;
     const newDate = Array.isArray(value) ? value[0] : value;
     if (!(newDate instanceof Date)) return;
+
+    // 애니메이션 효과를 위한 처리
+    if (isAnimating) return;
+
+    setIsAnimating(true);
     setDate(newDate);
+
     // 외부 상태도 업데이트
     if (onCalendarDateChange) {
       onCalendarDateChange(newDate);
     }
+
+    // 애니메이션 완료 후 상태 초기화
+    setTimeout(() => {
+      setIsAnimating(false);
+      setSlideDirection(null);
+    }, 300);
   };
 
   // 제스처로 월 넘기기 (스와이프)
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     setTouchStart({ x: touch.clientX, y: touch.clientY });
+    isHorizontalSwipe.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+
+    // 수평 스와이프가 수직 스와이프보다 크면 스크롤 방지
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+      isHorizontalSwipe.current = true;
+      e.preventDefault(); // 스크롤 방지
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -200,20 +232,36 @@ const ScheduleCalendarView: React.FC<Props> = ({
       const newDate = new Date(date);
       if (deltaX > 0) {
         // 오른쪽으로 스와이프 = 이전 달
+        setSlideDirection("right");
         newDate.setMonth(newDate.getMonth() - 1);
       } else {
         // 왼쪽으로 스와이프 = 다음 달
+        setSlideDirection("left");
         newDate.setMonth(newDate.getMonth() + 1);
       }
       handleDateChange(newDate);
     }
 
     setTouchStart(null);
+    isHorizontalSwipe.current = false;
   };
 
   // 마우스 드래그로도 월 넘기기 (데스크탑)
   const handleMouseDown = (e: React.MouseEvent) => {
     setTouchStart({ x: e.clientX, y: e.clientY });
+    isHorizontalSwipe.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!touchStart) return;
+
+    const deltaX = e.clientX - touchStart.x;
+    const deltaY = e.clientY - touchStart.y;
+
+    // 수평 드래그가 수직 드래그보다 크면 처리
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+      isHorizontalSwipe.current = true;
+    }
   };
 
   const handleMouseUp = (e: React.MouseEvent) => {
@@ -227,15 +275,18 @@ const ScheduleCalendarView: React.FC<Props> = ({
       const newDate = new Date(date);
       if (deltaX > 0) {
         // 오른쪽으로 드래그 = 이전 달
+        setSlideDirection("right");
         newDate.setMonth(newDate.getMonth() - 1);
       } else {
         // 왼쪽으로 드래그 = 다음 달
+        setSlideDirection("left");
         newDate.setMonth(newDate.getMonth() + 1);
       }
       handleDateChange(newDate);
     }
 
     setTouchStart(null);
+    isHorizontalSwipe.current = false;
   };
 
   return (
@@ -243,22 +294,40 @@ const ScheduleCalendarView: React.FC<Props> = ({
       className="calendar-view"
       ref={calendarRef}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onMouseLeave={() => {
+        setTouchStart(null);
+        isHorizontalSwipe.current = false;
+      }}
     >
-      <Calendar
-        value={date}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onChange={handleDateChange as (value: any) => void}
-        tileContent={tileContent}
-        tileClassName={tileClassName}
-        locale="ko-KR"
-        calendarType="gregory"
-        formatDay={(_locale, date) => format(date, "d")}
-        onClickDay={handleTileClick}
-        showNeighboringMonth={false}
-      />
+      <div
+        className={`calendar-wrapper ${
+          isAnimating
+            ? slideDirection === "left"
+              ? "slide-left"
+              : slideDirection === "right"
+              ? "slide-right"
+              : ""
+            : ""
+        }`}
+      >
+        <Calendar
+          value={date}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onChange={handleDateChange as (value: any) => void}
+          tileContent={tileContent}
+          tileClassName={tileClassName}
+          locale="ko-KR"
+          calendarType="gregory"
+          formatDay={(_locale, date) => format(date, "d")}
+          onClickDay={handleTileClick}
+          showNeighboringMonth={false}
+        />
+      </div>
     </div>
   );
 };

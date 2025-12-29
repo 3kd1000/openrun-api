@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { auth, clearLoginSession } from '../../services/firebase';
 import { signOut } from 'firebase/auth';
 import './Navigation.css';
@@ -34,29 +34,41 @@ const Navigation: React.FC = () => {
   const userName = localStorage.getItem('user_name') || localStorage.getItem('devUserName');
 
   return (
-    <nav className="navigation">
-      {navItems.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          className={({ isActive }) =>
-            `nav-item ${isActive ? 'active' : ''}`
-          }
-        >
-          <span className="nav-icon">{item.icon}</span>
-          <span className="nav-label">{item.label}</span>
-        </NavLink>
-      ))}
+    <>
+      {/* Footer 링크 (네비게이션 바 위에 배치) */}
+      <div className="navigation-footer">
+        <Link to="/terms" className="nav-footer-link">
+          서비스 이용약관
+        </Link>
+        <span className="nav-footer-separator">|</span>
+        <a href="mailto:dev.openrun@gmail.com" className="nav-footer-link">
+          문의하기
+        </a>
+      </div>
+      <nav className="navigation">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `nav-item ${isActive ? 'active' : ''}`
+            }
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </NavLink>
+        ))}
 
-      {userName && (
-        <div className="nav-user-section">
-          <span className="nav-user-name">{userName}</span>
-          <button onClick={handleLogout} className="nav-logout-btn">
-            로그아웃
-          </button>
-        </div>
-      )}
-    </nav>
+        {userName && (
+          <div className="nav-user-section">
+            <span className="nav-user-name">{userName}</span>
+            <button onClick={handleLogout} className="nav-logout-btn">
+              로그아웃
+            </button>
+          </div>
+        )}
+      </nav>
+    </>
   );
 };
 

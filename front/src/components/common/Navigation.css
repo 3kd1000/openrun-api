@@ -1,3 +1,35 @@
+/* Footer 링크 (네비게이션 바 위) */
+.navigation-footer {
+  position: fixed;
+  bottom: 68px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: transparent;
+  z-index: 999;
+  gap: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.nav-footer-link {
+  color: #888;
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+
+.nav-footer-link:hover {
+  color: #007bff;
+}
+
+.nav-footer-separator {
+  color: #ccc;
+  font-size: 12px;
+}
+
 /* 모바일: 하단 네비게이션 (기본) */
 .navigation {
   position: fixed;
@@ -11,7 +43,9 @@
   border-top: 1px solid #e0e0e0;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  height: 60px;
+  height: 68px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
 }
 
 .nav-item {
@@ -80,6 +114,10 @@
 
 /* PC: 좌측 사이드바 (>= 768px) */
 @media (min-width: 768px) {
+  .navigation-footer {
+    display: none; /* PC에서는 Footer 컴포넌트 사용 */
+  }
+
   .navigation {
     position: fixed;
     top: 0;

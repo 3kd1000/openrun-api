@@ -13,7 +13,8 @@
   flex: 1;
   padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
   /* 모바일 웹브라우저 하단 safe area 추가 고려 */
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  /* 네비게이션 바(68px) + Footer 링크(약 32px) + 여백 */
+  padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
 }
 
 /* PC: 좌측 네비게이션 여백 */

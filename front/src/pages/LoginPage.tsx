@@ -24,6 +24,19 @@ const LoginPage: React.FC = () => {
   const [kakaoAuthCode, setKakaoAuthCode] = useState<string | null>(null);
   const [showWebAuthnModal, setShowWebAuthnModal] = useState(false);
   const [registering, setRegistering] = useState(false);
+  const [autoLoginEnabled, setAutoLoginEnabled] = useState(true); // 기본값: 자동 로그인 사용
+
+  // 이미 로그인되어있는지 체크 (PWA 시작 시 자동 로그인)
+  useEffect(() => {
+    const firebaseToken = localStorage.getItem("firebase_token");
+    const userId = localStorage.getItem("user_id");
+
+    // 이미 로그인되어있으면 메인 화면으로 이동
+    if (firebaseToken && userId) {
+      console.log("✅ 이미 로그인되어 있음 → /schedules로 자동 이동");
+      navigate("/schedules", { replace: true });
+    }
+  }, [navigate]);
 
   // Kakao SDK 초기화
   useEffect(() => {
@@ -85,10 +98,13 @@ const LoginPage: React.FC = () => {
         // 6. 현재 클럽 ID 저장 (향후 클럽 전환 기능 추가 시 동적으로 변경)
         localStorage.setItem("current_club_id", "1"); // openrun 클럽 ID
 
+        // 7. 자동 로그인 설정 저장
+        localStorage.setItem("auto_login_enabled", autoLoginEnabled.toString());
+
         console.log("✅ 카카오 로그인 성공:", userInfo);
 
-        // 6. 로그인 세션 만료 시간 설정 (7일 후)
-        setLoginExpiry(true);
+        // 8. 로그인 세션 만료 시간 설정 (자동 로그인 여부에 따라 다르게)
+        setLoginExpiry(autoLoginEnabled);
 
         // 7. 신규 사용자 판단 (백엔드에서 받은 isNewUser 사용)
         if (isNewUser) {
@@ -177,11 +193,14 @@ const LoginPage: React.FC = () => {
       // 6. 현재 클럽 ID 저장 (향후 클럽 전환 기능 추가 시 동적으로 변경)
       localStorage.setItem("current_club_id", "1"); // openrun 클럽 ID
 
+      // 7. 자동 로그인 설정 저장
+      localStorage.setItem("auto_login_enabled", autoLoginEnabled.toString());
+
       console.log("✅ [3/4] localStorage 저장 완료");
 
       console.log("🔵 [4/4] 로그인 세션 만료 시간 설정...");
-      // 6. 로그인 세션 만료 시간 설정 (7일 후)
-      setLoginExpiry(true);
+      // 8. 로그인 세션 만료 시간 설정 (자동 로그인 여부에 따라 다르게)
+      setLoginExpiry(autoLoginEnabled);
 
       console.log("✅ [4/4] 로그인 플로우 완료");
 
@@ -285,11 +304,14 @@ const LoginPage: React.FC = () => {
       // 7. 현재 클럽 ID 저장
       localStorage.setItem("current_club_id", "1");
 
+      // 8. 자동 로그인 설정 저장
+      localStorage.setItem("auto_login_enabled", autoLoginEnabled.toString());
+
       console.log("✅ [4/5] localStorage 저장 완료");
 
       console.log("🔐 [5/5] 로그인 세션 설정...");
-      // 8. 로그인 세션 만료 시간 설정 (7일 후)
-      setLoginExpiry(true);
+      // 9. 로그인 세션 만료 시간 설정 (자동 로그인 여부에 따라 다르게)
+      setLoginExpiry(autoLoginEnabled);
 
       console.log("✅ [5/5] WebAuthn 로그인 완료!");
       console.log("✅ 사용자 정보:", userInfo);
@@ -510,6 +532,83 @@ const LoginPage: React.FC = () => {
           <span style={{ fontSize: "20px" }}>🔐</span>
           {loading ? "로그인 중..." : "생체인증으로 로그인"}
         </button>
+
+        {/* 자동 로그인 안내 */}
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "16px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            border: "1px solid #e9ecef",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "12px",
+            }}
+          >
+            <input
+              type="checkbox"
+              id="autoLoginCheckbox"
+              checked={autoLoginEnabled}
+              onChange={(e) => setAutoLoginEnabled(e.target.checked)}
+              style={{
+                width: "18px",
+                height: "18px",
+                marginRight: "10px",
+                cursor: "pointer",
+              }}
+            />
+            <label
+              htmlFor="autoLoginCheckbox"
+              style={{
+                fontSize: "14px",
+                color: "#495057",
+                fontWeight: "600",
+                cursor: "pointer",
+                userSelect: "none",
+              }}
+            >
+              자동 로그인 사용
+            </label>
+          </div>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6c757d",
+              lineHeight: "1.5",
+              margin: 0,
+            }}
+          >
+            {autoLoginEnabled
+              ? "이 기기에 로그인 정보를 안전하게 저장하여 30일간 자동으로 로그인 상태를 유지합니다."
+              : "로그인 후 1시간 동안만 로그인 상태를 유지합니다. 앱을 종료하면 재로그인이 필요합니다."}
+          </p>
+          <ul
+            style={{
+              fontSize: "12px",
+              color: "#6c757d",
+              marginTop: "8px",
+              marginBottom: 0,
+              paddingLeft: "20px",
+            }}
+          >
+            {autoLoginEnabled ? (
+              <>
+                <li>마지막 접속일로부터 30일간 유효</li>
+                <li>언제든지 로그아웃 가능</li>
+              </>
+            ) : (
+              <>
+                <li>최대 1시간 동안만 유효</li>
+                <li>보안이 더 강화됩니다</li>
+              </>
+            )}
+          </ul>
+        </div>
 
         <p
           style={{

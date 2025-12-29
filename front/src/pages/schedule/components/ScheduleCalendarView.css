@@ -2,6 +2,45 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom; /* 수직 스크롤과 핀치 줌은 허용, 수평 스크롤은 제어 */
+}
+
+.calendar-wrapper {
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  will-change: transform, opacity;
+}
+
+.calendar-wrapper.slide-left {
+  animation: slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calendar-wrapper.slide-right {
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(100%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* React Calendar 커스터마이징 */
