@@ -29,7 +29,6 @@ public class Club {
     @Column(length = 100, nullable = false)
     private String name;
 
-    @Lob // TEXT 타입 매핑
     @Column(columnDefinition = "text")
     private String description;
 

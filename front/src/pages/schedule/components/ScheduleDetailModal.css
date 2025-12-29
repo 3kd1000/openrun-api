@@ -401,4 +401,47 @@
     margin: 0 1px;
     font-size: 10px;
   }
+
+  /* 모바일 버튼 스타일 - 뭉개짐 방지 */
+  .schedule-detail-view .modal-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: stretch;
+  }
+
+  .schedule-detail-view .btn-cancel-participation,
+  .schedule-detail-view .btn-join,
+  .schedule-detail-view .btn-delete,
+  .schedule-detail-view .btn-primary,
+  .schedule-detail-view .btn-secondary {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 4px;
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 정말 작은 화면에서는 2개씩 2줄로 배치 */
+  @media (max-width: 360px) {
+    .schedule-detail-view .modal-actions {
+      flex-wrap: wrap;
+    }
+
+    .schedule-detail-view .btn-cancel-participation,
+    .schedule-detail-view .btn-join,
+    .schedule-detail-view .btn-delete,
+    .schedule-detail-view .btn-primary,
+    .schedule-detail-view .btn-secondary {
+      flex: 1 1 calc(50% - 2px);
+      min-width: calc(50% - 2px);
+      max-width: calc(50% - 2px);
+      padding: 6px 4px;
+      font-size: 9px;
+    }
+  }
 }
