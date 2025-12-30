@@ -9,6 +9,7 @@ import DrawCreateModal from "./DrawCreateModal";
 import DrawGamesList from "../../../components/draw/DrawGamesList";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
+import { isPastDate } from "../../../utils/scheduleValidation";
 import "./DrawViewModal.css";
 
 interface Props {
@@ -199,6 +200,9 @@ const DrawViewModal: React.FC<Props> = ({
       (game) => game.result !== undefined && game.result !== null
     ) || false;
 
+  // 일정이 미래인지 확인 (미래 일정은 결과 입력 불가)
+  const isFutureSchedule = !isPastDate(schedule.scheduledAt);
+
   // ESC 키로 모달 닫기 (편집 모드가 아닐 때만)
   useEscapeKey(onClose, !isEditMode && !showRegenerateModal);
 
@@ -291,7 +295,12 @@ const DrawViewModal: React.FC<Props> = ({
               type="button"
               onClick={handleToggleEditMode}
               className={isEditMode ? "btn-save" : "btn-edit"}
-              disabled={!drawResult || saving}
+              disabled={!drawResult || saving || isFutureSchedule}
+              title={
+                isFutureSchedule
+                  ? "경기 일정이 지난 후에만 결과를 입력할 수 있습니다"
+                  : ""
+              }
             >
               {saving
                 ? "저장 중..."
