@@ -159,7 +159,12 @@ public class WebAuthnService {
         // 인증 성공 처리
         credential.updateOnSuccessfulAuth(credential.getSignCount() + 1);
 
-        return credential.getUser();
+        User user = credential.getUser();
+
+        // oauthProviders lazy loading 강제 (Controller에서 사용하기 위해)
+        user.getOauthProviders().size();
+
+        return user;
     }
 
     /**

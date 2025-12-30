@@ -232,10 +232,10 @@ class WebAuthnService {
   async loginWithWebAuthn(): Promise<WebAuthnLoginResponse> {
     try {
       // 브라우저의 WebAuthn API 호출 (사전 인증 없이 바로 호출)
-      // rpId는 현재 도메인에서 자동으로 가져옴
       const credentialRequestOptions: CredentialRequestOptions = {
         publicKey: {
           challenge: new Uint8Array(32), // 임시 challenge (서버에서 검증 안 함)
+          rpId: "openrun.app", // 명시적으로 rpId 지정 (등록 시와 동일해야 함)
           timeout: 60000,
           userVerification: "required",
           // allowCredentials를 비워두면 등록된 모든 credential을 사용할 수 있음 (discoverable credentials)
