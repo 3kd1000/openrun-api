@@ -1,0 +1,81 @@
+/* OpenRun Color Tokens */
+/* 프로젝트 전체에서 사용하는 색상 정의 */
+
+:root {
+  /* Brand Colors */
+  --color-primary: #007bff;
+  --color-primary-hover: #0056b3;
+  --color-primary-light: #d1e7fd;
+  --color-primary-bg: #e3f2fd;
+
+  --color-secondary: #6c757d;
+  --color-secondary-hover: #5a6268;
+
+  --color-success: #28a745;
+  --color-success-hover: #218838;
+  --color-success-light: #d4edda;
+  --color-success-bg: #e8f5e9;
+  --color-success-text: #155724;
+
+  --color-danger: #dc3545;
+  --color-danger-hover: #c82333;
+  --color-danger-light: #f8d7da;
+  --color-danger-bg: #fff5f5;
+  --color-danger-text: #721c24;
+
+  --color-warning: #ffc107;
+  --color-warning-hover: #e0a800;
+  --color-warning-light: #fff3cd;
+  --color-warning-bg: #fffbf0;
+  --color-warning-text: #856404;
+
+  --color-info: #17a2b8;
+  --color-info-hover: #138496;
+  --color-info-light: #d1ecf1;
+  --color-info-bg: #e3f2fd;
+
+  /* Neutral Colors */
+  --color-text-primary: #212529;
+  --color-text-secondary: #495057;
+  --color-text-tertiary: #6c757d;
+  --color-text-muted: #888;
+  --color-text-disabled: #adb5bd;
+
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #e9ecef;
+  --color-bg-hover: #e9ecef;
+  --color-bg-disabled: #f5f5f5;
+
+  --color-border-primary: #ddd;
+  --color-border-secondary: #e0e0e0;
+  --color-border-tertiary: #dee2e6;
+  --color-border-focus: #007bff;
+
+  /* Gradient Colors */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  --gradient-warning: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+
+  /* Special Colors (Draw Types) */
+  --color-group-a: #007bff;
+  --color-group-a-bg: #e3f2fd;
+  --color-group-a-light: #d1e7fd;
+
+  --color-group-b: #e91e63;
+  --color-group-b-bg: #fce4ec;
+  --color-group-b-light: #f8bbd0;
+
+  --color-seed: #9c27b0;
+  --color-seed-bg: #f3e5f5;
+  --color-seed-light: #e1bee7;
+  --color-seed-highlight: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+
+  /* Draw Game Result Colors */
+  --color-team-a-win: #28a745;
+  --color-team-a-win-bg: #f0fff4;
+  --color-team-b-win: #dc3545;
+  --color-team-b-win-bg: #fff5f5;
+  --color-draw: #ffc107;
+  --color-draw-bg: #fffbf0;
+}

@@ -50,14 +50,14 @@ export const setLoginExpiry = (autoLoginEnabled: boolean = true) => {
     expiryDate.setDate(expiryDate.getDate() + AUTO_LOGIN_DAYS);
     localStorage.setItem("login_expiry", expiryDate.toISOString());
     console.log(
-      `✅ 로그인 만료 시간 설정 (슬라이딩 30일): ${expiryDate.toLocaleString()}`
+      `✅ 로그인 만료 시간 설정 (슬라이딩 30일): ${expiryDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`
     );
   } else {
     // 절대 만료 방식: 최초 로그인 시각 기준 1시간 고정
     expiryDate.setHours(expiryDate.getHours() + SHORT_LOGIN_HOURS);
     localStorage.setItem("login_expiry", expiryDate.toISOString());
     console.log(
-      `✅ 로그인 만료 시간 설정 (절대 1시간): ${expiryDate.toLocaleString()}`
+      `✅ 로그인 만료 시간 설정 (절대 1시간): ${expiryDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`
     );
   }
 };
@@ -77,7 +77,7 @@ export const isLoginExpired = (): boolean => {
 
   if (now > expiryDate) {
     console.warn(
-      `⏰ 로그인 세션 만료: ${expiryDate.toLocaleString()} < 현재 ${now.toLocaleString()}`
+      `⏰ 로그인 세션 만료: ${expiryDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} < 현재 ${now.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`
     );
     return true;
   }
@@ -96,6 +96,7 @@ export const clearLoginSession = () => {
   localStorage.removeItem("user_email");
   localStorage.removeItem("user_image_url");
   localStorage.removeItem("login_expiry");
+  localStorage.removeItem("token_last_refresh");
   console.log("🧹 로그인 세션 클리어");
 };
 
@@ -122,6 +123,10 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         localStorage.setItem("firebase_token", idToken);
         localStorage.setItem("firebase_uid", user.uid);
 
+        // 토큰 갱신 시간 저장 (디버깅용)
+        const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+        localStorage.setItem("token_last_refresh", refreshTime);
+
         // 자동 로그인 설정 확인
         const autoLoginEnabled =
           localStorage.getItem("auto_login_enabled") === "true";
@@ -129,9 +134,9 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         // 슬라이딩 윈도우: 자동 로그인 활성화 시에만 만료 시간 갱신
         if (autoLoginEnabled) {
           setLoginExpiry(true);
-          console.log("✅ Firebase 토큰 자동 갱신 + 만료 시간 연장:", user.email);
+          console.log(`✅ Firebase 토큰 자동 갱신 + 만료 시간 연장 [${refreshTime}]:`, user.email);
         } else {
-          console.log("✅ Firebase 토큰 자동 갱신 (만료 시간 유지):", user.email);
+          console.log(`✅ Firebase 토큰 자동 갱신 (만료 시간 유지) [${refreshTime}]:`, user.email);
         }
 
         // 콜백이 있으면 실행 (필요시 axiosInstance 헤더 업데이트 등)
@@ -161,7 +166,22 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
       try {
         const idToken = await user.getIdToken(true);
         localStorage.setItem("firebase_token", idToken);
-        console.log("🔄 Firebase 토큰 자동 갱신 (55분 주기, 만료 시간 유지)");
+
+        // 토큰 갱신 시간 저장 (디버깅용)
+        const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+        localStorage.setItem("token_last_refresh", refreshTime);
+
+        // 자동 로그인 설정 확인
+        const autoLoginEnabled =
+          localStorage.getItem("auto_login_enabled") === "true";
+
+        // 슬라이딩 윈도우: 자동 로그인 활성화 시 만료 시간도 갱신
+        if (autoLoginEnabled) {
+          setLoginExpiry(true);
+          console.log(`🔄 Firebase 토큰 자동 갱신 + 만료 시간 연장 (55분 주기) [${refreshTime}]`);
+        } else {
+          console.log(`🔄 Firebase 토큰 자동 갱신 (55분 주기, 만료 시간 유지) [${refreshTime}]`);
+        }
 
         if (onTokenRefresh) {
           onTokenRefresh(idToken);

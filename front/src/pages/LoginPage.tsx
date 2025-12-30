@@ -81,6 +81,8 @@ const LoginPage: React.FC = () => {
         // 3. Firebase token을 localStorage에 저장
         localStorage.setItem("firebase_token", idToken);
         localStorage.setItem("firebase_uid", firebaseUser.uid);
+        const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+        localStorage.setItem("token_last_refresh", refreshTime);
 
         // 4. 백엔드에서 사용자 정보 조회
         const userInfo = await fetchUserInfo();
@@ -175,6 +177,8 @@ const LoginPage: React.FC = () => {
       // 3. Firebase token을 localStorage에 저장
       localStorage.setItem("firebase_token", idToken);
       localStorage.setItem("firebase_uid", firebaseUser.uid);
+      const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+      localStorage.setItem("token_last_refresh", refreshTime);
 
       console.log("🔵 [3/4] 사용자 정보 조회...");
       // 4. 백엔드에서 사용자 정보 조회
@@ -285,6 +289,8 @@ const LoginPage: React.FC = () => {
       // 4. Firebase token을 localStorage에 저장
       localStorage.setItem("firebase_token", idToken);
       localStorage.setItem("firebase_uid", firebaseUser.uid);
+      const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+      localStorage.setItem("token_last_refresh", refreshTime);
 
       console.log("🔐 [3/5] 사용자 정보 조회...");
       // 5. 백엔드에서 사용자 정보 조회

@@ -1,0 +1,16 @@
+/* OpenRun Styles Index */
+/* 모든 토큰과 공통 스타일을 import하는 통합 파일 */
+
+/* 1. Tokens (순서 중요: 다른 파일들이 이 변수를 사용) */
+@import './tokens/colors.css';
+@import './tokens/spacing.css';
+@import './tokens/typography.css';
+@import './tokens/effects.css';
+@import './tokens/modal-sizes.css';
+
+/* 2. Global Styles */
+@import './global.css';
+
+/* 3. Common Components */
+@import './components/modal-base.css';
+@import './components/draw-games-common.css';

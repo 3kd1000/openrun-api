@@ -42,6 +42,21 @@ export const validateScheduleCreation = (
 };
 
 /**
+ * KST(한국 표준시) 현재 시간 가져오기
+ * 백엔드가 서버 시간대(아마도 UTC 또는 서버 로컬 시간)로 비교하므로,
+ * 프론트엔드에서도 KST 기준으로 정확하게 비교하기 위해 KST 시간을 계산
+ */
+const getKSTNow = (): Date => {
+  const now = new Date();
+  // 현재 UTC 시간 가져오기
+  const utcTime = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+  // KST는 UTC+9이므로 9시간을 더함
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kstTime = utcTime + kstOffset;
+  return new Date(kstTime);
+};
+
+/**
  * 참가신청 가능 여부 확인
  * @param scheduledAt 일정 시간 (ISO 8601 형식)
  * @param participationStartAt 참가신청 시작 시간 (ISO 8601 형식, 선택적)
@@ -61,23 +76,27 @@ export const validateParticipation = (
     };
   }
 
+  // KST 기준으로 현재 시간 가져오기
+  const nowKST = getKSTNow();
+  const scheduledDate = new Date(scheduledAt);
+
   // 과거 일정에는 참가신청 불가
-  if (isPastDate(scheduledAt)) {
+  if (scheduledDate < nowKST) {
     return {
       isValid: false,
       errorMessage: "이미 지난 일정에는 참가신청할 수 없습니다.",
     };
   }
 
-  // 참가신청 시작 시간 체크
+  // 참가신청 시작 시간 체크 (KST 기준)
   if (participationStartAt) {
-    const now = new Date();
     const startTime = new Date(participationStartAt);
-    if (now < startTime) {
+    if (nowKST < startTime) {
       return {
         isValid: false,
         errorMessage: `참가신청 시작 시간이 아직 도래하지 않았습니다. (시작 시간: ${startTime.toLocaleString(
-          "ko-KR"
+          "ko-KR",
+          { timeZone: "Asia/Seoul" }
         )})`,
       };
     }

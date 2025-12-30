@@ -326,6 +326,15 @@ const ScheduleCalendarView: React.FC<Props> = ({
           formatDay={(_locale, date) => format(date, "d")}
           onClickDay={handleTileClick}
           showNeighboringMonth={false}
+          // 연도/월 네비게이션 버튼 클릭 시 상태 동기화
+          onActiveStartDateChange={({ activeStartDate }) => {
+            if (activeStartDate) {
+              setDate(activeStartDate);
+              if (onCalendarDateChange) {
+                onCalendarDateChange(activeStartDate);
+              }
+            }
+          }}
         />
       </div>
     </div>

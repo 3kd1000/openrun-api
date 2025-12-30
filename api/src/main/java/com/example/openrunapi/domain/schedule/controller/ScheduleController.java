@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -135,8 +136,8 @@ public class ScheduleController {
         // 일정 존재 확인 및 조회
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
         
-        // 과거 일정 체크
-        if (scheduleResponse.getScheduledAt().isBefore(java.time.LocalDateTime.now())) {
+        // 과거 일정 체크 (KST 기준)
+        if (TimeValidationUtils.isPast(scheduleResponse.getScheduledAt())) {
             throw new IllegalStateException("이미 지난 일정에는 대진을 생성할 수 없습니다.");
         }
 

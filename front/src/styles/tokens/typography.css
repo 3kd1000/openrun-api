@@ -1,0 +1,46 @@
+/* OpenRun Typography Tokens */
+/* 폰트 크기, 두께, 줄 간격 정의 */
+
+:root {
+  /* Font Family */
+  --font-family-base: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  /* Font Sizes - Mobile (작은 폰트로 정보 밀도 증가) */
+  --font-size-xs: 9px;
+  --font-size-s: 11px;
+  --font-size-m: 13px;
+  --font-size-base: 14px;
+  --font-size-l: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 22px;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line Heights */
+  --line-height-tight: 1.1;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+}
+
+/* Desktop font sizes (768px 이상 - 약간 증가) */
+@media (min-width: 768px) {
+  :root {
+    --font-size-xs: 10px;
+    --font-size-s: 12px;
+    --font-size-m: 14px;
+    --font-size-base: 15px;
+    --font-size-l: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+  }
+}

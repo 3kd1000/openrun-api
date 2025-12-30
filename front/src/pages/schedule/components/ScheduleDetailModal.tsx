@@ -219,8 +219,10 @@ const ScheduleDetailModal: React.FC<Props> = ({
       };
 
       await scheduleService.updateSchedule(schedule.id, requestData);
-      onSuccess();
-      onClose();
+      setIsEditMode(false); // 편집 모드 종료 (편집 화면만 닫기)
+      await loadScheduleAndParticipants(); // 변경된 데이터로 새로고침
+      onSuccess(); // 부모 컴포넌트에 변경 알림
+      // onClose() 제거 - 상세 모달은 열어둔 채 유지
     } catch (err) {
       console.error("일정 수정 실패:", err);
       setError("일정 수정에 실패했습니다.");
@@ -427,18 +429,6 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </p>
             </div>
 
-            {schedule.participationStartAt && (
-              <div className="detail-item">
-                <label>참가신청 시작</label>
-                <p>
-                  {format(
-                    new Date(schedule.participationStartAt),
-                    "yyyy년 M월 d일 HH:mm"
-                  )}
-                </p>
-              </div>
-            )}
-
             <div className="detail-item">
               <label>참가 현황</label>
               <div className="participant-stats">
@@ -456,12 +446,14 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </div>
             </div>
 
-            {schedule.cost && (
-              <div className="detail-item">
-                <label>총 비용</label>
-                <p>{schedule.cost.toLocaleString()}원</p>
-              </div>
-            )}
+            {schedule.cost !== null &&
+              schedule.cost !== undefined &&
+              schedule.cost !== 0 && (
+                <div className="detail-item">
+                  <label>총 비용</label>
+                  <p>{schedule.cost.toLocaleString()}원</p>
+                </div>
+              )}
 
             {schedule.description && (
               <div className="detail-item">
@@ -588,19 +580,41 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
             {error && <div className="error-message">{error}</div>}
 
-            {/* 참가신청 시작 시간 안내 */}
-            {schedule?.participationStartAt &&
-              new Date() < new Date(schedule.participationStartAt) && (
-                <div className="participation-start-info">
-                  <p>
-                    참가신청 시작 시간:{" "}
-                    {format(
-                      new Date(schedule.participationStartAt),
-                      "yyyy년 M월 d일 HH:mm"
-                    )}
-                  </p>
+            {/* 참가신청 시작 시간 안내 및 새로고침 버튼 */}
+            <div className="participation-start-section">
+              {schedule?.participationStartAt ? (
+                (() => {
+                  const now = new Date();
+                  const startAt = new Date(schedule.participationStartAt);
+                  const isStarted = now >= startAt;
+
+                  return (
+                    <div className={`participation-start-info ${isStarted ? 'started' : 'pending'}`}>
+                      <p>
+                        참가신청 시작 시간:{" "}
+                        {format(startAt, "yyyy년 M월 d일 HH:mm")}
+                      </p>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="participation-start-info started">
+                  <p>참가신청 시작 시간: 즉시 신청 가능</p>
                 </div>
               )}
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  await loadScheduleAndParticipants();
+                }}
+                className="btn-refresh"
+                disabled={loading}
+                title="시간 정보 새로고침"
+              >
+                {loading ? "새로고침 중..." : "🔄 새로고침"}
+              </button>
+            </div>
 
             <div className="modal-actions">
               {currentUserId && myParticipation ? (
