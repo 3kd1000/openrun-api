@@ -520,7 +520,7 @@
     text-overflow: ellipsis;
   }
 
-  /* 정말 작은 화면에서는 2개씩 2줄로 배치 */
+  /* 360px 이하: 2x2 그리드 */
   @media (max-width: 360px) {
     .schedule-detail-view .modal-actions {
       flex-wrap: wrap;
@@ -531,11 +531,35 @@
     .schedule-detail-view .btn-delete,
     .schedule-detail-view .btn-primary,
     .schedule-detail-view .btn-secondary {
-      flex: 1 1 calc(50% - 2px);
-      min-width: calc(50% - 2px);
-      max-width: calc(50% - 2px);
-      padding: var(--space-xs) var(--space-xs);
-      font-size: 9px;
+      flex: 1 1 calc(50% - var(--space-xs));
+      min-width: calc(50% - var(--space-xs));
+      max-width: calc(50% - var(--space-xs));
+      padding: var(--space-xs) var(--space-xxs);
+      font-size: var(--font-size-xs);
+    }
+  }
+
+  /* 갤럭시 S24 등 360px~400px: 4개 한 줄 배치 */
+  @media (min-width: 361px) and (max-width: 400px) {
+    .schedule-detail-view .modal-actions {
+      gap: 2px;
+      flex-wrap: nowrap;
+      padding-left: var(--space-xxs);
+      padding-right: var(--space-xxs);
+    }
+
+    .schedule-detail-view .btn-cancel-participation,
+    .schedule-detail-view .btn-join,
+    .schedule-detail-view .btn-delete,
+    .schedule-detail-view .btn-primary,
+    .schedule-detail-view .btn-secondary {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: var(--space-xs) 2px;
+      font-size: var(--font-size-xs);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }

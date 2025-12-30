@@ -6,10 +6,12 @@
 
 /* ========== 페이지 컨테이너 ========== */
 .schedule-page {
-  padding: var(--space-l);
+  padding: var(--space-xxs) var(--space-l) var(--space-l) var(--space-l);
   width: 100%;
   padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
   box-sizing: border-box;
+  /* overflow-x: hidden 제거 - sticky가 작동하려면 필요 */
+  max-width: 100vw; /* 가로 스크롤 방지 */
 }
 
 /* ========== 헤더 ========== */
@@ -17,9 +19,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-xl);
+  margin-bottom: 0; /* 헤더와 캘린더 사이 간격 제거 */
+  margin-left: calc(-1 * var(--space-l));
+  margin-right: calc(-1 * var(--space-l));
+  margin-top: calc(
+    -1 * var(--space-xxs)
+  ); /* schedule-page의 padding-top 상쇄 */
   flex-wrap: wrap;
   gap: var(--space-l);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-bg-primary);
+  padding: var(--space-l);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  width: calc(100% + 2 * var(--space-l)); /* 좌우 음수 margin 상쇄 */
 }
 
 .schedule-header h1 {
@@ -89,6 +103,7 @@
   padding: var(--space-m) var(--space-l);
   background-color: var(--color-primary-bg);
   border-radius: var(--radius-m);
+  margin-top: 0; /* 헤더와 필터 사이 간격 제거 */
   margin-bottom: var(--space-l);
 }
 
@@ -159,6 +174,7 @@
   text-align: center;
   padding: 60px var(--space-l);
   color: var(--color-text-tertiary);
+  margin-top: 0; /* 헤더와 빈 상태 사이 간격 제거 */
 }
 
 .empty-state p:first-child {
@@ -181,6 +197,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-l);
+  margin-top: 0; /* 헤더와 리스트 사이 간격 제거 */
 }
 
 /* ========== 일정 카드 ========== */
@@ -205,7 +222,8 @@
   border: 2px solid var(--color-primary);
 }
 
-.schedule-page .schedule-card:not(.past-schedule):not(.not-participating):hover {
+.schedule-page
+  .schedule-card:not(.past-schedule):not(.not-participating):hover {
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
   background: var(--color-primary-bg);
 }
