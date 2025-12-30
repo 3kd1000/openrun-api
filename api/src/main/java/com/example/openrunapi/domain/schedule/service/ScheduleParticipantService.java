@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,15 +35,14 @@ public class ScheduleParticipantService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // 2. 과거 일정 체크
-        if (schedule.getScheduledAt().isBefore(LocalDateTime.now())) {
+        // 2. 과거 일정 체크 (KST 기준)
+        if (TimeValidationUtils.isPast(schedule.getScheduledAt())) {
             throw new IllegalStateException("이미 지난 일정에는 참가신청할 수 없습니다.");
         }
 
-        // 3. 참가신청 시작시간 체크 (participationStartAt이 설정되어 있고, 아직 시간이 도래하지 않았으면 예외 발생)
+        // 3. 참가신청 시작시간 체크 (participationStartAt이 설정되어 있고, 아직 시간이 도래하지 않았으면 예외 발생, KST 기준)
         if (schedule.getParticipationStartAt() != null) {
-            LocalDateTime now = LocalDateTime.now();
-            if (now.isBefore(schedule.getParticipationStartAt())) {
+            if (!TimeValidationUtils.isAfter(schedule.getParticipationStartAt())) {
                 throw new IllegalStateException(
                     String.format("참가신청 시작 시간이 아직 도래하지 않았습니다. 시작 시간: %s",
                         schedule.getParticipationStartAt())

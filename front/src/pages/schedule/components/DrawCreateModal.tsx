@@ -10,6 +10,8 @@ import { userService } from "../../../services/userService";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { validateDrawCreation } from "../../../utils/scheduleValidation";
 import type { Schedule } from "../../../types/schedule";
+import DrawGamesList from "../../../components/draw/DrawGamesList";
+import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import "./DrawCreateModal.css";
 import "./DrawViewModal.css";
 
@@ -403,43 +405,14 @@ const DrawCreateModal: React.FC<Props> = ({
     }
   };
 
-  // 대진표 텍스트로 포맷팅
-  const formatDrawAsText = (): string => {
-    if (!drawResult) return "";
-    let text = `🎯 대진표\n`;
-    text += `대진 타입: ${drawType}\n\n`;
-
-    // 라운드별로 그룹화
-    const gamesByRound: { [round: number]: typeof drawResult.games } = {};
-    drawResult.games.forEach((game) => {
-      if (!gamesByRound[game.roundNo]) {
-        gamesByRound[game.roundNo] = [];
-      }
-      gamesByRound[game.roundNo].push(game);
-    });
-
-    // 라운드 순서대로 정렬
-    const sortedRounds = Object.keys(gamesByRound)
-      .map(Number)
-      .sort((a, b) => a - b);
-
-    sortedRounds.forEach((round) => {
-      text += `라운드 ${round}\n`;
-      gamesByRound[round].forEach((game) => {
-        const teamANames = game.teamA.join(", ");
-        const teamBNames = game.teamB.join(", ");
-        text += `게임${game.gameNo} ${teamANames} : ${teamBNames}\n`;
-      });
-      text += "\n";
-    });
-
-    return text;
-  };
-
   // 클립보드 복사
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(formatDrawAsText());
+      const text = formatDrawAsText(drawResult, {
+        title: "🎯 대진표",
+        drawType: drawType,
+      });
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -490,7 +463,7 @@ const DrawCreateModal: React.FC<Props> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-content draw-create-modal"
+        className="modal-content draw-create-modal modal-nested-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
@@ -533,36 +506,9 @@ const DrawCreateModal: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* 게스트 추가 버튼 */}
-          <div className="form-group">
-            <button
-              type="button"
-              onClick={handleAddGuest}
-              disabled={addingGuest}
-              className="btn-add-guest"
-              style={{
-                padding: "8px 12px",
-                backgroundColor: "#6c757d",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: addingGuest ? "not-allowed" : "pointer",
-                opacity: addingGuest ? 0.6 : 1,
-                fontSize: "13px",
-              }}
-            >
-              {addingGuest ? "추가 중..." : "게스트 추가 (대기열)"}
-            </button>
-          </div>
-
           {/* AA 타입: 참가자/대기열 관리 */}
           {drawType === "AA" && (
             <>
-              {selectedUsers.length > 0 && (
-                <div className="selected-count-badge">
-                  {selectedUsers.length}명 선택됨
-                </div>
-              )}
               <div className="move-buttons">
                 <button
                   type="button"
@@ -579,6 +525,14 @@ const DrawCreateModal: React.FC<Props> = ({
                   className="btn-move-group"
                 >
                   대기열로 이동
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddGuest}
+                  disabled={addingGuest}
+                  className="btn-move-group"
+                >
+                  {addingGuest ? "추가 중..." : "게스트 추가"}
                 </button>
               </div>
 
@@ -667,12 +621,15 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* AB 타입: 그룹 A/B 분할 */}
           {drawType === "AB" && (
             <>
-              {selectedUsers.length > 0 && (
-                <div className="selected-count-badge">
-                  {selectedUsers.length}명 선택됨
-                </div>
-              )}
-              <div className="move-buttons">
+              <div
+                className="move-buttons"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => moveSelectedToABGroup("A")}
@@ -696,6 +653,14 @@ const DrawCreateModal: React.FC<Props> = ({
                   className="btn-move-group btn-move-waiting"
                 >
                   대기로 이동
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddGuest}
+                  disabled={addingGuest}
+                  className="btn-move-group"
+                >
+                  {addingGuest ? "추가 중..." : "게스트 추가"}
                 </button>
               </div>
 
@@ -807,12 +772,15 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* SEED 타입: 시드/일반 분할 */}
           {drawType === "SEED" && (
             <>
-              {selectedUsers.length > 0 && (
-                <div className="selected-count-badge">
-                  {selectedUsers.length}명 선택됨
-                </div>
-              )}
-              <div className="move-buttons">
+              <div
+                className="move-buttons"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => moveSelectedToSeedGroup("SEED")}
@@ -836,6 +804,14 @@ const DrawCreateModal: React.FC<Props> = ({
                   className="btn-move-group btn-move-waiting"
                 >
                   대기로 이동
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddGuest}
+                  disabled={addingGuest}
+                  className="btn-move-group"
+                >
+                  {addingGuest ? "추가 중..." : "게스트 추가"}
                 </button>
               </div>
 
@@ -950,60 +926,7 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* 대진 생성 결과 */}
           {drawResult && (
             <div className="draw-result-section">
-              <div className="draw-games-list">
-                {(() => {
-                  // 라운드별로 그룹화
-                  const gamesByRound: {
-                    [round: number]: typeof drawResult.games;
-                  } = {};
-                  drawResult.games.forEach((game) => {
-                    if (!gamesByRound[game.roundNo]) {
-                      gamesByRound[game.roundNo] = [];
-                    }
-                    gamesByRound[game.roundNo].push(game);
-                  });
-
-                  // 라운드 순서대로 정렬
-                  const sortedRounds = Object.keys(gamesByRound)
-                    .map(Number)
-                    .sort((a, b) => a - b);
-
-                  return sortedRounds.map((round) => (
-                    <div key={round} className="round-group">
-                      <div className="round-header">
-                        <span className="round-indicator">라운드 {round}</span>
-                      </div>
-                      <div className="round-games">
-                        {gamesByRound[round].map((game) => {
-                          const teamANames = game.teamA.join(", ");
-                          const teamBNames = game.teamB.join(", ");
-
-                          return (
-                            <div key={game.gameNo} className="game-row">
-                              <span className="game-number">
-                                게임{game.gameNo}
-                              </span>
-                              <div className="game-content">
-                                <div className="team-a-section">
-                                  <span className="team-a-names">
-                                    {teamANames}
-                                  </span>
-                                </div>
-                                <span className="game-separator">:</span>
-                                <div className="team-b-section">
-                                  <span className="team-b-names">
-                                    {teamBNames}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
+              <DrawGamesList games={drawResult.games} />
             </div>
           )}
 

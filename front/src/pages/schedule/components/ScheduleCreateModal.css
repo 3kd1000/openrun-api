@@ -1,72 +1,84 @@
+/**
+ * ScheduleCreateModal Styles
+ * CSS 토큰 적용, !important 제거
+ * 기존 클래스 이름 유지 (호환성)
+ */
+
+/* ========== 모달 오버레이 ========== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, var(--opacity-overlay));
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  padding: 20px;
+  z-index: var(--z-modal-overlay);
+  padding: var(--space-l);
   /* 모바일 웹브라우저 safe area 고려 */
-  padding-top: max(20px, env(safe-area-inset-top, 0px));
-  padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
-  padding-left: max(20px, env(safe-area-inset-left, 0px));
-  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  padding-top: max(var(--space-l), env(safe-area-inset-top, 0px));
+  padding-bottom: max(var(--space-l), env(safe-area-inset-bottom, 0px));
+  padding-left: max(var(--space-l), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--space-l), env(safe-area-inset-right, 0px));
 }
 
 /* 모바일에서는 상단 정렬로 변경하여 Title이 잘리지 않도록 */
 @media (max-width: 768px) {
   .modal-overlay {
     align-items: flex-start;
-    padding-top: max(40px, calc(env(safe-area-inset-top, 0px) + 20px));
-    padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+    padding-top: max(40px, calc(env(safe-area-inset-top, 0px) + var(--space-l)));
+    padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + var(--space-l)));
     overflow-y: auto;
   }
 }
 
+/* ========== 모달 컨텐츠 ========== */
 .modal-content {
-  background: #ffffff;
-  border-radius: 12px;
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  color: #212529; /* 명시적인 텍스트 색상 */
+  box-shadow: var(--shadow-xl);
+  color: var(--color-text-primary);
 }
 
 /* 모바일에서 모달 높이 조정 */
 @media (max-width: 768px) {
   .modal-content {
-    max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px);
+    max-height: calc(
+      100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px
+    );
     margin-top: 0;
-    margin-bottom: 20px;
+    margin-bottom: var(--space-l);
   }
 }
 
+/* ========== 모달 헤더 ========== */
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: var(--space-l);
+  border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #212529; /* 명시적인 텍스트 색상 - 다크테마에서도 보이도록 */
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
+/* ========== 닫기 버튼 ========== */
 .btn-close {
   background: none;
   border: none;
-  font-size: 28px;
-  color: #666;
+  font-size: var(--font-size-3xl);
+  color: var(--color-text-tertiary);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -74,138 +86,143 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: var(--radius-s);
+  transition: background-color var(--transition-base);
 }
 
 .btn-close:hover {
-  background-color: #f0f0f0;
+  background-color: var(--color-bg-tertiary);
 }
 
+/* ========== 폼 컨테이너 ========== */
 .modal-content form {
-  padding: 20px;
+  padding: var(--space-l);
 }
 
+/* ========== 에러 메시지 ========== */
 .error-message {
-  background-color: #ffebee;
-  color: #d32f2f;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  font-size: 14px;
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-text);
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  margin-bottom: var(--space-l);
+  font-size: var(--font-size-base);
 }
 
+/* ========== 폼 레이아웃 ========== */
 .form-row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-m);
+  margin-bottom: var(--space-l);
 }
 
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-l);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color 0.2s;
+  padding: 10px var(--space-m);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-base);
+  transition: border-color var(--transition-base);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-border-focus);
 }
 
 .form-group textarea {
   resize: vertical;
 }
 
+/* ========== 모달 액션 버튼 ========== */
 .modal-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
+  gap: var(--space-m);
+  margin-top: var(--space-xl);
 }
 
 .btn-secondary,
 .btn-primary {
   flex: 1;
-  padding: 12px 20px;
+  padding: var(--space-m) var(--space-l);
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-base);
 }
 
 .btn-secondary {
-  background-color: #f5f5f5;
-  color: #666;
+  background-color: var(--color-bg-disabled);
+  color: var(--color-text-tertiary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #e0e0e0;
+  background-color: var(--color-bg-tertiary);
 }
 
 .btn-primary {
-  background-color: #007bff;
+  background-color: var(--color-primary);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--color-primary-hover);
 }
 
 .btn-secondary:disabled,
 .btn-primary:disabled {
-  opacity: 0.5;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 
-/* 다크테마 대응 - 브라우저 다크모드 설정 무시하고 항상 밝은 배경 유지 */
+/* ========== 다크테마 대응 ========== */
+/* 브라우저 다크모드 설정 무시하고 항상 밝은 배경 유지 */
 @media (prefers-color-scheme: dark) {
   .modal-content {
-    background: #ffffff !important;
-    color: #212529 !important;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
   }
 
   .modal-header {
-    background: #ffffff !important;
+    background: var(--color-bg-primary);
   }
 
   .modal-header h2 {
-    color: #212529 !important;
+    color: var(--color-text-primary);
   }
 
   .form-group label {
-    color: #333 !important;
+    color: var(--color-text-secondary);
   }
 
   .form-group input,
   .form-group select,
   .form-group textarea {
-    background: #ffffff !important;
-    color: #212529 !important;
-    border-color: #ddd !important;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
   }
 
   .btn-close {
-    color: #666 !important;
+    color: var(--color-text-tertiary);
   }
 }

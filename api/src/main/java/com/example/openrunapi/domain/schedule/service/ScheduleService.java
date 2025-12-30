@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,8 +41,8 @@ public class ScheduleService {
      */
     @Transactional
     public ScheduleResponse createSchedule(CreateScheduleRequest request) {
-        // 과거 날짜 체크
-        if (request.getScheduledAt().isBefore(LocalDateTime.now())) {
+        // 과거 날짜 체크 (KST 기준)
+        if (TimeValidationUtils.isPast(request.getScheduledAt())) {
             throw new IllegalStateException("과거 날짜에는 일정을 생성할 수 없습니다.");
         }
 
@@ -78,11 +79,11 @@ public class ScheduleService {
     }
 
     /**
-     * 특정 클럽의 향후 일정 조회 (현재 시간 이후)
+     * 특정 클럽의 향후 일정 조회 (현재 시간 이후, KST 기준)
      */
     public List<ScheduleResponse> getUpcomingSchedules(Long clubId) {
-        LocalDateTime now = LocalDateTime.now();
-        return scheduleRepository.findByClubIdAndScheduledAtAfterOrderByScheduledAtAsc(clubId, now).stream()
+        LocalDateTime nowKST = TimeValidationUtils.getNowKST();
+        return scheduleRepository.findByClubIdAndScheduledAtAfterOrderByScheduledAtAsc(clubId, nowKST).stream()
                 .map(schedule -> new ScheduleResponse(schedule, userRepository))
                 .collect(Collectors.toList());
     }
@@ -104,8 +105,8 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // 과거 날짜 체크
-        if (request.getScheduledAt().isBefore(LocalDateTime.now())) {
+        // 과거 날짜 체크 (KST 기준)
+        if (TimeValidationUtils.isPast(request.getScheduledAt())) {
             throw new IllegalStateException("과거 날짜에는 일정을 수정할 수 없습니다.");
         }
 

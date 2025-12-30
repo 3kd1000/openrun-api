@@ -16,6 +16,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.openrunapi.common.utils.TimeValidationUtils;
+import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +31,7 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
     private final UserStatisticsRepository userStatisticsRepository;
+    private final ScheduleRepository scheduleRepository;
 
     /**
      * 클럽의 모든 대진 조회 (선수 이름 검색, 기간 필터링 지원)
@@ -91,6 +94,25 @@ public class MatchService {
 
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 경기입니다: " + matchId));
+
+        // 경기 시간(playedAt)이 지난 이후에만 결과 입력 가능 (KST 기준)
+        LocalDateTime playedAt = match.getPlayedAt();
+        // playedAt이 null이면 Schedule의 scheduledAt을 사용
+        if (playedAt == null && match.getScheduleId() != null) {
+            playedAt = scheduleRepository.findById(match.getScheduleId())
+                    .map(schedule -> schedule.getScheduledAt())
+                    .orElse(null);
+        }
+        
+        if (playedAt == null) {
+            throw new IllegalStateException("경기 시간을 확인할 수 없습니다.");
+        }
+        
+        if (!TimeValidationUtils.isAfter(playedAt)) {
+            throw new IllegalStateException(
+                    String.format("경기 시간이 지난 이후에만 결과를 입력할 수 있습니다. 경기 시간: %s", playedAt)
+            );
+        }
 
         // 1. 이전 결과가 있으면 통계에서 차감
         if (match.getResult() != null && match.getTeamAScore() != null && match.getTeamBScore() != null) {
