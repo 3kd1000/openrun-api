@@ -3,14 +3,30 @@
  */
 
 /**
- * 날짜가 과거인지 확인 (시간 포함)
+ * KST(한국 표준시) 현재 시간 가져오기
+ * 백엔드가 서버 시간대(아마도 UTC 또는 서버 로컬 시간)로 비교하므로,
+ * 프론트엔드에서도 KST 기준으로 정확하게 비교하기 위해 KST 시간을 계산
+ */
+const getKSTNow = (): Date => {
+  const now = new Date();
+  // 현재 UTC 시간 가져오기
+  const utcTime = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+  // KST는 UTC+9이므로 9시간을 더함
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kstTime = utcTime + kstOffset;
+  return new Date(kstTime);
+};
+
+/**
+ * 날짜가 과거인지 확인 (시간 포함, KST 기준)
  * @param dateString ISO 8601 형식의 날짜 문자열 (예: "2025-12-31T10:00:00")
  * @returns 과거 날짜면 true, 미래/현재면 false
  */
 export const isPastDate = (dateString: string): boolean => {
   const date = new Date(dateString);
-  const now = new Date();
-  return date < now;
+  // KST 기준으로 현재 시간 가져오기 (validateParticipation과 동일한 방식)
+  const nowKST = getKSTNow();
+  return date < nowKST;
 };
 
 /**
@@ -39,21 +55,6 @@ export const validateScheduleCreation = (
   }
 
   return { isValid: true };
-};
-
-/**
- * KST(한국 표준시) 현재 시간 가져오기
- * 백엔드가 서버 시간대(아마도 UTC 또는 서버 로컬 시간)로 비교하므로,
- * 프론트엔드에서도 KST 기준으로 정확하게 비교하기 위해 KST 시간을 계산
- */
-const getKSTNow = (): Date => {
-  const now = new Date();
-  // 현재 UTC 시간 가져오기
-  const utcTime = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
-  // KST는 UTC+9이므로 9시간을 더함
-  const kstOffset = 9 * 60 * 60 * 1000;
-  const kstTime = utcTime + kstOffset;
-  return new Date(kstTime);
 };
 
 /**
