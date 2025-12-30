@@ -100,7 +100,7 @@ class WebAuthnService {
           authenticatorSelection: {
             authenticatorAttachment: "platform", // 플랫폼 인증기 (Face ID, Touch ID)
             userVerification: "required",
-            residentKey: "preferred",
+            residentKey: "required", // discoverable credentials 강제 (Android 호환성)
           },
           timeout: challenge.timeout,
           attestation: "none",
