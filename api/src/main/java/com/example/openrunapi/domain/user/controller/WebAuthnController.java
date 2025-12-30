@@ -122,31 +122,45 @@ public class WebAuthnController {
     public ResponseEntity<WebAuthnLoginResponse> loginWithWebAuthn(
             @RequestBody WebAuthnAuthenticationRequest request
     ) {
+        log.info("🔐 [WebAuthn Login Start] credentialId={}",
+                request.getCredentialId().substring(0, Math.min(20, request.getCredentialId().length())) + "...");
+
         try {
-            // WebAuthn 인증 및 사용자 조회
-            User user = webAuthnService.authenticateAndGetUser(request);
+            // 1. WebAuthn 인증 및 사용자 정보 조회
+            log.info("  └─ Step 1: WebAuthn 인증 처리 중...");
+            WebAuthnService.WebAuthnLoginDto loginDto = webAuthnService.authenticateAndGetUser(request);
+            log.info("  └─ Step 1: ✅ WebAuthn 인증 성공 (userId={})", loginDto.getUserId());
 
-            // Firebase UID 찾기 (첫 번째 OAuth Provider 사용)
-            String firebaseUid = user.getOauthProviders().stream()
-                    .findFirst()
-                    .map(UserOAuthProvider::getProviderUid)
-                    .orElseThrow(() -> new IllegalStateException("사용자의 OAuth 정보가 없습니다."));
+            // 2. Firebase Custom Token 생성
+            log.info("  └─ Step 2: Firebase Custom Token 생성 중... (firebaseUid={})", loginDto.getFirebaseUid());
+            String customToken = FirebaseAuth.getInstance().createCustomToken(loginDto.getFirebaseUid());
+            log.info("  └─ Step 2: ✅ Firebase Custom Token 생성 완료 (length={})", customToken.length());
 
-            // Firebase Custom Token 생성
-            String customToken = FirebaseAuth.getInstance().createCustomToken(firebaseUid);
-
-            log.info("WebAuthn 로그인 성공: userId={}, email={}", user.getId(), user.getEmail());
-
-            return ResponseEntity.ok(WebAuthnLoginResponse.builder()
+            // 3. 응답 DTO 생성
+            log.info("  └─ Step 3: 응답 DTO 생성 중...");
+            WebAuthnLoginResponse response = WebAuthnLoginResponse.builder()
                     .customToken(customToken)
-                    .userId(user.getId())
-                    .userName(user.getName())
-                    .email(user.getEmail())
-                    .build());
+                    .userId(loginDto.getUserId())
+                    .userName(loginDto.getUserName())
+                    .email(loginDto.getUserEmail())
+                    .build();
+            log.info("  └─ Step 3: ✅ 응답 DTO 생성 완료");
+
+            log.info("✅ [WebAuthn Login Success] userId={}, email={}", loginDto.getUserId(), loginDto.getUserEmail());
+
+            // 4. ResponseEntity 생성 및 반환
+            log.info("  └─ Step 4: ResponseEntity 반환 준비 중...");
+            ResponseEntity<WebAuthnLoginResponse> responseEntity = ResponseEntity.ok(response);
+            log.info("  └─ Step 4: ✅ ResponseEntity 생성 완료, 클라이언트에 반환 시작");
+
+            return responseEntity;
 
         } catch (FirebaseAuthException e) {
-            log.error("Firebase Custom Token 생성 실패", e);
+            log.error("❌ [WebAuthn Login Failed] Firebase Custom Token 생성 실패", e);
             throw new RuntimeException("로그인 처리 중 오류가 발생했습니다.");
+        } catch (Exception e) {
+            log.error("❌ [WebAuthn Login Failed] 예상치 못한 오류 발생", e);
+            throw new RuntimeException("로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 

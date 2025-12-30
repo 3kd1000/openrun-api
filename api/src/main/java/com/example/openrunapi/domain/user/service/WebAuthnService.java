@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.user.service;
 
 import com.example.openrunapi.domain.user.model.User;
+import com.example.openrunapi.domain.user.model.UserOAuthProvider;
 import com.example.openrunapi.domain.user.model.WebAuthnCredential;
 import com.example.openrunapi.domain.user.model.dto.*;
 import com.example.openrunapi.domain.user.repository.UserRepository;
@@ -147,9 +148,11 @@ public class WebAuthnService {
     /**
      * 로그인용 인증 - Credential ID로 사용자 찾고 인증 처리
      * OAuth 없이 WebAuthn만으로 로그인할 때 사용
+     *
+     * @return WebAuthnLoginDto - 필요한 정보만 담은 DTO (lazy loading 방지)
      */
     @Transactional
-    public User authenticateAndGetUser(WebAuthnAuthenticationRequest request) {
+    public WebAuthnLoginDto authenticateAndGetUser(WebAuthnAuthenticationRequest request) {
         WebAuthnCredential credential = credentialRepository.findByCredentialId(request.getCredentialId())
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 인증기입니다."));
 
@@ -161,10 +164,42 @@ public class WebAuthnService {
 
         User user = credential.getUser();
 
-        // oauthProviders lazy loading 강제 (Controller에서 사용하기 위해)
-        user.getOauthProviders().size();
+        // OAuth Provider 정보 조회 (트랜잭션 내에서)
+        String firebaseUid = user.getOauthProviders().stream()
+                .findFirst()
+                .map(UserOAuthProvider::getProviderUid)
+                .orElseThrow(() -> new IllegalStateException("사용자의 OAuth 정보가 없습니다."));
 
-        return user;
+        // DTO로 변환하여 반환 (엔티티 detach)
+        return new WebAuthnLoginDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                firebaseUid
+        );
+    }
+
+    /**
+     * WebAuthn 로그인 결과 DTO (내부용)
+     * Controller에 User 엔티티를 직접 전달하지 않아 lazy loading 문제 방지
+     */
+    public static class WebAuthnLoginDto {
+        private final Long userId;
+        private final String userName;
+        private final String userEmail;
+        private final String firebaseUid;
+
+        public WebAuthnLoginDto(Long userId, String userName, String userEmail, String firebaseUid) {
+            this.userId = userId;
+            this.userName = userName;
+            this.userEmail = userEmail;
+            this.firebaseUid = firebaseUid;
+        }
+
+        public Long getUserId() { return userId; }
+        public String getUserName() { return userName; }
+        public String getUserEmail() { return userEmail; }
+        public String getFirebaseUid() { return firebaseUid; }
     }
 
     /**
