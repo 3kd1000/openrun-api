@@ -255,29 +255,7 @@
   box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
-.draw-warning {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-  padding: var(--space-xs) 10px;
-  background-color: var(--color-warning);
-  color: white;
-  border-radius: var(--radius-s);
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-semibold);
-  margin-bottom: var(--space-s);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
+/* 기존 draw-warning 제거 - 새로운 뱃지 구조로 변경 */
 
 /* 유효한 대진 스타일 */
 .schedule-page .schedule-card.has-valid-draw {
@@ -288,18 +266,9 @@
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
-.draw-success {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xxs);
-  padding: var(--space-xs) 10px;
-  background-color: var(--color-success);
-  color: white;
-  border-radius: var(--radius-s);
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-semibold);
-  margin-bottom: var(--space-s);
-}
+/* 기존 draw-success 제거 - 새로운 뱃지 구조로 변경 */
+
+/* 기존 btn-draw-view 제거 - 새로운 뱃지 구조로 변경 */
 
 /* ========== 일정 정보 ========== */
 .schedule-page .schedule-info h3 {
@@ -308,52 +277,141 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.schedule-reserved-by {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.schedule-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-s);
+  flex-wrap: nowrap;
+}
+
+.schedule-bottom-row > * {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+.schedule-details {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-details > * {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.schedule-cost {
+  white-space: nowrap;
+}
+
+.schedule-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-draw-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.draw-badge {
+  padding: var(--space-xxs) var(--space-xs);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-xxs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.draw-badge-valid {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: var(--border-width-thin) solid var(--color-success);
+}
+
+.draw-badge-invalid {
+  background: var(--color-warning-light);
+  color: var(--color-warning-text);
+  border: var(--border-width-thin) dashed var(--color-warning);
+}
+
+.draw-badge-view {
+  background: var(--color-primary);
+  color: white;
+  border: var(--border-width-thin) solid var(--color-primary);
+}
+
+.draw-badge-view:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs);
+}
+
+.draw-badge-view:active {
+  transform: translateY(0);
+}
+
 .schedule-page .schedule-info p {
   margin: var(--space-xxs) 0;
   font-size: var(--font-size-s);
   color: var(--color-text-tertiary);
 }
 
+.schedule-meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  margin-bottom: var(--space-s);
+  flex-wrap: wrap;
+}
+
+.schedule-meta-row > * {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 0;
+}
+
 .schedule-time {
-  color: var(--color-primary);
-  font-weight: var(--font-weight-medium);
+  /* meta-row의 공통 스타일 상속 */
 }
 
 .schedule-participants {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--space-xs);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
 }
 
-.schedule-participants .stat-confirmed {
-  color: var(--color-success);
-  font-weight: var(--font-weight-semibold);
-}
-
-.schedule-participants .stat-total {
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
-}
-
+.schedule-participants .stat-confirmed,
+.schedule-participants .stat-total,
 .schedule-participants .stat-divider {
-  color: var(--color-border-tertiary);
-  font-weight: var(--font-weight-light);
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
-.schedule-cost {
-  color: var(--color-danger);
-  font-weight: var(--font-weight-medium);
-}
-
-.schedule-description {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-s);
-  margin-top: var(--space-s);
-  line-height: var(--line-height-normal);
-}
+/* schedule-cost와 schedule-description는 schedule-bottom-row의 공통 스타일 상속 */
 
 .badge-full {
   display: inline-block;
@@ -382,13 +440,7 @@
     color: var(--color-text-tertiary);
   }
 
-  .schedule-page .schedule-time {
-    color: var(--color-primary);
-  }
-
-  .schedule-page .schedule-description {
-    color: var(--color-text-muted);
-  }
+  /* schedule-time과 schedule-description는 row의 공통 스타일 상속 */
 }
 
 /* ========== 모바일 최적화 ========== */
@@ -400,6 +452,46 @@
   .schedule-page .schedule-info h3 {
     margin: 0 0 var(--space-s) 0;
     font-size: var(--font-size-l);
+  }
+
+  .schedule-meta-row {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-s);
+    margin-bottom: var(--space-s);
+  }
+
+  .schedule-meta-row > * {
+    font-size: var(--font-size-xs);
+  }
+
+  .schedule-bottom-row {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xs);
+    flex-wrap: nowrap;
+  }
+
+  .schedule-bottom-row > * {
+    font-size: var(--font-size-xs);
+  }
+
+  .schedule-details {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xs);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .schedule-draw-badges {
+    flex-shrink: 0;
+    justify-content: flex-end;
+  }
+
+  .draw-badge {
+    font-size: 9px;
+    padding: 2px var(--space-xxs);
   }
 
   .schedule-page .schedule-info p {

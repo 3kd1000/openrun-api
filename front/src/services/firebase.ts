@@ -50,14 +50,20 @@ export const setLoginExpiry = (autoLoginEnabled: boolean = true) => {
     expiryDate.setDate(expiryDate.getDate() + AUTO_LOGIN_DAYS);
     localStorage.setItem("login_expiry", expiryDate.toISOString());
     console.log(
-      `✅ 로그인 만료 시간 설정 (슬라이딩 30일): ${expiryDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`
+      `✅ 로그인 만료 시간 설정 (슬라이딩 30일): ${expiryDate.toLocaleString(
+        "ko-KR",
+        { timeZone: "Asia/Seoul" }
+      )}`
     );
   } else {
     // 절대 만료 방식: 최초 로그인 시각 기준 1시간 고정
     expiryDate.setHours(expiryDate.getHours() + SHORT_LOGIN_HOURS);
     localStorage.setItem("login_expiry", expiryDate.toISOString());
     console.log(
-      `✅ 로그인 만료 시간 설정 (절대 1시간): ${expiryDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`
+      `✅ 로그인 만료 시간 설정 (절대 1시간): ${expiryDate.toLocaleString(
+        "ko-KR",
+        { timeZone: "Asia/Seoul" }
+      )}`
     );
   }
 };
@@ -77,7 +83,9 @@ export const isLoginExpired = (): boolean => {
 
   if (now > expiryDate) {
     console.warn(
-      `⏰ 로그인 세션 만료: ${expiryDate.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} < 현재 ${now.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`
+      `⏰ 로그인 세션 만료: ${expiryDate.toLocaleString("ko-KR", {
+        timeZone: "Asia/Seoul",
+      })} < 현재 ${now.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`
     );
     return true;
   }
@@ -104,7 +112,9 @@ export const clearLoginSession = () => {
  * Firebase 인증 상태 변화 감지 및 자동 토큰 갱신
  * 앱 시작 시 한 번만 호출하면 됩니다 (App.tsx에서 호출)
  */
-export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
+export const setupAuthListener = (
+  onTokenRefresh?: (token: string) => void
+): (() => void) => {
   onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
       // 세션 만료 체크
@@ -124,7 +134,9 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         localStorage.setItem("firebase_uid", user.uid);
 
         // 토큰 갱신 시간 저장 (디버깅용)
-        const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+        const refreshTime = new Date().toLocaleString("ko-KR", {
+          timeZone: "Asia/Seoul",
+        });
         localStorage.setItem("token_last_refresh", refreshTime);
 
         // 자동 로그인 설정 확인
@@ -134,9 +146,15 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         // 슬라이딩 윈도우: 자동 로그인 활성화 시에만 만료 시간 갱신
         if (autoLoginEnabled) {
           setLoginExpiry(true);
-          console.log(`✅ Firebase 토큰 자동 갱신 + 만료 시간 연장 [${refreshTime}]:`, user.email);
+          console.log(
+            `✅ Firebase 토큰 자동 갱신 + 만료 시간 연장 [${refreshTime}]:`,
+            user.email
+          );
         } else {
-          console.log(`✅ Firebase 토큰 자동 갱신 (만료 시간 유지) [${refreshTime}]:`, user.email);
+          console.log(
+            `✅ Firebase 토큰 자동 갱신 (만료 시간 유지) [${refreshTime}]:`,
+            user.email
+          );
         }
 
         // 콜백이 있으면 실행 (필요시 axiosInstance 헤더 업데이트 등)
@@ -152,8 +170,8 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
     }
   });
 
-  // 토큰 자동 갱신 (55분마다 - 만료 5분 전)
-  setInterval(async () => {
+  // 토큰 갱신 함수 (재사용)
+  const refreshToken = async () => {
     // 세션 만료 체크
     if (isLoginExpired()) {
       console.warn(`⏰ 로그인 세션 만료 감지 (자동 갱신 중) → 로그아웃`);
@@ -168,7 +186,9 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         localStorage.setItem("firebase_token", idToken);
 
         // 토큰 갱신 시간 저장 (디버깅용)
-        const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+        const refreshTime = new Date().toLocaleString("ko-KR", {
+          timeZone: "Asia/Seoul",
+        });
         localStorage.setItem("token_last_refresh", refreshTime);
 
         // 자동 로그인 설정 확인
@@ -178,9 +198,13 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         // 슬라이딩 윈도우: 자동 로그인 활성화 시 만료 시간도 갱신
         if (autoLoginEnabled) {
           setLoginExpiry(true);
-          console.log(`🔄 Firebase 토큰 자동 갱신 + 만료 시간 연장 (55분 주기) [${refreshTime}]`);
+          console.log(
+            `🔄 Firebase 토큰 자동 갱신 + 만료 시간 연장 [${refreshTime}]`
+          );
         } else {
-          console.log(`🔄 Firebase 토큰 자동 갱신 (55분 주기, 만료 시간 유지) [${refreshTime}]`);
+          console.log(
+            `🔄 Firebase 토큰 자동 갱신 (만료 시간 유지) [${refreshTime}]`
+          );
         }
 
         if (onTokenRefresh) {
@@ -190,7 +214,58 @@ export const setupAuthListener = (onTokenRefresh?: (token: string) => void) => {
         console.error("❌ 토큰 자동 갱신 실패:", error);
       }
     }
-  }, 55 * 60 * 1000); // 55분
+  };
+
+  // 토큰 자동 갱신 (50분마다 - 더 짧은 주기로 변경)
+  const intervalId = setInterval(refreshToken, 50 * 60 * 1000); // 50분
+
+  // 탭이 활성화될 때 토큰 갱신 (visibility API)
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      // 탭이 다시 활성화되면 토큰 갱신
+      refreshToken();
+    }
+  };
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  // 사용자 활동 감지 (클릭, 스크롤 등) - 마지막 활동 후 지정된 시간 경과 시 토큰 갱신
+  let lastActivityTime = Date.now();
+
+  const updateActivityTime = () => {
+    lastActivityTime = Date.now();
+  };
+
+  // 사용자 활동 이벤트 리스너
+  const events = [
+    "mousedown",
+    "mousemove",
+    "keypress",
+    "scroll",
+    "touchstart",
+    "click",
+  ];
+  events.forEach((event) => {
+    document.addEventListener(event, updateActivityTime, { passive: true });
+  });
+
+  // 활동 체크 (5분마다)
+  const activityCheckInterval = setInterval(() => {
+    const timeSinceLastActivity = Date.now() - lastActivityTime;
+    // 마지막 활동 후 50분이 지났고, 탭이 활성화되어 있으면 토큰 갱신
+    if (timeSinceLastActivity >= 50 * 60 * 1000 && !document.hidden) {
+      refreshToken();
+    }
+  }, 5 * 60 * 1000); // 5분마다 체크
+
+  // 정리 함수 반환 (필요시)
+  return () => {
+    clearInterval(intervalId);
+    clearInterval(activityCheckInterval);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    events.forEach((event) => {
+      document.removeEventListener(event, updateActivityTime);
+    });
+  };
 };
 
 // Google 로그인 함수 (user 정보도 함께 반환)

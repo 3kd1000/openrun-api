@@ -14,7 +14,42 @@
 
 /* ========== 헤더 ========== */
 .scoreboard-header {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-m);
+}
+
+/* ========== Tab Navigation ========== */
+.tab-navigation {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-m);
+  border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
+  padding-bottom: 0;
+}
+
+.tab-button {
+  padding: var(--space-xs) var(--space-m);
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-width-base) solid transparent;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: var(--transition-all);
+  margin-bottom: calc(-1 * var(--border-width-base));
+}
+
+.tab-button:hover {
+  color: var(--color-text-secondary);
+}
+
+.tab-button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tab-content {
+  min-height: 200px;
 }
 
 .scoreboard-header h1 {
@@ -286,9 +321,366 @@
   }
 }
 
+/* ========== 검색 필터 섹션 ========== */
+.filter-section {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  padding: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.search-form {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-s);
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--space-xs) var(--space-s);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+}
+
+.search-button,
+.reset-button {
+  padding: var(--space-xs) var(--space-m);
+  border: none;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.search-button {
+  background: var(--color-success);
+  color: white;
+}
+
+.search-button:hover {
+  background: var(--color-success-hover);
+}
+
+.reset-button {
+  background: var(--color-bg-disabled);
+  color: var(--color-text-tertiary);
+}
+
+.reset-button:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.date-range-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.date-range-filter label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.date-range-filter select {
+  padding: var(--space-xs) var(--space-s);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+/* ========== 매치 목록 ========== */
+.match-list-container {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: 200px;
+}
+
+.match-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  max-width: 100%;
+  margin: 0;
+}
+
+.match-card {
+  position: relative;
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  padding: var(--space-l);
+  background: var(--color-bg-primary);
+  transition: var(--transition-base);
+}
+
+.match-card:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-secondary);
+}
+
+.match-card.future-match {
+  background: var(--color-bg-primary);
+  border-color: var(--color-primary);
+}
+
+.match-card.future-match:hover {
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-bg);
+}
+
+.match-card.completed-match {
+  background: var(--color-bg-primary);
+  border-color: var(--color-success);
+}
+
+.match-card.completed-match:hover {
+  border-color: var(--color-success-hover);
+  background: var(--color-success-bg);
+}
+
+.match-card.pending-match {
+  background: var(--color-bg-primary);
+  border-color: var(--color-warning);
+}
+
+.match-card.pending-match:hover {
+  border-color: var(--color-warning-hover);
+  background: var(--color-warning-bg);
+}
+
+.match-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-s);
+  padding-bottom: var(--space-s);
+  border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
+}
+
+.match-date {
+  font-size: var(--font-size-s);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  flex: 1;
+}
+
+.match-status-badge {
+  padding: var(--space-xxs) var(--space-xs);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  margin-left: var(--space-xs);
+}
+
+.match-status-badge.future {
+  background: var(--color-primary);
+  color: white;
+}
+
+.match-status-badge.completed {
+  background: var(--color-success);
+  color: white;
+}
+
+.match-teams-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: 0;
+  padding: var(--space-s);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+}
+
+.team-inline {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--color-bg-primary);
+  transition: var(--transition-base);
+}
+
+.team-inline.winner {
+  background: var(--color-success-bg);
+  border: var(--border-width-thin) solid var(--color-success);
+}
+
+.team-inline.loser {
+  background: var(--color-bg-tertiary);
+  opacity: 0.7;
+}
+
+.players-inline {
+  flex: 1;
+  font-size: var(--font-size-s);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.score-inline {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-xs);
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.vs-inline {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  padding: 0 var(--space-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-m);
+}
+
+.empty-state h3 {
+  font-size: var(--font-size-l);
+  margin: 0 0 var(--space-s) 0;
+  color: var(--color-text-primary);
+}
+
 /* ========== 데스크톱: 모바일 패딩 제거 ========== */
 @media (min-width: 768px) {
   .scoreboard-page {
     padding-bottom: var(--space-l);
+  }
+}
+
+/* ========== 모바일 최적화 (탭 및 검색) ========== */
+@media (max-width: 768px) {
+  .tab-navigation {
+    gap: var(--space-xxs);
+    margin-bottom: var(--space-s);
+  }
+
+  .tab-button {
+    flex: 1;
+    padding: var(--space-xxs) var(--space-xs);
+    font-size: var(--font-size-xs);
+  }
+
+  .filter-section {
+    padding: var(--space-s);
+    margin-bottom: var(--space-s);
+  }
+
+  .search-form {
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xs);
+  }
+
+  .search-input {
+    width: 100%;
+    padding: var(--space-xxs) var(--space-xs);
+    font-size: var(--font-size-xs);
+  }
+
+  .search-button,
+  .reset-button {
+    width: 100%;
+    padding: var(--space-xxs) var(--space-s);
+    font-size: var(--font-size-xs);
+  }
+
+  .date-range-filter {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xxs);
+  }
+
+  .date-range-filter label {
+    font-size: var(--font-size-xs);
+  }
+
+  .date-range-filter select {
+    font-size: var(--font-size-xs);
+  }
+
+  .match-list-container {
+    padding: 0;
+  }
+
+  .match-list {
+    gap: var(--space-xs);
+  }
+
+  .match-card {
+    padding: var(--space-m);
+  }
+
+  .match-header-row {
+    margin-bottom: var(--space-xs);
+    padding-bottom: var(--space-xs);
+  }
+
+  .match-date {
+    font-size: var(--font-size-xs);
+    margin: 0;
+  }
+
+  .match-status-badge {
+    font-size: var(--font-size-xs);
+    padding: var(--space-xxs) var(--space-xs);
+    margin-left: var(--space-xs);
+  }
+
+  .match-teams-inline {
+    gap: var(--space-xxs);
+    padding: var(--space-xs);
+  }
+
+  .team-inline {
+    padding: var(--space-xxs) var(--space-xs);
+    gap: var(--space-xxs);
+    min-width: 0;
+  }
+
+  .players-inline {
+    font-size: var(--font-size-xs);
+    min-width: 0;
+  }
+
+  .score-inline {
+    font-size: var(--font-size-xs);
+    padding: 0 var(--space-xxs);
+    min-width: 20px;
+  }
+
+  .vs-inline {
+    font-size: var(--font-size-xxs);
+    padding: 0 var(--space-xxs);
+    flex-shrink: 0;
+  }
+
+  .empty-icon {
+    font-size: 36px;
+  }
+
+  .empty-state h3 {
+    font-size: var(--font-size-base);
   }
 }
