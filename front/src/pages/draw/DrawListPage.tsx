@@ -28,7 +28,7 @@ const DrawListPage: React.FC = () => {
   // 검색 필터 (Tab 2)
   const [playerName, setPlayerName] = useState("");
   const [dateRange, setDateRange] = useState<
-    "all" | "1week" | "1month" | "3months"
+    "all" | "3months" | "6months" | "1year"
   >("all");
 
   // DrawViewModal state
@@ -99,17 +99,17 @@ const DrawListPage: React.FC = () => {
         let startDate: string | undefined;
         const endDate = new Date().toISOString();
 
-        if (dateRange === "1week") {
+        if (dateRange === "3months") {
           const date = new Date();
-          date.setDate(date.getDate() - 7);
+          date.setDate(date.getMonth() - 3);
           startDate = date.toISOString();
-        } else if (dateRange === "1month") {
+        } else if (dateRange === "6months") {
           const date = new Date();
-          date.setMonth(date.getMonth() - 1);
+          date.setMonth(date.getMonth() - 6);
           startDate = date.toISOString();
-        } else if (dateRange === "3months") {
+        } else if (dateRange === "1year") {
           const date = new Date();
-          date.setMonth(date.getMonth() - 3);
+          date.setFullYear(date.getFullYear() - 1);
           startDate = date.toISOString();
         }
 
@@ -261,45 +261,59 @@ const DrawListPage: React.FC = () => {
               {schedules.map((schedule) => (
                 <div
                   key={schedule.id}
-                  className="schedule-card"
+                  className="draw-card"
                   onClick={() => handleScheduleClick(schedule)}
                 >
-                  <div className="schedule-header">
-                    <h3 className="schedule-court">{schedule.courtName}</h3>
-                    <span
-                      className={`draw-type-badge ${schedule.drawType?.toLowerCase()}`}
-                    >
-                      {schedule.drawType}
-                    </span>
-                  </div>
-                  <div className="schedule-datetime">
-                    📅{" "}
-                    {format(
-                      new Date(schedule.scheduledAt),
-                      "yyyy년 M월 d일 (E) HH:mm",
-                      { locale: ko }
-                    )}
-                  </div>
-                  <div className="schedule-info">
-                    <span className="info-item">
-                      👥 {schedule.currentParticipants}/{schedule.maxCapacity}명
-                    </span>
-                    {schedule.cost && (
-                      <span className="info-item">
-                        💰 {schedule.cost.toLocaleString()}원
+                  <div className="draw-card-top">
+                    <div className="draw-card-title-row">
+                      <div className="draw-card-court-wrapper">
+                        <span className="draw-card-court">
+                          {schedule.courtName}
+                        </span>
+                        {schedule.reservedByUserName && (
+                          <span className="draw-card-reserver">
+                            예약자: {schedule.reservedByUserName}
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        className={`draw-card-type ${schedule.drawType?.toLowerCase()}`}
+                      >
+                        {schedule.drawType}
                       </span>
-                    )}
-                  </div>
-                  <div
-                    className={`draw-validity ${
-                      schedule.isDrawValid ? "valid" : "invalid"
-                    }`}
-                  >
-                    {schedule.isDrawValid ? (
-                      <>✓ 유효한 대진표</>
-                    ) : (
-                      <>⚠️ 재생성 필요</>
-                    )}
+                    </div>
+                    <div className="draw-card-meta">
+                      <span className="draw-card-date">
+                        📅{" "}
+                        {format(
+                          new Date(schedule.scheduledAt),
+                          "yyyy년 M월 d일 (E) HH:mm",
+                          { locale: ko }
+                        )}
+                      </span>
+                    </div>
+                    <div className="draw-card-info">
+                      <span className="draw-card-participants">
+                        👥 {schedule.currentParticipants}/{schedule.maxCapacity}
+                        명
+                      </span>
+                      {schedule.cost && (
+                        <span className="draw-card-cost">
+                          ₩ {schedule.cost.toLocaleString()}
+                        </span>
+                      )}
+                      <div
+                        className={`draw-card-status ${
+                          schedule.isDrawValid ? "valid" : "invalid"
+                        }`}
+                      >
+                        {schedule.isDrawValid ? (
+                          <>✓ 유효</>
+                        ) : (
+                          <>⚠️ 재생성 필요</>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -339,14 +353,14 @@ const DrawListPage: React.FC = () => {
                 value={dateRange}
                 onChange={(e) =>
                   setDateRange(
-                    e.target.value as "all" | "1week" | "1month" | "3months"
+                    e.target.value as "all" | "3months" | "6months" | "1year"
                   )
                 }
               >
                 <option value="all">전체</option>
-                <option value="1week">1주일</option>
-                <option value="1month">1개월</option>
                 <option value="3months">3개월</option>
+                <option value="6months">6개월</option>
+                <option value="1year">1년</option>
               </select>
             </div>
           </div>

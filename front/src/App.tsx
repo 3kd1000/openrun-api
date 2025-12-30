@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import DrawGenerationPage from "./pages/draw/DrawGenerationPage";
-import DrawListPage from "./pages/draw/DrawListPage";
 import ScheduleListPage from "./pages/schedule/ScheduleListPage";
+import ComingSoonPage from "./pages/ComingSoonPage";
+import MorePage from "./pages/MorePage";
 import ScoreboardPage from "./pages/scoreboard/ScoreboardPage";
 import AuthTestPage from "./pages/AuthTestPage";
 import LoginPage from "./pages/LoginPage";
@@ -49,21 +50,14 @@ function App() {
             <Route path="/terms" element={<TermsOfServicePage />} />
             <Route path="/clubs" element={<ClubListPage />} />
             <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
-
+            <Route path="/home" element={<ComingSoonPage title="홈" />} />
+            <Route path="/more" element={<MorePage />} />
             {/* Protected 페이지 (로그인 필수) */}
             <Route
               path="/schedules"
               element={
                 <ProtectedRoute>
                   <ScheduleListPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/draws"
-              element={
-                <ProtectedRoute>
-                  <DrawListPage />
                 </ProtectedRoute>
               }
             />

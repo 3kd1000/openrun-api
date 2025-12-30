@@ -85,6 +85,34 @@ const ScheduleDetailModal: React.FC<Props> = ({
     fetchClubMembers();
   }, [isEditMode]); // isEditMode가 true될 때 조회
 
+  // 예약자 정보 초기화 (clubMembers와 schedule이 모두 로드된 후)
+  useEffect(() => {
+    if (!schedule || !isEditMode) return;
+
+    if (schedule.reservedByUserId && clubMembers.length > 0) {
+      const reservedUser = clubMembers.find(
+        (m) => m.id === schedule.reservedByUserId
+      );
+      if (reservedUser) {
+        setSelectedReservedBy(reservedUser);
+        setSearchQuery(reservedUser.name); // 검색 필드에 예약자 이름 표시
+      } else {
+        // clubMembers에 없지만 reservedByUserName이 있으면 이름만 표시
+        if (schedule.reservedByUserName) {
+          setSearchQuery(schedule.reservedByUserName);
+        }
+        setSelectedReservedBy(null);
+      }
+    } else if (schedule.reservedByUserName && !schedule.reservedByUserId) {
+      // reservedByUserId는 없지만 이름만 있는 경우
+      setSearchQuery(schedule.reservedByUserName);
+      setSelectedReservedBy(null);
+    } else {
+      setSelectedReservedBy(null);
+      setSearchQuery("");
+    }
+  }, [schedule, clubMembers, isEditMode]);
+
   // 초기 날짜 및 시간 분리
   const scheduledAtDate = schedule
     ? new Date(schedule.scheduledAt)
@@ -147,15 +175,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
         reservedByUserId: scheduleData.reservedByUserId || undefined,
       });
 
-      // 예약자 정보 초기화
-      if (scheduleData.reservedByUserId) {
-        const reservedUser = clubMembers.find(
-          (m) => m.id === scheduleData.reservedByUserId
-        );
-        setSelectedReservedBy(reservedUser || null);
-      } else {
-        setSelectedReservedBy(null);
-      }
+      // 예약자 정보 초기화는 clubMembers가 로드된 후에 수행 (아래 useEffect에서 처리)
 
       // 참가신청 시작시간 초기화
       if (scheduleData.participationStartAt) {
@@ -429,6 +449,22 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </p>
             </div>
 
+            {schedule.cost !== null &&
+              schedule.cost !== undefined &&
+              schedule.cost !== 0 && (
+                <div className="detail-item">
+                  <label>참가 비용</label>
+                  <p>{schedule.cost.toLocaleString()}원</p>
+                </div>
+              )}
+
+            {schedule.description && (
+              <div className="detail-item">
+                <label>설명</label>
+                <p className="detail-description">{schedule.description}</p>
+              </div>
+            )}
+
             <div className="detail-item">
               <label>참가 현황</label>
               <div className="participant-stats">
@@ -445,22 +481,6 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 </span>
               </div>
             </div>
-
-            {schedule.cost !== null &&
-              schedule.cost !== undefined &&
-              schedule.cost !== 0 && (
-                <div className="detail-item">
-                  <label>총 비용</label>
-                  <p>{schedule.cost.toLocaleString()}원</p>
-                </div>
-              )}
-
-            {schedule.description && (
-              <div className="detail-item">
-                <label>설명</label>
-                <p className="detail-description">{schedule.description}</p>
-              </div>
-            )}
 
             {/* 대진표 상태 */}
             <div className="detail-item">
@@ -589,7 +609,11 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   const isStarted = now >= startAt;
 
                   return (
-                    <div className={`participation-start-info ${isStarted ? 'started' : 'pending'}`}>
+                    <div
+                      className={`participation-start-info ${
+                        isStarted ? "started" : "pending"
+                      }`}
+                    >
                       <p>
                         참가신청 시작 시간:{" "}
                         {format(startAt, "yyyy년 M월 d일 HH:mm")}
@@ -790,7 +814,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
             </div>
 
             <div className="form-group">
-              <label>총 비용 (선택)</label>
+              <label>참가 비용 (선택)</label>
               <input
                 type="number"
                 value={formData.cost || ""}
@@ -800,7 +824,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     cost: e.target.value ? parseInt(e.target.value) : undefined,
                   })
                 }
-                placeholder="25000"
+                placeholder="13000"
               />
             </div>
 

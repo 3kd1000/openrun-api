@@ -1,37 +1,3 @@
-/* Footer 링크 (네비게이션 바 위) */
-.navigation-footer {
-  position: fixed;
-  bottom: 68px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 8px 16px;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  z-index: 999;
-  gap: 8px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.nav-footer-link {
-  color: #888;
-  text-decoration: none;
-  font-size: 12px;
-  transition: color 0.2s;
-}
-
-.nav-footer-link:hover {
-  color: #007bff;
-}
-
-.nav-footer-separator {
-  color: #ccc;
-  font-size: 12px;
-}
-
 /* 모바일: 하단 네비게이션 (기본) */
 .navigation {
   position: fixed;
@@ -81,45 +47,10 @@
   white-space: nowrap;
 }
 
-/* 사용자 섹션 (로그아웃 버튼) */
-.nav-user-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-top: 1px solid #e0e0e0;
-  margin-top: auto;
-  gap: 4px;
-}
-
-.nav-user-name {
-  font-size: 11px;
-  color: #666;
-  font-weight: 500;
-}
-
-.nav-logout-btn {
-  padding: 4px 12px;
-  font-size: 11px;
-  background-color: #f44336;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.nav-logout-btn:hover {
-  background-color: #d32f2f;
-}
+/* 사용자 섹션은 더보기 페이지로 이동 - 스타일 제거 */
 
 /* PC: 좌측 사이드바 (>= 768px) */
 @media (min-width: 768px) {
-  .navigation-footer {
-    display: none; /* PC에서는 Footer 컴포넌트 사용 */
-  }
-
   .navigation {
     position: fixed;
     top: 0;
@@ -154,20 +85,5 @@
     font-size: 16px;
   }
 
-  .nav-user-section {
-    padding: 16px;
-    margin-top: auto;
-    width: 100%;
-    gap: 8px;
-  }
-
-  .nav-user-name {
-    font-size: 14px;
-  }
-
-  .nav-logout-btn {
-    width: 100%;
-    padding: 8px 12px;
-    font-size: 14px;
-  }
+  /* 사용자 섹션은 더보기 페이지로 이동 - 스타일 제거 */
 }

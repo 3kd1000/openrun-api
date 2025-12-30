@@ -1,21 +1,35 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import { scheduleService } from "../../services/scheduleService";
-import type { Schedule } from "../../types/schedule";
+import { participantService } from "../../services/participantService";
+import type { Schedule, Participant } from "../../types/schedule";
 import ScheduleCreateModal from "./components/ScheduleCreateModal";
 import ScheduleCalendarView from "./components/ScheduleCalendarView";
 import ScheduleDetailModal from "./components/ScheduleDetailModal";
+import DrawViewModal from "./components/DrawViewModal";
 import "./ScheduleListPage.css";
 
 type ViewMode = "calendar" | "list";
 
 const ScheduleListPage: React.FC = () => {
+  const location = useLocation();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
+  const [showDrawViewModal, setShowDrawViewModal] = useState(false);
+  const [selectedScheduleForDraw, setSelectedScheduleForDraw] =
+    useState<Schedule | null>(null);
+  const [drawParticipants, setDrawParticipants] = useState<Participant[]>([]);
+  // localStorage에서 뷰 모드 복원
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem("schedule_viewMode");
+    return (
+      saved === "calendar" || saved === "list" ? saved : "calendar"
+    ) as ViewMode;
+  });
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
     null
@@ -68,17 +82,55 @@ const ScheduleListPage: React.FC = () => {
     loadSchedules();
   }, [loadSchedules]);
 
-  // 리스트뷰에서 오늘 날짜 기준으로 스크롤
+  // 뷰 모드 변경 시 localStorage에 저장
   useEffect(() => {
-    if (viewMode === "list" && !filterDate && todayScheduleRef.current) {
-      setTimeout(() => {
-        todayScheduleRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }, 100);
+    localStorage.setItem("schedule_viewMode", viewMode);
+  }, [viewMode]);
+
+  // 리스트뷰 진입 시 오늘 날짜로 스크롤
+  useEffect(() => {
+    if (
+      viewMode === "list" &&
+      schedules.length > 0 &&
+      !filterDate &&
+      location.pathname === "/schedules"
+    ) {
+      // DOM이 렌더링될 때까지 대기 후 오늘 날짜로 스크롤
+      let attemptCount = 0;
+      const maxAttempts = 10;
+
+      const scrollToToday = () => {
+        if (todayScheduleRef.current) {
+          todayScheduleRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+          return true; // 성공
+        }
+        return false; // 아직 ref가 없음
+      };
+
+      // 여러 시점에서 시도 (DOM 렌더링 보장)
+      const tryScroll = () => {
+        attemptCount++;
+        if (!scrollToToday() && attemptCount < maxAttempts) {
+          // ref가 아직 없으면 더 기다렸다가 다시 시도
+          setTimeout(tryScroll, 100);
+        }
+      };
+
+      // 즉시 시도
+      requestAnimationFrame(() => {
+        tryScroll();
+      });
+
+      // 추가 시도 (다른 페이지에서 돌아올 때를 대비)
+      setTimeout(tryScroll, 100);
+      setTimeout(tryScroll, 300);
+      setTimeout(tryScroll, 500);
+      setTimeout(tryScroll, 800);
     }
-  }, [viewMode, schedules, filterDate]);
+  }, [viewMode, schedules.length, filterDate, location.pathname]);
 
   if (loading) {
     return (
@@ -119,6 +171,33 @@ const ScheduleListPage: React.FC = () => {
     setShowDetailModal(true);
   };
 
+  const handleDrawViewClick = async (
+    e: React.MouseEvent,
+    schedule: Schedule
+  ) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+    try {
+      const participants = await participantService.getParticipants(
+        schedule.id
+      );
+      setDrawParticipants(participants);
+      setSelectedScheduleForDraw(schedule);
+      setShowDrawViewModal(true);
+    } catch (err) {
+      console.error("참가자 조회 실패:", err);
+    }
+  };
+
+  const handleDrawViewModalClose = () => {
+    setShowDrawViewModal(false);
+    setSelectedScheduleForDraw(null);
+    setDrawParticipants([]);
+  };
+
+  const handleDrawViewModalSuccess = () => {
+    loadSchedules(); // 일정 목록 새로고침
+  };
+
   const handleClearFilter = () => {
     setFilterDate(null);
   };
@@ -155,6 +234,8 @@ const ScheduleListPage: React.FC = () => {
               onClick={() => {
                 setViewMode("calendar");
                 setFilterDate(null);
+                // 캘린더뷰로 전환 시 스크롤 위치 초기화
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
               📅 캘린더
@@ -168,7 +249,9 @@ const ScheduleListPage: React.FC = () => {
           </div>
           <button
             className="btn-create"
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setShowCreateModal(true);
+            }}
           >
             + 일정 생성
           </button>
@@ -223,49 +306,76 @@ const ScheduleListPage: React.FC = () => {
                 }`}
                 onClick={() => handleScheduleClick(schedule)}
               >
-                {hasInvalidDraw && (
-                  <div className="draw-warning">
-                    ⚠️ 대진표 무효 (참가자 변동)
-                  </div>
-                )}
-                {hasValidDraw && (
-                  <div className="draw-success">✓ 대진표 생성 완료</div>
-                )}
                 <div className="schedule-info">
-                  <h3>{schedule.courtName}</h3>
-                  {schedule.reservedByUserName && (
-                    <p className="schedule-reserved-by">
-                      예약자: {schedule.reservedByUserName}
+                  {/* 1. 코트명, 예약자명 */}
+                  <h3>
+                    코트명 : {schedule.courtName}
+                    {schedule.reservedByUserName && (
+                      <span className="schedule-reserved-by">
+                        , 예약자 : {schedule.reservedByUserName}
+                      </span>
+                    )}
+                  </h3>
+
+                  {/* 2. 날짜 및 시간, 신청인원 / 총인원 */}
+                  <div className="schedule-meta-row">
+                    <p className="schedule-time">
+                      {new Date(schedule.scheduledAt).toLocaleString("ko-KR", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </p>
-                  )}
-                  <p className="schedule-time">
-                    {new Date(schedule.scheduledAt).toLocaleString("ko-KR", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                  <div className="schedule-participants">
-                    <span className="stat-confirmed">
-                      신청 {schedule.currentParticipants}명
-                    </span>
-                    <span className="stat-divider">/</span>
-                    <span className="stat-total">
-                      총원 {schedule.maxCapacity}명
-                    </span>
+                    <div className="schedule-participants">
+                      <span className="stat-confirmed">
+                        신청 {schedule.currentParticipants}명
+                      </span>
+                      <span className="stat-divider">/</span>
+                      <span className="stat-total">
+                        총원 {schedule.maxCapacity}명
+                      </span>
+                    </div>
                   </div>
-                  {schedule.cost && (
-                    <p className="schedule-cost">
-                      {schedule.cost.toLocaleString()}원
-                    </p>
-                  )}
-                  {schedule.description && (
-                    <p className="schedule-description">
-                      {schedule.description}
-                    </p>
-                  )}
+
+                  {/* 3. 비용, 설명 + 대진표 상태/대진보기 (오른쪽) */}
+                  <div className="schedule-bottom-row">
+                    <div className="schedule-details">
+                      {schedule.cost && (
+                        <span className="schedule-cost">
+                          ₩ {schedule.cost.toLocaleString()}
+                        </span>
+                      )}
+                      {schedule.description && (
+                        <span className="schedule-description">
+                          {schedule.description.length > 30
+                            ? `${schedule.description.substring(0, 30)}...`
+                            : schedule.description}
+                        </span>
+                      )}
+                    </div>
+                    <div className="schedule-draw-badges">
+                      {hasInvalidDraw && (
+                        <span className="draw-badge draw-badge-invalid">
+                          ⚠️ 무효
+                        </span>
+                      )}
+                      {hasValidDraw && (
+                        <span className="draw-badge draw-badge-valid">
+                          ✓ 완료
+                        </span>
+                      )}
+                      {(hasValidDraw || hasInvalidDraw) && (
+                        <button
+                          className="draw-badge draw-badge-view"
+                          onClick={(e) => handleDrawViewClick(e, schedule)}
+                        >
+                          📋 보기
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             );
@@ -276,7 +386,11 @@ const ScheduleListPage: React.FC = () => {
       {showCreateModal && (
         <ScheduleCreateModal
           initialDate={
-            selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined
+            filterDate
+              ? format(filterDate, "yyyy-MM-dd")
+              : selectedDate
+              ? format(selectedDate, "yyyy-MM-dd")
+              : undefined
           }
           onClose={handleCreateModalClose}
           onSuccess={() => {
@@ -292,6 +406,15 @@ const ScheduleListPage: React.FC = () => {
           onSuccess={() => {
             loadSchedules();
           }}
+        />
+      )}
+
+      {showDrawViewModal && selectedScheduleForDraw && (
+        <DrawViewModal
+          schedule={selectedScheduleForDraw}
+          participants={drawParticipants}
+          onClose={handleDrawViewModalClose}
+          onSuccess={handleDrawViewModalSuccess}
         />
       )}
     </div>

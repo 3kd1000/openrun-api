@@ -43,7 +43,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
   const [formData, setFormData] = useState({
     clubId: 1, // TODO: 실제 클럽 ID로 변경
     courtName: "",
-    maxCapacity: 8,
+    maxCapacity: 4,
     cost: undefined as number | undefined,
     description: "",
     reservedByUserId: undefined as number | undefined,
@@ -257,7 +257,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
           </div>
 
           <div className="form-group">
-            <label>비용 (선택)</label>
+            <label>참가 비용 (선택)</label>
             <input
               type="number"
               value={formData.cost || ""}
