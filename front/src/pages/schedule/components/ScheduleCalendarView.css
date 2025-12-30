@@ -100,6 +100,12 @@
   color: var(--color-text-disabled);
 }
 
+/* 연도 이동 버튼 숨기기 (prev2, next2) - 월별 이동만 허용 */
+.calendar-view .react-calendar__navigation__prev2-button,
+.calendar-view .react-calendar__navigation__next2-button {
+  display: none;
+}
+
 /* 연도/월 label 스타일 */
 .calendar-view .react-calendar__navigation__label {
   font-size: var(--font-size-base);
