@@ -59,33 +59,58 @@ const LoginPage: React.FC = () => {
     const handleKakaoCallback = async () => {
       if (!kakaoAuthCode) return;
 
+      const debugMode = localStorage.getItem("debug_login") === "true";
+
+      console.log("🟡 [Kakao Login] Step 0: 카카오 인가 코드 감지됨, 로그인 처리 시작");
+
+      // 중복 실행 방지: 즉시 kakaoAuthCode를 null로 설정
+      const authCode = kakaoAuthCode;
+      setKakaoAuthCode(null);
+
       setLoading(true);
       setError(null);
 
       try {
         // 1. 백엔드로 인가 코드 전송 → Firebase Custom Token + isNewUser 받기
+        console.log("🟡 [Kakao Login] Step 1: 백엔드로 인가 코드 전송 중...");
         const response = await axiosInstance.post(
-          `/auth/login/kakao?code=${kakaoAuthCode}`
+          `/auth/login/kakao?code=${authCode}`
         );
         const firebaseCustomToken = response.data.firebaseCustomToken;
         const isNewUser = response.data.newUser;
+        console.log("✅ [Kakao Login] Step 1: 백엔드에서 Custom Token 받기 완료 (length:", firebaseCustomToken?.length, ")");
+        if (debugMode) alert(`Step 1 완료: Custom Token 받음`);
 
         // 2. Firebase Custom Token으로 Firebase 로그인 → ID Token 받기
+        console.log("🟡 [Kakao Login] Step 2: Firebase signInWithCustomToken 호출 중...");
         const userCredential = await signInWithCustomToken(
           auth,
           firebaseCustomToken
         );
+        console.log("✅ [Kakao Login] Step 2: Firebase 로그인 성공");
+        if (debugMode) alert(`Step 2 완료: Firebase 로그인 성공`);
+
         const idToken = await userCredential.user.getIdToken();
         const firebaseUser = userCredential.user;
+        console.log("✅ [Kakao Login] Step 2-1: Firebase ID Token 받기 완료");
 
         // 3. Firebase token을 localStorage에 저장
+        console.log("🟡 [Kakao Login] Step 3: localStorage 저장 중...");
         localStorage.setItem("firebase_token", idToken);
         localStorage.setItem("firebase_uid", firebaseUser.uid);
         const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
         localStorage.setItem("token_last_refresh", refreshTime);
+        console.log("✅ [Kakao Login] Step 3: localStorage 저장 완료");
+
+        // 3-1. axios 기본 헤더에 즉시 설정 (타이밍 이슈 방지)
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+        console.log("✅ [Kakao Login] Step 3-1: axios 기본 헤더 설정 완료");
 
         // 4. 백엔드에서 사용자 정보 조회
+        console.log("🟡 [Kakao Login] Step 4: 사용자 정보 조회 중...");
         const userInfo = await fetchUserInfo();
+        console.log("✅ [Kakao Login] Step 4: 사용자 정보 조회 완료");
+        if (debugMode) alert(`Step 4 완료: 사용자 정보 조회 완료`);
 
         // 5. 사용자 정보를 localStorage에 저장
         localStorage.setItem("user_id", userInfo.id.toString());
@@ -111,6 +136,7 @@ const LoginPage: React.FC = () => {
         // 7. 신규 사용자 판단 (백엔드에서 받은 isNewUser 사용)
         if (isNewUser) {
           console.log("🆕 신규 사용자 감지 → 프로필 설정 페이지로 이동");
+          if (debugMode) alert("Step 5: 신규 사용자 → /setup-profile로 이동");
           // token을 state로 전달 (ID Token 사용)
           navigate("/setup-profile", {
             state: {
@@ -123,27 +149,37 @@ const LoginPage: React.FC = () => {
           // WebAuthn 등록 여부 확인
           try {
             const hasWebAuthn = await webauthnService.hasWebAuthn();
+            console.log("  └─ hasWebAuthn:", hasWebAuthn, ", isSupported:", webauthnService.isSupported());
             if (!hasWebAuthn && webauthnService.isSupported()) {
               console.log("🔐 WebAuthn 미등록 → 등록 권장 모달 표시");
+              if (debugMode) alert("Step 5: WebAuthn 미등록 → 모달 표시");
               setShowWebAuthnModal(true);
             } else {
               console.log("✅ 메인 화면으로 이동");
+              if (debugMode) alert("Step 5: /schedules로 이동");
               navigate("/schedules");
             }
           } catch (error) {
             console.error("WebAuthn 등록 여부 확인 실패:", error);
+            if (debugMode) alert(`WebAuthn 확인 실패 → /schedules로 이동\n${error}`);
             // 에러가 나도 메인 화면으로 이동
             navigate("/schedules");
           }
         }
       } catch (err: unknown) {
-        console.error("카카오 로그인 실패:", err);
+        console.error("❌ [Kakao Login] 카카오 로그인 실패:", err);
+        let errorMessage = "카카오 로그인 중 오류가 발생했습니다.";
         if (err instanceof Error) {
-          setError(`카카오 로그인 실패: ${err.message}`);
-        } else {
-          setError("카카오 로그인 중 오류가 발생했습니다.");
+          errorMessage = `카카오 로그인 실패: ${err.message}`;
+        }
+        setError(errorMessage);
+
+        // 디버그 모드일 때만 상세 정보 alert
+        if (debugMode) {
+          alert(`[카카오 로그인 실패]\n${errorMessage}\n\n상세: ${JSON.stringify(err, null, 2)}`);
         }
       } finally {
+        console.log("🟡 [Kakao Login] 로그인 처리 종료");
         setLoading(false);
       }
     };
