@@ -5,7 +5,6 @@ import App from './App.tsx'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 
-// PWA Service Worker 등록
 const updateSW = registerSW({
   onNeedRefresh() {
     if (confirm('새로운 버전이 있습니다. 업데이트하시겠습니까?')) {

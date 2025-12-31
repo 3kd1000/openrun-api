@@ -231,7 +231,7 @@
 
 .my-status p {
   margin: 0;
-  font-size: var(--font-size-l);
+  font-size: var(--font-size-s);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -546,6 +546,11 @@
 
   .participation-start-info p {
     margin: 0;
+    font-size: var(--font-size-s);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .my-status p {
     font-size: var(--font-size-s);
     font-weight: var(--font-weight-semibold);
   }

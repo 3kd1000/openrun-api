@@ -8,7 +8,10 @@
 
 import React from "react";
 import type { DrawGame } from "../../services/drawService";
-import { groupGamesByRound, getSortedRounds } from "../../utils/DrawFormatUtils";
+import {
+  groupGamesByRound,
+  getSortedRounds,
+} from "../../utils/DrawFormatUtils";
 
 export interface DrawGamesListProps {
   /** 대진표 게임 목록 */

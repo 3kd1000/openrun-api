@@ -67,6 +67,7 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-text-tertiary);
   transition: var(--transition-all);
+  white-space: nowrap;
 }
 
 .toggle-btn:hover {
@@ -89,6 +90,7 @@
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   transition: background-color var(--transition-slow);
+  white-space: nowrap;
 }
 
 .btn-create:hover {
@@ -271,8 +273,12 @@
 /* 기존 btn-draw-view 제거 - 새로운 뱃지 구조로 변경 */
 
 /* ========== 일정 정보 ========== */
+.schedule-header-info {
+  margin-bottom: 10px;
+}
+
 .schedule-page .schedule-info h3 {
-  margin: 0 0 10px 0;
+  margin: 0;
   font-size: var(--font-size-l);
   font-weight: var(--font-weight-semibold);
 }
@@ -281,6 +287,12 @@
   font-size: inherit;
   font-weight: inherit;
   color: inherit;
+}
+
+/* meta-row와 bottom-row에 공통 폰트 사이즈 적용 */
+.schedule-meta-row,
+.schedule-bottom-row {
+  font-size: var(--font-size-s);
 }
 
 .schedule-bottom-row {
@@ -292,7 +304,7 @@
 }
 
 .schedule-bottom-row > * {
-  font-size: var(--font-size-s);
+  font-size: inherit;
   font-weight: var(--font-weight-normal);
   color: var(--color-text-primary);
   margin: 0;
@@ -386,7 +398,7 @@
 }
 
 .schedule-meta-row > * {
-  font-size: var(--font-size-s);
+  font-size: inherit;
   font-weight: var(--font-weight-normal);
   color: var(--color-text-primary);
   margin: 0;
@@ -443,15 +455,10 @@
   /* schedule-time과 schedule-description는 row의 공통 스타일 상속 */
 }
 
-/* ========== 모바일 최적화 ========== */
+/* ========== 모바일 최적화 (768px 이하) ========== */
 @media (max-width: 768px) {
   .schedule-page .schedule-card {
     padding: var(--space-m);
-  }
-
-  .schedule-page .schedule-info h3 {
-    margin: 0 0 var(--space-s) 0;
-    font-size: var(--font-size-l);
   }
 
   .schedule-meta-row {
@@ -461,19 +468,11 @@
     margin-bottom: var(--space-s);
   }
 
-  .schedule-meta-row > * {
-    font-size: var(--font-size-xs);
-  }
-
   .schedule-bottom-row {
     flex-direction: row;
     align-items: center;
     gap: var(--space-xs);
     flex-wrap: nowrap;
-  }
-
-  .schedule-bottom-row > * {
-    font-size: var(--font-size-xs);
   }
 
   .schedule-details {
@@ -493,9 +492,77 @@
     font-size: 9px;
     padding: 2px var(--space-xxs);
   }
+}
+
+/* ========== 미디어쿼리별 폰트 사이즈 조정 ========== */
+
+/* 데스크탑 (769px 이상) */
+@media (min-width: 769px) {
+  .schedule-page .schedule-info h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  .schedule-meta-row,
+  .schedule-bottom-row {
+    font-size: var(--font-size-base);
+  }
 
   .schedule-page .schedule-info p {
-    margin: 3px 0;
+    font-size: var(--font-size-base);
+  }
+}
+
+/* 미디어 대형 (401px ~ 768px) */
+@media (min-width: 401px) and (max-width: 768px) {
+  .schedule-page .schedule-info h3 {
+    font-size: var(--font-size-l);
+  }
+
+  .schedule-meta-row,
+  .schedule-bottom-row,
+  .schedule-page .schedule-info p,
+  .schedule-draw-badges .draw-badge {
+    font-size: var(--font-size-m);
+  }
+}
+
+/* 미디어 중형 (361px ~ 400px) */
+@media (min-width: 361px) and (max-width: 400px) {
+  .schedule-page .schedule-info h3 {
+    font-size: var(--font-size-base);
+  }
+
+  .schedule-meta-row,
+  .schedule-bottom-row,
+  .schedule-page .schedule-info p,
+  .schedule-draw-badges .draw-badge {
+    font-size: var(--font-size-m);
+  }
+}
+
+/* 미디어 소형 (360px 이하) */
+@media (max-width: 360px) {
+  .schedule-header h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .view-toggle .toggle-btn {
+    font-size: var(--font-size-xs);
+  }
+
+  .btn-create {
+    padding: 8px var(--space-s);
+    font-size: var(--font-size-xs);
+  }
+
+  .schedule-page .schedule-info h3 {
+    font-size: var(--font-size-base);
+  }
+
+  .schedule-meta-row,
+  .schedule-bottom-row,
+  .schedule-page .schedule-info p,
+  .schedule-draw-badges .draw-badge {
     font-size: var(--font-size-s);
   }
 }

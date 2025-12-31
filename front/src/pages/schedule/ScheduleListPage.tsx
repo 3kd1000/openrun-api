@@ -308,14 +308,16 @@ const ScheduleListPage: React.FC = () => {
               >
                 <div className="schedule-info">
                   {/* 1. 코트명, 예약자명 */}
-                  <h3>
-                    코트명 : {schedule.courtName}
-                    {schedule.reservedByUserName && (
-                      <span className="schedule-reserved-by">
-                        , 예약자 : {schedule.reservedByUserName}
-                      </span>
-                    )}
-                  </h3>
+                  <div className="schedule-header-info">
+                    <h3>
+                      코트명 : {schedule.courtName}
+                      {schedule.reservedByUserName && (
+                        <span className="schedule-reserved-by">
+                          , 예약자 : {schedule.reservedByUserName}
+                        </span>
+                      )}
+                    </h3>
+                  </div>
 
                   {/* 2. 날짜 및 시간, 신청인원 / 총인원 */}
                   <div className="schedule-meta-row">
