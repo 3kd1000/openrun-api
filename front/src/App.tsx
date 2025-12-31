@@ -44,7 +44,11 @@ function App() {
     <div className="App">
       {/* <DevUserSwitcher /> */}
       {shouldShowNavigation && <Navigation />}
-      <main className="App-content">
+      <main
+        className={`App-content ${
+          !shouldShowNavigation ? "no-navigation" : ""
+        }`}
+      >
         <div className="App-content-wrapper">
           <Routes>
             {/* Public 페이지 (로그인 불필요) */}

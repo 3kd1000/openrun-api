@@ -26,9 +26,13 @@
   }
 
   .App-content {
-    margin-left: var(--nav-width-desktop);
     padding-bottom: 0;
     min-height: 100vh;
+  }
+
+  /* Navigation이 있을 때만 좌측 여백 추가 */
+  .App-content:not(.no-navigation) {
+    margin-left: var(--nav-width-desktop);
   }
 
   .App-content-wrapper {
