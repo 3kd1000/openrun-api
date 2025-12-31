@@ -183,7 +183,6 @@ export const setupAuthListener = (
               autoLoginEnabled ? "30일" : "1시간"
             } 후)`
           );
-          console.log(`   → 사용자: ${user.email}`);
         } else {
           const loginExpiry = loginExpiryStr
             ? new Date(loginExpiryStr).toLocaleString("ko-KR", {
@@ -195,7 +194,6 @@ export const setupAuthListener = (
           );
           console.log(`   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`);
           console.log(`   → 로그인 세션 만료: ${loginExpiry}`);
-          console.log(`   → 사용자: ${user.email}`);
         }
 
         // 콜백이 있으면 실행 (필요시 axiosInstance 헤더 업데이트 등)
