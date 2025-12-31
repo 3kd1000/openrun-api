@@ -1,0 +1,159 @@
+.more-page {
+  padding: var(--space-l);
+  min-height: calc(100vh - 140px);
+  box-sizing: border-box;
+  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+}
+
+.more-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.more-content h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-xl) 0;
+}
+
+.user-section {
+  background: var(--color-bg-primary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  padding: var(--space-l);
+  margin-bottom: var(--space-xl);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.user-icon {
+  font-size: var(--font-size-2xl);
+}
+
+.user-name {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.logout-btn {
+  width: 100%;
+  padding: var(--space-m);
+  background-color: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.logout-btn:hover {
+  background-color: var(--color-danger-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-s);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+.more-section {
+  margin-bottom: var(--space-xl);
+}
+
+.more-section h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-m) 0;
+}
+
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  padding: var(--space-m);
+  background: var(--color-bg-primary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-s);
+  margin-bottom: var(--space-s);
+  transition: var(--transition-base);
+}
+
+.more-item:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+}
+
+.more-icon {
+  font-size: var(--font-size-xl);
+}
+
+.more-link {
+  flex: 1;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+}
+
+.more-link:hover {
+  color: var(--color-primary);
+}
+
+.coming-soon-section {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--color-text-tertiary);
+}
+
+.coming-soon-text {
+  font-size: var(--font-size-s);
+  margin: 0;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+  .more-page {
+    padding: var(--space-m);
+  }
+
+  .more-content h1 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-l);
+  }
+
+  .user-section {
+    padding: var(--space-m);
+  }
+
+  .user-name {
+    font-size: var(--font-size-base);
+  }
+
+  .logout-btn {
+    padding: var(--space-s);
+    font-size: var(--font-size-s);
+  }
+
+  .more-section h2 {
+    font-size: var(--font-size-l);
+  }
+
+  .more-item {
+    padding: var(--space-s);
+  }
+
+  .more-link {
+    font-size: var(--font-size-s);
+  }
+}
+

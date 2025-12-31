@@ -1,0 +1,126 @@
+/* Modal Size Presets */
+/* Material UI 스타일의 모달 사이즈 프리셋 시스템 */
+
+:root {
+  /* Modal Size Presets - Width */
+  --modal-width-sm: 400px;
+  --modal-width-md: 600px;
+  --modal-width-lg: 800px;
+  --modal-width-xl: 1000px;
+  --modal-width-full: 95vw;
+
+  /* Modal Size Presets - Max Height */
+  --modal-height-sm: 50vh;
+  --modal-height-md: 75vh;
+  --modal-height-lg: 85vh;
+  --modal-height-xl: 90vh;
+  --modal-height-full: 95vh;
+
+  /* 기본 모달 크기 (modal-base.css에서 사용) */
+  --modal-default-width: var(--modal-width-md);
+  --modal-default-height: var(--modal-height-lg);
+}
+
+/* 데스크톱 (768px 이상) - 더 큰 사이즈 허용 */
+@media (min-width: 768px) {
+  :root {
+    --modal-width-sm: 500px;
+    --modal-width-md: 700px;
+    --modal-width-lg: 900px;
+    --modal-width-xl: 1100px;
+
+    --modal-height-xl: 95vh;
+  }
+}
+
+/* Modal Size Modifier Classes */
+/* 사용법: <div className="modal-content modal-sm"> */
+
+.modal-content.modal-sm {
+  max-width: var(--modal-width-sm);
+  max-height: var(--modal-height-sm);
+}
+
+.modal-content.modal-md {
+  max-width: var(--modal-width-md);
+  max-height: var(--modal-height-md);
+}
+
+.modal-content.modal-lg {
+  max-width: var(--modal-width-lg);
+  max-height: var(--modal-height-lg);
+}
+
+.modal-content.modal-xl {
+  max-width: var(--modal-width-xl);
+  max-height: var(--modal-height-xl);
+}
+
+.modal-content.modal-full {
+  max-width: var(--modal-width-full);
+  max-height: var(--modal-height-full);
+}
+
+/* Nested Modal 전용 크기 (z-index와 함께 사용) */
+/* DrawViewModal, DrawCreateModal처럼 모달 위에 뜨는 모달 */
+
+.modal-content.modal-nested-md {
+  max-width: var(--modal-width-md);
+  max-height: var(--modal-height-full);
+  z-index: var(--z-nested-modal-content);
+  overflow: hidden; /* flexbox를 위해 overflow 제거 */
+}
+
+.modal-content.modal-nested-lg {
+  max-width: var(--modal-width-lg);
+  max-height: var(--modal-height-full);
+  z-index: var(--z-nested-modal-content);
+  overflow: hidden;
+}
+
+.modal-content.modal-nested-xl {
+  max-width: var(--modal-width-xl);
+  max-height: var(--modal-height-full);
+  z-index: var(--z-nested-modal-content);
+  overflow: hidden;
+}
+
+/* Nested Modal Overlay */
+.modal-overlay:has(.modal-nested-md),
+.modal-overlay:has(.modal-nested-lg),
+.modal-overlay:has(.modal-nested-xl) {
+  z-index: var(--z-nested-modal-overlay);
+  background: rgba(0, 0, 0, 0.75); /* 더 진한 배경으로 중첩임을 표시 */
+}
+
+/* 모바일 대응 (768px 이하) */
+@media (max-width: 768px) {
+  /* 모바일에서는 모든 모달이 full width에 가깝게 */
+  .modal-content.modal-sm,
+  .modal-content.modal-md,
+  .modal-content.modal-lg,
+  .modal-content.modal-xl,
+  .modal-content.modal-nested-md,
+  .modal-content.modal-nested-lg,
+  .modal-content.modal-nested-xl {
+    max-width: 95vw;
+    width: 95vw;
+  }
+
+  /* 높이는 컨텐츠에 따라 조정 */
+  .modal-content.modal-sm {
+    max-height: 60vh;
+  }
+
+  .modal-content.modal-md {
+    max-height: 80vh;
+  }
+
+  .modal-content.modal-lg,
+  .modal-content.modal-xl,
+  .modal-content.modal-nested-md,
+  .modal-content.modal-nested-lg,
+  .modal-content.modal-nested-xl {
+    max-height: 95vh;
+  }
+}

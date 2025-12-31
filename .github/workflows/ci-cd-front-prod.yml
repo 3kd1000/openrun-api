@@ -6,6 +6,7 @@ on:
     paths:
       - "front/**"
       - "Dockerfile.front"
+      - "helm/openrun-frontend/**"
       - ".github/workflows/ci-cd-front-prod.yml"
 
 jobs:
@@ -18,7 +19,22 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # --- 2. GitHub Container Registry(GHCR)에 로그인 ---
+      # --- 2. Firebase & Kakao 환경 변수 파일 생성 (production용) ---
+      - name: Create .env.production with secrets
+        run: |
+          cat > front/.env.production << EOF
+          VITE_API_BASE_URL=https://api.openrun.app/api
+          VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_KAKAO_APP_KEY=${{ secrets.VITE_KAKAO_APP_KEY }}
+          VITE_KAKAO_REDIRECT_URI=https://front.openrun.app/login
+          EOF
+
+      # --- 3. GitHub Container Registry(GHCR)에 로그인 ---
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 

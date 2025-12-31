@@ -1,0 +1,55 @@
+/* OpenRun Spacing Tokens */
+/* 모바일 우선 설계: 작은 스크린에서 최대한 많은 정보 표시 */
+
+:root {
+  /* Mobile-first spacing (4px 기준 - 모바일 최소화) */
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 12px;
+  --space-l: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* Component-specific spacing */
+  --modal-padding: var(--space-l);
+  --modal-gap: var(--space-m);
+  --form-gap: var(--space-l);
+  --button-padding-y: 10px;
+  --button-padding-x: 20px;
+  --button-gap: var(--space-m);
+  --card-padding: var(--space-m);
+  --section-gap: var(--space-l);
+
+  /* Layout spacing */
+  --nav-height-mobile: 68px;
+  --nav-width-desktop: 200px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --content-padding-bottom: calc(112px + var(--safe-area-bottom));
+
+  /* Grid & Flexbox gaps */
+  --grid-gap-xs: var(--space-xs);
+  --grid-gap-s: var(--space-s);
+  --grid-gap-m: var(--space-m);
+  --grid-gap-l: var(--space-l);
+}
+
+/* Desktop spacing (768px 이상 - 1.5배 적용) */
+@media (min-width: 768px) {
+  :root {
+    --space-xxs: 3px;
+    --space-xs: 6px;
+    --space-s: 12px;
+    --space-m: 18px;
+    --space-l: 24px;
+    --space-xl: 30px;
+    --space-2xl: 36px;
+    --space-3xl: 48px;
+
+    --modal-padding: var(--space-xl);
+    --modal-gap: var(--space-l);
+    --card-padding: var(--space-l);
+    --section-gap: var(--space-xl);
+  }
+}

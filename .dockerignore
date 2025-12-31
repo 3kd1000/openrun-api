@@ -38,3 +38,15 @@ README.md
 Dockerfile
 docker-compose*.yml
 .dockerignore
+
+# Frontend (API 빌드에 불필요하지만 빌드 컨텍스트 캐시 이슈로 인해 주석 처리)
+# front
+
+# CI/CD & Infrastructure (빌드에 불필요)
+.github
+k8s
+helm
+
+# OS files
+**/.DS_Store
+**/Thumbs.db

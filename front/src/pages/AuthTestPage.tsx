@@ -12,7 +12,7 @@ const AuthTestPage: React.FC = () => {
     // Kakao SDK 초기화
     useEffect(() => {
         if (window.Kakao && !window.Kakao.isInitialized()) {
-            window.Kakao.init('faef7e192ddab06705cb82146c40cc35'); // ✨ 여기에 실제 JavaScript 키 입력 ✨
+            window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
             console.log('Kakao SDK initialized:', window.Kakao.isInitialized());
         }
 
@@ -32,7 +32,7 @@ const AuthTestPage: React.FC = () => {
             if (kakaoAuthCode) {
                 try {
                     const response = await axios.post(
-                        `http://localhost:8080/api/v1/auth/login/kakao?code=${kakaoAuthCode}`
+                        `http://localhost:8080/api/auth/login/kakao?code=${kakaoAuthCode}`
                     );
                     setKakaoFirebaseCustomToken(response.data.firebaseCustomToken);
                     alert("카카오 로그인 성공! Firebase Custom Token을 받았습니다.");
@@ -73,7 +73,7 @@ const AuthTestPage: React.FC = () => {
     const handleKakaoSignIn = () => {
         if (window.Kakao) {
             window.Kakao.Auth.authorize({
-                redirectUri: import.meta.env.VITE_KAKAO_REDIRECT_URL,
+                redirectUri: import.meta.env.VITE_KAKAO_REDIRECT_URI,
             });
         } else {
             alert('Kakao SDK가 로드되지 않았습니다.');

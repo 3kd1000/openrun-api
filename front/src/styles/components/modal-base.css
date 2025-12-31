@@ -1,0 +1,432 @@
+/* Modal Base Styles */
+/* 모든 모달에서 공통으로 사용하는 기본 스타일 */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, var(--opacity-overlay));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-overlay);
+  padding: var(--space-l);
+
+  /* Safe area 고려 (모바일) */
+  padding-top: max(var(--space-l), env(safe-area-inset-top));
+  padding-bottom: max(var(--space-l), env(safe-area-inset-bottom));
+  padding-left: max(var(--space-l), env(safe-area-inset-left));
+  padding-right: max(var(--space-l), env(safe-area-inset-right));
+}
+
+.modal-content {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: var(--modal-default-width);
+  max-height: var(--modal-default-height);
+  overflow-y: auto;
+  position: relative;
+  z-index: var(--z-modal-content);
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--modal-padding);
+  border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-primary);
+  z-index: var(--z-sticky);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+/* Close Button */
+.btn-close {
+  background: none;
+  border: none;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  transition: var(--transition-all);
+  line-height: 1;
+}
+
+.btn-close:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: var(--button-gap);
+  justify-content: flex-end;
+  padding-top: var(--space-l);
+  border-top: var(--border-width-thin) solid var(--color-border-secondary);
+  margin-top: var(--space-l);
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg-primary);
+  z-index: var(--z-sticky);
+}
+
+/* Button Styles */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-success,
+.btn-warning,
+.btn-info,
+.btn-edit,
+.btn-save,
+.btn-copy,
+.btn-regenerate {
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border: none;
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition-all);
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-primary);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: var(--color-success-hover);
+}
+
+.btn-warning {
+  background: var(--color-warning);
+  color: var(--color-text-primary);
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: var(--color-warning-hover);
+}
+
+.btn-info {
+  background: var(--color-info);
+  color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+  background: var(--color-info-hover);
+}
+
+.btn-edit {
+  background: var(--color-info);
+  color: white;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background: var(--color-info-hover);
+}
+
+.btn-save {
+  background: var(--color-success);
+  color: white;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: var(--color-success-hover);
+}
+
+.btn-copy {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.btn-copy:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+}
+
+.btn-regenerate {
+  background: var(--color-warning);
+  color: var(--color-text-primary);
+}
+
+.btn-regenerate:hover:not(:disabled) {
+  background: var(--color-warning-hover);
+}
+
+/* Disabled State */
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled,
+.btn-success:disabled,
+.btn-warning:disabled,
+.btn-info:disabled,
+.btn-edit:disabled,
+.btn-save:disabled,
+.btn-copy:disabled,
+.btn-regenerate:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: var(--form-gap);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--space-s);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-base);
+  transition: border-color var(--transition-base);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-m);
+  margin-bottom: var(--form-gap);
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Messages */
+.error-message {
+  padding: var(--space-m);
+  background: var(--color-danger-light);
+  color: var(--color-danger-text);
+  border: var(--border-width-thin) solid var(--color-danger);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-l);
+}
+
+.success-message {
+  padding: var(--space-m);
+  background: var(--color-success-light);
+  color: var(--color-success-text);
+  border: var(--border-width-thin) solid var(--color-success);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-l);
+}
+
+.info-message {
+  padding: var(--space-m);
+  background: var(--color-info-light);
+  color: var(--color-info);
+  border: var(--border-width-thin) solid var(--color-info);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-l);
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: var(--space-3xl);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-base);
+}
+
+/* Modal 모바일 대응 */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: var(--space-s);
+    align-items: flex-start;
+    padding-top: max(calc(env(safe-area-inset-top) + var(--space-s)), var(--space-l));
+    overflow-y: auto;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: var(--space-m);
+  }
+
+  .modal-header h2 {
+    font-size: var(--font-size-l);
+  }
+
+  .btn-close {
+    width: 28px;
+    height: 28px;
+    font-size: var(--font-size-xl);
+  }
+
+  .modal-actions {
+    gap: var(--space-s);
+    padding-top: var(--space-s);
+    margin-top: var(--space-s);
+    flex-wrap: wrap;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-success,
+  .btn-warning,
+  .btn-info,
+  .btn-edit,
+  .btn-save,
+  .btn-copy,
+  .btn-regenerate {
+    padding: 8px 12px;
+    font-size: var(--font-size-s);
+    flex: 1 1 calc(50% - var(--space-s));
+    min-width: 0;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-row .form-group {
+    margin-bottom: var(--form-gap);
+  }
+
+  /* 모바일에서 select (시간 선택) 크기 확대 */
+  .form-group select {
+    padding: 12px 14px; /* 10px 12px → 12px 14px */
+    font-size: var(--font-size-l); /* base → l로 증가 */
+    min-height: 48px; /* 터치하기 좋은 최소 높이 */
+  }
+}
+
+/* 작은 모바일 (360px 이하): 2x2 그리드 */
+@media (max-width: 360px) {
+  .modal-actions {
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-success,
+  .btn-warning,
+  .btn-info,
+  .btn-edit,
+  .btn-save,
+  .btn-copy,
+  .btn-regenerate {
+    flex: 1 1 calc(50% - var(--space-xs));
+    padding: var(--space-xs) var(--space-xxs);
+    font-size: var(--font-size-xs);
+    min-width: 0;
+  }
+}
+
+/* 갤럭시 S24 등 360px~400px: 4개 한 줄 배치 */
+@media (min-width: 361px) and (max-width: 400px) {
+  .modal-actions {
+    gap: 2px;
+    flex-wrap: nowrap;
+    padding-left: var(--space-xxs);
+    padding-right: var(--space-xxs);
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-success,
+  .btn-warning,
+  .btn-info,
+  .btn-edit,
+  .btn-save,
+  .btn-copy,
+  .btn-regenerate {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: var(--space-xs) 2px;
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

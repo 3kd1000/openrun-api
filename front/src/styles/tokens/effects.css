@@ -1,0 +1,57 @@
+/* OpenRun Effects Tokens */
+/* Border radius, shadows, transitions, z-index 정의 */
+
+:root {
+  /* Border Radius */
+  --radius-s: 4px;
+  --radius-m: 6px;
+  --radius-l: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-round: 50%;
+  --radius-pill: 16px;
+
+  /* Box Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-base: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 12px 32px rgba(0, 0, 0, 0.25);
+
+  /* Special Shadows (colored) */
+  --shadow-primary: 0 4px 8px rgba(0, 123, 255, 0.3);
+  --shadow-success: 0 4px 8px rgba(40, 167, 69, 0.3);
+  --shadow-warning: 0 4px 8px rgba(255, 152, 0, 0.3);
+  --shadow-danger: 0 4px 8px rgba(220, 53, 69, 0.3);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  --transition-all: all 0.2s ease;
+
+  /* Z-index scale */
+  --z-base: 1;
+  --z-dropdown: 10;
+  --z-sticky: 100;
+  --z-fixed: 500;
+  --z-modal-overlay: 1000;
+  --z-modal-content: 1001;
+  --z-nested-modal-overlay: 1100; /* 중첩 모달 (모달 위의 모달) */
+  --z-nested-modal-content: 1101;
+  --z-popover: 1500;
+  --z-tooltip: 2000;
+
+  /* Opacity */
+  --opacity-disabled: 0.5;
+  --opacity-hover: 0.8;
+  --opacity-overlay: 0.5;
+
+  /* Border Width */
+  --border-width-thin: 1px;
+  --border-width-base: 2px;
+  --border-width-thick: 3px;
+  --border-width-heavy: 4px;
+}

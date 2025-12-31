@@ -1,0 +1,784 @@
+/**
+ * ScoreboardPage Styles
+ * CSS 토큰 적용, !important 제거
+ * 기존 클래스 이름 유지 (호환성)
+ */
+
+/* ========== 페이지 컨테이너 ========== */
+.scoreboard-page {
+  padding: var(--space-l);
+  width: 100%;
+  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+  box-sizing: border-box;
+}
+
+/* ========== 헤더 ========== */
+.scoreboard-header {
+  margin-bottom: var(--space-m);
+}
+
+/* ========== Tab Navigation ========== */
+.tab-navigation {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-m);
+  border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
+  padding-bottom: 0;
+}
+
+.tab-button {
+  padding: var(--space-xs) var(--space-m);
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-width-base) solid transparent;
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: var(--transition-all);
+  margin-bottom: calc(-1 * var(--border-width-base));
+}
+
+.tab-button:hover {
+  color: var(--color-text-secondary);
+}
+
+.tab-button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tab-content {
+  min-height: 200px;
+}
+
+.scoreboard-header h1 {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.scoreboard-header .subtitle {
+  margin: var(--space-s) 0 0 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+}
+
+/* ========== 빈 상태 ========== */
+.empty-state {
+  text-align: center;
+  padding: 60px var(--space-l);
+  color: var(--color-text-tertiary);
+}
+
+.empty-state p:first-child {
+  font-size: 64px;
+  margin: 0 0 var(--space-l) 0;
+}
+
+.empty-state p {
+  margin: var(--space-s) 0;
+  font-size: var(--font-size-m);
+}
+
+.empty-hint {
+  color: var(--color-text-disabled);
+  font-size: var(--font-size-base);
+}
+
+/* ========== 스코어보드 테이블 ========== */
+.scoreboard-table-container {
+  overflow-x: auto;
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-m);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+}
+
+.scoreboard-page .scoreboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-bg-primary);
+  font-size: var(--font-size-m);
+  color: var(--color-text-primary);
+  /* 안드로이드 크롬 가시성 보장: 명시적 배경색 지정 */
+  background-color: var(--color-bg-primary);
+}
+
+.scoreboard-page .scoreboard-table thead {
+  background: var(--color-success);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+.scoreboard-page .scoreboard-table th {
+  padding: var(--space-s);
+  text-align: center;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  border-right: var(--border-width-thin) solid rgba(255, 255, 255, 0.2);
+}
+
+.scoreboard-page .scoreboard-table th:last-child {
+  border-right: none;
+}
+
+.scoreboard-page .scoreboard-table tbody tr {
+  border-bottom: var(--border-width-thin) solid var(--color-border-tertiary);
+  transition: background-color var(--transition-base);
+}
+
+.scoreboard-page .scoreboard-table tbody tr:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.scoreboard-page .scoreboard-table td {
+  padding: var(--space-xs);
+  text-align: center;
+  white-space: nowrap;
+  border-right: var(--border-width-thin) solid var(--color-border-tertiary);
+  color: var(--color-text-primary);
+  /* 안드로이드 크롬 가시성 보장: 명시적 배경색과 글자색 지정 */
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.scoreboard-page .scoreboard-table td:last-child {
+  border-right: none;
+}
+
+/* ========== 특정 컬럼 강조 ========== */
+.scoreboard-page .scoreboard-table td.rank {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+  font-size: var(--font-size-l);
+}
+
+.scoreboard-page .scoreboard-table td.name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.scoreboard-page .scoreboard-table td.points {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-warning);
+}
+
+.scoreboard-page .scoreboard-table td.wins {
+  color: var(--color-info);
+  font-weight: var(--font-weight-semibold);
+}
+
+.scoreboard-page .scoreboard-table td.positive {
+  color: var(--color-success);
+  font-weight: var(--font-weight-semibold);
+}
+
+.scoreboard-page .scoreboard-table td.negative {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* 일반 숫자 컬럼 (경기수, 승률, 무, 패, 득점, 실점) */
+.scoreboard-page
+  .scoreboard-table
+  td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(
+    .name
+  ) {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  /* 안드로이드 크롬 가시성 보장: 명시적 배경색과 글자색 지정 */
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* ========== 다크테마 대응 ========== */
+/* 브라우저 다크모드 설정 무시하고 항상 밝은 배경 유지 */
+@media (prefers-color-scheme: dark) {
+  .scoreboard-page .scoreboard-table {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+  }
+
+  .scoreboard-page .scoreboard-table td {
+    color: var(--color-text-primary);
+    /* 안드로이드 크롬 가시성 보장: 다크모드에서도 명시적 배경색과 글자색 지정 */
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+  }
+
+  .scoreboard-page .scoreboard-table td.name {
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+  }
+
+  /* 색상 효과가 있는 컬럼들은 원래 색상 유지 */
+  .scoreboard-page .scoreboard-table td.rank {
+    color: var(--color-success);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .scoreboard-page .scoreboard-table td.points {
+    color: var(--color-warning);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .scoreboard-page .scoreboard-table td.wins {
+    color: var(--color-info);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .scoreboard-page .scoreboard-table td.positive {
+    color: var(--color-success);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .scoreboard-page .scoreboard-table td.negative {
+    color: var(--color-danger);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* 숫자 컬럼들도 명시적으로 색상 지정 */
+  .scoreboard-page
+    .scoreboard-table
+    td:not(.rank):not(.points):not(.wins):not(.positive):not(.negative):not(
+      .name
+    ) {
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+    /* 안드로이드 크롬 가시성 보장: 다크모드에서도 명시적 배경색과 글자색 지정 */
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+  }
+
+  .scoreboard-page .scoreboard-table-container {
+    background: var(--color-bg-primary);
+    border-color: var(--color-border-primary);
+  }
+}
+
+/* ========== 모바일 대응 ========== */
+@media (max-width: 768px) {
+  .scoreboard-page {
+    padding: var(--space-l);
+  }
+
+  .scoreboard-page .scoreboard-table {
+    font-size: var(--font-size-m);
+  }
+
+  .scoreboard-page .scoreboard-table th,
+  .scoreboard-page .scoreboard-table td {
+    padding: var(--space-s) var(--space-xs);
+    min-width: 50px;
+  }
+
+  /* 순위 컬럼 */
+  .scoreboard-page .scoreboard-table th:nth-child(1),
+  .scoreboard-page .scoreboard-table td:nth-child(1) {
+    min-width: 45px;
+  }
+
+  /* 이름 컬럼 */
+  .scoreboard-page .scoreboard-table th:nth-child(2),
+  .scoreboard-page .scoreboard-table td:nth-child(2) {
+    min-width: 70px;
+  }
+
+  /* 경기수, 승점 */
+  .scoreboard-page .scoreboard-table th:nth-child(3),
+  .scoreboard-page .scoreboard-table td:nth-child(3),
+  .scoreboard-page .scoreboard-table th:nth-child(4),
+  .scoreboard-page .scoreboard-table td:nth-child(4) {
+    min-width: 50px;
+  }
+
+  /* 승률 (줄바꿈 방지를 위해 더 넓게) */
+  .scoreboard-page .scoreboard-table th:nth-child(5),
+  .scoreboard-page .scoreboard-table td:nth-child(5) {
+    min-width: 65px;
+  }
+
+  /* 승, 무, 패 */
+  .scoreboard-page .scoreboard-table th:nth-child(6),
+  .scoreboard-page .scoreboard-table td:nth-child(6),
+  .scoreboard-page .scoreboard-table th:nth-child(7),
+  .scoreboard-page .scoreboard-table td:nth-child(7),
+  .scoreboard-page .scoreboard-table th:nth-child(8),
+  .scoreboard-page .scoreboard-table td:nth-child(8) {
+    min-width: 45px;
+  }
+
+  /* 득실, 득점, 실점 */
+  .scoreboard-page .scoreboard-table th:nth-child(9),
+  .scoreboard-page .scoreboard-table td:nth-child(9),
+  .scoreboard-page .scoreboard-table th:nth-child(10),
+  .scoreboard-page .scoreboard-table td:nth-child(10),
+  .scoreboard-page .scoreboard-table th:nth-child(11),
+  .scoreboard-page .scoreboard-table td:nth-child(11) {
+    min-width: 55px;
+  }
+
+  .scoreboard-page .scoreboard-table td.rank {
+    font-size: var(--font-size-l);
+  }
+
+  .scoreboard-page .scoreboard-table td.name {
+    font-size: var(--font-size-m);
+  }
+}
+
+/* ========== 검색 필터 섹션 ========== */
+.filter-section {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  padding: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.search-form {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-s);
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--space-xs) var(--space-s);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+}
+
+.search-button,
+.reset-button {
+  padding: var(--space-xs) var(--space-m);
+  border: none;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.search-button {
+  background: var(--color-success);
+  color: white;
+}
+
+.search-button:hover {
+  background: var(--color-success-hover);
+}
+
+.reset-button {
+  background: var(--color-bg-disabled);
+  color: var(--color-text-tertiary);
+}
+
+.reset-button:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.date-range-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.date-range-filter label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.date-range-filter select {
+  padding: var(--space-xs) var(--space-s);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+/* ========== 매치 목록 ========== */
+.match-list-container {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: 200px;
+}
+
+.match-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  max-width: 100%;
+  margin: 0;
+}
+
+.match-card {
+  position: relative;
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  padding: var(--space-l);
+  background: var(--color-bg-primary);
+  transition: var(--transition-base);
+  font-size: var(--font-size-s);
+}
+
+.match-card:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-secondary);
+}
+
+.match-card.future-match {
+  background: var(--color-bg-primary);
+  border-color: var(--color-primary);
+}
+
+.match-card.future-match:hover {
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-bg);
+}
+
+.match-card.completed-match {
+  background: var(--color-bg-primary);
+  border-color: var(--color-success);
+}
+
+.match-card.completed-match:hover {
+  border-color: var(--color-success-hover);
+  background: var(--color-success-bg);
+}
+
+.match-card.pending-match {
+  background: var(--color-bg-primary);
+  border-color: var(--color-warning);
+}
+
+.match-card.pending-match:hover {
+  border-color: var(--color-warning-hover);
+  background: var(--color-warning-bg);
+}
+
+.match-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-s);
+  padding-bottom: var(--space-s);
+  border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
+}
+
+.match-date {
+  font-size: inherit;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  flex: 1;
+}
+
+.match-status-badge {
+  padding: var(--space-xxs) var(--space-xs);
+  border-radius: var(--radius-s);
+  font-size: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  margin-left: var(--space-xs);
+}
+
+.match-status-badge.future {
+  background: var(--color-primary);
+  color: white;
+}
+
+.match-status-badge.completed {
+  background: var(--color-success);
+  color: white;
+}
+
+.match-teams-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: 0;
+  padding: var(--space-s);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+}
+
+.team-inline {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--color-bg-primary);
+  transition: var(--transition-base);
+}
+
+.team-inline.winner {
+  background: var(--color-success-bg);
+  border: var(--border-width-thin) solid var(--color-success);
+}
+
+.team-inline.loser {
+  background: var(--color-bg-tertiary);
+  opacity: 0.7;
+}
+
+.players-inline {
+  flex: 1;
+  font-size: inherit;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.score-inline {
+  font-size: inherit;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-xs);
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.vs-inline {
+  font-size: inherit;
+  color: var(--color-text-tertiary);
+  padding: 0 var(--space-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-m);
+}
+
+.empty-state h3 {
+  font-size: var(--font-size-l);
+  margin: 0 0 var(--space-s) 0;
+  color: var(--color-text-primary);
+}
+
+/* ========== 미디어쿼리별 폰트 사이즈 조정 ========== */
+
+/* 데스크탑 (769px 이상) */
+@media (min-width: 769px) {
+  .match-card {
+    font-size: var(--font-size-base);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+}
+
+/* 미디어 대형 (401px ~ 768px) */
+@media (min-width: 401px) and (max-width: 768px) {
+  .match-card {
+    font-size: var(--font-size-base);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+}
+
+/* 미디어 중형 (361px ~ 400px) */
+@media (min-width: 361px) and (max-width: 400px) {
+  .match-card {
+    font-size: var(--font-size-m);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+}
+
+/* 미디어 소형 (360px 이하) */
+@media (max-width: 360px) {
+  .match-card {
+    font-size: var(--font-size-s);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+
+  .match-header-row {
+    margin-bottom: var(--space-xs);
+    padding-bottom: var(--space-xs);
+  }
+
+  .match-status-badge {
+    padding: var(--space-xxs) var(--space-xs);
+    margin-left: var(--space-xs);
+  }
+
+  .match-teams-inline {
+    gap: var(--space-xxs);
+    padding: var(--space-xs);
+  }
+
+  .team-inline {
+    padding: var(--space-xxs) var(--space-xs);
+    gap: var(--space-xxs);
+    min-width: 0;
+  }
+
+  .players-inline {
+    min-width: 0;
+  }
+
+  .score-inline {
+    padding: 0 var(--space-xxs);
+    min-width: 20px;
+  }
+
+  .vs-inline {
+    padding: 0 var(--space-xxs);
+    flex-shrink: 0;
+  }
+}
+
+/* ========== 데스크톱: 모바일 패딩 제거 ========== */
+@media (min-width: 768px) {
+  .scoreboard-page {
+    padding-bottom: var(--space-l);
+  }
+}
+
+/* ========== 모바일 최적화 (탭 및 검색) ========== */
+@media (max-width: 768px) {
+  .tab-navigation {
+    gap: var(--space-xxs);
+    margin-bottom: var(--space-s);
+  }
+
+  .tab-button {
+    flex: 1;
+    padding: var(--space-xxs) var(--space-xs);
+    font-size: var(--font-size-m);
+  }
+
+  .filter-section {
+    padding: var(--space-s);
+    margin-bottom: var(--space-s);
+  }
+
+  .search-form {
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xs);
+  }
+
+  .search-input {
+    width: 100%;
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-base);
+  }
+
+  .search-button,
+  .reset-button {
+    width: 100%;
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .date-range-filter {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xxs);
+  }
+
+  .date-range-filter label {
+    font-size: var(--font-size-xs);
+  }
+
+  .date-range-filter select {
+    font-size: var(--font-size-xs);
+  }
+
+  .match-list-container {
+    padding: 0;
+  }
+
+  .match-list {
+    gap: var(--space-xs);
+  }
+
+  .match-card {
+    padding: var(--space-m);
+  }
+
+  .match-header-row {
+    margin-bottom: var(--space-xs);
+    padding-bottom: var(--space-xs);
+  }
+
+  .match-status-badge {
+    padding: var(--space-xxs) var(--space-xs);
+    margin-left: var(--space-xs);
+  }
+
+  .match-teams-inline {
+    gap: var(--space-xxs);
+    padding: var(--space-xs);
+  }
+
+  .team-inline {
+    padding: var(--space-xxs) var(--space-xs);
+    gap: var(--space-xxs);
+    min-width: 0;
+  }
+
+  .players-inline {
+    min-width: 0;
+  }
+
+  .score-inline {
+    padding: 0 var(--space-xxs);
+    min-width: 20px;
+  }
+
+  .vs-inline {
+    padding: 0 var(--space-xxs);
+    flex-shrink: 0;
+  }
+
+  .empty-icon {
+    font-size: 36px;
+  }
+
+  .empty-state h3 {
+    font-size: var(--font-size-base);
+  }
+}

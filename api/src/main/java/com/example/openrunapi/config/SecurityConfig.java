@@ -31,13 +31,19 @@ public class SecurityConfig {
 
                 // HTTP 요청에 대한 인가 설정
                 .authorizeHttpRequests(auth -> auth
+                        // CORS preflight 요청 허용
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Actuator health 엔드포인트는 무조건 허용 (K8s liveness/readiness probe용)
                         .requestMatchers("/actuator/health/**").permitAll()
                         // 인증 불필요한 API 엔드포인트
-                        .requestMatchers("/api/v1/auth/**").permitAll() // 소셜 로그인 API
-                        .requestMatchers("/api/v1/dev/**").permitAll() // 개발용 로그인 API
+                        .requestMatchers("/api/auth/**").permitAll() // 소셜 로그인 API
+                        .requestMatchers("/api/dev/**").permitAll() // 개발용 로그인 API
+                        .requestMatchers("/api/webauthn/login").permitAll() // WebAuthn 로그인 API
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API
                         .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/**").permitAll() // 클럽 목록 조회 API
+                        .requestMatchers("/api/schedules/**").permitAll() // 일정 관리 API (개발 단계)
+                        .requestMatchers("/api/clubs/**").permitAll() // 클럽 조회 API
+                        .requestMatchers("/api/users/guests").permitAll() // 게스트 목록 조회
                         // 그 외 모든 API 요청은 인증 필요
                         .requestMatchers("/api/**").authenticated()
                         // 그 외 요청은 거부 (API 서버이므로 정적 리소스나 SPA 라우팅 불필요)

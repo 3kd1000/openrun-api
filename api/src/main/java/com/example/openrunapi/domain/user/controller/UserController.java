@@ -36,4 +36,13 @@ public class UserController {
         userService.deleteUser(userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 게스트 사용자 목록 조회 (게스트1~16)
+     */
+    @GetMapping("/guests")
+    public ResponseEntity<java.util.List<UserResponse>> getGuestUsers() {
+        java.util.List<UserResponse> guests = userService.getGuestUsers();
+        return ResponseEntity.ok(guests);
+    }
 }

@@ -36,7 +36,7 @@ database:
 # OAuth2 설정
 oauth2:
   kakao:
-    redirectUri: "http://localhost:5173/auth-test"
+    redirectUri: "https://dev-front.openrun.app/login"
     authorizationGrantType: "authorization_code"
     clientAuthenticationMethod: "client_secret_post"
     scope: "profile_nickname, account_email"
@@ -55,10 +55,10 @@ firebase:
 
 # 도메인 설정
 frontend:
-  url: "http://localhost:5173"
+  url: "https://dev-front.openrun.app"
 
 api:
-  baseUrl: "http://localhost:8080"
+  baseUrl: "https://dev-api.openrun.app"
 
 # JPA 설정 (개발 환경 - 로깅 활성화)
 jpa:

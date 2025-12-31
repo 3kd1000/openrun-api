@@ -1,0 +1,39 @@
+export interface Schedule {
+  id: number;
+  clubId: number;
+  courtName: string;
+  scheduledAt: string; // ISO 8601 format
+  maxCapacity: number;
+  currentParticipants: number;
+  cost?: number;
+  description?: string;
+  reservedByUserId?: number;
+  reservedByUserName?: string;
+  participationStartAt?: string | null; // ISO 8601 format
+  drawType?: 'AA' | 'AB' | 'SEED' | null;
+  isDrawValid?: boolean | null;
+  drawCreatedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateScheduleRequest {
+  clubId: number;
+  courtName: string;
+  scheduledAt: string; // ISO 8601 format: "2025-12-25T14:00:00"
+  maxCapacity: number;
+  cost?: number;
+  description?: string;
+  reservedByUserId?: number;
+  participationStartAt?: string | null; // ISO 8601 format: "2025-12-25T14:00:00"
+}
+
+export interface Participant {
+  id: number;
+  scheduleId: number;
+  userId: number;
+  userName: string; // 추가
+  status: 'CONFIRMED' | 'WAITING' | 'CANCELLED';
+  position: number;
+  joinedAt: string;
+}
