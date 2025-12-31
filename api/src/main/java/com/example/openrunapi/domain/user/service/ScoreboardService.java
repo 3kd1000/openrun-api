@@ -31,14 +31,11 @@ public class ScoreboardService {
      */
     @Transactional(readOnly = true)
     public ScoreboardResponse getClubScoreboard(Long clubId) {
-        log.info("클럽 스코어보드 조회: club_id={}", clubId);
-
         // 1. 통계 조회 (승점 순 정렬, 게스트 제외)
         List<UserStatistics> statistics = userStatisticsRepository
                 .findByClubIdExcludingGuestsOrderByPointsDescGoalDifferenceDesc(clubId);
 
         if (statistics.isEmpty()) {
-            log.info("통계 데이터 없음: club_id={}", clubId);
             return ScoreboardResponse.builder()
                     .rankings(List.of())
                     .build();
@@ -76,8 +73,6 @@ public class ScoreboardService {
                             .build();
                 })
                 .collect(Collectors.toList());
-
-        log.info("스코어보드 조회 완료: {} 명", rankings.size());
 
         return ScoreboardResponse.builder()
                 .rankings(rankings)
