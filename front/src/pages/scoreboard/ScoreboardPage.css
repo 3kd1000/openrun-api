@@ -31,7 +31,7 @@
   background: transparent;
   border: none;
   border-bottom: var(--border-width-base) solid transparent;
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-m);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-tertiary);
   cursor: pointer;
@@ -78,7 +78,7 @@
 
 .empty-state p {
   margin: var(--space-s) 0;
-  font-size: var(--font-size-l);
+  font-size: var(--font-size-m);
 }
 
 .empty-hint {
@@ -98,7 +98,7 @@
   width: 100%;
   border-collapse: collapse;
   background: var(--color-bg-primary);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-m);
   color: var(--color-text-primary);
   /* 안드로이드 크롬 가시성 보장: 명시적 배경색 지정 */
   background-color: var(--color-bg-primary);
@@ -265,34 +265,42 @@
   }
 
   .scoreboard-page .scoreboard-table {
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-m);
   }
 
   .scoreboard-page .scoreboard-table th,
   .scoreboard-page .scoreboard-table td {
     padding: var(--space-s) var(--space-xs);
-    min-width: 45px;
+    min-width: 50px;
   }
 
   /* 순위 컬럼 */
   .scoreboard-page .scoreboard-table th:nth-child(1),
   .scoreboard-page .scoreboard-table td:nth-child(1) {
-    min-width: 38px;
+    min-width: 45px;
   }
 
   /* 이름 컬럼 */
   .scoreboard-page .scoreboard-table th:nth-child(2),
   .scoreboard-page .scoreboard-table td:nth-child(2) {
-    min-width: 60px;
+    min-width: 70px;
   }
 
-  /* 경기수, 승점, 승률, 승무패 */
+  /* 경기수, 승점 */
   .scoreboard-page .scoreboard-table th:nth-child(3),
   .scoreboard-page .scoreboard-table td:nth-child(3),
   .scoreboard-page .scoreboard-table th:nth-child(4),
-  .scoreboard-page .scoreboard-table td:nth-child(4),
+  .scoreboard-page .scoreboard-table td:nth-child(4) {
+    min-width: 50px;
+  }
+
+  /* 승률 (줄바꿈 방지를 위해 더 넓게) */
   .scoreboard-page .scoreboard-table th:nth-child(5),
-  .scoreboard-page .scoreboard-table td:nth-child(5),
+  .scoreboard-page .scoreboard-table td:nth-child(5) {
+    min-width: 65px;
+  }
+
+  /* 승, 무, 패 */
   .scoreboard-page .scoreboard-table th:nth-child(6),
   .scoreboard-page .scoreboard-table td:nth-child(6),
   .scoreboard-page .scoreboard-table th:nth-child(7),
@@ -309,15 +317,15 @@
   .scoreboard-page .scoreboard-table td:nth-child(10),
   .scoreboard-page .scoreboard-table th:nth-child(11),
   .scoreboard-page .scoreboard-table td:nth-child(11) {
-    min-width: 50px;
+    min-width: 55px;
   }
 
   .scoreboard-page .scoreboard-table td.rank {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-l);
   }
 
   .scoreboard-page .scoreboard-table td.name {
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-m);
   }
 }
 
@@ -417,6 +425,7 @@
   padding: var(--space-l);
   background: var(--color-bg-primary);
   transition: var(--transition-base);
+  font-size: var(--font-size-s);
 }
 
 .match-card:hover {
@@ -464,7 +473,7 @@
 }
 
 .match-date {
-  font-size: var(--font-size-s);
+  font-size: inherit;
   color: var(--color-primary);
   font-weight: var(--font-weight-semibold);
   margin: 0;
@@ -474,7 +483,7 @@
 .match-status-badge {
   padding: var(--space-xxs) var(--space-xs);
   border-radius: var(--radius-s);
-  font-size: var(--font-size-s);
+  font-size: inherit;
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -525,7 +534,7 @@
 
 .players-inline {
   flex: 1;
-  font-size: var(--font-size-s);
+  font-size: inherit;
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
@@ -535,7 +544,7 @@
 }
 
 .score-inline {
-  font-size: var(--font-size-s);
+  font-size: inherit;
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   padding: 0 var(--space-xs);
@@ -545,7 +554,7 @@
 }
 
 .vs-inline {
-  font-size: var(--font-size-xs);
+  font-size: inherit;
   color: var(--color-text-tertiary);
   padding: 0 var(--space-xs);
   font-weight: var(--font-weight-bold);
@@ -560,6 +569,103 @@
   font-size: var(--font-size-l);
   margin: 0 0 var(--space-s) 0;
   color: var(--color-text-primary);
+}
+
+/* ========== 미디어쿼리별 폰트 사이즈 조정 ========== */
+
+/* 데스크탑 (769px 이상) */
+@media (min-width: 769px) {
+  .match-card {
+    font-size: var(--font-size-base);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+}
+
+/* 미디어 대형 (401px ~ 768px) */
+@media (min-width: 401px) and (max-width: 768px) {
+  .match-card {
+    font-size: var(--font-size-base);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+}
+
+/* 미디어 중형 (361px ~ 400px) */
+@media (min-width: 361px) and (max-width: 400px) {
+  .match-card {
+    font-size: var(--font-size-m);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+}
+
+/* 미디어 소형 (360px 이하) */
+@media (max-width: 360px) {
+  .match-card {
+    font-size: var(--font-size-s);
+  }
+
+  .match-date,
+  .match-status-badge,
+  .players-inline,
+  .score-inline,
+  .vs-inline {
+    font-size: inherit;
+  }
+
+  .match-header-row {
+    margin-bottom: var(--space-xs);
+    padding-bottom: var(--space-xs);
+  }
+
+  .match-status-badge {
+    padding: var(--space-xxs) var(--space-xs);
+    margin-left: var(--space-xs);
+  }
+
+  .match-teams-inline {
+    gap: var(--space-xxs);
+    padding: var(--space-xs);
+  }
+
+  .team-inline {
+    padding: var(--space-xxs) var(--space-xs);
+    gap: var(--space-xxs);
+    min-width: 0;
+  }
+
+  .players-inline {
+    min-width: 0;
+  }
+
+  .score-inline {
+    padding: 0 var(--space-xxs);
+    min-width: 20px;
+  }
+
+  .vs-inline {
+    padding: 0 var(--space-xxs);
+    flex-shrink: 0;
+  }
 }
 
 /* ========== 데스크톱: 모바일 패딩 제거 ========== */
@@ -579,7 +685,7 @@
   .tab-button {
     flex: 1;
     padding: var(--space-xxs) var(--space-xs);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-m);
   }
 
   .filter-section {
@@ -595,15 +701,16 @@
 
   .search-input {
     width: 100%;
-    padding: var(--space-xxs) var(--space-xs);
-    font-size: var(--font-size-xs);
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-base);
   }
 
   .search-button,
   .reset-button {
     width: 100%;
-    padding: var(--space-xxs) var(--space-s);
-    font-size: var(--font-size-xs);
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
   }
 
   .date-range-filter {
@@ -637,13 +744,7 @@
     padding-bottom: var(--space-xs);
   }
 
-  .match-date {
-    font-size: var(--font-size-xs);
-    margin: 0;
-  }
-
   .match-status-badge {
-    font-size: var(--font-size-xs);
     padding: var(--space-xxs) var(--space-xs);
     margin-left: var(--space-xs);
   }
@@ -660,18 +761,15 @@
   }
 
   .players-inline {
-    font-size: var(--font-size-xs);
     min-width: 0;
   }
 
   .score-inline {
-    font-size: var(--font-size-xs);
     padding: 0 var(--space-xxs);
     min-width: 20px;
   }
 
   .vs-inline {
-    font-size: var(--font-size-xxs);
     padding: 0 var(--space-xxs);
     flex-shrink: 0;
   }

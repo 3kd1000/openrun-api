@@ -100,6 +100,26 @@
   color: var(--color-text-tertiary);
 }
 
+/* 게스트 삭제 버튼 (빨간색) */
+.btn-danger {
+  background: var(--color-danger) !important;
+  color: white !important;
+  border-color: var(--color-danger) !important;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--color-danger-hover) !important;
+  border-color: var(--color-danger-hover) !important;
+}
+
+.btn-danger:disabled {
+  background: var(--color-bg-tertiary) !important;
+  color: var(--color-text-tertiary) !important;
+  border-color: var(--color-border-secondary) !important;
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+}
+
 /* ========== 플레이어 그리드 (2열) ========== */
 .player-grid {
   display: grid;
@@ -232,6 +252,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1; /* 이름 위에 표시 */
+  opacity: 0; /* 기본적으로 숨김 (데스크탑 hover용) */
+  transition: opacity var(--transition-base);
+}
+
+/* 데스크탑: hover 시에만 표시 */
+@media (min-width: 769px) {
+  .player-card-with-checkbox:hover .btn-remove-guest {
+    opacity: 1;
+  }
+}
+
+/* 모바일: 길게 누르면 표시됨 (JS로 제어) */
+@media (max-width: 768px) {
+  .btn-remove-guest {
+    opacity: 1; /* 모바일에서는 JS로 표시/숨김 제어 */
+  }
 }
 
 /* ========== 선택 인원 배지 ========== */
@@ -265,6 +302,10 @@
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: var(--transition-all);
+  white-space: normal; /* 단어 단위 줄바꿈 허용 */
+  word-break: keep-all; /* 한글 단어 단위로 줄바꿈 */
+  word-wrap: break-word; /* 긴 단어는 줄바꿈 */
+  line-height: 1.2; /* 줄바꿈 시 가독성 향상 */
 }
 
 .btn-move-group:hover:not(:disabled) {
@@ -411,14 +452,42 @@
     gap: var(--space-m);
   }
 
-  /* 대진 타입 버튼 */
+  /* 대진 타입 버튼 - 높이 통일 */
   .draw-type-buttons {
     gap: var(--space-xs);
   }
 
   .draw-type-btn {
+    height: 38px;
+    min-height: 38px;
     padding: var(--space-s) var(--space-xs);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-m);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  /* 게스트 추가 버튼 - 높이 통일 */
+  .btn-add-guest {
+    height: 38px;
+    min-height: 38px;
+    font-size: var(--font-size-m);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  /* 선택 인원 배지 - 높이 통일 */
+  .selected-count-badge {
+    height: 26px;
+    min-height: 26px;
+    font-size: var(--font-size-m);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
 
   /* AA 타입: 세로 배치 */
@@ -497,15 +566,35 @@
     margin-bottom: var(--space-xs);
   }
 
-  /* 이동 버튼 */
+  /* 이동 버튼 - 높이 통일 */
   .move-buttons {
     gap: var(--space-xs);
     margin-bottom: var(--space-s);
   }
 
   .btn-move-group {
+    height: auto; /* 줄바꿈 허용을 위해 auto로 변경 */
+    min-height: 38px;
     padding: var(--space-s) 10px;
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-m);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2; /* 줄바꿈 시 가독성 향상 */
+    white-space: normal; /* 단어 단위 줄바꿈 허용 */
+    word-break: keep-all; /* 한글 단어 단위로 줄바꿈 */
+    word-wrap: break-word; /* 긴 단어는 줄바꿈 */
+  }
+
+  /* 모달 액션 버튼 - 높이 통일 */
+  .draw-create-content .modal-actions button {
+    height: 38px;
+    min-height: 38px;
+    font-size: var(--font-size-m);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
 
   /* 대진 결과 섹션 */
@@ -526,5 +615,57 @@
   .divider-arrow {
     transform: rotate(90deg);
     margin: var(--space-s) 0;
+  }
+}
+
+/* 미디어 대형 (401px ~ 768px) */
+@media (min-width: 401px) and (max-width: 768px) {
+  .draw-create-modal .draw-type-btn,
+  .draw-create-modal .btn-add-guest,
+  .draw-create-modal .btn-move-group,
+  .draw-create-modal .draw-create-content .modal-actions button {
+    font-size: var(--font-size-m);
+  }
+
+  .draw-create-modal .selected-count-badge {
+    font-size: var(--font-size-m);
+  }
+}
+
+/* 미디어 중형 (361px ~ 400px) */
+@media (min-width: 361px) and (max-width: 400px) {
+  .draw-create-modal .draw-type-btn,
+  .draw-create-modal .btn-add-guest,
+  .draw-create-modal .btn-move-group,
+  .draw-create-modal .draw-create-content .modal-actions button {
+    font-size: var(--font-size-s);
+  }
+
+  .draw-create-modal .selected-count-badge {
+    font-size: var(--font-size-s);
+  }
+
+  /* AB/SEED 타입에서 move-buttons 줄바꿈 개선 */
+  .draw-create-modal .btn-move-group {
+    white-space: normal; /* 단어 단위 줄바꿈 허용 */
+    word-break: keep-all; /* 한글 단어 단위로 줄바꿈 */
+    word-wrap: break-word; /* 긴 단어는 줄바꿈 */
+    line-height: 1.2; /* 줄바꿈 시 가독성 향상 */
+    height: auto; /* 줄바꿈 허용 */
+    min-height: 38px;
+  }
+}
+
+/* 미디어 소형 (360px 이하) */
+@media (max-width: 360px) {
+  .draw-create-modal .draw-type-btn,
+  .draw-create-modal .btn-add-guest,
+  .draw-create-modal .btn-move-group,
+  .draw-create-modal .draw-create-content .modal-actions button {
+    font-size: var(--font-size-xs);
+  }
+
+  .draw-create-modal .selected-count-badge {
+    font-size: var(--font-size-xs);
   }
 }

@@ -17,6 +17,7 @@ import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { setupAuthListener } from "./services/firebase";
+import { getTimestamp } from "./utils/dateUtils";
 import "./App.css";
 
 function App() {
@@ -24,9 +25,11 @@ function App() {
 
   // Firebase 자동 로그인 및 토큰 갱신 설정
   useEffect(() => {
-    console.log("🔧 Firebase 자동 토큰 갱신 리스너 설정");
+    const now = getTimestamp();
+    console.log(`🔧 [${now}] Firebase 자동 토큰 갱신 리스너 설정`);
     setupAuthListener((token) => {
-      console.log("🔄 토큰 갱신됨 (App.tsx)");
+      const refreshTime = getTimestamp();
+      console.log(`🔄 [${refreshTime}] 토큰 갱신됨 (App.tsx)`);
       console.log(token);
     });
   }, []);

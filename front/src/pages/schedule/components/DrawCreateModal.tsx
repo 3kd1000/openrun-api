@@ -56,6 +56,9 @@ const DrawCreateModal: React.FC<Props> = ({
   // 게스트 추가 상태
   const [addingGuest, setAddingGuest] = useState(false);
 
+  // 선택된 게스트 삭제 가능 여부 (모두 게스트이고 모두 대기열에 있을 때만 true)
+  const [canDeleteSelectedGuests, setCanDeleteSelectedGuests] = useState(false);
+
   // AA 타입: 참가/대기
   const [confirmedGroup, setConfirmedGroup] = useState<number[]>([]);
   const [waitingGroup, setWaitingGroup] = useState<number[]>([]);
@@ -74,12 +77,6 @@ const DrawCreateModal: React.FC<Props> = ({
   // 대진 생성 결과
   const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
   const [copied, setCopied] = useState(false);
-
-  // userName으로 게스트인지 확인 (게스트1~게스트16 패턴)
-  const isGuest = (userId: number): boolean => {
-    const participant = localParticipants.find((p) => p.userId === userId);
-    return participant ? participant.userName.startsWith("게스트") : false;
-  };
 
   // userId로 userName 가져오기
   const getUserName = (userId: number): string => {
@@ -133,19 +130,24 @@ const DrawCreateModal: React.FC<Props> = ({
     }
   };
 
-  // 게스트 삭제 핸들러
-  const handleRemoveGuest = async (userId: number) => {
+  // 선택된 게스트들 삭제 핸들러
+  const handleRemoveSelectedGuests = async () => {
+    if (!canDeleteSelectedGuests || selectedUsers.length === 0) {
+      return;
+    }
+
+    const guestCount = selectedUsers.length; // 삭제 전 개수 저장
+
     try {
       setError("");
+      setLoading(true);
 
-      // 게스트인지 확인
-      if (!isGuest(userId)) {
-        setError("게스트만 삭제할 수 있습니다.");
-        return;
-      }
-
-      // 참가 취소 API 호출
-      await participantService.cancelParticipation(scheduleId, userId);
+      // 선택된 모든 게스트 삭제
+      await Promise.all(
+        selectedUsers.map((userId) =>
+          participantService.cancelParticipation(scheduleId, userId)
+        )
+      );
 
       // 참가자 목록 다시 가져오기
       const updatedParticipants = await participantService.getParticipants(
@@ -153,14 +155,18 @@ const DrawCreateModal: React.FC<Props> = ({
       );
       setLocalParticipants(updatedParticipants);
 
-      const participant = localParticipants.find((p) => p.userId === userId);
-      console.log(`✅ ${participant?.userName} 삭제 완료`);
+      // 선택 초기화
+      setSelectedUsers([]);
+
+      console.log(`✅ ${guestCount}명의 게스트 삭제 완료`);
     } catch (err: unknown) {
       console.error("게스트 삭제 실패:", err);
       const errorMessage = (
         err as { response?: { data?: { message?: string } } }
       )?.response?.data?.message;
       setError(errorMessage || "게스트 삭제에 실패했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -210,6 +216,28 @@ const DrawCreateModal: React.FC<Props> = ({
       setConfirmedGroup([]);
     }
   }, [drawType, localParticipants, confirmedUserIds]);
+
+  // 선택된 사용자들이 모두 게스트이고 모두 대기열에 있는지 확인
+  useEffect(() => {
+    if (selectedUsers.length === 0) {
+      setCanDeleteSelectedGuests(false);
+      return;
+    }
+
+    // 선택된 사용자가 모두 게스트인지 확인
+    const allAreGuests = selectedUsers.every((userId) => {
+      const participant = localParticipants.find((p) => p.userId === userId);
+      return participant ? participant.userName.startsWith("게스트") : false;
+    });
+
+    // 선택된 사용자가 모두 대기열에 있는지 확인
+    const allInWaitingGroup = selectedUsers.every((userId) =>
+      waitingGroup.includes(userId)
+    );
+
+    // 두 조건을 모두 만족하면 게스트 삭제 가능
+    setCanDeleteSelectedGuests(allAreGuests && allInWaitingGroup);
+  }, [selectedUsers, waitingGroup, localParticipants]);
 
   // 체크박스 토글
   const toggleUserSelection = (userId: number) => {
@@ -526,14 +554,25 @@ const DrawCreateModal: React.FC<Props> = ({
                 >
                   대기열로 이동
                 </button>
-                <button
-                  type="button"
-                  onClick={handleAddGuest}
-                  disabled={addingGuest}
-                  className="btn-move-group"
-                >
-                  {addingGuest ? "추가 중..." : "게스트 추가"}
-                </button>
+                {canDeleteSelectedGuests ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveSelectedGuests}
+                    disabled={loading || selectedUsers.length === 0}
+                    className="btn-move-group btn-danger"
+                  >
+                    {loading ? "삭제 중..." : "게스트 삭제"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAddGuest}
+                    disabled={addingGuest}
+                    className="btn-move-group"
+                  >
+                    {addingGuest ? "추가 중..." : "게스트 추가"}
+                  </button>
+                )}
               </div>
 
               <div className="group-division">
@@ -570,7 +609,6 @@ const DrawCreateModal: React.FC<Props> = ({
                           selectedUsers.includes(userId) ? "selected" : ""
                         }`}
                         onClick={() => toggleUserSelection(userId)}
-                        style={{ position: "relative" }}
                       >
                         <input
                           type="checkbox"
@@ -579,37 +617,6 @@ const DrawCreateModal: React.FC<Props> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                         <span>{getUserName(userId)}</span>
-                        {isGuest(userId) && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveGuest(userId);
-                            }}
-                            className="btn-remove-guest"
-                            style={{
-                              position: "absolute",
-                              top: "2px",
-                              right: "2px",
-                              width: "20px",
-                              height: "20px",
-                              padding: "0",
-                              background: "#dc3545",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "50%",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              lineHeight: "1",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                            title="게스트 삭제"
-                          >
-                            ×
-                          </button>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -654,14 +661,25 @@ const DrawCreateModal: React.FC<Props> = ({
                 >
                   대기로 이동
                 </button>
-                <button
-                  type="button"
-                  onClick={handleAddGuest}
-                  disabled={addingGuest}
-                  className="btn-move-group"
-                >
-                  {addingGuest ? "추가 중..." : "게스트 추가"}
-                </button>
+                {canDeleteSelectedGuests ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveSelectedGuests}
+                    disabled={loading || selectedUsers.length === 0}
+                    className="btn-move-group btn-danger"
+                  >
+                    {loading ? "삭제 중..." : "게스트 삭제"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAddGuest}
+                    disabled={addingGuest}
+                    className="btn-move-group"
+                  >
+                    {addingGuest ? "추가 중..." : "게스트 추가"}
+                  </button>
+                )}
               </div>
 
               <div className="group-division group-division-ab">
@@ -721,7 +739,6 @@ const DrawCreateModal: React.FC<Props> = ({
                           selectedUsers.includes(userId) ? "selected" : ""
                         }`}
                         onClick={() => toggleUserSelection(userId)}
-                        style={{ position: "relative" }}
                       >
                         <input
                           type="checkbox"
@@ -730,37 +747,6 @@ const DrawCreateModal: React.FC<Props> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                         <span>{getUserName(userId)}</span>
-                        {isGuest(userId) && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveGuest(userId);
-                            }}
-                            className="btn-remove-guest"
-                            style={{
-                              position: "absolute",
-                              top: "2px",
-                              right: "2px",
-                              width: "20px",
-                              height: "20px",
-                              padding: "0",
-                              background: "#dc3545",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "50%",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              lineHeight: "1",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                            title="게스트 삭제"
-                          >
-                            ×
-                          </button>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -805,14 +791,25 @@ const DrawCreateModal: React.FC<Props> = ({
                 >
                   대기로 이동
                 </button>
-                <button
-                  type="button"
-                  onClick={handleAddGuest}
-                  disabled={addingGuest}
-                  className="btn-move-group"
-                >
-                  {addingGuest ? "추가 중..." : "게스트 추가"}
-                </button>
+                {canDeleteSelectedGuests ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveSelectedGuests}
+                    disabled={loading || selectedUsers.length === 0}
+                    className="btn-move-group btn-danger"
+                  >
+                    {loading ? "삭제 중..." : "게스트 삭제"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAddGuest}
+                    disabled={addingGuest}
+                    className="btn-move-group"
+                  >
+                    {addingGuest ? "추가 중..." : "게스트 추가"}
+                  </button>
+                )}
               </div>
 
               <div className="group-division group-division-seed">
@@ -875,7 +872,6 @@ const DrawCreateModal: React.FC<Props> = ({
                           selectedUsers.includes(userId) ? "selected" : ""
                         }`}
                         onClick={() => toggleUserSelection(userId)}
-                        style={{ position: "relative" }}
                       >
                         <input
                           type="checkbox"
@@ -884,37 +880,6 @@ const DrawCreateModal: React.FC<Props> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                         <span>{getUserName(userId)}</span>
-                        {isGuest(userId) && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveGuest(userId);
-                            }}
-                            className="btn-remove-guest"
-                            style={{
-                              position: "absolute",
-                              top: "2px",
-                              right: "2px",
-                              width: "20px",
-                              height: "20px",
-                              padding: "0",
-                              background: "#dc3545",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "50%",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              lineHeight: "1",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                            title="게스트 삭제"
-                          >
-                            ×
-                          </button>
-                        )}
                       </div>
                     ))}
                   </div>
