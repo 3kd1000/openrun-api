@@ -27,10 +27,7 @@ public class ScoreboardController {
      */
     @GetMapping
     public ResponseEntity<ScoreboardResponse> getScoreboard(@PathVariable Long clubId) {
-        log.info("스코어보드 조회 요청: club_id={}", clubId);
-
         ScoreboardResponse response = scoreboardService.getClubScoreboard(clubId);
-
         return ResponseEntity.ok(response);
     }
 }
