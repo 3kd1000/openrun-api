@@ -12,6 +12,7 @@ import { validateDrawCreation } from "../../../utils/scheduleValidation";
 import type { Schedule } from "../../../types/schedule";
 import DrawGamesList from "../../../components/draw/DrawGamesList";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
+import Toast from "../../../components/common/Toast";
 import "./DrawCreateModal.css";
 import "./DrawViewModal.css";
 
@@ -77,6 +78,7 @@ const DrawCreateModal: React.FC<Props> = ({
   // 대진 생성 결과
   const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
 
   // userId로 userName 가져오기
   const getUserName = (userId: number): string => {
@@ -381,6 +383,24 @@ const DrawCreateModal: React.FC<Props> = ({
       return;
     }
 
+    // 최대 인원수 검증
+    let totalPlayers = 0;
+    if (drawType === "AA") {
+      totalPlayers = confirmedGroup.length;
+    } else if (drawType === "AB") {
+      totalPlayers = groupA.length + groupB.length;
+    } else {
+      // drawType === "SEED"
+      totalPlayers = seedPlayers.length + normalPlayers.length;
+    }
+
+    if (totalPlayers > schedule.maxCapacity) {
+      setToastMessage(
+        `최대 인원수(${schedule.maxCapacity}명)를 초과했습니다. 현재 선택된 인원: ${totalPlayers}명`
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -399,7 +419,7 @@ const DrawCreateModal: React.FC<Props> = ({
       } else if (drawType === "AB") {
         requestWithIds = {
           drawType,
-          numberOfTotalPlayer: confirmedUserIds.length,
+          numberOfTotalPlayer: groupA.length + groupB.length,
           userIds: [...groupA, ...groupB],
           groupAUserIds: groupA,
           groupBUserIds: groupB,
@@ -409,7 +429,7 @@ const DrawCreateModal: React.FC<Props> = ({
         // drawType === "SEED"
         requestWithIds = {
           drawType,
-          numberOfTotalPlayer: confirmedUserIds.length,
+          numberOfTotalPlayer: seedPlayers.length + normalPlayers.length,
           userIds: normalPlayers,
           seedUserIds: seedPlayers,
           groupAUserIds: [],
@@ -947,6 +967,7 @@ const DrawCreateModal: React.FC<Props> = ({
           </div>
         </div>
       </div>
+      <Toast message={toastMessage} onClose={() => setToastMessage("")} />
     </div>
   );
 };
