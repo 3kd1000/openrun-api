@@ -27,10 +27,9 @@ function App() {
   useEffect(() => {
     const now = getTimestamp();
     console.log(`🔧 [${now}] Firebase 자동 토큰 갱신 리스너 설정`);
-    setupAuthListener((token) => {
+    setupAuthListener(() => {
       const refreshTime = getTimestamp();
       console.log(`🔄 [${refreshTime}] 토큰 갱신됨 (App.tsx)`);
-      console.log(token);
     });
   }, []);
 
