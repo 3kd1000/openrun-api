@@ -39,6 +39,36 @@
   z-index: var(--z-sticky);
 }
 
+/* ========== 대진 타입 헤더 (라벨 + 아코디언 버튼) ========== */
+.draw-type-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.draw-type-header label {
+  margin-bottom: 0;
+}
+
+.btn-toggle-info {
+  padding: var(--space-xxs) var(--space-s);
+  background: var(--color-bg-secondary);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  transition: var(--transition-all);
+}
+
+.btn-toggle-info:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 /* ========== 대진 타입 버튼 ========== */
 .draw-type-buttons {
   display: flex;
@@ -70,6 +100,42 @@
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: white;
+}
+
+/* ========== 대진 타입 설명 (아코디언 내용) ========== */
+.draw-type-info {
+  margin-top: var(--space-s);
+  padding: var(--space-m);
+  background: var(--color-primary-bg);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-m);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.draw-type-info .info-description {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
+}
+
+.draw-type-info .info-players {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 /* ========== 게스트 추가 버튼 ========== */

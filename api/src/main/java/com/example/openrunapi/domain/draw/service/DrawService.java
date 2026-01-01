@@ -206,8 +206,8 @@ public class DrawService {
         if (userNames == null)
             return ValidationResult.fail("참가자 명단이 입력되지 않았습니다.");
         int total = userNames.size();
-        if (total < 5 || total > 16)
-            return ValidationResult.fail("AA 방식은 5~16명만 가능합니다.");
+        if (total < 6 || total > 16)
+            return ValidationResult.fail("AA 방식은 6~16명만 가능합니다.");
         return ValidationResult.success();
     }
     
@@ -232,8 +232,8 @@ public class DrawService {
         allPlayers.addAll(userNames);
         allPlayers.addAll(seedUserNames);
         int total = allPlayers.size();
-        if (total < 5 || total > 16)
-            return ValidationResult.fail("SEED 방식은 일반+시드 플레이어 합이 5~16명이어야 합니다.");
+        if (total < 6 || total > 16)
+            return ValidationResult.fail("SEED 방식은 일반+시드 플레이어 합이 6~16명이어야 합니다.");
         int seedCount = getSeedCount(total);
         if (seedUserNames.size() != seedCount)
             return ValidationResult.fail(

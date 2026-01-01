@@ -65,5 +65,10 @@ export const scheduleService = {
       params: { userId }
     });
     return response.data;
+  },
+
+  // 대진표 삭제
+  deleteDraw: async (scheduleId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/draw`);
   }
 };
