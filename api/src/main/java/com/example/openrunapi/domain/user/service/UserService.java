@@ -3,8 +3,10 @@ package com.example.openrunapi.domain.user.service;
 import com.example.openrunapi.domain.auth.service.OAuthService;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserOAuthProvider;
+import com.example.openrunapi.domain.user.model.dto.OAuthProviderResponse;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.repository.UserOAuthProviderRepository;
 import com.example.openrunapi.domain.user.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final UserOAuthProviderRepository userOAuthProviderRepository;
     private final OAuthService oauthService;
 
     @Override
@@ -81,6 +84,7 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
 
         user.updateProfile(request.getName(), request.getImageUrl());
+        user.updateContactInfo(request.getPhoneNumber(), request.getPhoneVisibility(), request.getEmailVisibility());
 
         return new UserResponse(user);
     }
@@ -100,6 +104,19 @@ public class UserService implements UserDetailsService {
         java.util.List<User> guests = userRepository.findByIsGuestOrderByIdAsc(true);
         return guests.stream()
                 .map(UserResponse::new)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * 현재 사용자의 OAuth 제공자 목록 조회
+     */
+    public java.util.List<OAuthProviderResponse> getUserOAuthProviders(String uid) {
+        User user = oauthService.findUserByProviderUid(uid)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
+
+        java.util.List<UserOAuthProvider> providers = userOAuthProviderRepository.findByUserId(user.getId());
+        return providers.stream()
+                .map(OAuthProviderResponse::new)
                 .collect(java.util.stream.Collectors.toList());
     }
 }

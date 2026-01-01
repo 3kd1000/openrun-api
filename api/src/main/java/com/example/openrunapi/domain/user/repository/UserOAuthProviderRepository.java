@@ -3,6 +3,7 @@ package com.example.openrunapi.domain.user.repository;
 import com.example.openrunapi.domain.user.model.UserOAuthProvider;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserOAuthProviderRepository extends JpaRepository<UserOAuthProvider, Long> {
@@ -27,4 +28,9 @@ public interface UserOAuthProviderRepository extends JpaRepository<UserOAuthProv
      * Provider 구분 없이 provider_uid로 조회 (Firebase uid 검색용)
      */
     Optional<UserOAuthProvider> findByProviderUid(String providerUid);
+
+    /**
+     * 특정 유저의 모든 OAuth 제공자 목록 조회
+     */
+    List<UserOAuthProvider> findByUserId(Long userId);
 }

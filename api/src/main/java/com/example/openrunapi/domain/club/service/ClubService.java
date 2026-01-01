@@ -167,6 +167,36 @@ public class ClubService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 사용자가 가입한 클럽 목록 조회
+     */
+    public List<ClubResponse> getMyClubs(Long userId) {
+        List<ClubMember> clubMembers = clubMemberRepository.findAllByUserIdAndStatus(userId, ClubMemberStatus.ACTIVE);
+
+        return clubMembers.stream()
+                .map(clubMember -> new ClubResponse(clubMember.getClub()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 클럽 탈퇴 (사용자가 자신이 가입한 클럽에서 탈퇴)
+     */
+    @Transactional
+    public void leaveClub(Long clubId, Long userId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
+
+        // 클럽 소유자는 탈퇴 불가
+        if (club.getOwnerUserId().equals(userId)) {
+            throw new IllegalStateException("클럽 소유자는 탈퇴할 수 없습니다. 클럽을 삭제하거나 소유권을 이전하세요.");
+        }
+
+        ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 클럽의 멤버가 아닙니다."));
+
+        clubMemberRepository.delete(member);
+    }
+
     private Specification<Club> search(String keyword) {
         return (root, query, criteriaBuilder) -> {
             if (keyword == null || keyword.trim().isEmpty()) {

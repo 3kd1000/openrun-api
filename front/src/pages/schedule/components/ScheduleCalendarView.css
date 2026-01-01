@@ -342,80 +342,76 @@
 
 /* ========== 캘린더 이벤트 ========== */
 .calendar-event {
-  background: var(--color-primary);
-  color: white;
+  position: relative;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   padding: var(--space-xxs) var(--space-xs);
   border-radius: var(--radius-s);
   font-size: var(--font-size-xs);
   cursor: pointer;
-  transition: background-color var(--transition-base);
+  transition: all var(--transition-base);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: flex;
   gap: var(--space-xxs);
   align-items: center;
+  border: var(--border-width-thin) solid var(--color-border-secondary);
 }
 
 .calendar-event:hover {
-  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-xs);
 }
 
-/* 과거 일정 스타일 - 글자 가독성 개선 */
-.calendar-event.past-event {
-  background: var(--color-bg-disabled);
-  color: var(--color-text-primary); /* 흰색 대신 진한 글자색 */
-  opacity: 0.75; /* 0.5 → 0.75로 증가 */
+/* ========== 정원 상태 배경색 (3단계) ========== */
+/* 신청 가능: 배경색 없음 (기본 스타일) */
+.calendar-event.capacity-available {
+  background: transparent;
+  color: #24292F;
+  border-color: #D0D7DE;
 }
 
-.calendar-event.past-event:hover {
-  background: var(--color-bg-tertiary);
-  opacity: 0.85; /* 0.75 → 0.85로 증가 */
-}
-
-/* 신청하지 않은 일정 스타일 (outline) */
-.calendar-event.not-participating {
-  background: var(--color-bg-primary);
-  color: var(--color-primary);
-  border: var(--border-width-thin) solid var(--color-primary);
-}
-
-.calendar-event.not-participating:hover {
-  background: var(--color-primary-bg);
-  color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-/* 과거 + 신청하지 않은 일정 - 글자 가독성 개선 */
-.calendar-event.past-event.not-participating {
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary); /* tertiary → secondary로 진하게 */
-  border: var(--border-width-thin) solid var(--color-border-secondary);
-  opacity: 0.75; /* 0.5 → 0.75로 증가 */
-}
-
-.calendar-event.past-event.not-participating:hover {
+.calendar-event.capacity-available:hover {
   background: var(--color-bg-secondary);
-  color: var(--color-text-primary); /* secondary → primary로 더 진하게 */
-  border-color: var(--color-border-primary);
-  opacity: 0.85; /* 0.75 → 0.85로 증가 */
 }
 
-/* ========== 무효 대진 스타일 ========== */
-.calendar-view .calendar-event.invalid-draw {
-  border: var(--border-width-thin) dashed var(--color-danger);
-  background: var(--color-danger-light);
-  color: var(--color-danger-text);
+/* 마감 또는 초과: disabled 느낌의 무겁지 않은 색상 */
+.calendar-event.capacity-full {
+  background: #F1F3F5;
+  color: #6B7280;
+  border-color: #CED4DA;
 }
 
-.calendar-view .calendar-event.invalid-draw:hover {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger-hover);
+.calendar-event.capacity-full:hover {
+  background: #E9ECEF;
 }
 
-.invalid-indicator {
-  margin-left: var(--space-xxs);
-  font-size: 9px;
+/* 신청 완료: 화려하지 않지만 눈에 잘 들어오는 색상 */
+.calendar-event.capacity-participated {
+  background: #E8F1FF;
+  color: #1E3A8A;
+  border-color: #3B82F6;
+}
+
+.calendar-event.capacity-participated:hover {
+  background: #DBEAFE;
+}
+
+/* ========== 대진 상태 아이콘 ========== */
+.draw-icon {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+  line-height: 1;
+  margin-left: auto;
+}
+
+.draw-icon-valid {
+  color: var(--color-success);
+}
+
+.draw-icon-invalid {
+  color: var(--color-danger);
   animation: pulse 2s infinite;
 }
 
@@ -429,46 +425,45 @@
   }
 }
 
-/* ========== 유효한 대진 스타일 ========== */
-.calendar-view .calendar-event.has-valid-draw {
-  border: var(--border-width-thin) solid var(--color-success);
-  background: var(--color-success);
-  color: white;
+@media (max-width: 768px) {
+  .draw-icon {
+    font-size: 8px;
+  }
 }
 
-.calendar-view .calendar-event.has-valid-draw:hover {
-  background: var(--color-success-hover);
-  border-color: var(--color-success-dark);
+/* ========== 과거 일정 스타일 (opacity) ========== */
+.calendar-event.past-event {
+  opacity: 0.6;
 }
 
-.calendar-view .calendar-event.has-valid-draw.not-participating {
-  background: var(--color-bg-primary);
-  color: var(--color-success);
-  border: var(--border-width-thin) solid var(--color-success);
-}
-
-.calendar-view .calendar-event.has-valid-draw.not-participating:hover {
-  background: var(--color-success-bg);
-  color: var(--color-success-hover);
-  border-color: var(--color-success-dark);
-}
-
-.valid-indicator {
-  margin-left: var(--space-xxs);
-  font-size: 9px;
-  font-weight: var(--font-weight-bold);
+.calendar-event.past-event:hover {
+  opacity: 0.75;
 }
 
 /* ========== 이벤트 콘텐츠 ========== */
 .event-time {
   font-weight: var(--font-weight-semibold);
   font-size: 10px;
+  flex-shrink: 0;
 }
 
 .event-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+
+.event-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .calendar-event-more {
@@ -482,7 +477,7 @@
 /* ========== 모바일 최적화 ========== */
 @media (max-width: 768px) {
   .calendar-view .react-calendar {
-    padding: var(--space-s);
+    padding: var(--space-s) 0;
   }
 
   .calendar-view .react-calendar__navigation {
@@ -504,13 +499,19 @@
   .calendar-view .react-calendar__month-view__weekdays {
     padding-bottom: var(--space-xxs);
     margin-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .calendar-view .react-calendar__month-view__weekdays__weekday {
+    padding: var(--space-xxs) 2px;
   }
 
   .calendar-view .react-calendar__tile {
     height: 110px;
     min-height: 110px;
     max-height: 110px;
-    padding: 3px var(--space-xs);
+    padding: 3px 2px;
     font-size: var(--font-size-xs);
     display: flex;
     flex-direction: column;
@@ -534,12 +535,25 @@
     gap: var(--space-xxs);
   }
 
-  .event-time,
+  .event-time {
+    font-size: 8px;
+    flex-shrink: 0;
+  }
+
   .event-name {
     font-size: 8px;
   }
 
-  .event-time {
-    flex-shrink: 0;
+  /* 모바일: 코트명은 JavaScript에서 substring으로 처리하므로 CSS 제한 제거 */
+  .event-name-text {
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+/* 데스크탑: 코트명 전체 표시 */
+@media (min-width: 769px) {
+  .event-name-text {
+    max-width: none;
   }
 }

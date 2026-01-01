@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.user.model;
 
+import com.example.openrunapi.common.converter.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -29,13 +30,25 @@ public class User {
     private Long id;
 
     @Column(unique = true)
-    private String email; // 이메일 (OAuth 통합 계정의 기준)
+    private String email; // 이메일 (OAuth 통합 계정의 기준, 평문 저장 - 검색용)
 
     @Column(nullable = false)
     private String name; // 사용자 이름 또는 닉네임
 
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
+
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "phone_number")
+    private String phoneNumber; // 연락처 (암호화 저장)
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "phone_visibility", length = 20)
+    private ContactVisibility phoneVisibility = ContactVisibility.PRIVATE; // 연락처 공개 범위
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "email_visibility", length = 20)
+    private ContactVisibility emailVisibility = ContactVisibility.CLUB_ONLY; // 이메일 공개 범위
 
     @Column(name = "is_guest", nullable = false)
     private boolean isGuest = false; // 게스트 사용자 여부 (스코어보드 집계 제외)
@@ -72,6 +85,16 @@ public class User {
             this.name = name;
         }
         this.imageUrl = imageUrl; // null이 들어와도 업데이트 가능
+    }
+
+    public void updateContactInfo(String phoneNumber, ContactVisibility phoneVisibility, ContactVisibility emailVisibility) {
+        this.phoneNumber = phoneNumber; // null이 들어와도 업데이트 가능
+        if (phoneVisibility != null) {
+            this.phoneVisibility = phoneVisibility;
+        }
+        if (emailVisibility != null) {
+            this.emailVisibility = emailVisibility;
+        }
     }
 
     /**
