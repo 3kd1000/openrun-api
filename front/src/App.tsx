@@ -13,6 +13,9 @@ import ClubListPage from "./pages/club/ClubListPage";
 import ClubDetailPage from "./pages/club/ClubDetailPage";
 import ClubAdminPage from "./pages/club/ClubAdminPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
+import LicensePage from "./pages/LicensePage";
+import OAuthProvidersPage from "./pages/OAuthProvidersPage";
+import MyClubsPage from "./pages/MyClubsPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -54,10 +57,13 @@ function App() {
             <Route path="/" element={<DrawGenerationPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/terms" element={<TermsOfServicePage />} />
+            <Route path="/license" element={<LicensePage />} />
             <Route path="/clubs" element={<ClubListPage />} />
             <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
             <Route path="/home" element={<ComingSoonPage title="홈" />} />
             <Route path="/more" element={<MorePage />} />
+            <Route path="/more/oauth-providers" element={<OAuthProvidersPage />} />
+            <Route path="/more/my-clubs" element={<MyClubsPage />} />
             {/* Protected 페이지 (로그인 필수) */}
             <Route
               path="/schedules"

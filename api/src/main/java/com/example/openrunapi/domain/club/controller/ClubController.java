@@ -101,4 +101,15 @@ public class ClubController {
         List<UserResponse> members = clubService.getClubMembers(clubId, status);
         return ResponseEntity.ok(members);
     }
+
+    /**
+     * 클럽 탈퇴 (사용자가 자신이 가입한 클럽에서 탈퇴)
+     */
+    @DeleteMapping("/{clubId}/members/me")
+    public ResponseEntity<Void> leaveClub(@PathVariable Long clubId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        clubService.leaveClub(clubId, currentUserResponse.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

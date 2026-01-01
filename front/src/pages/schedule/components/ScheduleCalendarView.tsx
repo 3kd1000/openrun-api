@@ -1,10 +1,26 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, lastDayOfMonth, getDate } from "date-fns";
 import type { Schedule } from "../../../types/schedule";
 import { holidayService, type Holiday } from "../../../services/holidayService";
 import "react-calendar/dist/Calendar.css";
 import "./ScheduleCalendarView.css";
+
+// 모바일 여부 확인 훅
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return isMobile;
+};
 
 interface Props {
   schedules: Schedule[];
@@ -38,6 +54,7 @@ const ScheduleCalendarView: React.FC<Props> = ({
   );
   const calendarRef = React.useRef<HTMLDivElement>(null);
   const isHorizontalSwipe = React.useRef(false);
+  const isMobile = useIsMobile();
 
   // 외부에서 전달된 calendarDate가 변경되면 내부 상태도 업데이트
   useEffect(() => {
@@ -83,14 +100,32 @@ const ScheduleCalendarView: React.FC<Props> = ({
             const isParticipating = myParticipations.has(schedule.id);
             const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
             const hasValidDraw = schedule.drawType && schedule.isDrawValid;
+
+            // 정원 상태 계산 (3단계: 신청 가능 / 마감 또는 초과 / 신청 완료)
+            const getCapacityStatus = () => {
+              const { currentParticipants, maxCapacity } = schedule;
+              if (isParticipating) return "capacity-participated";
+              if (currentParticipants >= maxCapacity) return "capacity-full";
+              return "capacity-available";
+            };
+
+            const capacityStatus = getCapacityStatus();
+
+            // 대진 상태 결정
+            const getDrawStatus = () => {
+              if (hasInvalidDraw) return "draw-invalid";
+              if (hasValidDraw) return "draw-valid";
+              return "draw-none";
+            };
+
+            const drawStatus = getDrawStatus();
+
             return (
               <div
                 key={schedule.id}
-                className={`calendar-event ${isPast ? "past-event" : ""} ${
-                  !isParticipating ? "not-participating" : ""
-                } ${hasInvalidDraw ? "invalid-draw" : ""} ${
-                  hasValidDraw ? "has-valid-draw" : ""
-                }`}
+                className={`calendar-event ${
+                  isPast ? "past-event" : ""
+                } ${capacityStatus} ${drawStatus}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onScheduleClick(schedule);
@@ -107,14 +142,20 @@ const ScheduleCalendarView: React.FC<Props> = ({
                 }`}
               >
                 <span className="event-time">
-                  {format(new Date(schedule.scheduledAt), "HH:mm")}
+                  {format(new Date(schedule.scheduledAt), "HH")}
                 </span>
                 <span className="event-name">
-                  {schedule.courtName}
-                  {hasInvalidDraw && (
-                    <span className="invalid-indicator">⚠️</span>
+                  <span className="event-name-text">
+                    {isMobile
+                      ? schedule.courtName.substring(0, 2)
+                      : schedule.courtName}
+                  </span>
+                  {drawStatus === "draw-valid" && (
+                    <span className="draw-icon draw-icon-valid">✓</span>
                   )}
-                  {hasValidDraw && <span className="valid-indicator">✓</span>}
+                  {drawStatus === "draw-invalid" && (
+                    <span className="draw-icon draw-icon-invalid">⚠</span>
+                  )}
                 </span>
               </div>
             );
@@ -176,6 +217,25 @@ const ScheduleCalendarView: React.FC<Props> = ({
     return classes.length > 0 ? classes.join(" ") : null;
   };
 
+  // 월 변경 시 날짜 조정 (해당 월에 날짜가 없으면 마지막 날짜로)
+  const adjustDateForMonth = (
+    currentDate: Date,
+    targetMonth: number,
+    targetYear: number
+  ): Date => {
+    const currentDay = getDate(currentDate);
+    const targetDate = new Date(targetYear, targetMonth, currentDay);
+
+    // 해당 월에 현재 날짜가 유효한지 확인
+    // (예: 1월 31일 -> 2월로 가면 2월 31일은 3월 3일로 변환되므로, 원하는 월과 다르면 마지막 날 사용)
+    if (targetDate.getMonth() !== targetMonth) {
+      // 해당 월의 마지막 날짜 사용
+      return lastDayOfMonth(new Date(targetYear, targetMonth, 1));
+    }
+
+    return targetDate;
+  };
+
   const handleDateChange = (value: Date | Date[] | null) => {
     if (!value) return;
     const newDate = Array.isArray(value) ? value[0] : value;
@@ -184,12 +244,25 @@ const ScheduleCalendarView: React.FC<Props> = ({
     // 애니메이션 효과를 위한 처리
     if (isAnimating) return;
 
+    // 현재 선택된 날짜와 새 날짜의 월이 다른 경우 (월 변경)
+    const currentMonth = date.getMonth();
+    const currentYear = date.getFullYear();
+    const newMonth = newDate.getMonth();
+    const newYear = newDate.getFullYear();
+
+    let adjustedDate = newDate;
+
+    // 월이 변경된 경우 날짜 조정
+    if (currentMonth !== newMonth || currentYear !== newYear) {
+      adjustedDate = adjustDateForMonth(date, newMonth, newYear);
+    }
+
     setIsAnimating(true);
-    setDate(newDate);
+    setDate(adjustedDate);
 
     // 외부 상태도 업데이트
     if (onCalendarDateChange) {
-      onCalendarDateChange(newDate);
+      onCalendarDateChange(adjustedDate);
     }
 
     // 애니메이션 완료 후 상태 초기화
@@ -229,17 +302,26 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
     // 수평 스와이프가 수직 스와이프보다 크고, 최소 50px 이상 이동했을 때만 처리
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      const newDate = new Date(date);
+      const currentMonth = date.getMonth();
+      const currentYear = date.getFullYear();
+
+      let targetMonth: number;
+      let targetYear: number;
+
       if (deltaX > 0) {
         // 오른쪽으로 스와이프 = 이전 달
         setSlideDirection("right");
-        newDate.setMonth(newDate.getMonth() - 1);
+        targetMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        targetYear = currentMonth === 0 ? currentYear - 1 : currentYear;
       } else {
         // 왼쪽으로 스와이프 = 다음 달
         setSlideDirection("left");
-        newDate.setMonth(newDate.getMonth() + 1);
+        targetMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+        targetYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       }
-      handleDateChange(newDate);
+
+      const adjustedDate = adjustDateForMonth(date, targetMonth, targetYear);
+      handleDateChange(adjustedDate);
     }
 
     setTouchStart(null);
@@ -272,17 +354,26 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
     // 수평 드래그가 수직 드래그보다 크고, 최소 50px 이상 이동했을 때만 처리
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      const newDate = new Date(date);
+      const currentMonth = date.getMonth();
+      const currentYear = date.getFullYear();
+
+      let targetMonth: number;
+      let targetYear: number;
+
       if (deltaX > 0) {
         // 오른쪽으로 드래그 = 이전 달
         setSlideDirection("right");
-        newDate.setMonth(newDate.getMonth() - 1);
+        targetMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        targetYear = currentMonth === 0 ? currentYear - 1 : currentYear;
       } else {
         // 왼쪽으로 드래그 = 다음 달
         setSlideDirection("left");
-        newDate.setMonth(newDate.getMonth() + 1);
+        targetMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+        targetYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       }
-      handleDateChange(newDate);
+
+      const adjustedDate = adjustDateForMonth(date, targetMonth, targetYear);
+      handleDateChange(adjustedDate);
     }
 
     setTouchStart(null);
@@ -329,9 +420,22 @@ const ScheduleCalendarView: React.FC<Props> = ({
           // 연도/월 네비게이션 버튼 클릭 시 상태 동기화
           onActiveStartDateChange={({ activeStartDate }) => {
             if (activeStartDate) {
-              setDate(activeStartDate);
+              // 현재 선택된 날짜와 새 월이 다른 경우 날짜 조정
+              const currentMonth = date.getMonth();
+              const currentYear = date.getFullYear();
+              const newMonth = activeStartDate.getMonth();
+              const newYear = activeStartDate.getFullYear();
+
+              let adjustedDate = activeStartDate;
+
+              // 월이 변경된 경우 날짜 조정
+              if (currentMonth !== newMonth || currentYear !== newYear) {
+                adjustedDate = adjustDateForMonth(date, newMonth, newYear);
+              }
+
+              setDate(adjustedDate);
               if (onCalendarDateChange) {
-                onCalendarDateChange(activeStartDate);
+                onCalendarDateChange(adjustedDate);
               }
             }
           }}

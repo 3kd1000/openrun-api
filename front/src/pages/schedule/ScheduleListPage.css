@@ -6,7 +6,7 @@
 
 /* ========== 페이지 컨테이너 ========== */
 .schedule-page {
-  padding: var(--space-xxs) var(--space-l) var(--space-l) var(--space-l);
+  padding: var(--space-xxs) 0 var(--space-l) 0;
   width: 100%;
   padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
   box-sizing: border-box;
@@ -16,30 +16,38 @@
 
 /* ========== 헤더 ========== */
 .schedule-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 0; /* 헤더와 캘린더 사이 간격 제거 */
-  margin-left: calc(-1 * var(--space-l));
-  margin-right: calc(-1 * var(--space-l));
   margin-top: calc(
     -1 * var(--space-xxs)
   ); /* schedule-page의 padding-top 상쇄 */
-  flex-wrap: wrap;
-  gap: var(--space-l);
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
   background: var(--color-bg-primary);
   padding: var(--space-l);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  width: calc(100% + 2 * var(--space-l)); /* 좌우 음수 margin 상쇄 */
+  width: 100%;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-l);
+  margin-bottom: var(--space-m);
 }
 
 .schedule-header h1 {
   margin: 0;
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
+}
+
+.header-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
 }
 
 /* ========== 헤더 액션 ========== */
@@ -97,16 +105,14 @@
   background-color: var(--color-primary-hover);
 }
 
-/* ========== 필터 정보 ========== */
+/* ========== 필터 영역 ========== */
 .filter-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-m) var(--space-l);
+  padding: var(--space-s) var(--space-m);
   background-color: var(--color-primary-bg);
   border-radius: var(--radius-m);
-  margin-top: 0; /* 헤더와 필터 사이 간격 제거 */
-  margin-bottom: var(--space-l);
 }
 
 .filter-info span {
@@ -130,6 +136,100 @@
 .btn-clear-filter:hover {
   background-color: var(--color-primary);
   color: white;
+}
+
+/* ========== 정원 상태 필터 ========== */
+.capacity-filters {
+  display: flex;
+  gap: var(--space-s);
+  flex-wrap: wrap;
+}
+
+.capacity-filter-btn {
+  padding: var(--space-s) var(--space-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.capacity-filter-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border-primary);
+}
+
+.capacity-filter-btn.active {
+  border-width: 2px;
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-xs);
+}
+
+/* 전체 필터 버튼 active 상태 - 더 명확하게 */
+.capacity-filter-btn.active:not(.capacity-filter-available):not(
+    .capacity-filter-full
+  ) {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-s);
+}
+
+/* 신청 가능 필터 버튼 - 정원 상태 배경색과 동일 (배경색 없음) */
+.capacity-filter-available {
+  background: transparent;
+  border-color: #d0d7de;
+  color: #24292f;
+}
+
+.capacity-filter-available:hover {
+  background: var(--color-bg-secondary);
+}
+
+.capacity-filter-available.active {
+  background: var(--color-bg-secondary);
+  color: #24292f;
+  border-color: #24292f;
+  border-width: 2px;
+}
+
+/* 마감/초과 필터 버튼 - 정원 상태 배경색과 동일 */
+.capacity-filter-full {
+  background: #f1f3f5;
+  border-color: #ced4da;
+  color: #6b7280;
+}
+
+.capacity-filter-full:hover {
+  background: #e9ecef;
+}
+
+.capacity-filter-full.active {
+  background: #ced4da;
+  color: #495057;
+  border-color: #adb5bd;
+  border-width: 2px;
+}
+
+/* 신청완료 필터 버튼 - 정원 상태 배경색과 동일 */
+.capacity-filter-participated {
+  background: #e8f1ff;
+  border-color: #3b82f6;
+  color: #1e3a8a;
+}
+
+.capacity-filter-participated:hover {
+  background: #dbeafe;
+}
+
+.capacity-filter-participated.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
 }
 
 /* ========== 로딩 및 에러 상태 ========== */
@@ -204,14 +304,14 @@
 
 /* ========== 일정 카드 ========== */
 .schedule-page .schedule-card {
+  position: relative;
   background: var(--color-bg-primary);
   border: var(--border-width-thin) solid var(--color-border-secondary);
   border-radius: var(--radius-m);
   padding: var(--space-l);
-  transition: box-shadow var(--transition-slow);
+  transition: all var(--transition-slow);
   cursor: pointer;
   width: 100%;
-  max-width: 400px;
   color: var(--color-text-primary);
 }
 
@@ -219,58 +319,45 @@
   box-shadow: var(--shadow-l);
 }
 
-/* 미래 일정 + 참여한 경우: 파란색 테두리로 강조 */
-.schedule-page .schedule-card:not(.past-schedule):not(.not-participating) {
-  border: 2px solid var(--color-primary);
+/* ========== 정원 상태 배경색 (3단계) ========== */
+/* 신청 가능: 배경색 없음 (기본 스타일) */
+.schedule-page .schedule-card.capacity-available {
+  background: transparent;
+  border-color: #d0d7de;
 }
 
-.schedule-page
-  .schedule-card:not(.past-schedule):not(.not-participating):hover {
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
-  background: var(--color-primary-bg);
-}
-
-/* 미래 일정 + 미참여: 기본 회색 테두리 */
-.schedule-page .schedule-card:not(.past-schedule).not-participating {
-  border: var(--border-width-thin) solid var(--color-border-secondary);
-}
-
-/* 과거 일정 스타일 */
-.schedule-page .schedule-card.past-schedule {
-  opacity: var(--opacity-disabled);
+.schedule-page .schedule-card.capacity-available:hover {
   background: var(--color-bg-secondary);
+}
+
+/* 마감 또는 초과: disabled 느낌의 무겁지 않은 색상 */
+.schedule-page .schedule-card.capacity-full {
+  background: #f1f3f5;
+  border-color: #ced4da;
+}
+
+.schedule-page .schedule-card.capacity-full:hover {
+  background: #e9ecef;
+}
+
+/* 신청 완료: 화려하지 않지만 눈에 잘 들어오는 색상 */
+.schedule-page .schedule-card.capacity-participated {
+  background: #e8f1ff;
+  border-color: #3b82f6;
+}
+
+.schedule-page .schedule-card.capacity-participated:hover {
+  background: #dbeafe;
+}
+
+/* ========== 과거 일정 스타일 (opacity) ========== */
+.schedule-page .schedule-card.past-schedule {
+  opacity: 0.6;
 }
 
 .schedule-page .schedule-card.past-schedule:hover {
   opacity: 0.75;
-  box-shadow: var(--shadow-s);
 }
-
-/* 무효 대진 스타일 */
-.schedule-page .schedule-card.invalid-draw {
-  border: 2px dashed var(--color-warning);
-  background-color: var(--color-warning-light);
-}
-
-.schedule-page .schedule-card.invalid-draw:hover {
-  background-color: var(--color-warning-bg);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-}
-
-/* 기존 draw-warning 제거 - 새로운 뱃지 구조로 변경 */
-
-/* 유효한 대진 스타일 */
-.schedule-page .schedule-card.has-valid-draw {
-  border: 2px solid var(--color-success);
-}
-
-.schedule-page .schedule-card.has-valid-draw:hover {
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-}
-
-/* 기존 draw-success 제거 - 새로운 뱃지 구조로 변경 */
-
-/* 기존 btn-draw-view 제거 - 새로운 뱃지 구조로 변경 */
 
 /* ========== 일정 정보 ========== */
 .schedule-header-info {
@@ -394,7 +481,12 @@
   align-items: center;
   gap: var(--space-m);
   margin-bottom: var(--space-s);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.schedule-meta-row > * {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .schedule-meta-row > * {
@@ -457,6 +549,19 @@
 
 /* ========== 모바일 최적화 (768px 이하) ========== */
 @media (max-width: 768px) {
+  .schedule-header {
+    padding: var(--space-m);
+  }
+
+  .header-top {
+    margin-bottom: var(--space-s);
+    gap: var(--space-s);
+  }
+
+  .header-filters {
+    gap: var(--space-xs);
+  }
+
   .schedule-page .schedule-card {
     padding: var(--space-m);
   }
@@ -491,6 +596,18 @@
   .draw-badge {
     font-size: 9px;
     padding: 2px var(--space-xxs);
+  }
+
+  /* 필터 버튼 모바일 최적화 */
+  .capacity-filters {
+    gap: var(--space-xs);
+  }
+
+  .capacity-filter-btn {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+    flex: 1;
+    min-width: 0;
   }
 }
 

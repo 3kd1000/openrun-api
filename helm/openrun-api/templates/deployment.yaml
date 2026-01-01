@@ -86,6 +86,13 @@ spec:
               name: {{ .Values.secrets.name }}
               key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET
 
+        # === Encryption Key (AES-256) ===
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secrets.name }}
+              key: ENCRYPTION_KEY
+
         # === OAuth2 Provider 설정 ===
         - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI
           value: {{ .Values.oauth2Provider.kakao.authorizationUri | quote }}

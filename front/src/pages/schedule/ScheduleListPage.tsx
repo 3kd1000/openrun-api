@@ -11,6 +11,7 @@ import DrawViewModal from "./components/DrawViewModal";
 import "./ScheduleListPage.css";
 
 type ViewMode = "calendar" | "list";
+type CapacityFilter = "all" | "available" | "full" | "participated";
 
 const ScheduleListPage: React.FC = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const ScheduleListPage: React.FC = () => {
     null
   );
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>("all");
   const [myParticipations, setMyParticipations] = useState<Set<number>>(
     new Set()
   );
@@ -212,64 +214,119 @@ const ScheduleListPage: React.FC = () => {
     setSelectedScheduleId(null);
   };
 
+  // 정원 상태 계산 헬퍼 함수
+  const getCapacityStatus = (schedule: Schedule): "available" | "full" | "participated" => {
+    const { currentParticipants, maxCapacity } = schedule;
+    if (myParticipations.has(schedule.id)) return "participated";
+    if (currentParticipants >= maxCapacity) return "full";
+    return "available";
+  };
+
   // 필터링된 일정 목록
-  const filteredSchedules = filterDate
-    ? schedules.filter(
-        (schedule) =>
-          format(new Date(schedule.scheduledAt), "yyyy-MM-dd") ===
-          format(filterDate, "yyyy-MM-dd")
-      )
-    : schedules;
+  const filteredSchedules = schedules.filter((schedule) => {
+    // 날짜 필터
+    if (filterDate) {
+      const scheduleDate = format(new Date(schedule.scheduledAt), "yyyy-MM-dd");
+      const filterDateStr = format(filterDate, "yyyy-MM-dd");
+      if (scheduleDate !== filterDateStr) return false;
+    }
+
+    // 정원 상태 필터
+    if (capacityFilter !== "all") {
+      const status = getCapacityStatus(schedule);
+      if (status !== capacityFilter) return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="schedule-page">
       <div className="schedule-header">
-        <h1>일정 관리</h1>
-        <div className="header-actions">
-          <div className="view-toggle">
+        <div className="header-top">
+          <h1>일정 관리</h1>
+          <div className="header-actions">
+            <div className="view-toggle">
+              <button
+                className={`toggle-btn ${
+                  viewMode === "calendar" ? "active" : ""
+                }`}
+                onClick={() => {
+                  setViewMode("calendar");
+                  setFilterDate(null);
+                  // 캘린더뷰로 전환 시 스크롤 위치 초기화
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                📅 캘린더
+              </button>
+              <button
+                className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                onClick={() => setViewMode("list")}
+              >
+                📋 리스트
+              </button>
+            </div>
             <button
-              className={`toggle-btn ${
-                viewMode === "calendar" ? "active" : ""
-              }`}
+              className="btn-create"
               onClick={() => {
-                setViewMode("calendar");
-                setFilterDate(null);
-                // 캘린더뷰로 전환 시 스크롤 위치 초기화
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                setShowCreateModal(true);
               }}
             >
-              📅 캘린더
-            </button>
-            <button
-              className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
-              onClick={() => setViewMode("list")}
-            >
-              📋 리스트
+              + 일정 생성
             </button>
           </div>
-          <button
-            className="btn-create"
-            onClick={() => {
-              setShowCreateModal(true);
-            }}
-          >
-            + 일정 생성
-          </button>
+        </div>
+        {/* 필터 영역 - header 안에 배치 */}
+        <div className="header-filters">
+          {filterDate && viewMode === "list" && (
+            <div className="filter-info">
+              <span>{format(filterDate, "yyyy년 M월 d일")} 일정</span>
+              <button className="btn-clear-filter" onClick={handleClearFilter}>
+                전체 보기
+              </button>
+            </div>
+          )}
+          <div className="capacity-filters">
+            <button
+              className={`capacity-filter-btn ${
+                capacityFilter === "all" ? "active" : ""
+              }`}
+              onClick={() => setCapacityFilter("all")}
+            >
+              전체
+            </button>
+            <button
+              className={`capacity-filter-btn capacity-filter-available ${
+                capacityFilter === "available" ? "active" : ""
+              }`}
+              onClick={() => setCapacityFilter("available")}
+            >
+              신청 가능
+            </button>
+            <button
+              className={`capacity-filter-btn capacity-filter-full ${
+                capacityFilter === "full" ? "active" : ""
+              }`}
+              onClick={() => setCapacityFilter("full")}
+            >
+              마감/초과
+            </button>
+            <button
+              className={`capacity-filter-btn capacity-filter-participated ${
+                capacityFilter === "participated" ? "active" : ""
+              }`}
+              onClick={() => setCapacityFilter("participated")}
+            >
+              신청완료
+            </button>
+          </div>
         </div>
       </div>
 
-      {filterDate && viewMode === "list" && (
-        <div className="filter-info">
-          <span>{format(filterDate, "yyyy년 M월 d일")} 일정</span>
-          <button className="btn-clear-filter" onClick={handleClearFilter}>
-            전체 보기
-          </button>
-        </div>
-      )}
-
       {viewMode === "calendar" ? (
         <ScheduleCalendarView
-          schedules={schedules}
+          schedules={filteredSchedules}
           onDateClick={handleDateClick}
           onDateDoubleClick={handleDateDoubleClick}
           onScheduleClick={handleScheduleClick}
@@ -295,15 +352,31 @@ const ScheduleListPage: React.FC = () => {
             const isParticipating = myParticipations.has(schedule.id);
             const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
             const hasValidDraw = schedule.drawType && schedule.isDrawValid;
+
+            // 정원 상태 계산 (3단계: 신청 가능 / 마감 또는 초과 / 신청 완료)
+            const getCapacityStatus = () => {
+              const { currentParticipants, maxCapacity } = schedule;
+              if (isParticipating) return 'capacity-participated';
+              if (currentParticipants >= maxCapacity) return 'capacity-full';
+              return 'capacity-available';
+            };
+
+            const capacityStatus = getCapacityStatus();
+
+            // 대진 상태 결정
+            const getDrawStatus = () => {
+              if (hasInvalidDraw) return 'draw-invalid';
+              if (hasValidDraw) return 'draw-valid';
+              return 'draw-none';
+            };
+
+            const drawStatus = getDrawStatus();
+
             return (
               <div
                 key={schedule.id}
                 ref={isFirstFuture ? todayScheduleRef : null}
-                className={`schedule-card ${isPast ? "past-schedule" : ""} ${
-                  !isParticipating ? "not-participating" : ""
-                } ${hasInvalidDraw ? "invalid-draw" : ""} ${
-                  hasValidDraw ? "has-valid-draw" : ""
-                }`}
+                className={`schedule-card ${isPast ? "past-schedule" : ""} ${capacityStatus} ${drawStatus}`}
                 onClick={() => handleScheduleClick(schedule)}
               >
                 <div className="schedule-info">
