@@ -538,4 +538,38 @@ public class ScheduleService {
 
         log.info("참가자 상태 업데이트 완료: CONFIRMED {} 명, WAITING {} 명", confirmedCount, waitingCount);
     }
+
+    /**
+     * 일정의 대진표 삭제
+     */
+    @Transactional
+    public void deleteDrawForSchedule(Long scheduleId) {
+        log.info("=== 대진표 삭제 시작 ===");
+        log.info("scheduleId: {}", scheduleId);
+
+        // 일정 조회
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 대진표가 없으면 예외
+        if (!schedule.hasDraw()) {
+            throw new IllegalStateException("삭제할 대진표가 존재하지 않습니다.");
+        }
+
+        // Match 테이블에서 해당 일정의 모든 매치 삭제
+        List<Match> matches = matchRepository.findByScheduleId(scheduleId);
+        if (!matches.isEmpty()) {
+            matchRepository.deleteAll(matches);
+            log.info("Match 삭제 완료: {} 건", matches.size());
+        }
+
+        // Schedule의 대진 정보 삭제
+        schedule.deleteDraw();
+        log.info("Schedule 대진 정보 삭제 완료");
+
+        // 참가자 상태는 그대로 유지 (선착순 정보 보존)
+        log.info("참가자 상태 유지 (선착순 정보 보존)");
+
+        log.info("=== 대진표 삭제 완료 ===");
+    }
 }

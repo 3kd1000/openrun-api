@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,7 @@ public class MatchService {
      * JPA Specification을 사용한 동적 쿼리 방식
      *
      * @param clubId 클럽 ID
-     * @param playerName 선수 이름 (optional)
+     * @param playerName 선수 이름 (optional, 쉼표로 구분하여 여러명 검색 가능: "홍길동,김철수")
      * @param startDate 시작일 (optional)
      * @param endDate 종료일 (optional)
      * @return 대진 목록
@@ -47,16 +48,26 @@ public class MatchService {
         log.info("=== 대진 목록 조회 ===");
         log.info("clubId: {}, playerName: {}, startDate: {}, endDate: {}", clubId, playerName, startDate, endDate);
 
-        // 선수 이름 -> 선수 ID 변환
-        Long playerId = null;
+        // 선수 이름 -> 선수 ID 변환 (쉼표로 구분된 여러 이름 지원)
+        List<Long> playerIds = null;
         if (playerName != null && !playerName.isBlank()) {
-            User player = userRepository.findByName(playerName)
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 선수입니다: " + playerName));
-            playerId = player.getId();
+            String[] names = playerName.split(",");
+            playerIds = new ArrayList<>();
+            for (String name : names) {
+                String trimmedName = name.trim();
+                if (!trimmedName.isEmpty()) {
+                    User player = userRepository.findByName(trimmedName)
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 선수입니다: " + trimmedName));
+                    playerIds.add(player.getId());
+                }
+            }
+            if (playerIds.isEmpty()) {
+                playerIds = null;
+            }
         }
 
         // Specification을 사용한 동적 쿼리 실행
-        Specification<Match> spec = MatchSpecification.search(clubId, playerId, startDate, endDate);
+        Specification<Match> spec = MatchSpecification.search(clubId, playerIds, startDate, endDate);
         List<Match> matches = matchRepository.findAll(spec);
 
         log.info("조회된 대진 수: {}", matches.size());

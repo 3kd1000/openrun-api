@@ -53,6 +53,7 @@ const DrawCreateModal: React.FC<Props> = ({
   const [drawType, setDrawType] = useState<DrawType>("AA");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showDrawTypeInfo, setShowDrawTypeInfo] = useState(false);
 
   // 게스트 추가 상태
   const [addingGuest, setAddingGuest] = useState(false);
@@ -526,7 +527,17 @@ const DrawCreateModal: React.FC<Props> = ({
 
           {/* 대진 타입 선택 */}
           <div className="form-group">
-            <label>대진 타입</label>
+            <div className="draw-type-header">
+              <label>대진 타입</label>
+              <button
+                type="button"
+                className="btn-toggle-info"
+                onClick={() => setShowDrawTypeInfo(!showDrawTypeInfo)}
+                title={showDrawTypeInfo ? "설명 닫기" : "설명 보기"}
+              >
+                {showDrawTypeInfo ? "▲" : "▼"}
+              </button>
+            </div>
             <div className="draw-type-buttons">
               <button
                 type="button"
@@ -552,6 +563,40 @@ const DrawCreateModal: React.FC<Props> = ({
                 SEED (시드)
               </button>
             </div>
+
+            {/* 대진 타입 설명 (아코디언) */}
+            {showDrawTypeInfo && (
+              <div className="draw-type-info">
+                {drawType === "AA" && (
+                  <>
+                    <p className="info-description">
+                      매 라운드마다 파트너가 바뀌며 다양한 조합으로 경기
+                    </p>
+                    <p className="info-players">참가 인원: 6~16명</p>
+                  </>
+                )}
+                {drawType === "AB" && (
+                  <>
+                    <p className="info-description">
+                      A/B 그룹으로 나눠 그룹 간 대결 위주로 진행
+                    </p>
+                    <p className="info-players">
+                      참가 인원: 8, 10, 12, 14, 16명 (그룹별 동일 인원)
+                    </p>
+                  </>
+                )}
+                {drawType === "SEED" && (
+                  <>
+                    <p className="info-description">
+                      실력자를 시드로 배정하여 초반 강강 대결 방지
+                    </p>
+                    <p className="info-players">
+                      참가 인원: 6~16명 (시드 개수는 총 인원에 따라 변동)
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* AA 타입: 참가자/대기열 관리 */}

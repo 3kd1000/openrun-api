@@ -14,29 +14,67 @@
 
 /* ========== 헤더 ========== */
 .scoreboard-header {
-  margin-bottom: var(--space-m);
+  margin-bottom: var(--space-xl);
 }
 
 /* ========== Tab Navigation ========== */
 .tab-navigation {
   display: flex;
   gap: var(--space-xs);
-  margin-bottom: var(--space-m);
+  margin-bottom: var(--space-l);
   border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
   padding-bottom: 0;
 }
 
+/* ========== 랭킹 필터 ========== */
+.ranking-filters {
+  display: flex;
+  gap: var(--space-m);
+  margin-bottom: var(--space-l);
+  padding: var(--space-m);
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  flex-wrap: wrap;
+}
+
+.ranking-year-filter,
+.ranking-sort-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.ranking-year-filter label,
+.ranking-sort-filter label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.year-select,
+.sort-select {
+  padding: var(--space-s) var(--space-m);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  min-width: 120px;
+}
+
 .tab-button {
-  padding: var(--space-xs) var(--space-m);
+  padding: var(--space-m) var(--space-l);
   background: transparent;
   border: none;
   border-bottom: var(--border-width-base) solid transparent;
-  font-size: var(--font-size-m);
+  font-size: var(--font-size-l);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-tertiary);
   cursor: pointer;
   transition: var(--transition-all);
   margin-bottom: calc(-1 * var(--border-width-base));
+  min-height: 48px;
 }
 
 .tab-button:hover {
@@ -334,38 +372,44 @@
   background: var(--color-bg-primary);
   border-radius: var(--radius-m);
   border: var(--border-width-thin) solid var(--color-border-secondary);
-  padding: var(--space-m);
+  padding: var(--space-l);
   margin-bottom: var(--space-m);
 }
 
-.search-form {
-  display: flex;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-s);
+.player-name-input-row {
+  margin-bottom: var(--space-m);
 }
 
 .search-input {
-  flex: 1;
-  padding: var(--space-xs) var(--space-s);
+  width: 100%;
+  padding: var(--space-s) var(--space-m);
   border: var(--border-width-thin) solid var(--color-border-primary);
   border-radius: var(--radius-s);
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-base);
+}
+
+.filter-actions-row {
+  display: flex;
+  gap: var(--space-s);
+  align-items: center;
 }
 
 .search-button,
 .reset-button {
-  padding: var(--space-xs) var(--space-m);
+  padding: var(--space-s) var(--space-l);
   border: none;
   border-radius: var(--radius-s);
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: background-color var(--transition-base);
+  white-space: nowrap;
 }
 
 .search-button {
   background: var(--color-success);
   color: white;
+  flex-shrink: 0;
 }
 
 .search-button:hover {
@@ -375,6 +419,7 @@
 .reset-button {
   background: var(--color-bg-disabled);
   color: var(--color-text-tertiary);
+  flex-shrink: 0;
 }
 
 .reset-button:hover {
@@ -384,21 +429,24 @@
 .date-range-filter {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-s);
+  flex-shrink: 0;
 }
 
 .date-range-filter label {
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .date-range-filter select {
-  padding: var(--space-xs) var(--space-s);
+  padding: var(--space-s) var(--space-m);
   border: var(--border-width-thin) solid var(--color-border-primary);
   border-radius: var(--radius-s);
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-base);
   cursor: pointer;
+  min-width: 100px;
 }
 
 /* ========== 매치 목록 ========== */
@@ -679,24 +727,48 @@
 @media (max-width: 768px) {
   .tab-navigation {
     gap: var(--space-xxs);
-    margin-bottom: var(--space-s);
+    margin-bottom: var(--space-l);
   }
 
   .tab-button {
     flex: 1;
-    padding: var(--space-xxs) var(--space-xs);
-    font-size: var(--font-size-m);
+    padding: var(--space-m) var(--space-s);
+    font-size: var(--font-size-base);
+    min-height: 44px;
+  }
+
+  .ranking-filters {
+    padding: var(--space-s);
+    margin-bottom: var(--space-m);
+    gap: var(--space-s);
+  }
+
+  .ranking-year-filter,
+  .ranking-sort-filter {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ranking-year-filter label,
+  .ranking-sort-filter label {
+    font-size: var(--font-size-s);
+  }
+
+  .year-select,
+  .sort-select {
+    flex: 1;
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+    min-width: 0;
   }
 
   .filter-section {
-    padding: var(--space-s);
-    margin-bottom: var(--space-s);
+    padding: var(--space-m);
+    margin-bottom: var(--space-m);
   }
 
-  .search-form {
-    flex-direction: column;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-xs);
+  .player-name-input-row {
+    margin-bottom: var(--space-m);
   }
 
   .search-input {
@@ -705,26 +777,37 @@
     font-size: var(--font-size-base);
   }
 
-  .search-button,
-  .reset-button {
-    width: 100%;
-    padding: var(--space-s) var(--space-m);
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
+  .filter-actions-row {
+    flex-direction: row;
+    gap: var(--space-xs);
+    flex-wrap: nowrap;
   }
 
   .date-range-filter {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-xxs);
+    flex: 1;
+    min-width: 0;
+    gap: var(--space-xs);
   }
 
   .date-range-filter label {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
+    white-space: nowrap;
   }
 
   .date-range-filter select {
-    font-size: var(--font-size-xs);
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-s) var(--space-xs);
+    font-size: var(--font-size-s);
+  }
+
+  .search-button,
+  .reset-button {
+    flex: 1;
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    min-width: 0;
   }
 
   .match-list-container {

@@ -288,14 +288,7 @@
   cursor: not-allowed;
 }
 
-/* ========== 참가신청 시작 시간 섹션 ========== */
-.participation-start-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-s);
-  margin-bottom: var(--space-m);
-}
-
+/* ========== 참가신청 시작 시간 ========== */
 .participation-start-info {
   padding: 10px var(--space-m);
   border: var(--border-width-thin) solid;
@@ -330,41 +323,28 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.btn-refresh {
-  padding: var(--space-s) var(--space-l);
-  background-color: var(--color-secondary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-m);
-  cursor: pointer;
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-medium);
-  transition: background-color var(--transition-base);
-  align-self: center;
-}
-
-.btn-refresh:hover:not(:disabled) {
-  background-color: var(--color-secondary-hover);
-}
-
-.btn-refresh:disabled {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-text-tertiary);
-  cursor: not-allowed;
-  opacity: var(--opacity-disabled);
-}
-
 /* 모달 액션 (border-top 제거) */
 .schedule-detail-view .modal-actions {
-  margin-top: -8px;
   padding: 0;
   border-top: none;
 }
 
 /* ========== 대진 관련 액션 버튼 영역 ========== */
 .draw-create-action {
-  margin-top: -4px;
-  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.draw-min-notice {
+  padding: var(--space-s) var(--space-m);
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: var(--border-width-thin) solid var(--color-warning);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
 }
 
 .btn-create-draw {
@@ -445,14 +425,16 @@
   }
 }
 
-/* ========== 대진표 보기 버튼 ========== */
+/* ========== 대진표 보기/삭제 버튼 ========== */
 .draw-view-action {
   margin-top: -4px;
   margin-bottom: 4px;
+  display: flex;
+  gap: var(--space-s);
 }
 
 .btn-view-draw {
-  width: 100%;
+  flex: 1;
   padding: var(--space-s) var(--space-xl);
   background: var(--gradient-primary);
   color: white;
@@ -472,6 +454,39 @@
 
 .btn-view-draw:active {
   transform: translateY(0);
+}
+
+.btn-delete-draw {
+  flex: 1;
+  padding: var(--space-s) var(--space-xl);
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--radius-l);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition-all);
+  box-shadow: var(--shadow-primary);
+}
+
+.btn-delete-draw:hover:not(:disabled) {
+  background-color: var(--color-danger-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.btn-delete-draw:active {
+  transform: translateY(0);
+}
+
+.btn-delete-draw:disabled {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: var(--opacity-disabled);
 }
 
 /* ========== 모바일 반응형 (768px 이하) ========== */
@@ -514,12 +529,12 @@
     padding: 0 var(--space-s);
   }
 
-  /* 버튼 통일 높이 (대진표보기, 참가자 목록, 참가신청 시작시간, 새로고침, modal-actions) */
+  /* 버튼 통일 높이 (대진표보기, 대진표삭제, 참가자 목록, 참가신청 시작시간, modal-actions) */
   .btn-view-draw,
+  .btn-delete-draw,
   .btn-create-draw,
   .participant-group li,
-  .participation-start-info,
-  .btn-refresh {
+  .participation-start-info {
     height: 38px;
     min-height: 38px;
     display: flex;
@@ -530,6 +545,7 @@
   }
 
   .btn-view-draw,
+  .btn-delete-draw,
   .btn-create-draw {
     padding: 0 var(--space-m);
     font-weight: var(--font-weight-semibold);
@@ -552,11 +568,6 @@
 
   .my-status p {
     font-size: var(--font-size-s);
-    font-weight: var(--font-weight-semibold);
-  }
-
-  .btn-refresh {
-    padding: 0 var(--space-m);
     font-weight: var(--font-weight-semibold);
   }
 

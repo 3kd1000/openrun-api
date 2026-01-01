@@ -37,6 +37,7 @@ public class ScoreboardResponse {
      */
     @Getter
     @Builder
+    @lombok.Setter
     public static class RankingEntry {
         private Integer rank;                // 순위
         private Long userId;                 // 사용자 ID
