@@ -31,9 +31,18 @@ const ScoreboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("ranking");
 
   // Tab 1: Rankings
+  const START_YEAR = 2026; // 시작 연도 (하드코딩)
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(() => {
+    const currentYear = new Date().getFullYear();
+    // 현재 연도가 시작 연도 이상이면 현재 연도, 아니면 시작 연도
+    return currentYear >= START_YEAR ? currentYear : START_YEAR;
+  });
+  const [sortBy, setSortBy] = useState<"points" | "totalMatches" | "winRate">(
+    "points"
+  );
 
   // Tab 2: Match search
   const [matches, setMatches] = useState<Match[]>([]);
@@ -57,8 +66,21 @@ const ScoreboardPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+
+      // 연도 선택에 따라 기간 설정
+      // 해당 연도의 1월 1일 00:00:00 ~ 12월 31일 23:59:59
+      const startDate = new Date(selectedYear, 0, 1, 0, 0, 0).toISOString();
+      const endDate = new Date(selectedYear, 11, 31, 23, 59, 59).toISOString();
+
+      const params = {
+        startDate,
+        endDate,
+        sortBy,
+      };
+
       const response = await axiosInstance.get<ScoreboardResponse>(
-        `/clubs/${clubId}/scoreboard`
+        `/clubs/${clubId}/scoreboard`,
+        { params }
       );
       setRankings(response.data.rankings);
     } catch (err) {
@@ -68,7 +90,7 @@ const ScoreboardPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [clubId]);
+  }, [clubId, selectedYear, sortBy]);
 
   // Tab 2: Fetch matches
   const fetchMatches = useCallback(
@@ -230,6 +252,53 @@ const ScoreboardPage: React.FC = () => {
       {/* Tab 1: Rankings */}
       {activeTab === "ranking" && (
         <div className="tab-content">
+          {/* 연도 및 정렬 필터 */}
+          <div className="ranking-filters">
+            <div className="ranking-year-filter">
+              <label>연도:</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  const year = parseInt(e.target.value);
+                  setSelectedYear(year);
+                }}
+                className="year-select"
+              >
+                {(() => {
+                  const currentYear = new Date().getFullYear();
+                  const years: number[] = [];
+
+                  // 시작 연도부터 현재 연도까지 역순 (현재 연도가 먼저)
+                  for (let year = currentYear; year >= START_YEAR; year--) {
+                    years.push(year);
+                  }
+
+                  return years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}년
+                    </option>
+                  ));
+                })()}
+              </select>
+            </div>
+            <div className="ranking-sort-filter">
+              <label>정렬:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(
+                    e.target.value as "points" | "totalMatches" | "winRate"
+                  );
+                }}
+                className="sort-select"
+              >
+                <option value="points">승점</option>
+                <option value="totalMatches">경기수</option>
+                <option value="winRate">승률</option>
+              </select>
+            </div>
+          </div>
+
           {loading ? (
             <div className="empty-state">
               <p>로딩 중...</p>
@@ -297,14 +366,32 @@ const ScoreboardPage: React.FC = () => {
         <div className="tab-content">
           {/* 검색 필터 */}
           <div className="filter-section">
-            <form onSubmit={handleSearch} className="search-form">
+            <div className="player-name-input-row">
               <input
                 type="text"
-                placeholder="선수 이름 검색"
+                placeholder="선수 이름 검색 (쉼표로 구분: 홍길동, 김철수)"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 className="search-input"
               />
+            </div>
+            <form onSubmit={handleSearch} className="filter-actions-row">
+              <div className="date-range-filter">
+                <label>기간:</label>
+                <select
+                  value={dateRange}
+                  onChange={(e) =>
+                    setDateRange(
+                      e.target.value as "all" | "3months" | "6months" | "1year"
+                    )
+                  }
+                >
+                  <option value="all">전체</option>
+                  <option value="3months">3개월</option>
+                  <option value="6months">6개월</option>
+                  <option value="1year">1년</option>
+                </select>
+              </div>
               <button type="submit" className="search-button">
                 검색
               </button>
@@ -316,22 +403,6 @@ const ScoreboardPage: React.FC = () => {
                 초기화
               </button>
             </form>
-            <div className="date-range-filter">
-              <label>기간:</label>
-              <select
-                value={dateRange}
-                onChange={(e) =>
-                  setDateRange(
-                    e.target.value as "all" | "3months" | "6months" | "1year"
-                  )
-                }
-              >
-                <option value="all">전체</option>
-                <option value="3months">3개월</option>
-                <option value="6months">6개월</option>
-                <option value="1year">1년</option>
-              </select>
-            </div>
           </div>
 
           {/* 경기 목록 */}

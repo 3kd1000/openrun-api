@@ -274,6 +274,29 @@ const ScheduleDetailModal: React.FC<Props> = ({
     }
   };
 
+  const handleDeleteDraw = async () => {
+    if (!schedule) {
+      return;
+    }
+
+    if (!window.confirm("대진표를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      await scheduleService.deleteDraw(schedule.id);
+      await loadScheduleAndParticipants(); // 변경된 데이터로 새로고침
+      onSuccess(); // 부모 컴포넌트에 변경 알림
+    } catch (err) {
+      console.error("대진표 삭제 실패:", err);
+      setError("대진표 삭제에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleJoin = async () => {
     if (!currentUserId) {
       alert("로그인이 필요합니다. /dev/login 페이지에서 로그인해주세요.");
@@ -504,7 +527,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
             {/* 대진 관련 액션 버튼 */}
             {schedule.drawType ? (
-              // 대진이 있는 경우: 보기 버튼만 (수정/재생성은 대진표 보기 모달에서)
+              // 대진이 있는 경우: 보기 버튼과 삭제 버튼
               // 과거 일정이어도 대진이 있으면 보기 가능 (경기 결과 입력/수정을 위해)
               <div className="draw-view-action">
                 <button
@@ -513,6 +536,14 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   className="btn-view-draw"
                 >
                   📋 대진표 보기
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteDraw}
+                  className="btn-delete-draw"
+                  disabled={loading}
+                >
+                  🗑️ 대진표 삭제
                 </button>
               </div>
             ) : (
@@ -524,19 +555,28 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   className="btn-create-draw"
                   disabled={
                     !!(
-                      schedule.scheduledAt &&
-                      new Date() >= new Date(schedule.scheduledAt)
+                      (schedule.scheduledAt &&
+                        new Date() >= new Date(schedule.scheduledAt)) ||
+                      confirmedParticipants.length < 6
                     )
                   }
                   title={
                     schedule.scheduledAt &&
                     new Date() >= new Date(schedule.scheduledAt)
                       ? "이미 지난 일정에는 대진을 생성할 수 없습니다."
+                      : confirmedParticipants.length < 6
+                      ? `대진 생성에는 최소 6명이 필요합니다 (현재: ${confirmedParticipants.length}명)`
                       : undefined
                   }
                 >
                   🎯 대진 생성
                 </button>
+                {confirmedParticipants.length < 6 && (
+                  <p className="draw-min-notice">
+                    대진 생성에는 최소 6명이 필요합니다 (현재:{" "}
+                    {confirmedParticipants.length}명)
+                  </p>
+                )}
               </div>
             )}
 
@@ -600,45 +640,31 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
             {error && <div className="error-message">{error}</div>}
 
-            {/* 참가신청 시작 시간 안내 및 새로고침 버튼 */}
-            <div className="participation-start-section">
-              {schedule?.participationStartAt ? (
-                (() => {
-                  const now = new Date();
-                  const startAt = new Date(schedule.participationStartAt);
-                  const isStarted = now >= startAt;
+            {/* 참가신청 시작 시간 안내 */}
+            {schedule?.participationStartAt ? (
+              (() => {
+                const now = new Date();
+                const startAt = new Date(schedule.participationStartAt);
+                const isStarted = now >= startAt;
 
-                  return (
-                    <div
-                      className={`participation-start-info ${
-                        isStarted ? "started" : "pending"
-                      }`}
-                    >
-                      <p>
-                        참가신청 시작 시간:{" "}
-                        {format(startAt, "yyyy년 M월 d일 HH:mm")}
-                      </p>
-                    </div>
-                  );
-                })()
-              ) : (
-                <div className="participation-start-info started">
-                  <p>참가신청 시작 시간: 즉시 신청 가능</p>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={async () => {
-                  setLoading(true);
-                  await loadScheduleAndParticipants();
-                }}
-                className="btn-refresh"
-                disabled={loading}
-                title="시간 정보 새로고침"
-              >
-                {loading ? "새로고침 중..." : "🔄 새로고침"}
-              </button>
-            </div>
+                return (
+                  <div
+                    className={`participation-start-info ${
+                      isStarted ? "started" : "pending"
+                    }`}
+                  >
+                    <p>
+                      참가신청 시작 시간:{" "}
+                      {format(startAt, "yyyy년 M월 d일 HH:mm")}
+                    </p>
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="participation-start-info started">
+                <p>참가신청 시작 시간: 즉시 신청 가능</p>
+              </div>
+            )}
 
             <div className="modal-actions">
               {currentUserId && myParticipation ? (

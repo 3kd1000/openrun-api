@@ -147,4 +147,13 @@ public class Schedule {
     public boolean hasValidDraw() {
         return this.drawType != null && Boolean.TRUE.equals(this.isDrawValid);
     }
+
+    /**
+     * 대진 삭제
+     */
+    public void deleteDraw() {
+        this.drawType = null;
+        this.isDrawValid = false;
+        this.drawCreatedAt = null;
+    }
 }

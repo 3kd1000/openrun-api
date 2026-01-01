@@ -185,4 +185,13 @@ public class ScheduleController {
         DrawResponse response = scheduleService.getDrawForSchedule(scheduleId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 일정의 대진표 삭제
+     */
+    @DeleteMapping("/{scheduleId}/draw")
+    public ResponseEntity<Void> deleteDrawForSchedule(@PathVariable Long scheduleId) {
+        scheduleService.deleteDrawForSchedule(scheduleId);
+        return ResponseEntity.noContent().build();
+    }
 }
