@@ -384,26 +384,28 @@
   background: var(--color-bg-secondary);
 }
 
-/* 마감 또는 초과: disabled 느낌의 무겁지 않은 색상 */
+/* 마감 또는 초과: 붉은색 계열로 통일 */
 .calendar-event.capacity-full {
-  background: #F1F3F5;
-  color: #6B7280;
-  border-color: #CED4DA;
+  background: #fff5f5;
+  color: #991b1b;
+  border-color: #fca5a5;
 }
 
 .calendar-event.capacity-full:hover {
-  background: #E9ECEF;
+  background: #fee2e2;
+  border-color: #f87171;
 }
 
-/* 신청 완료: 화려하지 않지만 눈에 잘 들어오는 색상 */
+/* 신청 완료: 초록색 계열 (success) */
 .calendar-event.capacity-participated {
-  background: #E8F1FF;
-  color: #1E3A8A;
-  border-color: #3B82F6;
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #86efac;
 }
 
 .calendar-event.capacity-participated:hover {
-  background: #DBEAFE;
+  background: #dcfce7;
+  border-color: #4ade80;
 }
 
 /* ========== 대진 상태 아이콘 ========== */
@@ -497,11 +499,13 @@
   .calendar-view .react-calendar__navigation button {
     min-width: 28px;
     font-size: var(--font-size-s);
+    font-weight: var(--font-weight-bold);
     padding: var(--space-xxs);
   }
 
   .calendar-view .react-calendar__navigation__label {
     font-size: var(--font-size-s);
+    font-weight: var(--font-weight-bold);
     padding: var(--space-xxs);
   }
 
@@ -510,6 +514,7 @@
     margin-top: 0;
     padding-left: 0;
     padding-right: 0;
+    font-weight: var(--font-weight-bold);
   }
 
   .calendar-view .react-calendar__month-view__weekdays__weekday {
@@ -522,6 +527,7 @@
     max-height: 110px;
     padding: 3px 2px;
     font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -529,6 +535,7 @@
 
   .calendar-view .react-calendar__tile abbr {
     font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
   }
 
   .calendar-tile-content {
@@ -540,17 +547,24 @@
 
   .calendar-event {
     font-size: 9px;
+    font-weight: var(--font-weight-semibold);
     padding: 1px var(--space-xxs);
     gap: var(--space-xxs);
   }
 
   .event-time {
     font-size: 8px;
+    font-weight: var(--font-weight-bold);
     flex-shrink: 0;
   }
 
   .event-name {
     font-size: 8px;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .event-name-text {
+    font-weight: var(--font-weight-semibold);
   }
 
   /* 모바일: 코트명은 JavaScript에서 substring으로 처리하므로 CSS 제한 제거 */
