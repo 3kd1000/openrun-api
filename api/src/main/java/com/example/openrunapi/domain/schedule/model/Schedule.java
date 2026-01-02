@@ -17,7 +17,11 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "schedule")
+@Table(name = "schedule", indexes = {
+    @Index(name = "idx_schedule_club_id", columnList = "club_id"),
+    @Index(name = "idx_schedule_scheduled_at", columnList = "scheduled_at"),
+    @Index(name = "idx_schedule_club_id_scheduled_at", columnList = "club_id, scheduled_at")
+})
 public class Schedule {
 
     @Id

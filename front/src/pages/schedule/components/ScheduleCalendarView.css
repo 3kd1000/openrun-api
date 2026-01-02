@@ -164,6 +164,15 @@
   background-color: var(--color-bg-secondary);
 }
 
+/* 과거 날짜 (오늘 이전) - 회색 계열 */
+.calendar-view .react-calendar__tile.past-date {
+  background-color: #f5f5f5;
+}
+
+.calendar-view .react-calendar__tile.past-date:hover {
+  background-color: #ececec;
+}
+
 /* 오늘 날짜 */
 .calendar-view .react-calendar__tile--now {
   background-color: transparent;
@@ -175,17 +184,17 @@
   background-color: var(--color-bg-secondary);
 }
 
-/* 선택된 날짜 */
+/* 선택된 날짜 - 하이라이트 제거 */
 .calendar-view .react-calendar__tile--active {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: transparent;
+  color: inherit;
 }
 
 .calendar-view .react-calendar__tile--active:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--color-bg-secondary);
 }
 
-/* 오늘 날짜가 선택된 경우 배경색 제거 (테두리만 유지) */
+/* 오늘 날짜가 선택된 경우도 동일 */
 .calendar-view .react-calendar__tile--now.react-calendar__tile--active {
   background-color: transparent;
   color: var(--color-text-secondary);
@@ -231,16 +240,16 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* 공휴일이면서 선택된 상태에서도 빨간색 유지 (배경색만 변경) */
+/* 공휴일이면서 선택된 상태 - 하이라이트 제거, 빨간색만 유지 */
 .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active,
 .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: transparent;
+  color: var(--color-danger);
 }
 
 .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active abbr,
 .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active abbr {
-  color: white;
+  color: var(--color-danger);
 }
 
 /* 공휴일이면서 오늘 날짜인 경우 */
@@ -291,13 +300,13 @@
 
   .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active,
   .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active {
-    background-color: var(--color-primary);
-    color: white;
+    background-color: transparent;
+    color: var(--color-danger);
   }
 
   .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active abbr,
   .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active abbr {
-    color: white;
+    color: var(--color-danger);
   }
 
   .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--now,
@@ -433,11 +442,11 @@
 
 /* ========== 과거 일정 스타일 (opacity) ========== */
 .calendar-event.past-event {
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
 .calendar-event.past-event:hover {
-  opacity: 0.75;
+  opacity: 0.6;
 }
 
 /* ========== 이벤트 콘텐츠 ========== */

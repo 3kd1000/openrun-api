@@ -64,9 +64,9 @@ const AuthTestPage: React.FC = () => {
     }, [kakaoFirebaseCustomToken]);
 
     const handleGoogleSignIn = async () => {
-        const token = await signInWithGooglePopup();
-        if (token) {
-            setIdToken(token);
+        const result = await signInWithGooglePopup();
+        if (result) {
+            setIdToken(result.idToken);
         }
     };
 

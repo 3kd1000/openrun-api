@@ -1,13 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import DrawCreateModal from './DrawCreateModal';
-import type { Participant } from '../../../types/schedule';
+import type { Participant, Schedule } from '../../../types/schedule';
 import { drawService } from '../../../services/drawService';
 import type { DrawResponse } from '../../../services/drawService';
 
 vi.mock('../../../services/drawService');
 
 describe('DrawCreateModal', () => {
+  const mockSchedule: Schedule = {
+    id: 1,
+    clubId: 1,
+    courtName: '테스트 코트',
+    scheduledAt: '2025-01-01T10:00:00',
+    maxCapacity: 8,
+    currentParticipants: 6,
+    createdAt: '2025-01-01T00:00:00',
+    updatedAt: '2025-01-01T00:00:00',
+  };
+
   const mockParticipants: Participant[] = [
     { id: 1, scheduleId: 1, userId: 1, userName: 'User 1', status: 'CONFIRMED', position: 1, joinedAt: '2025-01-01T00:00:00' },
     { id: 2, scheduleId: 1, userId: 2, userName: 'User 2', status: 'CONFIRMED', position: 2, joinedAt: '2025-01-01T00:00:00' },
@@ -30,6 +41,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -43,6 +55,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -58,6 +71,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -72,6 +86,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -90,6 +105,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -108,6 +124,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -121,6 +138,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -139,6 +157,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -155,6 +174,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -171,6 +191,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -198,6 +219,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -225,6 +247,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -249,6 +272,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -267,6 +291,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}
@@ -285,6 +310,7 @@ describe('DrawCreateModal', () => {
     render(
       <DrawCreateModal
         scheduleId={1}
+        schedule={mockSchedule}
         participants={mockParticipants}
         onClose={mockOnClose}
         onSuccess={mockOnSuccess}

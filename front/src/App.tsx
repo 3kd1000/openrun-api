@@ -19,17 +19,30 @@ import MyClubsPage from "./pages/MyClubsPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { setupAuthListener } from "./services/firebase";
+import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
+import { usePWAUpdate } from "./hooks/usePWAUpdate";
+import { setupAuthListener, restoreSessionIfValid } from "./services/firebase";
 import { getTimestamp } from "./utils/dateUtils";
 import "./App.css";
 
 function App() {
   const location = useLocation();
+  const { needRefresh, updateServiceWorker } = usePWAUpdate();
 
   // Firebase 자동 로그인 및 토큰 갱신 설정
   useEffect(() => {
     const now = getTimestamp();
     console.log(`🔧 [${now}] Firebase 자동 토큰 갱신 리스너 설정`);
+
+    // 앱 시작 시 세션 복원 시도 (PWA 재시작 시 Firebase 토큰이 만료되어도 자동 갱신)
+    restoreSessionIfValid().then((restored) => {
+      if (restored) {
+        const restoreTime = getTimestamp();
+        console.log(`✅ [${restoreTime}] 세션 복원 완료`);
+      }
+    });
+
+    // 인증 상태 변화 리스너 설정
     setupAuthListener(() => {
       const refreshTime = getTimestamp();
       console.log(`🔄 [${refreshTime}] 토큰 갱신됨 (App.tsx)`);
@@ -62,7 +75,10 @@ function App() {
             <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
             <Route path="/home" element={<ComingSoonPage title="홈" />} />
             <Route path="/more" element={<MorePage />} />
-            <Route path="/more/oauth-providers" element={<OAuthProvidersPage />} />
+            <Route
+              path="/more/oauth-providers"
+              element={<OAuthProvidersPage />}
+            />
             <Route path="/more/my-clubs" element={<MyClubsPage />} />
             {/* Protected 페이지 (로그인 필수) */}
             <Route
@@ -106,6 +122,11 @@ function App() {
       </main>
       {/* 네비게이션 바가 있을 때는 Footer 숨김 (네비게이션 바에 통합) */}
       {!shouldShowNavigation && <Footer />}
+
+      {/* PWA 주석 테스트*/}
+
+      {/* PWA 업데이트 프롬프트 주석 */}
+      {needRefresh && <PWAUpdatePrompt onUpdate={updateServiceWorker} />}
     </div>
   );
 }

@@ -114,6 +114,65 @@ export const clearLoginSession = () => {
 };
 
 /**
+ * 앱 시작 시 세션 복원 (PWA 재시작 시 Firebase 토큰이 만료되어도 자동 갱신)
+ * localStorage의 expiry를 확인하고, 아직 만료되지 않았으면 Firebase 토큰을 갱신
+ */
+export const restoreSessionIfValid = async (): Promise<boolean> => {
+  const now = getTimestamp();
+  const loginExpiryStr = localStorage.getItem("login_expiry");
+  const autoLoginEnabled =
+    localStorage.getItem("auto_login_enabled") === "true";
+
+  // login_expiry가 없으면 복원할 세션이 없음
+  if (!loginExpiryStr) {
+    console.log(`ℹ️ [${now}] 복원할 세션 없음 (login_expiry 없음)`);
+    return false;
+  }
+
+  // 세션이 만료되었는지 확인
+  if (isLoginExpired()) {
+    console.log(`⏰ [${now}] 세션 만료됨 → 복원 불가`);
+    return false;
+  }
+
+  // 자동 로그인이 활성화되어 있지 않으면 복원하지 않음
+  if (!autoLoginEnabled) {
+    console.log(`ℹ️ [${now}] 자동 로그인 비활성화 → 복원 불가`);
+    return false;
+  }
+
+  // Firebase 사용자 확인
+  const user = auth.currentUser;
+  if (!user) {
+    console.log(`ℹ️ [${now}] Firebase 사용자 없음 → 복원 불가`);
+    return false;
+  }
+
+  // 세션이 유효하고 사용자가 있으면 토큰 갱신 시도
+  try {
+    console.log(`🔄 [${now}] 세션 복원 시도 (토큰 갱신)`);
+    const idToken = await user.getIdToken(true);
+
+    // localStorage 업데이트
+    localStorage.setItem("firebase_token", idToken);
+    localStorage.setItem("firebase_uid", user.uid);
+
+    // 토큰 갱신 시간 저장
+    const refreshTime = getTimestamp();
+    localStorage.setItem("token_last_refresh", refreshTime);
+
+    // 만료 시간 연장 (자동 로그인 활성화 시)
+    setLoginExpiry(true);
+
+    console.log(`✅ [${refreshTime}] 세션 복원 성공 (토큰 갱신 완료)`);
+    return true;
+  } catch (error) {
+    console.error(`❌ [${now}] 세션 복원 실패:`, error);
+    return false;
+  }
+};
+
+/**
  * Firebase 인증 상태 변화 감지 및 자동 토큰 갱신
  * 앱 시작 시 한 번만 호출하면 됩니다 (App.tsx에서 호출)
  */
