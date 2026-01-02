@@ -1,0 +1,128 @@
+/* PWA Update Prompt - Toast Notification */
+
+.pwa-update-prompt {
+  position: fixed;
+  /* 네비게이션 바(68px) 위에 표시 + safe-area 고려 */
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
+  z-index: 10000; /* 네비게이션(1000)보다 높게 */
+  padding: var(--space-m);
+  /* 자기 자신의 높이만큼 아래로 숨김 */
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+}
+
+.pwa-update-prompt.show {
+  /* bottom 위치로 올라옴 (네비게이션 바로 위) */
+  transform: translateY(0);
+}
+
+.pwa-update-content {
+  background: #ffffff;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-l);
+  padding: var(--space-m);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.pwa-update-message {
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-update-title {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.pwa-update-description {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.pwa-update-actions {
+  display: flex;
+  gap: var(--space-s);
+  flex-shrink: 0;
+}
+
+.btn-pwa-dismiss,
+.btn-pwa-update {
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-pwa-dismiss {
+  background: #ffffff;
+  color: var(--color-text-primary);
+  border: 1px solid #333333;
+}
+
+.btn-pwa-dismiss:hover {
+  background: #f5f5f5;
+  border-color: #000000;
+}
+
+.btn-pwa-update {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.btn-pwa-update:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* PC: 네비게이션이 좌측이므로 하단에 표시 */
+@media (min-width: 768px) {
+  .pwa-update-prompt {
+    bottom: 0;
+    transform: translateY(100%);
+  }
+
+  .pwa-update-prompt.show {
+    transform: translateY(0);
+  }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 767px) {
+  .pwa-update-prompt {
+    padding: var(--space-s);
+  }
+
+  .pwa-update-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-m);
+  }
+
+  .pwa-update-message {
+    text-align: center;
+  }
+
+  .pwa-update-actions {
+    width: 100%;
+    gap: var(--space-m);
+  }
+
+  .btn-pwa-dismiss,
+  .btn-pwa-update {
+    flex: 1;
+  }
+}

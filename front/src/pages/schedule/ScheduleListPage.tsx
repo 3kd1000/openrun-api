@@ -8,6 +8,7 @@ import ScheduleCreateModal from "./components/ScheduleCreateModal";
 import ScheduleCalendarView from "./components/ScheduleCalendarView";
 import ScheduleDetailModal from "./components/ScheduleDetailModal";
 import DrawViewModal from "./components/DrawViewModal";
+import { isNotEmpty } from "../../utils/isEmpty";
 import "./ScheduleListPage.css";
 
 type ViewMode = "calendar" | "list";
@@ -417,12 +418,12 @@ const ScheduleListPage: React.FC = () => {
                   {/* 3. 비용, 설명 + 대진표 상태/대진보기 (오른쪽) */}
                   <div className="schedule-bottom-row">
                     <div className="schedule-details">
-                      {schedule.cost && (
+                      {isNotEmpty(schedule.cost) && schedule.cost !== undefined && (
                         <span className="schedule-cost">
                           ₩ {schedule.cost.toLocaleString()}
                         </span>
                       )}
-                      {schedule.description && (
+                      {isNotEmpty(schedule.description) && schedule.description !== undefined && (
                         <span className="schedule-description">
                           {schedule.description.length > 30
                             ? `${schedule.description.substring(0, 30)}...`

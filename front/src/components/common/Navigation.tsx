@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import "./Navigation.css";
 
 // 선 스타일 SVG 아이콘 컴포넌트
-const HomeIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
+const HomeIcon: React.FC<{ isActive: boolean }> = () => (
   <svg
     width="24"
     height="24"
@@ -19,7 +19,7 @@ const HomeIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
   </svg>
 );
 
-const CalendarIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
+const CalendarIcon: React.FC<{ isActive: boolean }> = () => (
   <svg
     width="24"
     height="24"
@@ -37,7 +37,7 @@ const CalendarIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
   </svg>
 );
 
-const TrophyIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
+const TrophyIcon: React.FC<{ isActive: boolean }> = () => (
   <svg
     width="24"
     height="24"
@@ -57,7 +57,7 @@ const TrophyIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
   </svg>
 );
 
-const MoreIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
+const MoreIcon: React.FC<{ isActive: boolean }> = () => (
   <svg
     width="24"
     height="24"

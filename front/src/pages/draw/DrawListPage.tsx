@@ -7,6 +7,7 @@ import type { Schedule, Participant } from "../../types/schedule";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import DrawViewModal from "../schedule/components/DrawViewModal";
+import { isNotEmpty } from "../../utils/isEmpty";
 import "./DrawListPage.css";
 
 type TabType = "schedules" | "matches";
@@ -297,7 +298,7 @@ const DrawListPage: React.FC = () => {
                         👥 {schedule.currentParticipants}/{schedule.maxCapacity}
                         명
                       </span>
-                      {schedule.cost && (
+                      {isNotEmpty(schedule.cost) && schedule.cost !== undefined && (
                         <span className="draw-card-cost">
                           ₩ {schedule.cost.toLocaleString()}
                         </span>

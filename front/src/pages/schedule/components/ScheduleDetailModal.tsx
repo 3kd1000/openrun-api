@@ -17,6 +17,7 @@ import {
   validateScheduleCreation,
   isPastDate,
 } from "../../../utils/scheduleValidation";
+import { isNotEmpty } from "../../../utils/isEmpty";
 import "./ScheduleDetailModal.css";
 
 interface Props {
@@ -279,7 +280,11 @@ const ScheduleDetailModal: React.FC<Props> = ({
       return;
     }
 
-    if (!window.confirm("대진표를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
+    if (
+      !window.confirm(
+        "대진표를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다."
+      )
+    ) {
       return;
     }
 
@@ -472,16 +477,14 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </p>
             </div>
 
-            {schedule.cost !== null &&
-              schedule.cost !== undefined &&
-              schedule.cost !== 0 && (
-                <div className="detail-item">
-                  <label>참가 비용</label>
-                  <p>{schedule.cost.toLocaleString()}원</p>
-                </div>
-              )}
+            {isNotEmpty(schedule.cost) && schedule.cost !== undefined && (
+              <div className="detail-item">
+                <label>참가 비용</label>
+                <p>{schedule.cost.toLocaleString()}원</p>
+              </div>
+            )}
 
-            {schedule.description && (
+            {isNotEmpty(schedule.description) && (
               <div className="detail-item">
                 <label>설명</label>
                 <p className="detail-description">{schedule.description}</p>
@@ -541,7 +544,12 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   type="button"
                   onClick={handleDeleteDraw}
                   className="btn-delete-draw"
-                  disabled={loading}
+                  disabled={loading || isPastDate(schedule.scheduledAt)}
+                  title={
+                    isPastDate(schedule.scheduledAt)
+                      ? "이미 지난 경기에는 대진표를 삭제할 수 없습니다."
+                      : undefined
+                  }
                 >
                   🗑️ 대진표 삭제
                 </button>

@@ -206,6 +206,16 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
     const classes: string[] = [];
 
+    // 과거 날짜 체크
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tileDate = new Date(date);
+    tileDate.setHours(0, 0, 0, 0);
+
+    if (tileDate < today) {
+      classes.push("past-date");
+    }
+
     if (isSunday(date)) {
       classes.push("holiday-sunday");
     }
