@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../services/api/axiosInstance';
 import type { Club } from '../../types/club';
+import { isNotEmpty } from '../../utils/isEmpty';
 import './ClubListPage.css';
 
 const ClubListPage: React.FC = () => {
@@ -52,7 +53,7 @@ const ClubListPage: React.FC = () => {
                                 <div className="club-icon">🏟️</div>
                                 <div className="club-info">
                                     <div className="club-name">{club.name}</div>
-                                    {club.description && (
+                                    {isNotEmpty(club.description) && (
                                         <div className="club-description">{club.description}</div>
                                     )}
                                     {club.region && (

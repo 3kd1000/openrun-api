@@ -330,14 +330,15 @@
   background: var(--color-bg-secondary);
 }
 
-/* 마감 또는 초과: disabled 느낌의 무겁지 않은 색상 */
+/* 마감 또는 초과: 구분되는 색상 적용 */
 .schedule-page .schedule-card.capacity-full {
-  background: #f1f3f5;
-  border-color: #ced4da;
+  background: #fff5f5;
+  border-color: #fca5a5;
 }
 
 .schedule-page .schedule-card.capacity-full:hover {
-  background: #e9ecef;
+  background: #fee2e2;
+  border-color: #f87171;
 }
 
 /* 신청 완료: 화려하지 않지만 눈에 잘 들어오는 색상 */
@@ -352,11 +353,11 @@
 
 /* ========== 과거 일정 스타일 (opacity) ========== */
 .schedule-page .schedule-card.past-schedule {
-  opacity: 0.6;
+  opacity: 0.45;
 }
 
 .schedule-page .schedule-card.past-schedule:hover {
-  opacity: 0.75;
+  opacity: 0.65;
 }
 
 /* ========== 일정 정보 ========== */

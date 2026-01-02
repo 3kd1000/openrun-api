@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: [
         "icon-192x192.png",
         "icon-512x512.png",
@@ -15,6 +15,9 @@ export default defineConfig({
       ],
       manifest: false, // 이미 수동으로 생성한 manifest.json 사용
       workbox: {
+        // Service Worker 업데이트 전략
+        skipWaiting: false, // prompt 모드에서는 사용자 확인 후 skipWaiting
+        clientsClaim: true, // 새 SW 활성화 즉시 모든 클라이언트 제어
         // JS/CSS/이미지만 precache (HTML 제외)
         globPatterns: ["**/*.{js,css,ico,png,svg,jpeg}"],
         // 구버전 캐시 자동 삭제

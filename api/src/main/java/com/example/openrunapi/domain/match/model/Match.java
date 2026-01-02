@@ -10,7 +10,17 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "match")
+@Table(name = "match", indexes = {
+    @Index(name = "idx_match_draw_id", columnList = "draw_id"),
+    @Index(name = "idx_match_schedule_id", columnList = "schedule_id"),
+    @Index(name = "idx_match_club_id", columnList = "club_id"),
+    @Index(name = "idx_match_played_at", columnList = "played_at"),
+    @Index(name = "idx_match_club_played_at", columnList = "club_id, played_at"),
+    @Index(name = "idx_match_team_a_player1", columnList = "team_a_player1_id"),
+    @Index(name = "idx_match_team_a_player2", columnList = "team_a_player2_id"),
+    @Index(name = "idx_match_team_b_player1", columnList = "team_b_player1_id"),
+    @Index(name = "idx_match_team_b_player2", columnList = "team_b_player2_id")
+})
 @EntityListeners(MatchEntityListener.class)
 @Getter
 @Builder
