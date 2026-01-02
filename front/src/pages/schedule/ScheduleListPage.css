@@ -169,67 +169,83 @@
   box-shadow: var(--shadow-xs);
 }
 
-/* 전체 필터 버튼 active 상태 - 더 명확하게 */
-.capacity-filter-btn.active:not(.capacity-filter-available):not(
-    .capacity-filter-full
-  ) {
+/* 전체 필터 버튼 - 파란색 계열 */
+.capacity-filter-btn:not(.capacity-filter-available):not(.capacity-filter-full):not(.capacity-filter-participated) {
+  background: #eff6ff;
+  border-color: #60a5fa;
+  color: #1e40af;
+}
+
+.capacity-filter-btn:not(.capacity-filter-available):not(.capacity-filter-full):not(.capacity-filter-participated):hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+/* 전체 필터 버튼 active 상태 */
+.capacity-filter-btn.active:not(.capacity-filter-available):not(.capacity-filter-full):not(.capacity-filter-participated) {
   background: var(--color-primary);
   color: white;
   border-color: var(--color-primary);
   box-shadow: var(--shadow-s);
+  border-width: 2px;
 }
 
-/* 신청 가능 필터 버튼 - 정원 상태 배경색과 동일 (배경색 없음) */
+/* 신청 가능 필터 버튼 - 흰색 배경 + 테두리 */
 .capacity-filter-available {
-  background: transparent;
+  background: #ffffff;
   border-color: #d0d7de;
-  color: #24292f;
+  color: #57606a;
 }
 
 .capacity-filter-available:hover {
-  background: var(--color-bg-secondary);
+  background: #f6f8fa;
+  border-color: #8c959f;
 }
 
 .capacity-filter-available.active {
-  background: var(--color-bg-secondary);
+  background: #ffffff;
   color: #24292f;
   border-color: #24292f;
   border-width: 2px;
+  box-shadow: 0 0 0 2px rgba(36, 41, 47, 0.1);
 }
 
-/* 마감/초과 필터 버튼 - 정원 상태 배경색과 동일 */
+/* 마감/초과 필터 버튼 - 붉은색 계열로 통일 */
 .capacity-filter-full {
-  background: #f1f3f5;
-  border-color: #ced4da;
-  color: #6b7280;
+  background: #fff5f5;
+  border-color: #fca5a5;
+  color: #991b1b;
 }
 
 .capacity-filter-full:hover {
-  background: #e9ecef;
+  background: #fee2e2;
+  border-color: #f87171;
 }
 
 .capacity-filter-full.active {
-  background: #ced4da;
-  color: #495057;
-  border-color: #adb5bd;
+  background: #fca5a5;
+  color: #ffffff;
+  border-color: #f87171;
   border-width: 2px;
 }
 
-/* 신청완료 필터 버튼 - 정원 상태 배경색과 동일 */
+/* 신청완료 필터 버튼 - 초록색 계열 (success) */
 .capacity-filter-participated {
-  background: #e8f1ff;
-  border-color: #3b82f6;
-  color: #1e3a8a;
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
 }
 
 .capacity-filter-participated:hover {
-  background: #dbeafe;
+  background: #dcfce7;
+  border-color: #4ade80;
 }
 
 .capacity-filter-participated.active {
-  background: #3b82f6;
+  background: #22c55e;
   color: white;
-  border-color: #3b82f6;
+  border-color: #16a34a;
+  border-width: 2px;
 }
 
 /* ========== 로딩 및 에러 상태 ========== */
@@ -341,14 +357,15 @@
   border-color: #f87171;
 }
 
-/* 신청 완료: 화려하지 않지만 눈에 잘 들어오는 색상 */
+/* 신청 완료: 초록색 계열 (success) */
 .schedule-page .schedule-card.capacity-participated {
-  background: #e8f1ff;
-  border-color: #3b82f6;
+  background: #f0fdf4;
+  border-color: #86efac;
 }
 
 .schedule-page .schedule-card.capacity-participated:hover {
-  background: #dbeafe;
+  background: #dcfce7;
+  border-color: #4ade80;
 }
 
 /* ========== 과거 일정 스타일 (opacity) ========== */
