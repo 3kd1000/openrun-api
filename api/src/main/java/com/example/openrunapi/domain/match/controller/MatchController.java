@@ -88,4 +88,23 @@ public class MatchController {
         List<MatchResponse> responses = matchService.updateMatchResultsBatch(clubId, request);
         return ResponseEntity.ok(responses);
     }
+
+    /**
+     * 경기 결과 삭제 (초기화)
+     * DELETE /api/clubs/{clubId}/matches/{matchId}/result
+     *
+     * @param clubId 클럽 ID (경로 파라미터, 현재는 검증용)
+     * @param matchId 경기 ID
+     * @return 204 No Content
+     */
+    @DeleteMapping("/{matchId}/result")
+    public ResponseEntity<Void> deleteMatchResult(
+            @PathVariable Long clubId,
+            @PathVariable Long matchId
+    ) {
+        log.info("=== DELETE /api/clubs/{}/matches/{}/result ===", clubId, matchId);
+
+        matchService.deleteMatchResult(matchId);
+        return ResponseEntity.noContent().build();
+    }
 }

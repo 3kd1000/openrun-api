@@ -266,6 +266,33 @@ public class MatchService {
     }
 
     /**
+     * 경기 결과 삭제 (초기화)
+     *
+     * @param matchId 경기 ID
+     */
+    @Transactional
+    public void deleteMatchResult(Long matchId) {
+        log.info("=== 경기 결과 삭제 ===");
+        log.info("matchId: {}", matchId);
+
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 경기입니다: " + matchId));
+
+        // 이전 결과가 있으면 통계에서 차감
+        if (match.getResult() != null && match.getTeamAScore() != null && match.getTeamBScore() != null) {
+            log.info("경기 결과 차감: result={}, scoreA={}, scoreB={}",
+                    match.getResult(), match.getTeamAScore(), match.getTeamBScore());
+            removeStatistics(match);
+        }
+
+        // 결과 필드를 null로 설정
+        match.clearResult();
+
+        matchRepository.save(match);
+        log.info("경기 결과 삭제 완료: matchId={}", matchId);
+    }
+
+    /**
      * 사용자 ID로 이름 조회
      */
     private String getUserName(Long userId) {

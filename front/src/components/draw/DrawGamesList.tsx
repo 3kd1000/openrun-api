@@ -12,6 +12,7 @@ import {
   groupGamesByRound,
   getSortedRounds,
 } from "../../utils/DrawFormatUtils";
+import { isNotEmpty } from "../../utils/isEmpty";
 
 export interface DrawGamesListProps {
   /** 대진표 게임 목록 */
@@ -22,6 +23,8 @@ export interface DrawGamesListProps {
   onScoreChange?: (matchId: number, team: "A" | "B", value: string) => void;
   /** 매치별 스코어 임시 저장 Map (편집 모드에서 사용) */
   matchScores?: Map<number, { teamAScore: string; teamBScore: string }>;
+  /** 결과 초기화 핸들러 (편집 모드에서 사용) */
+  onResetResult?: (matchId: number) => void;
 }
 
 /**
@@ -33,6 +36,7 @@ const DrawGamesList: React.FC<DrawGamesListProps> = ({
   isEditMode = false,
   onScoreChange,
   matchScores,
+  onResetResult,
 }) => {
   // 라운드별로 그룹화
   const gamesByRound = groupGamesByRound(games);
@@ -50,7 +54,7 @@ const DrawGamesList: React.FC<DrawGamesListProps> = ({
               const matchId = game.matchId;
               const scores = matchId ? matchScores?.get(matchId) : undefined;
               const hasExistingResult =
-                game.teamAScore !== undefined && game.teamBScore !== undefined;
+                isNotEmpty(game.teamAScore) && isNotEmpty(game.teamBScore);
 
               // 표시할 스코어 (입력 중이면 입력값, 아니면 기존값)
               const displayTeamAScore =
@@ -151,7 +155,7 @@ const DrawGamesList: React.FC<DrawGamesListProps> = ({
                       >
                         {teamBNames}
                       </span>
-                      {!isEditMode && hasExistingResult && game.result && (
+                      {!isEditMode && hasExistingResult && isNotEmpty(game.result) && (
                         <span
                           className={`dgc-result-badge dgc-result-badge--${
                             game.result === "TEAM_A_WIN"
@@ -170,6 +174,22 @@ const DrawGamesList: React.FC<DrawGamesListProps> = ({
                       )}
                     </div>
                   </div>
+                  {/* 삭제 버튼 - 오른쪽 고정 위치 (항상 렌더링, visibility로 제어) */}
+                  {isEditMode && matchId && onResetResult && (
+                    <button
+                      type="button"
+                      className={`dgc-reset-button ${
+                        hasExistingResult && isNotEmpty(game.result)
+                          ? ""
+                          : "dgc-reset-button--hidden"
+                      }`}
+                      onClick={() => onResetResult(matchId)}
+                      title="결과 삭제"
+                      disabled={!hasExistingResult || !isNotEmpty(game.result)}
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </div>
               );
             })}
