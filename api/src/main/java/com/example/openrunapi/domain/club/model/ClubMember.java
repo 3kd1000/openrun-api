@@ -36,6 +36,10 @@ public class ClubMember {
     @Column(nullable = false)
     private ClubMemberStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ClubRole role = ClubRole.MEMBER;
+
     @CreatedDate
     @Column(updatable = false, nullable = false)
     private LocalDateTime joinedAt;
@@ -45,9 +49,35 @@ public class ClubMember {
         this.club = club;
         this.user = user;
         this.status = status;
+        this.role = ClubRole.MEMBER; // 기본값
     }
 
     public void updateStatus(ClubMemberStatus status) {
         this.status = status;
+    }
+
+    public void updateRole(ClubRole role) {
+        this.role = role;
+    }
+
+    /**
+     * 일정 관리 권한 확인 (ADMIN 이상)
+     */
+    public boolean canManageSchedule() {
+        return this.role.canManageSchedule();
+    }
+
+    /**
+     * 클럽 소유자 여부 확인
+     */
+    public boolean isOwner() {
+        return this.role.isOwner();
+    }
+
+    /**
+     * 회원 관리 권한 확인 (OWNER만 가능)
+     */
+    public boolean canManageMembers() {
+        return this.role.canManageMembers();
     }
 }

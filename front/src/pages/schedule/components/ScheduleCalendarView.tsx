@@ -6,20 +6,28 @@ import { holidayService, type Holiday } from "../../../services/holidayService";
 import "react-calendar/dist/Calendar.css";
 import "./ScheduleCalendarView.css";
 
-// 모바일 여부 확인 훅
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+// 화면 너비 추적 훅
+const useScreenWidth = () => {
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setScreenWidth(window.innerWidth);
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return isMobile;
+  return screenWidth;
+};
+
+// 화면 너비에 따른 최대 코트명 글자 수 계산
+const getMaxCourtNameLength = (screenWidth: number): number => {
+  if (screenWidth <= 360) return 2; // 아주 좁은 화면 (Galaxy Fold 등)
+  if (screenWidth <= 400) return 3; // 좁은 화면 (iPhone SE)
+  if (screenWidth <= 768) return 4; // 일반 모바일
+  return 999; // 데스크톱 (전체 표시)
 };
 
 interface Props {
@@ -54,7 +62,8 @@ const ScheduleCalendarView: React.FC<Props> = ({
   );
   const calendarRef = React.useRef<HTMLDivElement>(null);
   const isHorizontalSwipe = React.useRef(false);
-  const isMobile = useIsMobile();
+  const screenWidth = useScreenWidth();
+  const maxCourtNameLength = getMaxCourtNameLength(screenWidth);
 
   // 외부에서 전달된 calendarDate가 변경되면 내부 상태도 업데이트
   useEffect(() => {
@@ -146,9 +155,7 @@ const ScheduleCalendarView: React.FC<Props> = ({
                 </span>
                 <span className="event-name">
                   <span className="event-name-text">
-                    {isMobile
-                      ? schedule.courtName.substring(0, 2)
-                      : schedule.courtName}
+                    {schedule.courtName.replace(/\s+/g, '').substring(0, maxCourtNameLength)}
                   </span>
                   {drawStatus === "draw-valid" && (
                     <span className="draw-icon draw-icon-valid">✓</span>

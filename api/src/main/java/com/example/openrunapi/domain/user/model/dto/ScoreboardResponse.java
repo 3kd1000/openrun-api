@@ -48,9 +48,6 @@ public class ScoreboardResponse {
         private Integer wins;                // 승
         private Integer draws;               // 무
         private Integer losses;              // 패
-        private Integer goalDifference;      // 득실차
-        private Integer totalPointsScored;   // 득점
-        private Integer totalPointsConceded; // 실점
 
         public static RankingEntry from(int rank, UserStatistics stats) {
             return RankingEntry.builder()
@@ -63,9 +60,6 @@ public class ScoreboardResponse {
                     .wins(stats.getWins())
                     .draws(stats.getDraws())
                     .losses(stats.getLosses())
-                    .goalDifference(stats.getGoalDifference())
-                    .totalPointsScored(stats.getTotalPointsScored())
-                    .totalPointsConceded(stats.getTotalPointsConceded())
                     .build();
         }
     }

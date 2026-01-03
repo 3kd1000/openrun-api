@@ -668,3 +668,41 @@
     }
   }
 }
+
+/* ========== 참가자 관리 버튼 ========== */
+.section-header-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.section-header-with-button label {
+  margin-bottom: 0;
+}
+
+.manage-participants-button {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-info);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.manage-participants-button:hover {
+  background: var(--color-info-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.manage-participants-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}

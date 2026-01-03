@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.service;
 
+import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
@@ -10,13 +11,15 @@ import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.openrunapi.common.utils.TimeValidationUtils;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -25,6 +28,7 @@ public class ScheduleParticipantService {
     private final ScheduleParticipantRepository participantRepository;
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final PermissionService permissionService;
 
     /**
      * 일정 참가 신청
@@ -141,5 +145,142 @@ public class ScheduleParticipantService {
         // User와 JOIN하여 userName 포함하여 조회
         return participantRepository.findActiveParticipationWithUserName(scheduleId, userId, ParticipantStatus.CANCELLED)
                 .orElse(null);
+    }
+
+    /**
+     * 참가자 일괄 수정 (운영진 전용)
+     * - 권한 체크: System Admin 또는 Club ADMIN 이상
+     * - 기존 참가자 추가/삭제 가능
+     * - 기존 참가자의 position은 유지
+     * - 새로 추가되는 참가자는 마지막에 append
+     *
+     * @param scheduleId 일정 ID
+     * @param userIds 참가자로 지정할 userId 목록
+     * @param requestUserId 요청한 사용자 ID (권한 체크용)
+     */
+    @Transactional
+    public void bulkUpdateParticipants(Long scheduleId, List<Long> userIds, Long requestUserId) {
+        log.info("=== 참가자 일괄 수정 시작 ===");
+        log.info("scheduleId: {}, requestUserId: {}, userIds: {}", scheduleId, requestUserId, userIds);
+
+        // 1. 일정 존재 여부 확인
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 2. 권한 체크: System Admin 또는 Club ADMIN 이상
+        permissionService.requireScheduleManagePermission(requestUserId, schedule.getClubId());
+        log.info("권한 체크 통과: userId={}, clubId={}", requestUserId, schedule.getClubId());
+
+        // 3. 기존 참가자 조회 (CANCELLED 제외)
+        List<ScheduleParticipant> currentParticipants = participantRepository
+                .findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED);
+
+        Set<Long> currentUserIds = currentParticipants.stream()
+                .map(ScheduleParticipant::getUserId)
+                .collect(Collectors.toSet());
+
+        Set<Long> newUserIds = new HashSet<>(userIds);
+
+        log.info("기존 참가자: {}, 새로운 참가자 목록: {}", currentUserIds, newUserIds);
+
+        // 4. 제거할 참가자 처리 (기존에 있지만 새로운 목록에 없는 사람)
+        List<ScheduleParticipant> toRemove = currentParticipants.stream()
+                .filter(p -> !newUserIds.contains(p.getUserId()))
+                .collect(Collectors.toList());
+
+        if (!toRemove.isEmpty()) {
+            int removedConfirmedCount = 0;
+            for (ScheduleParticipant participant : toRemove) {
+                boolean wasConfirmed = participant.isConfirmed();
+                participantRepository.delete(participant);
+                schedule.decrementParticipants();
+                if (wasConfirmed) {
+                    removedConfirmedCount++;
+                }
+            }
+            log.info("제거된 참가자: {} 명 (확정: {}명)", toRemove.size(), removedConfirmedCount);
+
+            // 제거된 확정 참가자가 있으면 대기 중인 사람을 확정으로 변경
+            if (removedConfirmedCount > 0) {
+                List<ScheduleParticipant> waitingList = participantRepository
+                        .findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED)
+                        .stream()
+                        .filter(ScheduleParticipant::isWaiting)
+                        .sorted((a, b) -> Integer.compare(a.getPosition(), b.getPosition()))
+                        .limit(removedConfirmedCount)
+                        .collect(Collectors.toList());
+
+                for (ScheduleParticipant waiting : waitingList) {
+                    waiting.confirm();
+                }
+                log.info("대기 → 확정 변경: {} 명", waitingList.size());
+            }
+        }
+
+        // 5. 추가할 참가자만 처리 (현재 목록에 없는 사람)
+        List<Long> toAdd = userIds.stream()
+                .filter(userId -> !currentUserIds.contains(userId))
+                .collect(Collectors.toList());
+
+        if (!toAdd.isEmpty()) {
+            // 현재 최대 position 찾기
+            Integer maxPosition = participantRepository.getMaxPosition(scheduleId);
+            int nextPosition = (maxPosition != null ? maxPosition : 0) + 1;
+
+            // 제거 후 현재 확정된 참가자 수 확인 (제거 후 다시 조회)
+            List<ScheduleParticipant> remainingParticipants = participantRepository
+                    .findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED);
+            long currentConfirmedCount = remainingParticipants.stream()
+                    .filter(p -> p.getStatus() == ParticipantStatus.CONFIRMED)
+                    .count();
+
+            // 총원 확인
+            int maxCapacity = schedule.getMaxCapacity();
+            int availableSlots = (int) (maxCapacity - currentConfirmedCount);
+
+            log.info("제거 후 현재 확정 참가자: {}명, 총원: {}명, 사용 가능한 슬롯: {}명", 
+                    currentConfirmedCount, maxCapacity, availableSlots);
+
+            int confirmedCount = 0;
+            int waitingCount = 0;
+
+            for (Long userId : toAdd) {
+                // User 존재 확인
+                if (!userRepository.existsById(userId)) {
+                    throw new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId);
+                }
+
+                // 총원을 고려하여 상태 결정
+                // 사용 가능한 슬롯이 있으면 CONFIRMED, 없으면 WAITING
+                ParticipantStatus status;
+                if (confirmedCount < availableSlots) {
+                    status = ParticipantStatus.CONFIRMED;
+                    confirmedCount++;
+                } else {
+                    status = ParticipantStatus.WAITING;
+                    waitingCount++;
+                }
+
+                ScheduleParticipant participant = ScheduleParticipant.builder()
+                        .scheduleId(scheduleId)
+                        .userId(userId)
+                        .status(status)
+                        .position(nextPosition++)
+                        .build();
+
+                participantRepository.save(participant);
+                schedule.incrementParticipants();
+            }
+            log.info("추가된 참가자: {} 명 (확정: {}명, 대기: {}명)", 
+                    toAdd.size(), confirmedCount, waitingCount);
+
+            // 대진 무효화 (참가자가 추가되었으므로 기존 대진은 더 이상 유효하지 않음)
+            schedule.invalidateDraw();
+            log.info("참가자 추가로 대진 무효화");
+        } else {
+            log.info("변경사항 없음 (추가할 참가자 없음)");
+        }
+
+        log.info("=== 참가자 일괄 수정 완료 ===");
     }
 }

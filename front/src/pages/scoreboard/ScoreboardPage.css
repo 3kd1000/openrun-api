@@ -348,16 +348,6 @@
     min-width: 45px;
   }
 
-  /* 득실, 득점, 실점 */
-  .scoreboard-page .scoreboard-table th:nth-child(9),
-  .scoreboard-page .scoreboard-table td:nth-child(9),
-  .scoreboard-page .scoreboard-table th:nth-child(10),
-  .scoreboard-page .scoreboard-table td:nth-child(10),
-  .scoreboard-page .scoreboard-table th:nth-child(11),
-  .scoreboard-page .scoreboard-table td:nth-child(11) {
-    min-width: 55px;
-  }
-
   .scoreboard-page .scoreboard-table td.rank {
     font-size: var(--font-size-l);
   }

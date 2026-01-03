@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.model.dto;
 
+import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
@@ -27,12 +28,17 @@ public class ScheduleResponse {
     private final LocalDateTime drawCreatedAt;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+    private final Boolean canManageSchedule; // 권한 정보 (nullable, 요청 userId가 없으면 null)
 
     public ScheduleResponse(Schedule schedule) {
-        this(schedule, null);
+        this(schedule, null, null, null);
     }
 
     public ScheduleResponse(Schedule schedule, UserRepository userRepository) {
+        this(schedule, userRepository, null, null);
+    }
+
+    public ScheduleResponse(Schedule schedule, UserRepository userRepository, PermissionService permissionService, Long requestUserId) {
         this.id = schedule.getId();
         this.clubId = schedule.getClubId();
         this.courtName = schedule.getCourtName();
@@ -58,5 +64,20 @@ public class ScheduleResponse {
         this.drawCreatedAt = schedule.getDrawCreatedAt();
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
+
+        // 권한 체크 (permissionService와 requestUserId가 제공된 경우에만)
+        if (permissionService != null && requestUserId != null) {
+            this.canManageSchedule = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
+            System.out.println("[DEBUG] ScheduleResponse - scheduleId: " + schedule.getId()
+                + ", requestUserId: " + requestUserId
+                + ", clubId: " + schedule.getClubId()
+                + ", canManageSchedule: " + this.canManageSchedule);
+        } else {
+            this.canManageSchedule = null;
+            System.out.println("[DEBUG] ScheduleResponse - scheduleId: " + schedule.getId()
+                + ", permissionService: " + (permissionService != null ? "NOT NULL" : "NULL")
+                + ", requestUserId: " + requestUserId
+                + " -> canManageSchedule = NULL");
+        }
     }
 }

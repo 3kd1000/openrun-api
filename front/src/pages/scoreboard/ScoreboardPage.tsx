@@ -15,9 +15,6 @@ interface RankingEntry {
   wins: number;
   draws: number;
   losses: number;
-  goalDifference: number;
-  totalPointsScored: number;
-  totalPointsConceded: number;
 }
 
 interface ScoreboardResponse {
@@ -31,7 +28,7 @@ const ScoreboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("ranking");
 
   // Tab 1: Rankings
-  const START_YEAR = 2026; // 시작 연도 (하드코딩)
+  const START_YEAR = 2025; // 시작 연도 (하드코딩)
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -326,9 +323,6 @@ const ScoreboardPage: React.FC = () => {
                     <th>승</th>
                     <th>무</th>
                     <th>패</th>
-                    <th>득실</th>
-                    <th>득점</th>
-                    <th>실점</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -342,16 +336,6 @@ const ScoreboardPage: React.FC = () => {
                       <td className="wins">{entry.wins}</td>
                       <td>{entry.draws}</td>
                       <td>{entry.losses}</td>
-                      <td
-                        className={
-                          entry.goalDifference >= 0 ? "positive" : "negative"
-                        }
-                      >
-                        {entry.goalDifference > 0 ? "+" : ""}
-                        {entry.goalDifference}
-                      </td>
-                      <td>{entry.totalPointsScored}</td>
-                      <td>{entry.totalPointsConceded}</td>
                     </tr>
                   ))}
                 </tbody>
