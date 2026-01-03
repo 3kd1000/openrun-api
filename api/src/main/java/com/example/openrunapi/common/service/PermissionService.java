@@ -40,30 +40,23 @@ public class PermissionService {
      * @return 권한 여부
      */
     public boolean canManageSchedule(Long userId, Long clubId) {
-        log.info("[DEBUG] canManageSchedule - userId: {}, clubId: {}", userId, clubId);
 
         if (userId == null || clubId == null) {
-            log.info("[DEBUG] canManageSchedule - userId or clubId is null -> FALSE");
             return false;
         }
 
         // System Admin 체크
         if (isSystemAdmin(userId)) {
-            log.info("[DEBUG] System Admin 권한으로 일정 관리 허용: userId={}", userId);
             return true;
         }
 
         // Club 권한 체크
         ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(clubId, userId).orElse(null);
         if (clubMember == null) {
-            log.info("[DEBUG] ClubMember not found - userId: {}, clubId: {} -> FALSE", userId, clubId);
             return false;
         }
 
-        boolean canManage = clubMember.canManageSchedule();
-        log.info("[DEBUG] ClubMember found - userId: {}, clubId: {}, role: {}, canManage: {}",
-            userId, clubId, clubMember.getRole(), canManage);
-        return canManage;
+        return clubMember.canManageSchedule();
     }
 
     /**

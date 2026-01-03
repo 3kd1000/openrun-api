@@ -32,7 +32,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-lg);
+  padding: var(--space-l);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -41,7 +41,6 @@
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  font-size: 1.5rem;
 }
 
 .participant-management-modal .close-button {
@@ -73,27 +72,27 @@
 .participant-management-modal .error-message {
   background: var(--color-error-bg);
   color: var(--color-error);
-  padding: var(--spacing-md);
-  margin: var(--spacing-md) var(--spacing-lg) 0;
+  padding: var(--space-m);
+  margin: var(--space-m) var(--space-l) 0;
   border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-s);
 }
 
 .participant-management-modal .modal-body {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-lg);
+  padding: var(--space-l);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--space-l);
 }
 
 /* 정원 정보 섹션 */
 .participant-management-modal .capacity-info {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
+  gap: var(--space-m);
+  padding: var(--space-m);
   background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
@@ -102,7 +101,7 @@
 .participant-management-modal .capacity-stat {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--space-s);
 }
 
 .participant-management-modal .stat-label {
@@ -112,7 +111,7 @@
 }
 
 .participant-management-modal .stat-value {
-  font-size: 1.1rem;
+  font-size: var(--font-size-l);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
@@ -132,11 +131,11 @@
 .participant-management-modal .participants-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--space-m);
 }
 
 .participant-management-modal .list-header {
-  padding: var(--spacing-md);
+  padding: var(--space-m);
   background: var(--color-bg-secondary);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
@@ -145,12 +144,11 @@
 .participant-management-modal .checkbox-label {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--space-s);
   cursor: pointer;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
-  font-size: 1rem;
 }
 
 .participant-management-modal .checkbox-label input[type="checkbox"] {
@@ -162,10 +160,10 @@
 .participant-management-modal .members-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--space-xs);
   max-height: 400px;
   overflow-y: auto;
-  padding: var(--spacing-xs);
+  padding: var(--space-xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-primary);
@@ -192,8 +190,8 @@
 .participant-management-modal .member-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md) var(--spacing-lg);
+  gap: var(--space-m);
+  padding: var(--space-m) var(--space-l);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -236,16 +234,13 @@
   flex: 1;
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
-  font-size: 1rem;
   font-weight: var(--font-weight-medium);
 }
 
 .participant-management-modal .badge {
-  padding: var(--spacing-2xs) var(--spacing-sm);
-  padding: 6px 10px;
+  padding: var(--space-s) var(--space-m);
   border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  font-size: 0.875rem;
+  font-size: var(--font-size-s);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
@@ -271,50 +266,48 @@
 /* 미디어쿼리: 데스크탑 (769px 이상) */
 @media (min-width: 769px) {
   .participant-management-modal .badge {
-    font-size: 0.9375rem;
-    padding: 7px 12px;
+    font-size: var(--font-size-m);
+    padding: var(--space-s) var(--space-l);
   }
 }
 
 /* 미디어쿼리: 미디어 대형 (401px ~ 768px) */
 @media (min-width: 401px) and (max-width: 768px) {
   .participant-management-modal .badge {
-    font-size: 0.875rem;
-    padding: 6px 10px;
+    font-size: var(--font-size-s);
+    padding: var(--space-s) var(--space-m);
   }
 }
 
 /* 미디어쿼리: 미디어 중형 (361px ~ 400px) */
 @media (min-width: 361px) and (max-width: 400px) {
   .participant-management-modal .badge {
-    font-size: 0.8125rem;
-    padding: 5px 9px;
+    font-size: var(--font-size-s);
+    padding: var(--space-xs) var(--space-s);
   }
 }
 
 /* 미디어쿼리: 미디어 소형 (360px 이하) */
 @media (max-width: 360px) {
   .participant-management-modal .badge {
-    font-size: 0.75rem;
-    padding: 4px 8px;
+    font-size: var(--font-size-xs);
+    padding: var(--space-xs) var(--space-s);
   }
 }
 
 .participant-management-modal .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
+  gap: var(--space-m);
+  padding: var(--space-l);
   border-top: 1px solid var(--color-border);
 }
 
 .participant-management-modal .cancel-button,
 .participant-management-modal .save-button {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  padding: 10px var(--space-2xl);
+  padding: var(--button-padding-y) var(--space-2xl);
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
-  font-size: 1rem;
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -344,4 +337,168 @@
 .participant-management-modal .cancel-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ========== 모바일 반응형 ========== */
+@media (max-width: 768px) {
+  .participant-management-modal {
+    width: 95%;
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .participant-management-modal .modal-header {
+    padding: var(--space-m);
+  }
+
+  .participant-management-modal .modal-header h2 {
+    font-size: var(--font-size-l);
+  }
+
+  .participant-management-modal .close-button {
+    width: 28px;
+    height: 28px;
+    font-size: var(--font-size-xl);
+  }
+
+  .participant-management-modal .modal-body {
+    padding: var(--space-m);
+    gap: var(--space-m);
+  }
+
+  /* 정원 정보 - 모바일에서 1열로 변경 */
+  .participant-management-modal .capacity-info {
+    grid-template-columns: 1fr;
+    gap: var(--space-s);
+    padding: var(--space-s);
+  }
+
+  .participant-management-modal .capacity-stat {
+    gap: var(--space-xs);
+  }
+
+  .participant-management-modal .stat-label {
+    font-size: var(--font-size-s);
+  }
+
+  .participant-management-modal .stat-value {
+    font-size: var(--font-size-base);
+  }
+
+  .participant-management-modal .list-header {
+    padding: var(--space-s);
+  }
+
+  .participant-management-modal .checkbox-label {
+    font-size: var(--font-size-s);
+    gap: var(--space-xs);
+  }
+
+  .participant-management-modal .members-list {
+    max-height: 50vh;
+    padding: var(--space-xs);
+  }
+
+  .participant-management-modal .member-item {
+    padding: var(--space-s) var(--space-m);
+    gap: var(--space-s);
+    flex-wrap: wrap;
+  }
+
+  .participant-management-modal .member-name {
+    font-size: var(--font-size-s);
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .participant-management-modal .modal-footer {
+    padding: var(--space-m);
+    gap: var(--space-s);
+    flex-wrap: wrap;
+  }
+
+  .participant-management-modal .cancel-button,
+  .participant-management-modal .save-button {
+    flex: 1 1 calc(50% - var(--space-xs));
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-s);
+    min-width: 0;
+  }
+}
+
+/* 미디어쿼리: 미디어 중형 (361px ~ 400px) */
+@media (min-width: 361px) and (max-width: 400px) {
+  .participant-management-modal .member-item {
+    padding: var(--space-xs) var(--space-s);
+    gap: var(--space-xs);
+  }
+
+  .participant-management-modal .member-name {
+    font-size: var(--font-size-xs);
+  }
+
+  .participant-management-modal .cancel-button,
+  .participant-management-modal .save-button {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* 미디어쿼리: 미디어 소형 (360px 이하) */
+@media (max-width: 360px) {
+  .participant-management-modal {
+    width: 98%;
+    max-width: 98vw;
+  }
+
+  .participant-management-modal .modal-header {
+    padding: var(--space-s);
+  }
+
+  .participant-management-modal .modal-header h2 {
+    font-size: var(--font-size-base);
+  }
+
+  .participant-management-modal .modal-body {
+    padding: var(--space-s);
+    gap: var(--space-s);
+  }
+
+  .participant-management-modal .capacity-info {
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+  }
+
+  .participant-management-modal .stat-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .participant-management-modal .stat-value {
+    font-size: var(--font-size-s);
+  }
+
+  .participant-management-modal .members-list {
+    max-height: 45vh;
+  }
+
+  .participant-management-modal .member-item {
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+  }
+
+  .participant-management-modal .member-name {
+    font-size: var(--font-size-xs);
+  }
+
+  .participant-management-modal .modal-footer {
+    padding: var(--space-s);
+    gap: var(--space-xs);
+  }
+
+  .participant-management-modal .cancel-button,
+  .participant-management-modal .save-button {
+    flex: 1 1 calc(50% - var(--space-xxs));
+    padding: var(--space-xs) var(--space-xxs);
+    font-size: var(--font-size-xs);
+  }
 }

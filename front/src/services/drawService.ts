@@ -129,6 +129,11 @@ class DrawService {
     );
     return response.data;
   }
+
+  // 경기 결과 삭제 (초기화)
+  async deleteMatchResult(clubId: number, matchId: number): Promise<void> {
+    await axios.delete(`/clubs/${clubId}/matches/${matchId}/result`);
+  }
 }
 
 export const drawService = new DrawService();

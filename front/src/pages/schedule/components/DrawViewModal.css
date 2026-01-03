@@ -438,3 +438,75 @@
     }
   }
 }
+
+/* ========== 결과 삭제 버튼 (아이콘) ========== */
+.dgc-reset-button {
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-l);
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.dgc-reset-button:hover:not(:disabled) {
+  color: var(--color-danger);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.dgc-reset-button:active:not(:disabled) {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.dgc-reset-button:disabled {
+  cursor: default;
+}
+
+.dgc-reset-button--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 모바일에서 삭제 버튼 크기 조정 */
+@media (max-width: 768px) {
+  .dgc-reset-button {
+    font-size: var(--font-size-base);
+    min-width: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* 미디어쿼리: 미디어 중형 (361px ~ 400px) */
+@media (min-width: 361px) and (max-width: 400px) {
+  .dgc-reset-button {
+    min-width: 22px;
+    width: 22px;
+    height: 22px;
+    font-size: var(--font-size-s);
+  }
+}
+
+/* 미디어쿼리: 미디어 소형 (360px 이하) */
+@media (max-width: 360px) {
+  .dgc-reset-button {
+    min-width: 20px;
+    width: 20px;
+    height: 20px;
+    font-size: var(--font-size-s);
+  }
+}

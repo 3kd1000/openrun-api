@@ -10,6 +10,7 @@ import DrawGamesList from "../../../components/draw/DrawGamesList";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
+import { isNotEmpty } from "../../../utils/isEmpty";
 import "./DrawViewModal.css";
 
 interface Props {
@@ -194,10 +195,42 @@ const DrawViewModal: React.FC<Props> = ({
     }
   };
 
+  // 결과 초기화 핸들러
+  const handleResetResult = async (matchId: number) => {
+    if (!window.confirm("이 경기 결과를 초기화하시겠습니까?\n통계에서도 제외됩니다.")) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+
+      await drawService.deleteMatchResult(schedule.clubId, matchId);
+
+      // 대진표 다시 로드
+      await loadDraw();
+
+      // matchScores에서 해당 matchId 제거
+      setMatchScores((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(matchId);
+        return newMap;
+      });
+    } catch (err: unknown) {
+      console.error("결과 초기화 실패:", err);
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "결과 초기화에 실패했습니다.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // 경기 결과가 하나라도 입력되었는지 확인
   const hasAnyResult =
     drawResult?.games.some(
-      (game) => game.result !== undefined && game.result !== null
+      (game) => isNotEmpty(game.result)
     ) || false;
 
   // 일정이 미래인지 확인 (미래 일정은 결과 입력 불가)
@@ -260,6 +293,7 @@ const DrawViewModal: React.FC<Props> = ({
                 isEditMode={isEditMode}
                 onScoreChange={handleScoreChange}
                 matchScores={matchScores}
+                onResetResult={handleResetResult}
               />
             </div>
           ) : null}

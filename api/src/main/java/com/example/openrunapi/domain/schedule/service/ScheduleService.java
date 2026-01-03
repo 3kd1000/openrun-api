@@ -7,6 +7,8 @@ import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
+import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
+import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
@@ -119,6 +121,9 @@ public class ScheduleService {
             throw new IllegalStateException("과거 날짜에는 일정을 수정할 수 없습니다.");
         }
 
+        // 기존 정원 저장
+        Integer oldMaxCapacity = schedule.getMaxCapacity();
+
         schedule.update(
                 request.getCourtName(),
                 request.getScheduledAt(),
@@ -129,7 +134,56 @@ public class ScheduleService {
                 request.getParticipationStartAt()
         );
 
+        // 정원이 증가한 경우, 대기자를 확정으로 승격
+        if (request.getMaxCapacity() > oldMaxCapacity) {
+            promoteWaitingParticipants(scheduleId, request.getMaxCapacity());
+        }
+
         return new ScheduleResponse(schedule, userRepository);
+    }
+
+    /**
+     * 정원 증가 시 대기 중인 참가자를 확정으로 승격
+     *
+     * @param scheduleId 일정 ID
+     * @param newMaxCapacity 새로운 정원
+     */
+    private void promoteWaitingParticipants(Long scheduleId, Integer newMaxCapacity) {
+        log.info("=== 대기자 승격 시작 - scheduleId: {}, newMaxCapacity: {} ===", scheduleId, newMaxCapacity);
+
+        // 모든 참가자 조회 (CANCELLED 제외, position 순)
+        List<ScheduleParticipant> allParticipants = participantRepository.findActiveParticipantsByScheduleId(
+                scheduleId, ScheduleParticipant.ParticipantStatus.CANCELLED);
+
+        // CONFIRMED 참가자 수 계산
+        long confirmedCount = allParticipants.stream()
+                .filter(ScheduleParticipant::isConfirmed)
+                .count();
+
+        // 남은 자리 계산
+        int availableSlots = newMaxCapacity - (int) confirmedCount;
+
+        if (availableSlots <= 0) {
+            log.info("남은 자리 없음 - confirmedCount: {}, maxCapacity: {}", confirmedCount, newMaxCapacity);
+            return;
+        }
+
+        // WAITING 상태인 참가자를 position 순으로 필터링
+        List<ScheduleParticipant> waitingParticipants = allParticipants.stream()
+                .filter(ScheduleParticipant::isWaiting)
+                .sorted(Comparator.comparing(ScheduleParticipant::getPosition))
+                .limit(availableSlots)
+                .collect(Collectors.toList());
+
+        // WAITING → CONFIRMED 승격
+        for (ScheduleParticipant participant : waitingParticipants) {
+            participant.confirm();
+            participantRepository.save(participant);
+            log.info("대기자 승격 - userId: {}, position: {}, status: WAITING → CONFIRMED",
+                    participant.getUserId(), participant.getPosition());
+        }
+
+        log.info("대기자 승격 완료 - 승격된 인원: {}", waitingParticipants.size());
     }
 
     /**
