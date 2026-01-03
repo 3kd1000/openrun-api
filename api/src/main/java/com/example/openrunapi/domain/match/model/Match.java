@@ -103,6 +103,16 @@ public class Match {
         this.playedAt = playedAt != null ? playedAt : LocalDateTime.now();
     }
 
+    /**
+     * 경기 결과 초기화 (미진행 상태로 복원)
+     */
+    public void clearResult() {
+        this.teamAScore = null;
+        this.teamBScore = null;
+        this.result = null;
+        // playedAt은 유지 (경기 일정 정보)
+    }
+
     public enum MatchResult {
         TEAM_A_WIN,
         TEAM_B_WIN,
