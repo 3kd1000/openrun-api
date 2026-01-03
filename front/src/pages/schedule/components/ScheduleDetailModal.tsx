@@ -11,6 +11,7 @@ import type {
 } from "../../../types/schedule";
 import DrawCreateModal from "./DrawCreateModal";
 import DrawViewModal from "./DrawViewModal";
+import ParticipantManagementModal from "./ParticipantManagementModal";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import {
   validateParticipation,
@@ -50,6 +51,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
   );
   const [showDrawCreateModal, setShowDrawCreateModal] = useState(false);
   const [showDrawViewModal, setShowDrawViewModal] = useState(false);
+  const [showParticipantManagementModal, setShowParticipantManagementModal] = useState(false);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
 
   // 클럽 회원 검색 관련 state (예약자 선택용)
@@ -68,9 +70,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const userId = localStorage.getItem("user_id");
   const currentUserId = userId ? parseInt(userId) : null;
 
-  // 클럽 회원 목록 조회 (수정 모드 진입 시에만)
+  // 클럽 회원 목록 조회 (수정 모드 진입 시 또는 참가자 관리 모달 열릴 때)
   useEffect(() => {
-    if (!isEditMode) return; // 수정 모드 아니면 조회 안 함
+    if (!isEditMode && !showParticipantManagementModal) return; // 수정 모드도 아니고 참가자 관리 모달도 아니면 조회 안 함
 
     const fetchClubMembers = async () => {
       try {
@@ -84,7 +86,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
       }
     };
     fetchClubMembers();
-  }, [isEditMode]); // isEditMode가 true될 때 조회
+  }, [isEditMode, showParticipantManagementModal]); // isEditMode가 true되거나 참가자 관리 모달이 열릴 때 조회
 
   // 예약자 정보 초기화 (clubMembers와 schedule이 모두 로드된 후)
   useEffect(() => {
@@ -152,7 +154,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
       // 일정 정보와 참가자 정보를 병렬로 가져오기
       const [scheduleData, participantsList, myStatus] = await Promise.all([
-        scheduleService.getScheduleById(scheduleId),
+        scheduleService.getScheduleById(scheduleId, currentUserId || undefined),
         participantService.getParticipants(scheduleId),
         currentUserId
           ? participantService.getMyParticipation(scheduleId, currentUserId)
@@ -591,7 +593,31 @@ const ScheduleDetailModal: React.FC<Props> = ({
             {/* 참가자 목록 */}
             {participants.length > 0 && (
               <div className="participants-section">
-                <label>참가자 목록</label>
+                <div className="section-header-with-button">
+                  <label>참가자 목록</label>
+                  {schedule?.canManageSchedule && !isEditMode && (
+                    <button
+                      className="manage-participants-button"
+                      onClick={() => setShowParticipantManagementModal(true)}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ marginRight: "6px" }}
+                      >
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                      참가자 수정
+                    </button>
+                  )}
+                </div>
                 <div className="participants-list">
                   {confirmedParticipants.length > 0 && (
                     <div className="participant-group">
@@ -997,6 +1023,22 @@ const ScheduleDetailModal: React.FC<Props> = ({
           }}
           onSuccess={async () => {
             setShowDrawViewModal(false);
+            await loadScheduleAndParticipants();
+            onSuccess();
+          }}
+        />
+      )}
+
+      {/* 참가자 관리 모달 */}
+      {showParticipantManagementModal && schedule && (
+        <ParticipantManagementModal
+          scheduleId={schedule.id}
+          schedule={schedule}
+          currentParticipants={participants}
+          clubMembers={clubMembers}
+          onClose={() => setShowParticipantManagementModal(false)}
+          onSuccess={async () => {
+            setShowParticipantManagementModal(false);
             await loadScheduleAndParticipants();
             onSuccess();
           }}

@@ -31,6 +31,10 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     @Query("SELECT COALESCE(MAX(sp.position), 0) + 1 FROM ScheduleParticipant sp WHERE sp.scheduleId = :scheduleId")
     Integer getNextPosition(@Param("scheduleId") Long scheduleId);
 
+    // 특정 일정의 최대 position 번호 가져오기
+    @Query("SELECT MAX(sp.position) FROM ScheduleParticipant sp WHERE sp.scheduleId = :scheduleId")
+    Integer getMaxPosition(@Param("scheduleId") Long scheduleId);
+
     // 특정 사용자가 특정 일정에 신청했는지 확인 (취소 포함)
     boolean existsByScheduleIdAndUserId(Long scheduleId, Long userId);
 

@@ -13,6 +13,7 @@ export interface Schedule {
   drawType?: 'AA' | 'AB' | 'SEED' | null;
   isDrawValid?: boolean | null;
   drawCreatedAt?: string | null;
+  canManageSchedule?: boolean | null; // 권한 정보 (System Admin 또는 Club ADMIN 이상)
   createdAt: string;
   updatedAt: string;
 }

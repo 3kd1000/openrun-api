@@ -23,8 +23,10 @@ export const scheduleService = {
   },
 
   // 특정 일정 조회
-  getScheduleById: async (scheduleId: number): Promise<Schedule> => {
-    const response = await axiosInstance.get(`/schedules/${scheduleId}`);
+  getScheduleById: async (scheduleId: number, userId?: number): Promise<Schedule> => {
+    const response = await axiosInstance.get(`/schedules/${scheduleId}`, {
+      params: userId ? { userId } : undefined
+    });
     return response.data;
   },
 
