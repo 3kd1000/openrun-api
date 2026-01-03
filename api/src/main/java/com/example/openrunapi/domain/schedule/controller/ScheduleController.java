@@ -71,8 +71,10 @@ public class ScheduleController {
      * 특정 일정 조회
      */
     @GetMapping("/{scheduleId}")
-    public ResponseEntity<ScheduleResponse> getScheduleById(@PathVariable Long scheduleId) {
-        ScheduleResponse response = scheduleService.getScheduleById(scheduleId);
+    public ResponseEntity<ScheduleResponse> getScheduleById(
+            @PathVariable Long scheduleId,
+            @RequestParam(required = false) Long userId) { // 권한 체크용 (optional)
+        ScheduleResponse response = scheduleService.getScheduleById(scheduleId, userId);
         return ResponseEntity.ok(response);
     }
 

@@ -91,9 +91,6 @@ public class ScoreboardService {
                             .wins(stats.getWins())
                             .draws(stats.getDraws())
                             .losses(stats.getLosses())
-                            .goalDifference(stats.getGoalDifference())
-                            .totalPointsScored(stats.getTotalPointsScored())
-                            .totalPointsConceded(stats.getTotalPointsConceded())
                             .build();
                 })
                 .sorted((a, b) -> compareRankings(a, b, sortBy))
@@ -174,9 +171,6 @@ public class ScoreboardService {
                             .wins(stats.wins)
                             .draws(stats.draws)
                             .losses(stats.losses)
-                            .goalDifference(stats.goalDifference)
-                            .totalPointsScored(stats.totalPointsScored)
-                            .totalPointsConceded(stats.totalPointsConceded)
                             .build();
                 })
                 .sorted((a, b) -> compareRankings(a, b, sortBy))
@@ -201,9 +195,6 @@ public class ScoreboardService {
         int draws = 0;
         int losses = 0;
         int points = 0;
-        int totalPointsScored = 0;
-        int totalPointsConceded = 0;
-        int goalDifference = 0;
         BigDecimal winRate = BigDecimal.ZERO;
     }
 
@@ -230,13 +221,6 @@ public class ScoreboardService {
             stats.losses++;
         }
 
-        int scored = isTeamA ? match.getTeamAScore() : match.getTeamBScore();
-        int conceded = isTeamA ? match.getTeamBScore() : match.getTeamAScore();
-
-        stats.totalPointsScored += scored;
-        stats.totalPointsConceded += conceded;
-        stats.goalDifference = stats.totalPointsScored - stats.totalPointsConceded;
-
         // 승률 계산
         if (stats.totalMatches > 0) {
             BigDecimal winCount = BigDecimal.valueOf(stats.wins);
@@ -258,23 +242,53 @@ public class ScoreboardService {
      */
     private int compareRankings(ScoreboardResponse.RankingEntry a, ScoreboardResponse.RankingEntry b, String sortBy) {
         if (sortBy == null || sortBy.isEmpty() || "points".equals(sortBy)) {
-            // 기본: 승점 내림차순 → 득실차 내림차순
+            // 기본: 승점 내림차순 → 경기수 내림차순 → 승수 내림차순 → 이름 가나다순
             int pointsCompare = Integer.compare(b.getPoints(), a.getPoints());
             if (pointsCompare != 0) return pointsCompare;
-            return Integer.compare(b.getGoalDifference(), a.getGoalDifference());
-        } else if ("totalMatches".equals(sortBy)) {
-            // 경기수 내림차순 → 승점 내림차순
+
             int matchesCompare = Integer.compare(b.getTotalMatches(), a.getTotalMatches());
             if (matchesCompare != 0) return matchesCompare;
-            return Integer.compare(b.getPoints(), a.getPoints());
+
+            int winsCompare = Integer.compare(b.getWins(), a.getWins());
+            if (winsCompare != 0) return winsCompare;
+
+            return a.getUserName().compareTo(b.getUserName());
+        } else if ("totalMatches".equals(sortBy)) {
+            // 경기수 내림차순 → 승점 내림차순 → 승수 내림차순 → 이름 가나다순
+            int matchesCompare = Integer.compare(b.getTotalMatches(), a.getTotalMatches());
+            if (matchesCompare != 0) return matchesCompare;
+
+            int pointsCompare = Integer.compare(b.getPoints(), a.getPoints());
+            if (pointsCompare != 0) return pointsCompare;
+
+            int winsCompare = Integer.compare(b.getWins(), a.getWins());
+            if (winsCompare != 0) return winsCompare;
+
+            return a.getUserName().compareTo(b.getUserName());
         } else if ("winRate".equals(sortBy)) {
-            // 승률 내림차순 → 경기수 내림차순
+            // 승률 내림차순 → 경기수 내림차순 → 승수 내림차순 → 이름 가나다순
             int winRateCompare = b.getWinRate().compareTo(a.getWinRate());
             if (winRateCompare != 0) return winRateCompare;
-            return Integer.compare(b.getTotalMatches(), a.getTotalMatches());
+
+            int matchesCompare = Integer.compare(b.getTotalMatches(), a.getTotalMatches());
+            if (matchesCompare != 0) return matchesCompare;
+
+            int winsCompare = Integer.compare(b.getWins(), a.getWins());
+            if (winsCompare != 0) return winsCompare;
+
+            return a.getUserName().compareTo(b.getUserName());
         } else {
             // 기본값: 승점
-            return Integer.compare(b.getPoints(), a.getPoints());
+            int pointsCompare = Integer.compare(b.getPoints(), a.getPoints());
+            if (pointsCompare != 0) return pointsCompare;
+
+            int matchesCompare = Integer.compare(b.getTotalMatches(), a.getTotalMatches());
+            if (matchesCompare != 0) return matchesCompare;
+
+            int winsCompare = Integer.compare(b.getWins(), a.getWins());
+            if (winsCompare != 0) return winsCompare;
+
+            return a.getUserName().compareTo(b.getUserName());
         }
     }
 }

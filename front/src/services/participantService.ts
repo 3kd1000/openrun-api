@@ -36,5 +36,17 @@ export const participantService = {
       }
       throw error;
     }
+  },
+
+  // 참가자 일괄 수정 (운영진 전용)
+  bulkUpdateParticipants: async (
+    scheduleId: number,
+    userIds: number[],
+    userId: number
+  ): Promise<void> => {
+    await axiosInstance.put(`/schedules/${scheduleId}/participants/bulk`,
+      { userIds },
+      { params: { userId } }
+    );
   }
 };

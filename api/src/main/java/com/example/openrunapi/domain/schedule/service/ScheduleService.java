@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.service;
 
+import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequestWithIds;
 import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
@@ -35,6 +36,7 @@ public class ScheduleService {
     private final ScheduleParticipantRepository participantRepository;
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
+    private final PermissionService permissionService;
 
     /**
      * 일정 생성
@@ -64,9 +66,16 @@ public class ScheduleService {
      * 특정 일정 조회
      */
     public ScheduleResponse getScheduleById(Long scheduleId) {
+        return getScheduleById(scheduleId, null);
+    }
+
+    /**
+     * 특정 일정 조회 (권한 정보 포함)
+     */
+    public ScheduleResponse getScheduleById(Long scheduleId, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
-        return new ScheduleResponse(schedule, userRepository);
+        return new ScheduleResponse(schedule, userRepository, permissionService, userId);
     }
 
     /**
