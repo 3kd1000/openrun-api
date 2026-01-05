@@ -62,7 +62,20 @@ const ScheduleCreateModal: React.FC<Props> = ({
     useState(false);
   const [participationStartDate, setParticipationStartDate] =
     useState(defaultDate);
-  const [participationStartTime, setParticipationStartTime] = useState("06:00");
+  const [participationStartAmPm, setParticipationStartAmPm] = useState<"AM" | "PM">("AM");
+  const [participationStartHour, setParticipationStartHour] = useState(6);
+  const [participationStartMinute, setParticipationStartMinute] = useState<0 | 30>(0);
+  
+  // 참가신청 시작시간을 HH:mm 형식으로 변환
+  const getParticipationStartTime = (): string => {
+    let hour24 = participationStartHour;
+    if (participationStartAmPm === "PM" && participationStartHour !== 12) {
+      hour24 = participationStartHour + 12;
+    } else if (participationStartAmPm === "AM" && participationStartHour === 12) {
+      hour24 = 0;
+    }
+    return `${String(hour24).padStart(2, "0")}:${String(participationStartMinute).padStart(2, "0")}`;
+  };
 
   // 클럽 회원 목록 조회
   useEffect(() => {
@@ -102,7 +115,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
       setError("");
 
       const participationStartAt = participationStartEnabled
-        ? `${participationStartDate}T${participationStartTime}:00`
+        ? `${participationStartDate}T${getParticipationStartTime()}:00`
         : null;
 
       const requestData: CreateScheduleRequest = {
@@ -199,8 +212,8 @@ const ScheduleCreateModal: React.FC<Props> = ({
           </div>
 
           {participationStartEnabled && (
-            <div className="form-row">
-              <div className="form-group" style={{ flex: "1.5" }}>
+            <>
+              <div className="form-group">
                 <label>시작 날짜 *</label>
                 <input
                   type="date"
@@ -209,22 +222,45 @@ const ScheduleCreateModal: React.FC<Props> = ({
                   required
                 />
               </div>
-              <div className="form-group" style={{ flex: "1" }}>
-                <label>시작 시간 *</label>
-                <select
-                  value={participationStartTime}
-                  onChange={(e) => setParticipationStartTime(e.target.value)}
-                  required
-                  className="time-select"
-                >
-                  {timeOptions.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                </select>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: "0.8" }}>
+                  <label>오전/오후 *</label>
+                  <select
+                    value={participationStartAmPm}
+                    onChange={(e) => setParticipationStartAmPm(e.target.value as "AM" | "PM")}
+                    required
+                  >
+                    <option value="AM">오전</option>
+                    <option value="PM">오후</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: "1" }}>
+                  <label>시간 *</label>
+                  <select
+                    value={participationStartHour}
+                    onChange={(e) => setParticipationStartHour(parseInt(e.target.value))}
+                    required
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                      <option key={hour} value={hour}>
+                        {hour}시
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: "1" }}>
+                  <label>분 *</label>
+                  <select
+                    value={participationStartMinute}
+                    onChange={(e) => setParticipationStartMinute(parseInt(e.target.value) as 0 | 30)}
+                    required
+                  >
+                    <option value={0}>00분</option>
+                    <option value={30}>30분</option>
+                  </select>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           <div className="form-group">

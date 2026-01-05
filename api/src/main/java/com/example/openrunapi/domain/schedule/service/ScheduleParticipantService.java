@@ -4,6 +4,8 @@ import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
+import com.example.openrunapi.domain.schedule.model.dto.BatchParticipationRequest;
+import com.example.openrunapi.domain.schedule.model.dto.BatchParticipationResponse;
 import com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse;
 import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepository;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
@@ -282,5 +284,92 @@ public class ScheduleParticipantService {
         }
 
         log.info("=== 참가자 일괄 수정 완료 ===");
+    }
+
+    /**
+     * 일정 참가신청/취소 배치 처리
+     * - 최종적으로 참가하고 싶은 일정 목록을 받아서 현재 상태와 비교
+     * - 추가해야 할 일정과 취소해야 할 일정을 자동으로 계산
+     * - 각 작업은 독립적으로 처리되며, 일부 실패해도 나머지는 계속 진행
+     *
+     * @param userId 사용자 ID
+     * @param request 배치 요청 (최종 참가 희망 일정 목록)
+     * @return 성공/실패 결과
+     */
+    @Transactional
+    public BatchParticipationResponse batchParticipation(Long userId, BatchParticipationRequest request) {
+        log.info("=== 배치 참가신청/취소 시작 - userId: {} ===", userId);
+
+        List<Long> joinedScheduleIds = new ArrayList<>();
+        List<Long> canceledScheduleIds = new ArrayList<>();
+        List<BatchParticipationResponse.FailedOperation> failedOperations = new ArrayList<>();
+
+        // 1. 현재 참가 중인 일정 조회 (CANCELLED 제외)
+        List<ScheduleParticipant> currentParticipations = participantRepository
+                .findByUserIdAndStatusNot(userId, ParticipantStatus.CANCELLED);
+
+        Set<Long> currentScheduleIds = currentParticipations.stream()
+                .map(ScheduleParticipant::getScheduleId)
+                .collect(Collectors.toSet());
+
+        log.info("현재 참가 중인 일정: {}", currentScheduleIds);
+
+        // 2. 최종 선택한 일정 목록
+        Set<Long> selectedScheduleIds = request.getSelectedScheduleIds() != null
+                ? new HashSet<>(request.getSelectedScheduleIds())
+                : new HashSet<>();
+
+        log.info("최종 선택한 일정: {}", selectedScheduleIds);
+
+        // 3. 추가할 일정 계산 (선택했지만 현재 참가 중이 아닌 것)
+        Set<Long> toJoin = new HashSet<>(selectedScheduleIds);
+        toJoin.removeAll(currentScheduleIds);
+
+        // 4. 취소할 일정 계산 (현재 참가 중이지만 선택하지 않은 것)
+        Set<Long> toCancel = new HashSet<>(currentScheduleIds);
+        toCancel.removeAll(selectedScheduleIds);
+
+        log.info("추가할 일정: {}, 취소할 일정: {}", toJoin, toCancel);
+
+        // 5. 참가신청 처리
+        for (Long scheduleId : toJoin) {
+            try {
+                joinSchedule(scheduleId, userId);
+                joinedScheduleIds.add(scheduleId);
+                log.info("참가신청 성공 - scheduleId: {}", scheduleId);
+            } catch (Exception e) {
+                log.warn("참가신청 실패 - scheduleId: {}, error: {}", scheduleId, e.getMessage());
+                failedOperations.add(BatchParticipationResponse.FailedOperation.builder()
+                        .scheduleId(scheduleId)
+                        .operation("JOIN")
+                        .errorMessage(e.getMessage())
+                        .build());
+            }
+        }
+
+        // 6. 취소 처리
+        for (Long scheduleId : toCancel) {
+            try {
+                cancelParticipation(scheduleId, userId);
+                canceledScheduleIds.add(scheduleId);
+                log.info("참가취소 성공 - scheduleId: {}", scheduleId);
+            } catch (Exception e) {
+                log.warn("참가취소 실패 - scheduleId: {}, error: {}", scheduleId, e.getMessage());
+                failedOperations.add(BatchParticipationResponse.FailedOperation.builder()
+                        .scheduleId(scheduleId)
+                        .operation("CANCEL")
+                        .errorMessage(e.getMessage())
+                        .build());
+            }
+        }
+
+        log.info("=== 배치 참가신청/취소 완료 - 신청: {}개, 취소: {}개, 실패: {}개 ===",
+                joinedScheduleIds.size(), canceledScheduleIds.size(), failedOperations.size());
+
+        return BatchParticipationResponse.builder()
+                .joinedScheduleIds(joinedScheduleIds)
+                .canceledScheduleIds(canceledScheduleIds)
+                .failedOperations(failedOperations)
+                .build();
     }
 }

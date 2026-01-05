@@ -8,9 +8,11 @@ export const scheduleService = {
     return response.data;
   },
 
-  // 모든 일정 조회
-  getAllSchedules: async (): Promise<Schedule[]> => {
-    const response = await axiosInstance.get('/schedules');
+  // 모든 일정 조회 (clubId 없으면 전체, 있으면 해당 클럽만)
+  getAllSchedules: async (clubId?: number): Promise<Schedule[]> => {
+    const response = await axiosInstance.get('/schedules', {
+      params: clubId ? { clubId } : undefined
+    });
     return response.data;
   },
 

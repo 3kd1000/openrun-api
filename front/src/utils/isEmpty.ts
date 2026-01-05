@@ -41,3 +41,21 @@ export const isEmpty = (value: unknown): boolean => {
 export const isNotEmpty = (value: unknown): boolean => {
   return !isEmpty(value);
 };
+
+/**
+ * 점수가 설정되었는지 확인하는 함수 (0점도 유효한 점수로 간주)
+ * @param value - 확인할 점수 값
+ * @returns true: 점수가 설정됨 (null/undefined가 아님), false: 점수가 설정되지 않음
+ */
+export const isScoreSet = (value: unknown): boolean => {
+  return value !== null && value !== undefined;
+};
+
+/**
+ * 점수가 설정되지 않았는지 확인하는 함수
+ * @param value - 확인할 점수 값
+ * @returns true: 점수가 설정되지 않음, false: 점수가 설정됨
+ */
+export const isScoreNotSet = (value: unknown): boolean => {
+  return !isScoreSet(value);
+};
