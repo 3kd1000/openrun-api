@@ -12,6 +12,7 @@ import type {
 import DrawCreateModal from "./DrawCreateModal";
 import DrawViewModal from "./DrawViewModal";
 import ParticipantManagementModal from "./ParticipantManagementModal";
+import ScheduleFormSection from "./ScheduleFormSection";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import {
   validateParticipation,
@@ -25,22 +26,14 @@ interface Props {
   scheduleId: number;
   onClose: () => void;
   onSuccess: () => void;
+  onJoinSuccess?: () => void;
 }
-
-// 시간 옵션 생성 (정시만, 00시부터 23시까지)
-const generateTimeOptions = () => {
-  const options = [];
-  for (let hour = 0; hour < 24; hour++) {
-    const time = `${String(hour).padStart(2, "0")}:00`;
-    options.push(time);
-  }
-  return options;
-};
 
 const ScheduleDetailModal: React.FC<Props> = ({
   scheduleId,
   onClose,
   onSuccess,
+  onJoinSuccess,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,38 +47,16 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const [showParticipantManagementModal, setShowParticipantManagementModal] = useState(false);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
 
-  // 클럽 회원 검색 관련 state (예약자 선택용)
+  // 클럽 회원 목록 (참가자 관리 모달용)
   const [clubMembers, setClubMembers] = useState<UserResponse[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedReservedBy, setSelectedReservedBy] =
-    useState<UserResponse | null>(null);
-
-  // 참가신청 시작시간 관련 state
-  const [participationStartEnabled, setParticipationStartEnabled] =
-    useState(false);
-  const [participationStartDate, setParticipationStartDate] = useState("");
-  const [participationStartAmPm, setParticipationStartAmPm] = useState<"AM" | "PM">("AM");
-  const [participationStartHour, setParticipationStartHour] = useState(6);
-  const [participationStartMinute, setParticipationStartMinute] = useState<0 | 30>(0);
-  
-  // 참가신청 시작시간을 HH:mm 형식으로 변환
-  const getParticipationStartTime = (): string => {
-    let hour24 = participationStartHour;
-    if (participationStartAmPm === "PM" && participationStartHour !== 12) {
-      hour24 = participationStartHour + 12;
-    } else if (participationStartAmPm === "AM" && participationStartHour === 12) {
-      hour24 = 0;
-    }
-    return `${String(hour24).padStart(2, "0")}:${String(participationStartMinute).padStart(2, "0")}`;
-  };
 
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem("user_id");
   const currentUserId = userId ? parseInt(userId) : null;
 
-  // 클럽 회원 목록 조회 (수정 모드 진입 시 또는 참가자 관리 모달 열릴 때)
+  // 클럽 회원 목록 조회 (참가자 관리 모달 열릴 때)
   useEffect(() => {
-    if (!isEditMode && !showParticipantManagementModal) return; // 수정 모드도 아니고 참가자 관리 모달도 아니면 조회 안 함
+    if (!showParticipantManagementModal) return;
 
     const fetchClubMembers = async () => {
       try {
@@ -99,37 +70,15 @@ const ScheduleDetailModal: React.FC<Props> = ({
       }
     };
     fetchClubMembers();
-  }, [isEditMode, showParticipantManagementModal]); // isEditMode가 true되거나 참가자 관리 모달이 열릴 때 조회
+  }, [showParticipantManagementModal]);
 
-  // 예약자 정보 초기화 (clubMembers와 schedule이 모두 로드된 후)
-  useEffect(() => {
-    if (!schedule || !isEditMode) return;
+  // ESC 키로 모달 닫기 (편집 모드가 아니고 다른 모달이 열려있지 않을 때만)
+  useEscapeKey(
+    onClose,
+    !isEditMode && !showDrawCreateModal && !showDrawViewModal
+  );
 
-    if (schedule.reservedByUserId && clubMembers.length > 0) {
-      const reservedUser = clubMembers.find(
-        (m) => m.id === schedule.reservedByUserId
-      );
-      if (reservedUser) {
-        setSelectedReservedBy(reservedUser);
-        setSearchQuery(reservedUser.name); // 검색 필드에 예약자 이름 표시
-      } else {
-        // clubMembers에 없지만 reservedByUserName이 있으면 이름만 표시
-        if (schedule.reservedByUserName) {
-          setSearchQuery(schedule.reservedByUserName);
-        }
-        setSelectedReservedBy(null);
-      }
-    } else if (schedule.reservedByUserName && !schedule.reservedByUserId) {
-      // reservedByUserId는 없지만 이름만 있는 경우
-      setSearchQuery(schedule.reservedByUserName);
-      setSelectedReservedBy(null);
-    } else {
-      setSelectedReservedBy(null);
-      setSearchQuery("");
-    }
-  }, [schedule, clubMembers, isEditMode]);
-
-  // 초기 날짜 및 시간 분리
+  // 초기 날짜 및 시간 분리 (ScheduleFormSection에 전달용)
   const scheduledAtDate = schedule
     ? new Date(schedule.scheduledAt)
     : new Date();
@@ -138,12 +87,6 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
   const [selectedDate, setSelectedDate] = useState(defaultDate);
   const [selectedTime, setSelectedTime] = useState(defaultTime);
-
-  // ESC 키로 모달 닫기 (편집 모드가 아니고 다른 모달이 열려있지 않을 때만)
-  useEscapeKey(
-    onClose,
-    !isEditMode && !showDrawCreateModal && !showDrawViewModal
-  );
 
   const [formData, setFormData] = useState({
     clubId: schedule?.clubId || 1,
@@ -178,7 +121,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
       setParticipants(participantsList);
       setMyParticipation(myStatus);
 
-      // 폼 데이터 초기화
+      // 폼 데이터 초기화 (Edit 모드 진입 시 사용)
       const scheduledAt = new Date(scheduleData.scheduledAt);
       setSelectedDate(format(scheduledAt, "yyyy-MM-dd"));
       setSelectedTime(format(scheduledAt, "HH:mm"));
@@ -190,27 +133,6 @@ const ScheduleDetailModal: React.FC<Props> = ({
         description: scheduleData.description || "",
         reservedByUserId: scheduleData.reservedByUserId || undefined,
       });
-
-      // 예약자 정보 초기화는 clubMembers가 로드된 후에 수행 (아래 useEffect에서 처리)
-
-      // 참가신청 시작시간 초기화
-      if (scheduleData.participationStartAt) {
-        setParticipationStartEnabled(true);
-        const participationStart = new Date(scheduleData.participationStartAt);
-        setParticipationStartDate(format(participationStart, "yyyy-MM-dd"));
-        const hour = participationStart.getHours();
-        const minute = participationStart.getMinutes();
-        setParticipationStartAmPm(hour >= 12 ? "PM" : "AM");
-        const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-        setParticipationStartHour(hour12);
-        setParticipationStartMinute(minute === 30 ? 30 : 0);
-      } else {
-        setParticipationStartEnabled(false);
-        setParticipationStartDate(format(scheduledAt, "yyyy-MM-dd"));
-        setParticipationStartAmPm("AM");
-        setParticipationStartHour(6);
-        setParticipationStartMinute(0);
-      }
     } catch (err) {
       console.error("일정 정보 로드 실패:", err);
       setError("일정 정보를 불러오는데 실패했습니다.");
@@ -224,55 +146,6 @@ const ScheduleDetailModal: React.FC<Props> = ({
   useEffect(() => {
     loadScheduleAndParticipants();
   }, [loadScheduleAndParticipants]);
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!schedule) {
-      setError("일정 정보를 불러오는 중입니다.");
-      return;
-    }
-
-    if (!formData.courtName || !selectedDate || !selectedTime) {
-      setError("코트명, 날짜, 시간은 필수입니다.");
-      return;
-    }
-
-    const scheduledAt = `${selectedDate}T${selectedTime}:00`;
-
-    // 과거 날짜 체크
-    const validation = validateScheduleCreation(scheduledAt);
-    if (!validation.isValid) {
-      setError(validation.errorMessage || "일정 수정에 실패했습니다.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError("");
-
-      const participationStartAt = participationStartEnabled
-        ? `${participationStartDate}T${getParticipationStartTime()}:00`
-        : null;
-
-      const requestData: CreateScheduleRequest = {
-        ...formData,
-        scheduledAt,
-        participationStartAt,
-      };
-
-      await scheduleService.updateSchedule(schedule.id, requestData);
-      setIsEditMode(false); // 편집 모드 종료 (편집 화면만 닫기)
-      await loadScheduleAndParticipants(); // 변경된 데이터로 새로고침
-      onSuccess(); // 부모 컴포넌트에 변경 알림
-      // onClose() 제거 - 상세 모달은 열어둔 채 유지
-    } catch (err) {
-      console.error("일정 수정 실패:", err);
-      setError("일정 수정에 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!schedule) {
@@ -350,6 +223,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
       await participantService.joinSchedule(schedule.id, currentUserId);
       await loadScheduleAndParticipants(); // 전체 데이터 새로고침
       onSuccess(); // 부모 컴포넌트 일정 목록 새로고침
+      if (onJoinSuccess) {
+        onJoinSuccess(); // 참가신청 성공 알림
+      }
       onClose(); // 참가신청 후 모달 닫기
     } catch (err: unknown) {
       console.error("참가 신청 실패:", err);
@@ -385,34 +261,12 @@ const ScheduleDetailModal: React.FC<Props> = ({
     }
   };
 
-  // 예약자 선택
-  const handleSelectReservedBy = (member: UserResponse) => {
-    setSelectedReservedBy(member);
-    setFormData({ ...formData, reservedByUserId: member.id });
-    setSearchQuery("");
-  };
-
-  // 예약자 선택 해제
-  const handleClearReservedBy = () => {
-    setSelectedReservedBy(null);
-    setFormData({ ...formData, reservedByUserId: undefined });
-  };
-
-  // LIKE 검색 (이름에 검색어가 포함된 회원 필터링)
-  const filteredMembers = searchQuery.trim()
-    ? clubMembers.filter((member) =>
-        member.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
-
   const confirmedParticipants = participants.filter(
     (p) => p.status === "CONFIRMED"
   );
   const waitingParticipants = participants.filter(
     (p) => p.status === "WAITING"
   );
-
-  const timeOptions = generateTimeOptions();
 
   // 일정 정보 로딩 중
   if (loading && !schedule) {
@@ -790,253 +644,64 @@ const ScheduleDetailModal: React.FC<Props> = ({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleUpdate}>
-            {error && <div className="error-message">{error}</div>}
+          <ScheduleFormSection
+            mode="update"
+            currentUserId={currentUserId}
+            initialData={{
+              clubId: schedule.clubId,
+              scheduledAt: `${selectedDate}T${selectedTime}:00`,
+              courtName: formData.courtName,
+              maxCapacity: formData.maxCapacity,
+              cost: formData.cost,
+              description: formData.description,
+              reservedByUserId: formData.reservedByUserId,
+              participationStartAt: schedule.participationStartAt || null,
+            }}
+            onSubmit={async (data) => {
+              if (!schedule) {
+                setError("일정 정보를 불러오는 중입니다.");
+                throw new Error("일정 정보를 불러오는 중입니다.");
+              }
 
-            <div className="form-row">
-              <div className="form-group" style={{ flex: "1.5" }}>
-                <label>날짜 *</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group" style={{ flex: "1" }}>
-                <label>시간 *</label>
-                <select
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  required
-                  className="time-select"
-                >
-                  {timeOptions.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+              // 과거 날짜 체크
+              const validation = validateScheduleCreation(data.scheduledAt);
+              if (!validation.isValid) {
+                setError(validation.errorMessage || "일정 수정에 실패했습니다.");
+                throw new Error(validation.errorMessage || "일정 수정에 실패했습니다.");
+              }
 
-            <div className="form-group">
-              <label
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <input
-                  type="checkbox"
-                  checked={participationStartEnabled}
-                  onChange={(e) =>
-                    setParticipationStartEnabled(e.target.checked)
-                  }
-                  style={{ width: "auto", margin: 0 }}
-                />
-                참가신청 시작시간 설정
-              </label>
-            </div>
+              setLoading(true);
+              setError("");
 
-            {participationStartEnabled && (
-              <>
-                <div className="form-group">
-                  <label>참가신청 시작 날짜 *</label>
-                  <input
-                    type="date"
-                    value={participationStartDate}
-                    onChange={(e) => setParticipationStartDate(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-row">
-                  <div className="form-group" style={{ flex: "0.8" }}>
-                    <label>오전/오후 *</label>
-                    <select
-                      value={participationStartAmPm}
-                      onChange={(e) => setParticipationStartAmPm(e.target.value as "AM" | "PM")}
-                      required
-                    >
-                      <option value="AM">오전</option>
-                      <option value="PM">오후</option>
-                    </select>
-                  </div>
-                  <div className="form-group" style={{ flex: "1" }}>
-                    <label>시간 *</label>
-                    <select
-                      value={participationStartHour}
-                      onChange={(e) => setParticipationStartHour(parseInt(e.target.value))}
-                      required
-                    >
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
-                        <option key={hour} value={hour}>
-                          {hour}시
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group" style={{ flex: "1" }}>
-                    <label>분 *</label>
-                    <select
-                      value={participationStartMinute}
-                      onChange={(e) => setParticipationStartMinute(parseInt(e.target.value) as 0 | 30)}
-                      required
-                    >
-                      <option value={0}>00분</option>
-                      <option value={30}>30분</option>
-                    </select>
-                  </div>
-                </div>
-              </>
-            )}
+              try {
+                const requestData: CreateScheduleRequest = {
+                  clubId: data.clubId,
+                  scheduledAt: data.scheduledAt,
+                  courtName: data.courtName,
+                  maxCapacity: data.maxCapacity,
+                  cost: data.cost,
+                  description: data.description,
+                  reservedByUserId: data.reservedByUserId,
+                  participationStartAt: data.participationStartAt,
+                };
 
-            <div className="form-group">
-              <label>코트명 *</label>
-              <input
-                type="text"
-                value={formData.courtName}
-                onChange={(e) =>
-                  setFormData({ ...formData, courtName: e.target.value })
-                }
-                placeholder="예: 골드 3번 코트"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>최대 정원 *</label>
-              <input
-                type="number"
-                value={formData.maxCapacity}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    maxCapacity: parseInt(e.target.value),
-                  })
-                }
-                min="1"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>참가 비용 (선택)</label>
-              <input
-                type="number"
-                value={formData.cost || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    cost: e.target.value ? parseInt(e.target.value) : undefined,
-                  })
-                }
-                placeholder="13000"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>예약자 (선택)</label>
-              {selectedReservedBy ? (
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  <span
-                    style={{
-                      padding: "8px 12px",
-                      background: "#f0f0f0",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    {selectedReservedBy.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleClearReservedBy}
-                    style={{
-                      padding: "4px 8px",
-                      background: "#ff6b6b",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault(); // 엔터키로 form submit 방지
-                      }
-                    }}
-                    placeholder="클럽원 이름 검색... (타이핑하면 자동 검색됩니다)"
-                  />
-                  {filteredMembers.length > 0 && (
-                    <div
-                      style={{
-                        marginTop: "4px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        maxHeight: "150px",
-                        overflowY: "auto",
-                        background: "white",
-                      }}
-                    >
-                      {filteredMembers.map((member) => (
-                        <div
-                          key={member.id}
-                          onClick={() => handleSelectReservedBy(member)}
-                          style={{
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            borderBottom: "1px solid #eee",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = "#f5f5f5")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = "white")
-                          }
-                        >
-                          {member.name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label>설명 (선택)</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="일정 설명"
-                rows={3}
-              />
-            </div>
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                onClick={() => setIsEditMode(false)}
-                className="btn-secondary"
-                disabled={loading}
-              >
-                취소
-              </button>
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? "저장 중..." : "저장"}
-              </button>
-            </div>
-          </form>
+                await scheduleService.updateSchedule(schedule.id, requestData);
+                setIsEditMode(false); // 편집 모드 종료
+                await loadScheduleAndParticipants(); // 데이터 새로고침
+                onSuccess(); // 부모 컴포넌트 알림
+              } catch (err) {
+                console.error("일정 수정 실패:", err);
+                setError("일정 수정에 실패했습니다.");
+                throw err;
+              } finally {
+                setLoading(false);
+              }
+            }}
+            onCancel={() => setIsEditMode(false)}
+            loading={loading}
+            error={error}
+            submitButtonText="저장"
+          />
         )}
       </div>
 

@@ -9,6 +9,7 @@ import ScheduleJoinModal from "./components/ScheduleJoinModal";
 import ScheduleCalendarView from "./components/ScheduleCalendarView";
 import ScheduleDetailModal from "./components/ScheduleDetailModal";
 import DrawViewModal from "./components/DrawViewModal";
+import Toast from "../../components/common/Toast";
 import { isNotEmpty } from "../../utils/isEmpty";
 import "./ScheduleListPage.css";
 
@@ -43,6 +44,7 @@ const ScheduleListPage: React.FC = () => {
   const [myParticipations, setMyParticipations] = useState<Set<number>>(
     new Set()
   );
+  const [toastMessage, setToastMessage] = useState("");
   // 캘린더에서 현재 보고 있는 월 상태 관리 (직전 월 유지)
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const todayScheduleRef = useRef<HTMLDivElement>(null);
@@ -484,6 +486,7 @@ const ScheduleListPage: React.FC = () => {
           onClose={handleCreateModalClose}
           onSuccess={() => {
             loadSchedules();
+            setToastMessage("일정이 생성되었습니다.");
           }}
         />
       )}
@@ -504,6 +507,9 @@ const ScheduleListPage: React.FC = () => {
           onSuccess={() => {
             loadSchedules();
           }}
+          onJoinSuccess={() => {
+            setToastMessage("참가신청이 완료되었습니다.");
+          }}
         />
       )}
 
@@ -514,6 +520,10 @@ const ScheduleListPage: React.FC = () => {
           onClose={handleDrawViewModalClose}
           onSuccess={handleDrawViewModalSuccess}
         />
+      )}
+
+      {toastMessage && (
+        <Toast message={toastMessage} onClose={() => setToastMessage("")} />
       )}
     </div>
   );
