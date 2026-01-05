@@ -7,6 +7,7 @@
 @import './tokens/typography.css';
 @import './tokens/effects.css';
 @import './tokens/modal-sizes.css';
+@import './tokens/breakpoints.css';
 
 /* 2. Global Styles */
 @import './global.css';

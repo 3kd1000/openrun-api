@@ -5,7 +5,7 @@
  */
 
 /* ========== 모달 컨테이너 ========== */
-/* modal-nested-lg 프리셋 사용 (900px, 95vh, nested z-index, overflow:hidden) */
+/* modal-nested-lg 프리셋 사용 (768px, 95vh, nested z-index, overflow:hidden) */
 .modal-content.draw-create-modal {
   /* modal-nested-lg 프리셋이 적용됨 (modal-sizes.css) */
   width: 95vw; /* 작은 화면에서 최대 활용 */
@@ -684,8 +684,8 @@
   }
 }
 
-/* 미디어 대형 (401px ~ 768px) */
-@media (min-width: 401px) and (max-width: 768px) {
+/* 미디어 대형 (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
   .draw-create-modal .draw-type-btn,
   .draw-create-modal .btn-add-guest,
   .draw-create-modal .btn-move-group,
@@ -698,8 +698,8 @@
   }
 }
 
-/* 미디어 중형 (361px ~ 400px) */
-@media (min-width: 361px) and (max-width: 400px) {
+/* 미디어 중형 (361px ~ 425px) */
+@media (min-width: 361px) and (max-width: 425px) {
   .draw-create-modal .draw-type-btn,
   .draw-create-modal .btn-add-guest,
   .draw-create-modal .btn-move-group,
