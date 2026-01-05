@@ -65,12 +65,62 @@ const ScheduleCalendarView: React.FC<Props> = ({
   const screenWidth = useScreenWidth();
   const maxCourtNameLength = getMaxCourtNameLength(screenWidth);
 
+  // Long press 감지를 위한 state
+  const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
+  const longPressTarget = React.useRef<Date | null>(null);
+  const [pressStart, setPressStart] = useState<{ x: number; y: number } | null>(null);
+
   // 외부에서 전달된 calendarDate가 변경되면 내부 상태도 업데이트
   useEffect(() => {
     if (calendarDate) {
       setDate(calendarDate);
     }
   }, [calendarDate]);
+
+  // Long press 타이머 정리
+  const clearLongPressTimer = React.useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    longPressTarget.current = null;
+    setPressStart(null);
+  }, []);
+
+  // Long press 시작
+  const handlePressStart = React.useCallback((e: React.PointerEvent, targetDate: Date) => {
+    // 이미 스와이프 중이면 무시
+    if (touchStart) return;
+
+    setPressStart({ x: e.clientX, y: e.clientY });
+    longPressTarget.current = targetDate;
+
+    // 500ms 후 long press로 간주
+    longPressTimer.current = setTimeout(() => {
+      if (longPressTarget.current) {
+        onDateDoubleClick(longPressTarget.current); // 일정 추가 모달 열기
+        clearLongPressTimer();
+      }
+    }, 500);
+  }, [touchStart, onDateDoubleClick, clearLongPressTimer]);
+
+  // Long press 취소 (움직임 감지)
+  const handlePressMove = React.useCallback((e: React.PointerEvent) => {
+    if (!pressStart) return;
+
+    const deltaX = Math.abs(e.clientX - pressStart.x);
+    const deltaY = Math.abs(e.clientY - pressStart.y);
+
+    // 10px 이상 움직이면 long press 취소
+    if (deltaX > 10 || deltaY > 10) {
+      clearLongPressTimer();
+    }
+  }, [pressStart, clearLongPressTimer]);
+
+  // Long press 종료
+  const handlePressEnd = React.useCallback(() => {
+    clearLongPressTimer();
+  }, [clearLongPressTimer]);
 
   // 현재 표시 중인 년도의 공휴일 로드
   useEffect(() => {
@@ -87,6 +137,50 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
     loadHolidays();
   }, [date]);
+
+  // Long press 이벤트 리스너 추가
+  useEffect(() => {
+    if (!calendarRef.current) return;
+
+    const tiles = calendarRef.current.querySelectorAll('.react-calendar__tile');
+
+    const handleTilePointerDown = (e: PointerEvent, tile: Element) => {
+      // 타일의 abbr 태그에서 날짜 추출
+      const abbrElement = tile.querySelector('abbr');
+      if (!abbrElement) return;
+
+      const ariaLabel = abbrElement.getAttribute('aria-label');
+      if (!ariaLabel) return;
+
+      // aria-label 형식: "2025년 1월 5일" 등
+      const dateMatch = ariaLabel.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+      if (!dateMatch) return;
+
+      const [, year, month, day] = dateMatch;
+      const targetDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+      // Long press 시작 (React 이벤트가 아니므로 변환)
+      handlePressStart(e as unknown as React.PointerEvent, targetDate);
+    };
+
+    tiles.forEach((tile) => {
+      const pointerDownListener = (e: Event) => handleTilePointerDown(e as PointerEvent, tile);
+      tile.addEventListener('pointerdown', pointerDownListener);
+
+      // cleanup을 위해 element에 listener 저장
+      (tile as any)._pointerDownListener = pointerDownListener;
+    });
+
+    // Cleanup
+    return () => {
+      tiles.forEach((tile) => {
+        if ((tile as any)._pointerDownListener) {
+          tile.removeEventListener('pointerdown', (tile as any)._pointerDownListener);
+          delete (tile as any)._pointerDownListener;
+        }
+      });
+    };
+  }, [date, schedules, handlePressStart]); // date와 schedules가 변경되면 타일도 재생성되므로 리스너 재등록
 
   // 특정 날짜의 일정들 가져오기
   const getSchedulesForDate = (date: Date): Schedule[] => {
@@ -180,6 +274,12 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
   // 타일 클릭 핸들러 (단일 클릭 vs 더블클릭 구분)
   const handleTileClick = (date: Date) => {
+    // Long press가 실행 중이면 클릭 무시
+    if (longPressTimer.current) {
+      clearLongPressTimer();
+      return;
+    }
+
     if (clickTimeout) {
       // 더블클릭
       clearTimeout(clickTimeout);
@@ -411,6 +511,9 @@ const ScheduleCalendarView: React.FC<Props> = ({
         setTouchStart(null);
         isHorizontalSwipe.current = false;
       }}
+      onPointerMove={handlePressMove}
+      onPointerUp={handlePressEnd}
+      onPointerCancel={handlePressEnd}
     >
       <div
         className={`calendar-wrapper ${

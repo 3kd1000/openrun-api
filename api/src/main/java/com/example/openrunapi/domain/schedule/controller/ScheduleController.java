@@ -4,9 +4,12 @@ import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequestWithIds;
 import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
 import com.example.openrunapi.domain.draw.service.DrawService;
+import com.example.openrunapi.domain.schedule.model.dto.BatchParticipationRequest;
+import com.example.openrunapi.domain.schedule.model.dto.BatchParticipationResponse;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
+import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ public class ScheduleController {
 
     private final ScheduleService scheduleService;
     private final DrawService drawService;
+    private final ScheduleParticipantService participantService;
 
     /**
      * 일정 생성
@@ -105,6 +109,19 @@ public class ScheduleController {
     public ResponseEntity<List<Long>> getMyParticipations(@RequestParam Long userId) {
         List<Long> scheduleIds = scheduleService.getMyParticipatingScheduleIds(userId);
         return ResponseEntity.ok(scheduleIds);
+    }
+
+    /**
+     * 일정 참가신청/취소 배치 처리
+     * - 여러 일정에 대해 한 번에 참가신청 또는 취소
+     * - 각 작업은 독립적으로 처리 (일부 실패해도 나머지는 계속 진행)
+     */
+    @PostMapping("/participants/batch")
+    public ResponseEntity<BatchParticipationResponse> batchParticipation(
+            @RequestBody BatchParticipationRequest request,
+            @RequestParam Long userId) {
+        BatchParticipationResponse response = participantService.batchParticipation(userId, request);
+        return ResponseEntity.ok(response);
     }
 
     /**

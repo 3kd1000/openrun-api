@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/schedules/{scheduleId}/participants")
@@ -50,16 +52,17 @@ public class ParticipantController {
 
     /**
      * 내 참가 신청 내역 조회
+     * - 참가하지 않은 경우에도 200 OK 반환 (404가 아님)
+     * - 참가 여부 확인은 정상적인 조회 성공이므로 에러가 아님
+     * - Map으로 감싸서 null도 JSON으로 직렬화 ("data": null)
      */
     @GetMapping("/me")
-    public ResponseEntity<ParticipantResponse> getMyParticipation(
+    public ResponseEntity<Map<String, ParticipantResponse>> getMyParticipation(
             @PathVariable Long scheduleId,
             @RequestParam Long userId) { // TODO: 나중에 SecurityContext에서 가져오기
         ParticipantResponse response = participantService.getMyParticipation(scheduleId, userId);
-        if (response == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(response);
+        // Map으로 감싸면 null도 JSON으로 직렬화됨: {"data": null}
+        return ResponseEntity.ok(Collections.singletonMap("data", response));
     }
 
     /**

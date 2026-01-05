@@ -226,9 +226,6 @@ const ScoreboardPage: React.FC = () => {
 
   return (
     <div className="scoreboard-page">
-      <div className="scoreboard-header">
-        <h1>스코어보드</h1>
-      </div>
 
       {/* Tab Navigation */}
       <div className="tab-navigation">

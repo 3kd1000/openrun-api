@@ -20,12 +20,12 @@
 /* form-row와 form-group은 modal-base.css에 정의되어 있지만 여기서도 필요 */
 .form-row {
   display: flex;
-  gap: var(--space-m);
-  margin-bottom: var(--space-l);
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
 }
 
 .form-group {
-  margin-bottom: var(--space-l);
+  margin-bottom: var(--space-m);
 }
 
 .form-group label {
@@ -327,6 +327,12 @@
 .schedule-detail-view .modal-actions {
   padding: 0;
   border-top: none;
+}
+
+/* 일정 수정 화면의 취소/저장 버튼 */
+.schedule-detail-modal form .modal-actions .btn-primary,
+.schedule-detail-modal form .modal-actions .btn-secondary {
+  font-size: var(--font-size-m);
 }
 
 /* ========== 대진 관련 액션 버튼 영역 ========== */

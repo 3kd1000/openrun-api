@@ -5,6 +5,7 @@ import { scheduleService } from "../../services/scheduleService";
 import { participantService } from "../../services/participantService";
 import type { Schedule, Participant } from "../../types/schedule";
 import ScheduleCreateModal from "./components/ScheduleCreateModal";
+import ScheduleJoinModal from "./components/ScheduleJoinModal";
 import ScheduleCalendarView from "./components/ScheduleCalendarView";
 import ScheduleDetailModal from "./components/ScheduleDetailModal";
 import DrawViewModal from "./components/DrawViewModal";
@@ -20,6 +21,7 @@ const ScheduleListPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDrawViewModal, setShowDrawViewModal] = useState(false);
   const [selectedScheduleForDraw, setSelectedScheduleForDraw] =
@@ -216,7 +218,9 @@ const ScheduleListPage: React.FC = () => {
   };
 
   // 정원 상태 계산 헬퍼 함수
-  const getCapacityStatus = (schedule: Schedule): "available" | "full" | "participated" => {
+  const getCapacityStatus = (
+    schedule: Schedule
+  ): "available" | "full" | "participated" => {
     const { currentParticipants, maxCapacity } = schedule;
     if (myParticipations.has(schedule.id)) return "participated";
     if (currentParticipants >= maxCapacity) return "full";
@@ -244,39 +248,44 @@ const ScheduleListPage: React.FC = () => {
   return (
     <div className="schedule-page">
       <div className="schedule-header">
-        <div className="header-top">
-          <h1>일정 관리</h1>
-          <div className="header-actions">
-            <div className="view-toggle">
-              <button
-                className={`toggle-btn ${
-                  viewMode === "calendar" ? "active" : ""
-                }`}
-                onClick={() => {
-                  setViewMode("calendar");
-                  setFilterDate(null);
-                  // 캘린더뷰로 전환 시 스크롤 위치 초기화
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              >
-                📅 캘린더
-              </button>
-              <button
-                className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
-                onClick={() => setViewMode("list")}
-              >
-                📋 리스트
-              </button>
-            </div>
+        <div className="header-actions">
+          <div className="view-toggle-group">
             <button
-              className="btn-create"
+              className={`header-action-btn view-toggle-btn ${
+                viewMode === "calendar" ? "active" : ""
+              }`}
               onClick={() => {
-                setShowCreateModal(true);
+                setViewMode("calendar");
+                setFilterDate(null);
+                // 캘린더뷰로 전환 시 스크롤 위치 초기화
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
-              + 일정 생성
+              📅 캘린더
+            </button>
+            <button
+              className={`header-action-btn view-toggle-btn ${
+                viewMode === "list" ? "active" : ""
+              }`}
+              onClick={() => setViewMode("list")}
+            >
+              📋 리스트
             </button>
           </div>
+          <button
+            className="header-action-btn btn-join"
+            onClick={() => setShowJoinModal(true)}
+          >
+            ✓ 일정 참여
+          </button>
+          <button
+            className="header-action-btn btn-create"
+            onClick={() => {
+              setShowCreateModal(true);
+            }}
+          >
+            + 일정 등록
+          </button>
         </div>
         {/* 필터 영역 - header 안에 배치 */}
         <div className="header-filters">
@@ -357,18 +366,18 @@ const ScheduleListPage: React.FC = () => {
             // 정원 상태 계산 (3단계: 신청 가능 / 마감 또는 초과 / 신청 완료)
             const getCapacityStatus = () => {
               const { currentParticipants, maxCapacity } = schedule;
-              if (isParticipating) return 'capacity-participated';
-              if (currentParticipants >= maxCapacity) return 'capacity-full';
-              return 'capacity-available';
+              if (isParticipating) return "capacity-participated";
+              if (currentParticipants >= maxCapacity) return "capacity-full";
+              return "capacity-available";
             };
 
             const capacityStatus = getCapacityStatus();
 
             // 대진 상태 결정
             const getDrawStatus = () => {
-              if (hasInvalidDraw) return 'draw-invalid';
-              if (hasValidDraw) return 'draw-valid';
-              return 'draw-none';
+              if (hasInvalidDraw) return "draw-invalid";
+              if (hasValidDraw) return "draw-valid";
+              return "draw-none";
             };
 
             const drawStatus = getDrawStatus();
@@ -377,7 +386,9 @@ const ScheduleListPage: React.FC = () => {
               <div
                 key={schedule.id}
                 ref={isFirstFuture ? todayScheduleRef : null}
-                className={`schedule-card ${isPast ? "past-schedule" : ""} ${capacityStatus} ${drawStatus}`}
+                className={`schedule-card ${
+                  isPast ? "past-schedule" : ""
+                } ${capacityStatus} ${drawStatus}`}
                 onClick={() => handleScheduleClick(schedule)}
               >
                 <div className="schedule-info">
@@ -418,18 +429,20 @@ const ScheduleListPage: React.FC = () => {
                   {/* 3. 비용, 설명 + 대진표 상태/대진보기 (오른쪽) */}
                   <div className="schedule-bottom-row">
                     <div className="schedule-details">
-                      {isNotEmpty(schedule.cost) && schedule.cost !== undefined && (
-                        <span className="schedule-cost">
-                          ₩ {schedule.cost.toLocaleString()}
-                        </span>
-                      )}
-                      {isNotEmpty(schedule.description) && schedule.description !== undefined && (
-                        <span className="schedule-description">
-                          {schedule.description.length > 30
-                            ? `${schedule.description.substring(0, 30)}...`
-                            : schedule.description}
-                        </span>
-                      )}
+                      {isNotEmpty(schedule.cost) &&
+                        schedule.cost !== undefined && (
+                          <span className="schedule-cost">
+                            ₩ {schedule.cost.toLocaleString()}
+                          </span>
+                        )}
+                      {isNotEmpty(schedule.description) &&
+                        schedule.description !== undefined && (
+                          <span className="schedule-description">
+                            {schedule.description.length > 30
+                              ? `${schedule.description.substring(0, 30)}...`
+                              : schedule.description}
+                          </span>
+                        )}
                     </div>
                     <div className="schedule-draw-badges">
                       {hasInvalidDraw && (
@@ -469,6 +482,15 @@ const ScheduleListPage: React.FC = () => {
               : undefined
           }
           onClose={handleCreateModalClose}
+          onSuccess={() => {
+            loadSchedules();
+          }}
+        />
+      )}
+
+      {showJoinModal && (
+        <ScheduleJoinModal
+          onClose={() => setShowJoinModal(false)}
           onSuccess={() => {
             loadSchedules();
           }}

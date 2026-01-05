@@ -28,8 +28,14 @@
 @media (max-width: 768px) {
   .modal-overlay {
     align-items: flex-start;
-    padding-top: max(40px, calc(env(safe-area-inset-top, 0px) + var(--space-l)));
-    padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + var(--space-l)));
+    padding-top: max(
+      40px,
+      calc(env(safe-area-inset-top, 0px) + var(--space-l))
+    );
+    padding-bottom: max(
+      40px,
+      calc(env(safe-area-inset-bottom, 0px) + var(--space-l))
+    );
     overflow-y: auto;
   }
 }
@@ -50,7 +56,8 @@
 @media (max-width: 768px) {
   .modal-content {
     max-height: calc(
-      100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px
+      100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) -
+        80px
     );
     margin-top: 0;
     margin-bottom: var(--space-l);
@@ -112,12 +119,12 @@
 /* ========== 폼 레이아웃 ========== */
 .form-row {
   display: flex;
-  gap: var(--space-m);
-  margin-bottom: var(--space-l);
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
 }
 
 .form-group {
-  margin-bottom: var(--space-l);
+  margin-bottom: var(--space-m);
 }
 
 .form-group label {
@@ -164,7 +171,7 @@
   padding: var(--space-m) var(--space-l);
   border: none;
   border-radius: var(--radius-m);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-m);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: background-color var(--transition-base);
