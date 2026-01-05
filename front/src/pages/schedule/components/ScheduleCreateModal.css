@@ -129,7 +129,7 @@
 .form-row {
   display: flex;
   gap: var(--space-s);
-  margin-bottom: var(--space-m);
+  margin-bottom: 8px; /* 모바일 쿼리 상관없이 8px로 고정 */
   min-width: 0; /* flex 아이템이 부모를 초과하지 않도록 */
 }
 
@@ -158,6 +158,14 @@
   transition: border-color var(--transition-base);
   box-sizing: border-box; /* padding 포함한 크기 계산 */
   max-width: 100%; /* 부모를 초과하지 않도록 */
+  line-height: 1.5; /* 텍스트 수직 정렬 */
+}
+
+/* Date Picker와 select의 높이를 명시적으로 통일 */
+.form-group input[type="date"],
+.form-group select {
+  height: 42px;
+  min-height: 42px;
 }
 
 .form-group input:focus,
@@ -259,6 +267,19 @@
     height: 38px;
     min-height: 38px;
     font-size: var(--font-size-m);
+  }
+
+  /* 모바일에서도 form-row가 가로로 배치되도록 유지 */
+  .form-row {
+    display: flex;
+    flex-direction: row; /* 명시적으로 가로 배치 */
+    gap: var(--space-s);
+  }
+
+  /* 모바일에서 form-group이 너무 작아지지 않도록 최소 너비 설정 */
+  .form-group {
+    min-width: 0;
+    flex-shrink: 1; /* 필요시 축소 가능 */
   }
 }
 
