@@ -72,11 +72,18 @@ const ScheduleDetailModal: React.FC<Props> = ({
     fetchClubMembers();
   }, [showParticipantManagementModal]);
 
-  // ESC 키로 모달 닫기 (편집 모드가 아니고 다른 모달이 열려있지 않을 때만)
-  useEscapeKey(
-    onClose,
-    !isEditMode && !showDrawCreateModal && !showDrawViewModal
-  );
+  // ESC 키로 모달 닫기 또는 편집 모드 종료
+  const handleEscapeKey = useCallback(() => {
+    if (isEditMode) {
+      // 편집 모드일 때는 편집 모드 종료
+      setIsEditMode(false);
+    } else if (!showDrawCreateModal && !showDrawViewModal && !showParticipantManagementModal) {
+      // 다른 모달이 열려있지 않을 때만 상세 모달 닫기
+      onClose();
+    }
+  }, [isEditMode, showDrawCreateModal, showDrawViewModal, showParticipantManagementModal, onClose]);
+
+  useEscapeKey(handleEscapeKey);
 
   // 초기 날짜 및 시간 분리 (ScheduleFormSection에 전달용)
   const scheduledAtDate = schedule

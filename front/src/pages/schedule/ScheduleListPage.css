@@ -710,76 +710,69 @@
   }
 }
 
-/* 미디어 대형 (401px ~ 768px) */
-@media (min-width: 401px) and (max-width: 768px) {
-  .schedule-page .schedule-info h3 {
-    font-size: var(--font-size-l);
-  }
 
-  .schedule-meta-row,
-  .schedule-bottom-row,
-  .schedule-page .schedule-info p,
-  .schedule-draw-badges .draw-badge {
-    font-size: var(--font-size-m);
-  }
-
+/* 미디어 중대형 (501px ~ 768px) */
+@media (min-width: 501px) and (max-width: 768px) {
   .header-actions {
-    gap: var(--space-xs);
+    gap: var(--space-s);
   }
 
   .view-toggle-group {
-    padding: 1px;
+    padding: 2px;
   }
 
   .view-toggle-group .view-toggle-btn {
-    padding: var(--space-xs) var(--space-s);
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-m);
+  }
+
+  .header-action-btn {
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-m);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .capacity-filter-btn {
+    padding: var(--space-s) var(--space-m);
+    font-size: var(--font-size-m);
+  }
+}
+
+/* 미디어 소형 (361px ~ 500px) */
+@media (min-width: 361px) and (max-width: 500px) {
+  .schedule-header {
+    padding: var(--space-s);
+  }
+
+  .header-actions {
+    gap: var(--space-s);
+  }
+
+  .view-toggle-group {
+    padding: 2px;
+  }
+
+  .view-toggle-group .view-toggle-btn {
+    padding: var(--space-s) var(--space-m);
     font-size: var(--font-size-s);
   }
 
   .header-action-btn {
-    padding: var(--space-xs) var(--space-s);
+    padding: var(--space-s) var(--space-m);
     font-size: var(--font-size-s);
     flex: 1;
     min-width: 0;
   }
-}
 
-/* 미디어 중형 (361px ~ 400px) */
-@media (min-width: 361px) and (max-width: 400px) {
-  .schedule-page .schedule-info h3 {
-    font-size: var(--font-size-base);
-  }
-
-  .schedule-meta-row,
-  .schedule-bottom-row,
-  .schedule-page .schedule-info p,
-  .schedule-draw-badges .draw-badge {
-    font-size: var(--font-size-m);
-  }
-
-  .header-actions {
-    gap: var(--space-xs);
-  }
-
-  .view-toggle-group {
-    padding: 1px;
-  }
-
-  .view-toggle-group .view-toggle-btn {
-    padding: var(--space-xs) var(--space-s);
+  .capacity-filter-btn {
+    padding: var(--space-s) var(--space-m);
     font-size: var(--font-size-s);
-  }
-
-  .header-action-btn {
-    padding: var(--space-xs) var(--space-s);
-    font-size: var(--font-size-s);
-    flex: 1;
-    min-width: 0;
   }
 }
 
-/* 미디어 소형 (360px 이하) */
-@media (max-width: 360px) {
+/* 미디어 초소형 (321px ~ 360px) */
+@media (min-width: 321px) and (max-width: 360px) {
   .schedule-header {
     padding: var(--space-s);
   }
@@ -803,6 +796,11 @@
     flex: 1;
     min-width: 0;
   }
+
+  .capacity-filter-btn {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+  }
 }
 
 /* 매우 작은 모바일 (320px 이하) */
@@ -825,6 +823,11 @@
   }
 
   .header-action-btn {
+    padding: var(--space-xxs) var(--space-xs);
+    font-size: var(--font-size-s);
+  }
+
+  .capacity-filter-btn {
     padding: var(--space-xxs) var(--space-xs);
     font-size: var(--font-size-s);
   }
