@@ -79,4 +79,19 @@ export default defineConfig({
       "front.openrun.app", // Cloudflare Tunnel을 통해 접근할 도메인
     ],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React 관련 라이브러리
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          // 날짜 처리 라이브러리
+          "date-vendor": ["date-fns"],
+          // 캘린더 라이브러리
+          "calendar-vendor": ["react-calendar"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600, // 경고 임계값을 600KB로 상향 조정
+  },
 });

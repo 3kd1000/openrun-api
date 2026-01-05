@@ -94,9 +94,13 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ user, onClose, onUp
 
       onUpdate(updatedUser);
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('프로필 수정 실패:', err);
-      setError(err.response?.data?.message || '프로필 수정에 실패했습니다.');
+      const errorMessage =
+        err instanceof Error && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      setError(errorMessage || '프로필 수정에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }

@@ -90,6 +90,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
   // 참가신청 시작시간 관련 state
   const [participationStartEnabled, setParticipationStartEnabled] =
     useState(!!initialData?.participationStartAt);
+  const [isEditingParticipationStart, setIsEditingParticipationStart] = useState(false);
   const [participationStartDate, setParticipationStartDate] = useState("");
   const [participationStartAmPm, setParticipationStartAmPm] = useState<"AM" | "PM">("AM");
   const [participationStartHour, setParticipationStartHour] = useState(6);
@@ -157,6 +158,15 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       hour24 = 0;
     }
     return `${String(hour24).padStart(2, "0")}:${String(participationStartMinute).padStart(2, "0")}`;
+  };
+
+  // 참가신청 시작시간을 포맷팅된 문자열로 변환 (yyyy.mm.dd HH:mm)
+  const getFormattedParticipationStart = (): string => {
+    if (!participationStartDate) return "";
+    const date = new Date(participationStartDate);
+    const formattedDate = format(date, "yyyy.MM.dd");
+    const formattedTime = getParticipationStartTime();
+    return `${formattedDate} ${formattedTime}`;
   };
 
   // 템플릿 콜백 함수들
@@ -388,7 +398,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       )}
 
       <div className="form-row">
-        <div className="form-group" style={{ flex: "1.5" }}>
+        <div className="form-group" style={{ flex: "1.2", minWidth: 0 }}>
           <label>날짜 *</label>
           <input
             type="date"
@@ -397,7 +407,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             required
           />
         </div>
-        <div className="form-group" style={{ flex: "1" }}>
+        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
           <label>시간 *</label>
           <select
             value={selectedTime}
@@ -421,7 +431,15 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
           <input
             type="checkbox"
             checked={participationStartEnabled}
-            onChange={(e) => setParticipationStartEnabled(e.target.checked)}
+            onChange={(e) => {
+              setParticipationStartEnabled(e.target.checked);
+              if (!e.target.checked) {
+                setIsEditingParticipationStart(false);
+              } else if (e.target.checked && !participationStartDate) {
+                // 체크박스 활성화 시 날짜가 없으면 수정 모드로 진입
+                setIsEditingParticipationStart(true);
+              }
+            }}
             style={{ width: "auto", margin: 0 }}
           />
           참가신청 시작 시간 설정
@@ -430,61 +448,123 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
 
       {participationStartEnabled && (
         <>
-          <div className="form-group">
-            <label>시작 날짜 *</label>
-            <input
-              type="date"
-              value={participationStartDate}
-              onChange={(e) => setParticipationStartDate(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <div className="form-group" style={{ flex: "0.8" }}>
-              <label>오전/오후 *</label>
-              <select
-                value={participationStartAmPm}
-                onChange={(e) =>
-                  setParticipationStartAmPm(e.target.value as "AM" | "PM")
-                }
-                required
+          {!isEditingParticipationStart ? (
+            <div className="form-group">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 12px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  background: "#f9f9f9",
+                }}
               >
-                <option value="AM">오전</option>
-                <option value="PM">오후</option>
-              </select>
+                <span style={{ fontSize: "14px", color: "#333" }}>
+                  {participationStartDate
+                    ? getFormattedParticipationStart()
+                    : "날짜와 시간을 설정해주세요"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingParticipationStart(true)}
+                  style={{
+                    padding: "4px 12px",
+                    background: "#4a90e2",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                  }}
+                >
+                  수정
+                </button>
+              </div>
             </div>
-            <div className="form-group" style={{ flex: "1" }}>
-              <label>시간 *</label>
-              <select
-                value={participationStartHour}
-                onChange={(e) =>
-                  setParticipationStartHour(parseInt(e.target.value))
-                }
-                required
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
-                  <option key={hour} value={hour}>
-                    {hour}시
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group" style={{ flex: "1" }}>
-              <label>분 *</label>
-              <select
-                value={participationStartMinute}
-                onChange={(e) =>
-                  setParticipationStartMinute(
-                    parseInt(e.target.value) as 0 | 30
-                  )
-                }
-                required
-              >
-                <option value={0}>00분</option>
-                <option value={30}>30분</option>
-              </select>
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="form-group">
+                <label>시작 날짜 *</label>
+                <input
+                  type="date"
+                  value={participationStartDate}
+                  onChange={(e) => setParticipationStartDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: "0.8", minWidth: 0 }}>
+                  <label>오전/오후 *</label>
+                  <select
+                    value={participationStartAmPm}
+                    onChange={(e) =>
+                      setParticipationStartAmPm(e.target.value as "AM" | "PM")
+                    }
+                    required
+                  >
+                    <option value="AM">오전</option>
+                    <option value="PM">오후</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+                  <label>시간 *</label>
+                  <select
+                    value={participationStartHour}
+                    onChange={(e) =>
+                      setParticipationStartHour(parseInt(e.target.value))
+                    }
+                    required
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                      <option key={hour} value={hour}>
+                        {hour}시
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+                  <label>분 *</label>
+                  <select
+                    value={participationStartMinute}
+                    onChange={(e) =>
+                      setParticipationStartMinute(
+                        parseInt(e.target.value) as 0 | 30
+                      )
+                    }
+                    required
+                  >
+                    <option value={0}>00분</option>
+                    <option value={30}>30분</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (participationStartDate) {
+                      setIsEditingParticipationStart(false);
+                    }
+                  }}
+                  style={{
+                    padding: "6px 16px",
+                    background: "#4caf50",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                  }}
+                >
+                  완료
+                </button>
+              </div>
+            </>
+          )}
         </>
       )}
 
