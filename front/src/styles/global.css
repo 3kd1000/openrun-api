@@ -8,7 +8,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  min-width: 320px;
+  /* min-width 제거: 360px 미만 디바이스도 가로 스크롤 없이 디바이스 너비 사용 */
   min-height: 100vh;
   font-family: var(--font-family-base);
   line-height: var(--line-height-normal);

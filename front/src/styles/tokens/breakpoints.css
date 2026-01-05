@@ -1,0 +1,74 @@
+/**
+ * Breakpoints Token
+ * 반응형 디자인을 위한 표준 브레이크포인트 정의
+ *
+ * 주의: CSS 변수는 @media 쿼리에서 직접 사용 불가
+ * 따라서 아래 변수는 문서화 및 JS에서 사용하기 위한 용도이며,
+ * 실제 CSS에서는 주석에 명시된 px 값을 직접 사용해야 합니다.
+ *
+ * ========== 최소 지원 기준 ==========
+ * 360px 미만은 지원하지 않음 (global.css에서 min-width: 360px 설정)
+ *
+ * 사용 예시:
+ * @media (max-width: 360px) { } // mobile-sm (360px 이하)
+ * @media (min-width: 361px) and (max-width: 425px) { } // mobile-md
+ * @media (min-width: 426px) and (max-width: 768px) { } // tablet
+ * @media (min-width: 769px) { } // desktop
+ */
+
+:root {
+  /* ========== Breakpoint Values ========== */
+
+  /* 소형 모바일: 갤럭시 S24, 안드로이드 표준 (최소 지원) */
+  --breakpoint-mobile-sm: 360px;
+
+  /* 중대형 모바일: 갤럭시 S24+, iPhone 14 Pro Max 등 */
+  --breakpoint-mobile-md: 425px;
+
+  /* 태블릿: iPad, 태블릿 등 */
+  --breakpoint-tablet: 768px;
+
+  /* 데스크탑: 노트북, 데스크탑 등 */
+  --breakpoint-desktop: 769px;
+
+
+  /* ========== Range Names (문서화용) ========== */
+
+  /*
+   * Mobile Small: 360px 이하 (최소 지원 범위)
+   * - 사용: @media (max-width: 360px)
+   * - 디바이스: 갤럭시 S24 (360x800), 소형 안드로이드
+   */
+
+  /*
+   * Mobile Medium: 361px ~ 425px
+   * - 사용: @media (min-width: 361px) and (max-width: 425px)
+   * - 디바이스: iPhone 12/13/14 (375x812), 중형 안드로이드
+   */
+
+  /*
+   * Tablet: 426px ~ 768px
+   * - 사용: @media (min-width: 426px) and (max-width: 768px)
+   * - 디바이스: iPad Mini, 중소형 태블릿
+   */
+
+  /*
+   * Desktop: 769px ~
+   * - 사용: @media (min-width: 769px)
+   * - 디바이스: 노트북, 데스크탑, 대형 태블릿
+   */
+
+
+  /* ========== 모바일 퍼스트 권장 사용법 ========== */
+
+  /*
+   * 기본 스타일 (360px 기준 모바일)
+   * .element { padding: 8px; }
+   *
+   * 중형 모바일 이상 (426px~)
+   * @media (min-width: 426px) { .element { padding: 12px; } }
+   *
+   * 데스크탑 이상 (769px~)
+   * @media (min-width: 769px) { .element { padding: 16px; } }
+   */
+}

@@ -290,8 +290,8 @@
   }
 }
 
-/* 400px 이하 - 작은 모바일 */
-@media (max-width: 400px) {
+/* 425px 이하 - 작은 모바일 */
+@media (max-width: 425px) {
   .template-header h4 {
     font-size: 12px;
   }

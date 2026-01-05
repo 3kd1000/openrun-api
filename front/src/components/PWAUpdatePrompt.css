@@ -101,7 +101,7 @@
 }
 
 /* 모바일 최적화 */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .pwa-update-prompt {
     padding: var(--space-s);
   }

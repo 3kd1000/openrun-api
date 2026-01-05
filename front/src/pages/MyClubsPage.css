@@ -178,7 +178,7 @@
 }
 
 /* ===== 미디어 쿼리: 미디어 대형 (401px ~ 768px) ===== */
-@media (min-width: 401px) and (max-width: 768px) {
+@media (min-width: 426px) and (max-width: 768px) {
   .my-clubs-page {
     padding: var(--space-m);
   }
@@ -208,7 +208,7 @@
 }
 
 /* ===== 미디어 쿼리: 미디어 중형 (361px ~ 400px) ===== */
-@media (min-width: 361px) and (max-width: 400px) {
+@media (min-width: 361px) and (max-width: 425px) {
   .my-clubs-page {
     padding: var(--space-s);
   }
