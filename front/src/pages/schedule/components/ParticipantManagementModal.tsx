@@ -23,9 +23,9 @@ const ParticipantManagementModal: React.FC<Props> = ({
   onSuccess,
 }) => {
   // 현재 참가자 userId 집합
-  const currentParticipantIds = new Set(
-    currentParticipants.map((p) => p.userId)
-  );
+  const currentParticipantIds = useMemo(() => {
+    return new Set(currentParticipants.map((p) => p.userId));
+  }, [currentParticipants]);
 
   // 현재 확정된 참가자 수
   const currentConfirmedCount = useMemo(() => {
@@ -80,17 +80,6 @@ const ParticipantManagementModal: React.FC<Props> = ({
     setSelectedUserIds(newSelected);
   };
 
-  // 전체 선택/해제
-  const handleSelectAll = () => {
-    if (selectedUserIds.size === clubMembers.length) {
-      // 전체 해제
-      setSelectedUserIds(new Set());
-    } else {
-      // 전체 선택
-      setSelectedUserIds(new Set(clubMembers.map((m) => m.id)));
-    }
-  };
-
   // 저장
   const handleSave = async () => {
     try {
@@ -109,13 +98,14 @@ const ParticipantManagementModal: React.FC<Props> = ({
       );
 
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("참가자 수정 실패:", err);
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "참가자 수정에 실패했습니다."
-      );
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ||
+        (err as { message?: string })?.message ||
+        "참가자 수정에 실패했습니다.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -140,10 +130,18 @@ const ParticipantManagementModal: React.FC<Props> = ({
 
     return {
       confirmed: currentConfirmedCount + newConfirmed,
-      waiting: currentParticipants.filter((p) => p.status === "WAITING").length + newWaiting,
+      waiting:
+        currentParticipants.filter((p) => p.status === "WAITING").length +
+        newWaiting,
       total: selectedUserIds.size,
     };
-  }, [selectedUserIds, currentConfirmedCount, currentParticipants, schedule.maxCapacity, currentParticipantIds]);
+  }, [
+    selectedUserIds,
+    currentConfirmedCount,
+    currentParticipants,
+    schedule.maxCapacity,
+    currentParticipantIds,
+  ]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -153,11 +151,7 @@ const ParticipantManagementModal: React.FC<Props> = ({
       >
         <div className="modal-header">
           <h2>참가자 관리</h2>
-          <button
-            className="close-button"
-            onClick={onClose}
-            disabled={loading}
-          >
+          <button className="close-button" onClick={onClose} disabled={loading}>
             ✕
           </button>
         </div>
@@ -173,41 +167,39 @@ const ParticipantManagementModal: React.FC<Props> = ({
             </div>
             <div className="capacity-stat">
               <span className="stat-label">현재 확정:</span>
-              <span className="stat-value confirmed">{currentConfirmedCount}명</span>
+              <span className="stat-value confirmed">
+                {currentConfirmedCount}명
+              </span>
             </div>
             <div className="capacity-stat">
               <span className="stat-label">예상 확정:</span>
-              <span className="stat-value expected">{expectedStats.confirmed}명</span>
+              <span className="stat-value expected">
+                {expectedStats.confirmed}명
+              </span>
             </div>
             <div className="capacity-stat">
               <span className="stat-label">예상 대기:</span>
-              <span className="stat-value waiting">{expectedStats.waiting}명</span>
+              <span className="stat-value waiting">
+                {expectedStats.waiting}명
+              </span>
             </div>
           </div>
 
           <div className="participants-list">
-            <div className="list-header">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={selectedUserIds.size === clubMembers.length}
-                  onChange={handleSelectAll}
-                  disabled={loading}
-                />
-                <span>전체 선택 ({selectedUserIds.size} / {clubMembers.length})</span>
-              </label>
-            </div>
-
             <div className="members-list">
               {clubMembers.map((member) => {
-                const isCurrentParticipant = currentParticipantIds.has(member.id);
+                const isCurrentParticipant = currentParticipantIds.has(
+                  member.id
+                );
                 const expectedStatus = getExpectedStatus(member.id);
                 const isSelected = selectedUserIds.has(member.id);
-                
+
                 return (
-                  <label 
-                    key={member.id} 
-                    className={`member-item ${isCurrentParticipant ? "current-participant" : ""} ${!isSelected ? "not-selected" : ""}`}
+                  <label
+                    key={member.id}
+                    className={`member-item ${
+                      isCurrentParticipant ? "current-participant" : ""
+                    } ${!isSelected ? "not-selected" : ""}`}
                   >
                     <input
                       type="checkbox"
@@ -220,8 +212,12 @@ const ParticipantManagementModal: React.FC<Props> = ({
                       <span className="badge current">현재 참가자</span>
                     )}
                     {isSelected && (
-                      <span className={`badge expected ${expectedStatus.toLowerCase()}`}>
-                        {expectedStatus === "CONFIRMED" ? "확정 예정" : "대기 예정"}
+                      <span
+                        className={`badge expected ${expectedStatus.toLowerCase()}`}
+                      >
+                        {expectedStatus === "CONFIRMED"
+                          ? "확정 예정"
+                          : "대기 예정"}
                       </span>
                     )}
                   </label>

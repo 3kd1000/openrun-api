@@ -12,7 +12,7 @@ import {
   groupGamesByRound,
   getSortedRounds,
 } from "../../utils/DrawFormatUtils";
-import { isNotEmpty } from "../../utils/isEmpty";
+import { isNotEmpty, isScoreSet } from "../../utils/isEmpty";
 
 export interface DrawGamesListProps {
   /** 대진표 게임 목록 */
@@ -53,18 +53,27 @@ const DrawGamesList: React.FC<DrawGamesListProps> = ({
             {gamesByRound[round].map((game) => {
               const matchId = game.matchId;
               const scores = matchId ? matchScores?.get(matchId) : undefined;
+              // 두 팀 모두 점수가 설정되었고, 한 팀이라도 0이 아니면 결과가 있는 것
+              // 0-0인 경우는 경기가 진행되지 않은 것으로 간주
               const hasExistingResult =
-                isNotEmpty(game.teamAScore) && isNotEmpty(game.teamBScore);
+                isScoreSet(game.teamAScore) &&
+                isScoreSet(game.teamBScore) &&
+                (game.teamAScore !== 0 || game.teamBScore !== 0);
 
               // 표시할 스코어 (입력 중이면 입력값, 아니면 기존값)
+              // 0점도 유효한 점수이므로 isScoreSet 사용
               const displayTeamAScore =
                 isEditMode && scores?.teamAScore !== undefined
                   ? scores.teamAScore
-                  : game.teamAScore?.toString() || "";
+                  : isScoreSet(game.teamAScore) && game.teamAScore !== undefined
+                  ? game.teamAScore.toString()
+                  : "";
               const displayTeamBScore =
                 isEditMode && scores?.teamBScore !== undefined
                   ? scores.teamBScore
-                  : game.teamBScore?.toString() || "";
+                  : isScoreSet(game.teamBScore) && game.teamBScore !== undefined
+                  ? game.teamBScore.toString()
+                  : "";
 
               const teamANames = game.teamA.join(", ");
               const teamBNames = game.teamB.join(", ");
@@ -155,23 +164,25 @@ const DrawGamesList: React.FC<DrawGamesListProps> = ({
                       >
                         {teamBNames}
                       </span>
-                      {!isEditMode && hasExistingResult && isNotEmpty(game.result) && (
-                        <span
-                          className={`dgc-result-badge dgc-result-badge--${
-                            game.result === "TEAM_A_WIN"
-                              ? "team-a-win"
+                      {!isEditMode &&
+                        hasExistingResult &&
+                        isNotEmpty(game.result) && (
+                          <span
+                            className={`dgc-result-badge dgc-result-badge--${
+                              game.result === "TEAM_A_WIN"
+                                ? "team-a-win"
+                                : game.result === "TEAM_B_WIN"
+                                ? "team-b-win"
+                                : "draw"
+                            }`}
+                          >
+                            {game.result === "TEAM_A_WIN"
+                              ? "A 승"
                               : game.result === "TEAM_B_WIN"
-                              ? "team-b-win"
-                              : "draw"
-                          }`}
-                        >
-                          {game.result === "TEAM_A_WIN"
-                            ? "A 승"
-                            : game.result === "TEAM_B_WIN"
-                            ? "B 승"
-                            : "무"}
-                        </span>
-                      )}
+                              ? "B 승"
+                              : "무"}
+                          </span>
+                        )}
                     </div>
                   </div>
                   {/* 삭제 버튼 - 오른쪽 고정 위치 (항상 렌더링, visibility로 제어) */}

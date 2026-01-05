@@ -42,6 +42,10 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     @Query("SELECT sp.scheduleId FROM ScheduleParticipant sp WHERE sp.userId = :userId AND sp.status IN ('CONFIRMED', 'WAITING')")
     List<Long> findScheduleIdsByUserId(@Param("userId") Long userId);
 
+    // 특정 사용자의 취소되지 않은 참가 신청 목록 조회 (배치 처리용)
+    @Query("SELECT sp FROM ScheduleParticipant sp WHERE sp.userId = :userId AND sp.status != :status")
+    List<ScheduleParticipant> findByUserIdAndStatusNot(@Param("userId") Long userId, @Param("status") ParticipantStatus status);
+
     // 특정 일정의 취소되지 않은 참가자 + userName JOIN 조회
     @Query("""
         SELECT new com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse(

@@ -64,7 +64,20 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const [participationStartEnabled, setParticipationStartEnabled] =
     useState(false);
   const [participationStartDate, setParticipationStartDate] = useState("");
-  const [participationStartTime, setParticipationStartTime] = useState("06:00");
+  const [participationStartAmPm, setParticipationStartAmPm] = useState<"AM" | "PM">("AM");
+  const [participationStartHour, setParticipationStartHour] = useState(6);
+  const [participationStartMinute, setParticipationStartMinute] = useState<0 | 30>(0);
+  
+  // 참가신청 시작시간을 HH:mm 형식으로 변환
+  const getParticipationStartTime = (): string => {
+    let hour24 = participationStartHour;
+    if (participationStartAmPm === "PM" && participationStartHour !== 12) {
+      hour24 = participationStartHour + 12;
+    } else if (participationStartAmPm === "AM" && participationStartHour === 12) {
+      hour24 = 0;
+    }
+    return `${String(hour24).padStart(2, "0")}:${String(participationStartMinute).padStart(2, "0")}`;
+  };
 
   // 로그인한 사용자 ID 가져오기
   const userId = localStorage.getItem("user_id");
@@ -185,11 +198,18 @@ const ScheduleDetailModal: React.FC<Props> = ({
         setParticipationStartEnabled(true);
         const participationStart = new Date(scheduleData.participationStartAt);
         setParticipationStartDate(format(participationStart, "yyyy-MM-dd"));
-        setParticipationStartTime(format(participationStart, "HH:mm"));
+        const hour = participationStart.getHours();
+        const minute = participationStart.getMinutes();
+        setParticipationStartAmPm(hour >= 12 ? "PM" : "AM");
+        const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        setParticipationStartHour(hour12);
+        setParticipationStartMinute(minute === 30 ? 30 : 0);
       } else {
         setParticipationStartEnabled(false);
         setParticipationStartDate(format(scheduledAt, "yyyy-MM-dd"));
-        setParticipationStartTime("06:00");
+        setParticipationStartAmPm("AM");
+        setParticipationStartHour(6);
+        setParticipationStartMinute(0);
       }
     } catch (err) {
       console.error("일정 정보 로드 실패:", err);
@@ -232,7 +252,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
       setError("");
 
       const participationStartAt = participationStartEnabled
-        ? `${participationStartDate}T${participationStartTime}:00`
+        ? `${participationStartDate}T${getParticipationStartTime()}:00`
         : null;
 
       const requestData: CreateScheduleRequest = {
@@ -330,6 +350,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
       await participantService.joinSchedule(schedule.id, currentUserId);
       await loadScheduleAndParticipants(); // 전체 데이터 새로고침
       onSuccess(); // 부모 컴포넌트 일정 목록 새로고침
+      onClose(); // 참가신청 후 모달 닫기
     } catch (err: unknown) {
       console.error("참가 신청 실패:", err);
       const errorMessage = (
@@ -816,8 +837,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
             </div>
 
             {participationStartEnabled && (
-              <div className="form-row">
-                <div className="form-group" style={{ flex: "1.5" }}>
+              <>
+                <div className="form-group">
                   <label>참가신청 시작 날짜 *</label>
                   <input
                     type="date"
@@ -826,22 +847,45 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     required
                   />
                 </div>
-                <div className="form-group" style={{ flex: "1" }}>
-                  <label>참가신청 시작 시간 *</label>
-                  <select
-                    value={participationStartTime}
-                    onChange={(e) => setParticipationStartTime(e.target.value)}
-                    required
-                    className="time-select"
-                  >
-                    {timeOptions.map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </select>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: "0.8" }}>
+                    <label>오전/오후 *</label>
+                    <select
+                      value={participationStartAmPm}
+                      onChange={(e) => setParticipationStartAmPm(e.target.value as "AM" | "PM")}
+                      required
+                    >
+                      <option value="AM">오전</option>
+                      <option value="PM">오후</option>
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ flex: "1" }}>
+                    <label>시간 *</label>
+                    <select
+                      value={participationStartHour}
+                      onChange={(e) => setParticipationStartHour(parseInt(e.target.value))}
+                      required
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                        <option key={hour} value={hour}>
+                          {hour}시
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ flex: "1" }}>
+                    <label>분 *</label>
+                    <select
+                      value={participationStartMinute}
+                      onChange={(e) => setParticipationStartMinute(parseInt(e.target.value) as 0 | 30)}
+                      required
+                    >
+                      <option value={0}>00분</option>
+                      <option value={30}>30분</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             <div className="form-group">

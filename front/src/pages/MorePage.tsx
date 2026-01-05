@@ -100,7 +100,6 @@ const MorePage: React.FC = () => {
   return (
     <div className="more-page">
       <div className="more-content">
-        <h1>더보기</h1>
 
         {/* 프로필 카드 */}
         {!isLoading && user && (
