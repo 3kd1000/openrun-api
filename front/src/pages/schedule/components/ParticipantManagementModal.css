@@ -272,7 +272,7 @@
 }
 
 /* 미디어쿼리: 미디어 대형 (401px ~ 768px) */
-@media (min-width: 401px) and (max-width: 768px) {
+@media (min-width: 426px) and (max-width: 768px) {
   .participant-management-modal .badge {
     font-size: var(--font-size-s);
     padding: var(--space-s) var(--space-m);
@@ -280,7 +280,7 @@
 }
 
 /* 미디어쿼리: 미디어 중형 (361px ~ 400px) */
-@media (min-width: 361px) and (max-width: 400px) {
+@media (min-width: 361px) and (max-width: 425px) {
   .participant-management-modal .badge {
     font-size: var(--font-size-s);
     padding: var(--space-xs) var(--space-s);
@@ -427,7 +427,7 @@
 }
 
 /* 미디어쿼리: 미디어 중형 (361px ~ 400px) */
-@media (min-width: 361px) and (max-width: 400px) {
+@media (min-width: 361px) and (max-width: 425px) {
   .participant-management-modal .member-item {
     padding: var(--space-xs) var(--space-s);
     gap: var(--space-xs);

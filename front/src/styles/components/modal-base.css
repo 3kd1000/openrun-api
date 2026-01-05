@@ -362,19 +362,28 @@
   }
 
   .form-row {
-    flex-direction: column;
-    gap: 0;
+    gap: var(--space-xs);
+    flex-wrap: nowrap; /* 가로 배치 유지 */
   }
 
   .form-row .form-group {
-    margin-bottom: var(--form-gap);
+    margin-bottom: 0;
+    min-width: 0; /* flex 아이템이 축소될 수 있도록 */
   }
 
-  /* 모바일에서 select (시간 선택) 크기 확대 */
+  /* 모바일에서 input, select 크기 조정 */
+  .form-group input[type="date"],
+  .form-group input[type="time"],
   .form-group select {
-    padding: 12px 14px; /* 10px 12px → 12px 14px */
-    font-size: var(--font-size-l); /* base → l로 증가 */
-    min-height: 48px; /* 터치하기 좋은 최소 높이 */
+    padding: 8px 6px; /* 좁은 화면에 맞게 패딩 축소 */
+    font-size: var(--font-size-s); /* 찌그러짐 방지를 위해 폰트 크기 축소 */
+    min-height: 42px; /* 터치하기 좋은 최소 높이 */
+  }
+
+  /* 일반 input (text, number 등) */
+  .form-group input:not([type="date"]):not([type="time"]):not([type="checkbox"]) {
+    padding: 10px 12px;
+    font-size: var(--font-size-base);
   }
 }
 
@@ -400,10 +409,18 @@
     font-size: var(--font-size-xs);
     min-width: 0;
   }
+
+  /* 360px 이하에서 날짜/시간 input 추가 축소 */
+  .form-group input[type="date"],
+  .form-group input[type="time"],
+  .form-group select {
+    padding: 6px 4px; /* 더 좁은 패딩 */
+    font-size: var(--font-size-s); /* 가독성을 위해 s 크기 유지 */
+  }
 }
 
-/* 갤럭시 S24 등 360px~400px: 4개 한 줄 배치 */
-@media (min-width: 361px) and (max-width: 400px) {
+/* 갤럭시 S24 등 361px~425px: 4개 한 줄 배치 */
+@media (min-width: 361px) and (max-width: 425px) {
   .modal-actions {
     gap: 2px;
     flex-wrap: nowrap;

@@ -678,7 +678,7 @@
   }
 
   /* 갤럭시 S24 등 360px~400px: 4개 한 줄 배치 */
-  @media (min-width: 361px) and (max-width: 400px) {
+  @media (min-width: 361px) and (max-width: 425px) {
     .schedule-detail-view .modal-actions {
       gap: 2px;
       flex-wrap: nowrap;

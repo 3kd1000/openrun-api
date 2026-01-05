@@ -459,7 +459,7 @@ h1 {
 }
 
 /* ========== 반응형 (모바일) ========== */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .page-container {
     width: 99vw;
     max-width: 99vw;
