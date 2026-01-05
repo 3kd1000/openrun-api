@@ -196,7 +196,7 @@
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 16px; /* 모바일 자동 줌 방지: 최소 16px 필요 */
 }
 
 .template-save-controls input:disabled {
@@ -280,7 +280,7 @@
   }
 
   .template-save-controls input {
-    font-size: 13px;
+    font-size: 16px; /* 모바일 자동 줌 방지: 최소 16px 필요 */
     padding: 6px 10px;
   }
 
@@ -335,7 +335,7 @@
   }
 
   .template-save-controls input {
-    font-size: 12px; /* s 사이즈 */
+    font-size: 16px; /* 모바일 자동 줌 방지: 최소 16px 필요 */
   }
 
   .btn-save-template {

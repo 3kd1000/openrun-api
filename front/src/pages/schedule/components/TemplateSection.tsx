@@ -169,11 +169,14 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
       }
 
       setToastMessage("템플릿이 저장되었습니다.");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("템플릿 저장 실패:", err);
-      setError(
-        err.response?.data?.message || "템플릿 저장에 실패했습니다."
-      );
+      const errorMessage =
+        err instanceof Error && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : undefined;
+      setError(errorMessage || "템플릿 저장에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -221,11 +224,14 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
       }
 
       setToastMessage("템플릿이 수정되었습니다.");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("템플릿 수정 실패:", err);
-      setError(
-        err.response?.data?.message || "템플릿 수정에 실패했습니다."
-      );
+      const errorMessage =
+        err instanceof Error && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : undefined;
+      setError(errorMessage || "템플릿 수정에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -264,16 +270,15 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
     }
   };
 
-  const isEditMode = editingTemplateId !== null && editingTemplateId !== undefined;
+  const isEditMode =
+    editingTemplateId !== null && editingTemplateId !== undefined;
 
   return (
     <div className="template-section">
       <div className="template-header">
         <h4>{title}</h4>
         <div className="template-header-actions">
-          <span className="template-count">
-            {templates.length} / 5
-          </span>
+          <span className="template-count">{templates.length} / 5</span>
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
@@ -341,9 +346,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
       {/* 템플릿 저장 섹션 (열림 상태에서만 표시) */}
       {!collapsed && saveFormData && (
         <div className="template-save-section">
-          <label>
-            {isEditMode ? "템플릿 수정" : "새 템플릿 저장"}
-          </label>
+          <label>{isEditMode ? "템플릿 수정" : "새 템플릿 저장"}</label>
           <div className="template-save-controls">
             <input
               type="text"

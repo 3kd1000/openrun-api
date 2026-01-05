@@ -37,10 +37,14 @@ const MyClubsPage: React.FC = () => {
       await axiosInstance.delete(`/clubs/${clubId}/members/me`);
       alert("클럽 탈퇴가 완료되었습니다.");
       loadClubs(); // 목록 새로고침
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("클럽 탈퇴 실패:", error);
-      if (error.response?.data?.message) {
-        alert(error.response.data.message);
+      const errorMessage =
+        error instanceof Error && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      if (errorMessage) {
+        alert(errorMessage);
       } else {
         alert("클럽 탈퇴에 실패했습니다.");
       }
