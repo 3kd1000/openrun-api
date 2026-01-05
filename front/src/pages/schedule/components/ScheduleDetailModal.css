@@ -9,6 +9,23 @@
   max-width: 540px;
 }
 
+/* ========== 폼 컨테이너 (수정 모드) ========== */
+.schedule-detail-modal form {
+  padding: var(--space-l);
+  overflow-y: auto;
+  max-height: calc(90vh - 80px); /* 헤더 높이 제외 */
+}
+
+/* 모바일에서 폼 높이 조정 */
+@media (max-width: 768px) {
+  .schedule-detail-modal form {
+    max-height: calc(
+      100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) -
+        160px
+    ); /* 헤더 + 여백 제외 */
+  }
+}
+
 /* ========== 컨텐츠 영역 ========== */
 .schedule-detail-view {
   display: flex;

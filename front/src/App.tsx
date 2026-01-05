@@ -34,19 +34,25 @@ function App() {
     const now = getTimestamp();
     console.log(`🔧 [${now}] Firebase 자동 토큰 갱신 리스너 설정`);
 
-    // 앱 시작 시 세션 복원 시도 (PWA 재시작 시 Firebase 토큰이 만료되어도 자동 갱신)
-    restoreSessionIfValid().then((restored) => {
-      if (restored) {
-        const restoreTime = getTimestamp();
-        console.log(`✅ [${restoreTime}] 세션 복원 완료`);
-      }
-    });
-
-    // 인증 상태 변화 리스너 설정
-    setupAuthListener(() => {
+    // 인증 상태 변화 리스너를 먼저 설정 (onAuthStateChanged가 인증 상태 복원을 감지)
+    const cleanup = setupAuthListener(() => {
       const refreshTime = getTimestamp();
       console.log(`🔄 [${refreshTime}] 토큰 갱신됨 (App.tsx)`);
     });
+
+    // 인증 상태 리스너 설정 후 세션 복원 시도 (PWA 재시작 시 Firebase 토큰이 만료되어도 자동 갱신)
+    // 약간의 지연을 두어 onAuthStateChanged가 먼저 트리거되도록 함
+    setTimeout(() => {
+      restoreSessionIfValid().then((restored) => {
+        if (restored) {
+          const restoreTime = getTimestamp();
+          console.log(`✅ [${restoreTime}] 세션 복원 완료`);
+        }
+      });
+    }, 100);
+
+    // cleanup 함수 반환
+    return cleanup;
   }, []);
 
   // "/" 경로와 "/setup-profile", "/terms"에서는 Navigation 숨김

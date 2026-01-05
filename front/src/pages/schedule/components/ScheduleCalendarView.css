@@ -232,8 +232,12 @@
 .calendar-view .react-calendar__tile.holiday abbr,
 .calendar-view .react-calendar__tile.holiday-sunday:hover abbr,
 .calendar-view .react-calendar__tile.holiday:hover abbr,
-.calendar-view .react-calendar__tile.holiday-sunday .react-calendar__month-view__days__day,
-.calendar-view .react-calendar__tile.holiday .react-calendar__month-view__days__day,
+.calendar-view
+  .react-calendar__tile.holiday-sunday
+  .react-calendar__month-view__days__day,
+.calendar-view
+  .react-calendar__tile.holiday
+  .react-calendar__month-view__days__day,
 .calendar-view .react-calendar__tile.holiday-sunday > *,
 .calendar-view .react-calendar__tile.holiday > * {
   color: var(--color-danger);
@@ -241,13 +245,16 @@
 }
 
 /* 공휴일이면서 선택된 상태 - 하이라이트 제거, 빨간색만 유지 */
-.calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active,
+.calendar-view
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--active,
 .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active {
   background-color: transparent;
   color: var(--color-danger);
 }
 
-.calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active abbr,
+.calendar-view
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--active
+  abbr,
 .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active abbr {
   color: var(--color-danger);
 }
@@ -259,7 +266,9 @@
   border: var(--border-width-thin) solid var(--color-warning);
 }
 
-.calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--now abbr,
+.calendar-view
+  .react-calendar__tile.holiday-sunday.react-calendar__tile--now
+  abbr,
 .calendar-view .react-calendar__tile.holiday.react-calendar__tile--now abbr {
   color: var(--color-danger);
 }
@@ -298,14 +307,19 @@
     color: var(--color-danger);
   }
 
-  .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active,
+  .calendar-view
+    .react-calendar__tile.holiday-sunday.react-calendar__tile--active,
   .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active {
     background-color: transparent;
     color: var(--color-danger);
   }
 
-  .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--active abbr,
-  .calendar-view .react-calendar__tile.holiday.react-calendar__tile--active abbr {
+  .calendar-view
+    .react-calendar__tile.holiday-sunday.react-calendar__tile--active
+    abbr,
+  .calendar-view
+    .react-calendar__tile.holiday.react-calendar__tile--active
+    abbr {
     color: var(--color-danger);
   }
 
@@ -314,7 +328,9 @@
     color: var(--color-danger);
   }
 
-  .calendar-view .react-calendar__tile.holiday-sunday.react-calendar__tile--now abbr,
+  .calendar-view
+    .react-calendar__tile.holiday-sunday.react-calendar__tile--now
+    abbr,
   .calendar-view .react-calendar__tile.holiday.react-calendar__tile--now abbr {
     color: var(--color-danger);
   }
@@ -356,7 +372,7 @@
   color: var(--color-text-primary);
   padding: var(--space-xxs) var(--space-xs);
   border-radius: var(--radius-s);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-s);
   cursor: pointer;
   transition: all var(--transition-base);
   white-space: nowrap;
@@ -376,8 +392,8 @@
 /* 신청 가능: 배경색 없음 (기본 스타일) */
 .calendar-event.capacity-available {
   background: transparent;
-  color: #24292F;
-  border-color: #D0D7DE;
+  color: #24292f;
+  border-color: #d0d7de;
 }
 
 .calendar-event.capacity-available:hover {
@@ -454,7 +470,7 @@
 /* ========== 이벤트 콘텐츠 ========== */
 .event-time {
   font-weight: var(--font-weight-semibold);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   flex-shrink: 0;
 }
 
@@ -478,7 +494,7 @@
 }
 
 .calendar-event-more {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   padding: var(--space-xxs) var(--space-xs);
   text-align: center;
@@ -546,20 +562,20 @@
   }
 
   .calendar-event {
-    font-size: 9px;
+    font-size: var(--font-size-s);
     font-weight: var(--font-weight-semibold);
     padding: 1px var(--space-xxs);
     gap: var(--space-xxs);
   }
 
   .event-time {
-    font-size: 8px;
+    font-size: var(--font-size-s);
     font-weight: var(--font-weight-bold);
     flex-shrink: 0;
   }
 
   .event-name {
-    font-size: 8px;
+    font-size: var(--font-size-s);
     font-weight: var(--font-weight-semibold);
   }
 
