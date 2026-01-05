@@ -540,6 +540,15 @@
     flex-shrink: 1; /* 필요시 축소 가능 */
   }
 
+  /* 모바일에서 DatePicker Input 크기 조절 */
+  .form-group input[type="date"],
+  .form-group select {
+    height: 36px;
+    min-height: 36px;
+    padding: 6px var(--space-s);
+    font-size: var(--font-size-s);
+  }
+
   /* Badge 통일 높이 (참가 현황, 대진표 상태) */
   .stat-item,
   .draw-status {
