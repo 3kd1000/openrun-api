@@ -68,7 +68,9 @@ const ScheduleCalendarView: React.FC<Props> = ({
   // Long press 감지를 위한 state
   const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
   const longPressTarget = React.useRef<Date | null>(null);
-  const [pressStart, setPressStart] = useState<{ x: number; y: number } | null>(null);
+  const [pressStart, setPressStart] = useState<{ x: number; y: number } | null>(
+    null
+  );
 
   // 외부에서 전달된 calendarDate가 변경되면 내부 상태도 업데이트
   useEffect(() => {
@@ -88,34 +90,40 @@ const ScheduleCalendarView: React.FC<Props> = ({
   }, []);
 
   // Long press 시작
-  const handlePressStart = React.useCallback((e: React.PointerEvent, targetDate: Date) => {
-    // 이미 스와이프 중이면 무시
-    if (touchStart) return;
+  const handlePressStart = React.useCallback(
+    (e: React.PointerEvent, targetDate: Date) => {
+      // 이미 스와이프 중이면 무시
+      if (touchStart) return;
 
-    setPressStart({ x: e.clientX, y: e.clientY });
-    longPressTarget.current = targetDate;
+      setPressStart({ x: e.clientX, y: e.clientY });
+      longPressTarget.current = targetDate;
 
-    // 500ms 후 long press로 간주
-    longPressTimer.current = setTimeout(() => {
-      if (longPressTarget.current) {
-        onDateDoubleClick(longPressTarget.current); // 일정 추가 모달 열기
-        clearLongPressTimer();
-      }
-    }, 500);
-  }, [touchStart, onDateDoubleClick, clearLongPressTimer]);
+      // 500ms 후 long press로 간주
+      longPressTimer.current = setTimeout(() => {
+        if (longPressTarget.current) {
+          onDateDoubleClick(longPressTarget.current); // 일정 추가 모달 열기
+          clearLongPressTimer();
+        }
+      }, 500);
+    },
+    [touchStart, onDateDoubleClick, clearLongPressTimer]
+  );
 
   // Long press 취소 (움직임 감지)
-  const handlePressMove = React.useCallback((e: React.PointerEvent) => {
-    if (!pressStart) return;
+  const handlePressMove = React.useCallback(
+    (e: React.PointerEvent) => {
+      if (!pressStart) return;
 
-    const deltaX = Math.abs(e.clientX - pressStart.x);
-    const deltaY = Math.abs(e.clientY - pressStart.y);
+      const deltaX = Math.abs(e.clientX - pressStart.x);
+      const deltaY = Math.abs(e.clientY - pressStart.y);
 
-    // 10px 이상 움직이면 long press 취소
-    if (deltaX > 10 || deltaY > 10) {
-      clearLongPressTimer();
-    }
-  }, [pressStart, clearLongPressTimer]);
+      // 10px 이상 움직이면 long press 취소
+      if (deltaX > 10 || deltaY > 10) {
+        clearLongPressTimer();
+      }
+    },
+    [pressStart, clearLongPressTimer]
+  );
 
   // Long press 종료
   const handlePressEnd = React.useCallback(() => {
@@ -142,41 +150,56 @@ const ScheduleCalendarView: React.FC<Props> = ({
   useEffect(() => {
     if (!calendarRef.current) return;
 
-    const tiles = calendarRef.current.querySelectorAll('.react-calendar__tile');
+    const tiles = calendarRef.current.querySelectorAll(".react-calendar__tile");
 
     const handleTilePointerDown = (e: PointerEvent, tile: Element) => {
       // 타일의 abbr 태그에서 날짜 추출
-      const abbrElement = tile.querySelector('abbr');
+      const abbrElement = tile.querySelector("abbr");
       if (!abbrElement) return;
 
-      const ariaLabel = abbrElement.getAttribute('aria-label');
+      const ariaLabel = abbrElement.getAttribute("aria-label");
       if (!ariaLabel) return;
 
       // aria-label 형식: "2025년 1월 5일" 등
-      const dateMatch = ariaLabel.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+      const dateMatch = ariaLabel.match(
+        /(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/
+      );
       if (!dateMatch) return;
 
       const [, year, month, day] = dateMatch;
-      const targetDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      const targetDate = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day)
+      );
 
       // Long press 시작 (React 이벤트가 아니므로 변환)
       handlePressStart(e as unknown as React.PointerEvent, targetDate);
     };
 
+    // 타일 요소에 리스너를 저장하기 위한 타입 정의
+    type TileWithListener = Element & { _pointerDownListener?: EventListener };
+
     tiles.forEach((tile) => {
-      const pointerDownListener = (e: Event) => handleTilePointerDown(e as PointerEvent, tile);
-      tile.addEventListener('pointerdown', pointerDownListener);
+      const pointerDownListener = (e: Event) =>
+        handleTilePointerDown(e as PointerEvent, tile);
+      tile.addEventListener("pointerdown", pointerDownListener);
 
       // cleanup을 위해 element에 listener 저장
-      (tile as any)._pointerDownListener = pointerDownListener;
+      (tile as unknown as TileWithListener)._pointerDownListener =
+        pointerDownListener;
     });
 
     // Cleanup
     return () => {
       tiles.forEach((tile) => {
-        if ((tile as any)._pointerDownListener) {
-          tile.removeEventListener('pointerdown', (tile as any)._pointerDownListener);
-          delete (tile as any)._pointerDownListener;
+        const tileWithListener = tile as unknown as TileWithListener;
+        if (tileWithListener._pointerDownListener) {
+          tile.removeEventListener(
+            "pointerdown",
+            tileWithListener._pointerDownListener
+          );
+          delete tileWithListener._pointerDownListener;
         }
       });
     };
@@ -249,7 +272,9 @@ const ScheduleCalendarView: React.FC<Props> = ({
                 </span>
                 <span className="event-name">
                   <span className="event-name-text">
-                    {schedule.courtName.replace(/\s+/g, '').substring(0, maxCourtNameLength)}
+                    {schedule.courtName
+                      .replace(/\s+/g, "")
+                      .substring(0, maxCourtNameLength)}
                   </span>
                   {drawStatus === "draw-valid" && (
                     <span className="draw-icon draw-icon-valid">✓</span>
@@ -353,7 +378,11 @@ const ScheduleCalendarView: React.FC<Props> = ({
     return targetDate;
   };
 
-  const handleDateChange = (value: Date | Date[] | null) => {
+  // react-calendar의 Value 타입은 Date | Date[] | null | [Date | null, Date | null]이지만
+  // 우리는 단일 날짜 선택만 사용하므로 Date | Date[] | null로 처리
+  const handleDateChange = (
+    value: Date | Date[] | null | [Date | null, Date | null]
+  ) => {
     if (!value) return;
     const newDate = Array.isArray(value) ? value[0] : value;
     if (!(newDate instanceof Date)) return;
@@ -528,8 +557,9 @@ const ScheduleCalendarView: React.FC<Props> = ({
       >
         <Calendar
           value={date}
+          // react-calendar의 onChange는 Value 타입을 받지만, 우리는 handleDateChange에서 처리
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onChange={handleDateChange as (value: any) => void}
+          onChange={handleDateChange as any}
           tileContent={tileContent}
           tileClassName={tileClassName}
           locale="ko-KR"

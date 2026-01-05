@@ -20,9 +20,13 @@ axiosInstance.interceptors.request.use((config) => {
 
 // 401 에러 시 토큰 리프레시 후 재시도
 let isRefreshing = false;
-let failedQueue: any[] = [];
+interface QueuedRequest {
+  resolve: (token: string | null) => void;
+  reject: (error: unknown) => void;
+}
+let failedQueue: QueuedRequest[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);

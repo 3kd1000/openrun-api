@@ -71,20 +71,20 @@ const ClubAdminPage: React.FC = () => {
                     <p>대기 중인 가입 신청이 없습니다.</p>
                 ) : (
                     <ul style={{ listStyle: 'none', padding: 0 }}>
-                        {pendingMembers.map((member: any) => (
+                        {pendingMembers.map((member) => (
                             <li key={member.id} style={{ borderBottom: '1px solid #eee', padding: '10px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                    <strong>{member.name}</strong> ({member.email})
+                                    <strong>{member.user.name}</strong> ({member.user.email})
                                 </div>
                                 <div>
                                     <button
-                                        onClick={() => handleApprove(member.id)}
+                                        onClick={() => handleApprove(member.user.id)}
                                         style={{ marginRight: '10px', padding: '5px 10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
                                     >
                                         승인
                                     </button>
                                     <button
-                                        onClick={() => handleReject(member.id)}
+                                        onClick={() => handleReject(member.user.id)}
                                         style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
                                     >
                                         거절

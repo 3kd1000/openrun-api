@@ -44,11 +44,11 @@ const ClubDetailPage: React.FC = () => {
             // we can infer from the list if I am active.
 
             const response = await axiosInstance.get(`/clubs/${clubId}/members`);
-            const memberList: any[] = response.data;
+            const memberList: ClubMember[] = response.data as ClubMember[];
             setMembers(memberList);
 
             // Check if I am in the list (Active members)
-            const me = memberList.find((m: any) => m.id === currentUserId);
+            const me = memberList.find((m) => m.id === currentUserId);
             if (me) {
                 setJoinStatus('ACTIVE');
             } else {
@@ -70,8 +70,12 @@ const ClubDetailPage: React.FC = () => {
             await axiosInstance.post(`/clubs/${clubId}/join`);
             alert('가입 신청이 완료되었습니다.');
             setJoinStatus('PENDING'); // Optimistic update
-        } catch (error: any) {
-            alert('가입 신청 실패: ' + (error.response?.data?.message || '오류 발생'));
+        } catch (error: unknown) {
+            const errorMessage =
+                error instanceof Error && 'response' in error
+                    ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+                    : undefined;
+            alert('가입 신청 실패: ' + (errorMessage || '오류 발생'));
         }
     };
 
