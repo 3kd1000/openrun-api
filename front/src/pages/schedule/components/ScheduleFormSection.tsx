@@ -8,6 +8,7 @@ import {
   parseParticipationPattern,
   createParticipationPattern,
 } from "../../../utils/participationPatternUtils";
+import "./ScheduleFormSection.css";
 
 // 시간 옵션 생성 (정시만, 00시부터 23시까지)
 const generateTimeOptions = () => {
@@ -395,7 +396,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       )}
 
       <div className="form-row">
-        <div className="form-group" style={{ flex: "1.2", minWidth: 0 }}>
+        <div className="form-group" style={{ flex: "1.2 1 0%", minWidth: 0 }}>
           <label>날짜 *</label>
           <input
             type="date"
@@ -404,7 +405,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             required
           />
         </div>
-        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+        <div className="form-group" style={{ flex: "1 1 0%", minWidth: 0 }}>
           <label>시간 *</label>
           <select
             value={selectedTime}
