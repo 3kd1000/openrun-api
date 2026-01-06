@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 import { useAuth } from "../../contexts/AuthContext";
 import { scheduleService } from "../../services/scheduleService";
 import { participantService } from "../../services/participantService";
@@ -421,12 +422,8 @@ const ScheduleListPage: React.FC = () => {
                   {/* 2. 날짜 및 시간, 신청인원 / 총인원 */}
                   <div className="schedule-meta-row">
                     <p className="schedule-time">
-                      {new Date(schedule.scheduledAt).toLocaleString("ko-KR", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
+                      {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 (E) HH:mm", {
+                        locale: ko,
                       })}
                     </p>
                     <div className="schedule-participants">

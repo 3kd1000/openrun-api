@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 import { drawService } from "../../../services/drawService";
 import type {
   DrawResponse,
@@ -269,12 +271,8 @@ const DrawViewModal: React.FC<Props> = ({
           <div className="schedule-info-section">
             <h3>{schedule.courtName}</h3>
             <p className="schedule-datetime">
-              {new Date(schedule.scheduledAt).toLocaleString("ko-KR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
+              {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 (E) HH:mm", {
+                locale: ko,
               })}
             </p>
             <div className="draw-type-badge">
