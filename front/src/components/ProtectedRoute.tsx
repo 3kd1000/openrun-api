@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { isTokenValid, clearLoginSession } from '../services/firebase';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,18 +13,60 @@ interface ProtectedRouteProps {
  * 사용법:
  * <Route path="/schedules" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
  *
- * TODO: SecurityConfig에서 API 인증을 켜면 이 컴포넌트도 활성화
+ * AuthContext의 isAuthReady와 user를 사용하여 인증 상태를 확인하고,
+ * Firebase 토큰 유효성을 검증하여 localStorage에 정보가 있어도
+ * 토큰이 유효하지 않으면 미로그인으로 처리합니다.
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  // localStorage에서 로그인 정보 확인
-  const userId = localStorage.getItem('user_id');
-  const firebaseToken = localStorage.getItem('firebase_token');
+  const { isAuthReady, user } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // OAuth 로그인 확인
-  const isAuthenticated = !!userId || !!firebaseToken;
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Firebase 인증 상태 복원이 완료될 때까지 대기
+      if (!isAuthReady) {
+        return;
+      }
+
+      // 사용자가 없으면 미로그인
+      if (!user) {
+        console.warn('⚠️ Firebase 사용자 없음 → 로그인 페이지로 리다이렉트');
+        setIsAuthenticated(false);
+        setIsChecking(false);
+        return;
+      }
+
+      try {
+        // Firebase 토큰 유효성 검증
+        const tokenValid = await isTokenValid();
+
+        if (tokenValid) {
+          setIsAuthenticated(true);
+        } else {
+          // 토큰이 유효하지 않으면 세션 클리어 및 미로그인 처리
+          console.warn('⚠️ Firebase 토큰이 유효하지 않음 → 세션 클리어 및 로그인 페이지로 리다이렉트');
+          clearLoginSession();
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('인증 확인 실패:', error);
+        clearLoginSession();
+        setIsAuthenticated(false);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkAuth();
+  }, [isAuthReady, user]);
+
+  // Firebase 인증 상태 복원 대기 또는 토큰 검증 중에는 로딩 상태
+  if (!isAuthReady || isChecking) {
+    return null; // 또는 <LoadingSpinner /> 등
+  }
 
   if (!isAuthenticated) {
-    console.warn('⚠️ 로그인이 필요합니다. /login으로 리다이렉트');
     return <Navigate to="/login" replace />;
   }
 
