@@ -8,6 +8,7 @@ import {
   parseParticipationPattern,
   createParticipationPattern,
 } from "../../../utils/participationPatternUtils";
+import "./ScheduleFormSection.css";
 
 // 시간 옵션 생성 (정시만, 00시부터 23시까지)
 const generateTimeOptions = () => {
