@@ -198,18 +198,18 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       if (parsed) {
         const { day, hour, minute } = parsed;
 
-        // scheduledAt을 기준으로 참가신청 시작 날짜 계산
-        const scheduleDate = new Date(selectedDate);
-        const lastDay = new Date(
-          scheduleDate.getFullYear(),
-          scheduleDate.getMonth() + 1,
-          0
-        ).getDate();
+        // 오늘 날짜를 기준으로 참가신청 시작 날짜 계산 (등록 시점의 월 사용)
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+
+        // 해당 월의 마지막 날 계산
+        const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
         const actualDay = Math.min(day, lastDay);
 
         const participationDate = new Date(
-          scheduleDate.getFullYear(),
-          scheduleDate.getMonth(),
+          currentYear,
+          currentMonth,
           actualDay
         );
         setParticipationStartDate(format(participationDate, "yyyy-MM-dd"));
@@ -245,17 +245,19 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       );
       if (parsed) {
         const { day, hour, minute } = parsed;
-        const scheduleDate = new Date(selectedDate);
-        const lastDay = new Date(
-          scheduleDate.getFullYear(),
-          scheduleDate.getMonth() + 1,
-          0
-        ).getDate();
+
+        // 오늘 날짜를 기준으로 참가신청 시작 날짜 계산 (등록 시점의 월 사용)
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+
+        // 해당 월의 마지막 날 계산
+        const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
         const actualDay = Math.min(day, lastDay);
 
         const participationDate = new Date(
-          scheduleDate.getFullYear(),
-          scheduleDate.getMonth(),
+          currentYear,
+          currentMonth,
           actualDay
         );
         setParticipationStartDate(format(participationDate, "yyyy-MM-dd"));
