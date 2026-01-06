@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
 import { clubService } from "../../../services/clubService";
@@ -357,7 +358,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
             <div className="detail-item">
               <label>일정 시간</label>
               <p>
-                {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 HH:mm")}
+                {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 (E) HH:mm", {
+                  locale: ko,
+                })}
               </p>
             </div>
 
@@ -571,7 +574,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   >
                     <p>
                       참가신청 시작 시간:{" "}
-                      {format(startAt, "yyyy년 M월 d일 HH:mm")}
+                      {format(startAt, "yyyy년 M월 d일 (E) HH:mm", {
+                        locale: ko,
+                      })}
                     </p>
                   </div>
                 );
