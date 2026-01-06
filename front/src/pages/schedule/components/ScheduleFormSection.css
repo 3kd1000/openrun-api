@@ -58,8 +58,12 @@
 .form-row .form-group select {
   min-height: unset; /* modal-base.css의 min-height: 42px 무효화 */
   height: 42px;
+  max-height: 42px; /* iOS Safari에서 높이 강제 제한 */
   font-size: var(--font-size-s); /* 날짜와 시간 폰트 크기 통일 */
   line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+  box-sizing: border-box; /* padding 포함 높이 계산 */
+  -webkit-appearance: none; /* iOS Safari 기본 스타일 제거 */
+  appearance: none;
 }
 
 .form-group input:focus,
@@ -158,9 +162,13 @@
   .form-row .form-group select {
     min-height: unset; /* modal-base.css의 min-height 무효화 */
     height: 40px;
+    max-height: 40px;
     padding: 8px var(--space-m);
     font-size: var(--font-size-s); /* 날짜와 시간 폰트 크기 통일 */
     line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .btn-secondary,
@@ -197,9 +205,13 @@
   .form-row .form-group select {
     min-height: unset; /* modal-base.css의 min-height 무효화 */
     height: 38px;
+    max-height: 38px;
     padding: 7px var(--space-s);
     font-size: var(--font-size-s); /* 날짜와 시간 폰트 크기 통일 */
     line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .btn-secondary,
@@ -238,9 +250,13 @@
   .form-row .form-group select {
     min-height: unset; /* modal-base.css의 min-height 무효화 */
     height: 36px;
+    max-height: 36px;
     padding: 6px var(--space-xs);
     font-size: var(--font-size-s);
     line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .btn-secondary,

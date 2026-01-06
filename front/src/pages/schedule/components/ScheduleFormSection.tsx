@@ -396,7 +396,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       )}
 
       <div className="form-row">
-        <div className="form-group" style={{ flex: "1.2", minWidth: 0 }}>
+        <div className="form-group" style={{ flex: "1.2 1 0%", minWidth: 0 }}>
           <label>날짜 *</label>
           <input
             type="date"
@@ -405,7 +405,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             required
           />
         </div>
-        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+        <div className="form-group" style={{ flex: "1 1 0%", minWidth: 0 }}>
           <label>시간 *</label>
           <select
             value={selectedTime}
