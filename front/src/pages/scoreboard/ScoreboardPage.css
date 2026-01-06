@@ -200,7 +200,7 @@
 
 .scoreboard-page .scoreboard-table td.points {
   font-weight: var(--font-weight-bold);
-  color: var(--color-warning);
+  color: #ff6600; /* 주황색 - 노란색보다 가독성 향상 */
 }
 
 .scoreboard-page .scoreboard-table td.wins {
@@ -258,7 +258,7 @@
   }
 
   .scoreboard-page .scoreboard-table td.points {
-    color: var(--color-warning);
+    color: #ff6600; /* 주황색 - 노란색보다 가독성 향상 */
     font-weight: var(--font-weight-bold);
   }
 
@@ -296,64 +296,182 @@
   }
 }
 
-/* ========== 모바일 대응 ========== */
-@media (max-width: 768px) {
+/* ========== 모바일 대응 (362px 이상 768px 이하) ========== */
+@media (min-width: 362px) and (max-width: 768px) {
   .scoreboard-page {
     padding: var(--space-l);
   }
 
   .scoreboard-page .scoreboard-table {
-    font-size: var(--font-size-m);
+    font-size: var(--font-size-s);
+  }
+
+  .scoreboard-page .scoreboard-table th {
+    font-size: var(--font-size-s);
+  }
+
+  .scoreboard-page .scoreboard-table td {
+    font-size: var(--font-size-base);
   }
 
   .scoreboard-page .scoreboard-table th,
   .scoreboard-page .scoreboard-table td {
-    padding: var(--space-s) var(--space-xs);
-    min-width: 50px;
+    padding: var(--space-xs) 3px;
+    min-width: 0;
   }
 
   /* 순위 컬럼 */
   .scoreboard-page .scoreboard-table th:nth-child(1),
   .scoreboard-page .scoreboard-table td:nth-child(1) {
-    min-width: 45px;
+    min-width: 38px;
+    max-width: 38px;
   }
 
   /* 이름 컬럼 */
   .scoreboard-page .scoreboard-table th:nth-child(2),
   .scoreboard-page .scoreboard-table td:nth-child(2) {
-    min-width: 70px;
+    min-width: 60px;
+    max-width: 60px;
   }
 
-  /* 경기수, 승점 */
+  /* 경기수 */
   .scoreboard-page .scoreboard-table th:nth-child(3),
-  .scoreboard-page .scoreboard-table td:nth-child(3),
+  .scoreboard-page .scoreboard-table td:nth-child(3) {
+    min-width: 42px;
+    max-width: 42px;
+  }
+
+  /* 승점 */
   .scoreboard-page .scoreboard-table th:nth-child(4),
   .scoreboard-page .scoreboard-table td:nth-child(4) {
-    min-width: 50px;
+    min-width: 42px;
+    max-width: 42px;
   }
 
-  /* 승률 (줄바꿈 방지를 위해 더 넓게) */
+  /* 승률 */
   .scoreboard-page .scoreboard-table th:nth-child(5),
   .scoreboard-page .scoreboard-table td:nth-child(5) {
-    min-width: 65px;
+    min-width: 50px;
+    max-width: 50px;
   }
 
-  /* 승, 무, 패 */
+  /* 승 */
   .scoreboard-page .scoreboard-table th:nth-child(6),
-  .scoreboard-page .scoreboard-table td:nth-child(6),
+  .scoreboard-page .scoreboard-table td:nth-child(6) {
+    min-width: 32px;
+    max-width: 32px;
+  }
+
+  /* 무 */
   .scoreboard-page .scoreboard-table th:nth-child(7),
-  .scoreboard-page .scoreboard-table td:nth-child(7),
+  .scoreboard-page .scoreboard-table td:nth-child(7) {
+    min-width: 32px;
+    max-width: 32px;
+  }
+
+  /* 패 */
   .scoreboard-page .scoreboard-table th:nth-child(8),
   .scoreboard-page .scoreboard-table td:nth-child(8) {
-    min-width: 45px;
+    min-width: 32px;
+    max-width: 32px;
   }
 
   .scoreboard-page .scoreboard-table td.rank {
-    font-size: var(--font-size-l);
+    font-size: var(--font-size-base);
   }
 
   .scoreboard-page .scoreboard-table td.name {
-    font-size: var(--font-size-m);
+    font-size: var(--font-size-base);
+  }
+}
+
+/* ========== 360px 이하 최적화 (360px과 동일한 스타일, 좌우 스크롤 허용) ========== */
+@media (max-width: 361px) {
+  .scoreboard-page {
+    padding: var(--space-m);
+  }
+
+  .scoreboard-page .scoreboard-table {
+    font-size: var(--font-size-xs);
+  }
+
+  .scoreboard-page .scoreboard-table th {
+    font-size: var(--font-size-xs);
+  }
+
+  .scoreboard-page .scoreboard-table td {
+    font-size: var(--font-size-s);
+  }
+
+  .scoreboard-page .scoreboard-table th,
+  .scoreboard-page .scoreboard-table td {
+    padding: 6px 2px;
+  }
+
+  /* 순위 컬럼 - 두 자리 숫자 (32px → 35px) */
+  .scoreboard-page .scoreboard-table th:nth-child(1),
+  .scoreboard-page .scoreboard-table td:nth-child(1) {
+    min-width: 35px;
+    max-width: 35px;
+  }
+
+  /* 이름 컬럼 - 네 자리까지 (52px 유지) */
+  .scoreboard-page .scoreboard-table th:nth-child(2),
+  .scoreboard-page .scoreboard-table td:nth-child(2) {
+    min-width: 52px;
+    max-width: 52px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 경기수 (36px → 38px) */
+  .scoreboard-page .scoreboard-table th:nth-child(3),
+  .scoreboard-page .scoreboard-table td:nth-child(3) {
+    min-width: 38px;
+    max-width: 38px;
+  }
+
+  /* 승점 (36px → 40px) - 가장 중요하므로 더 넓게 */
+  .scoreboard-page .scoreboard-table th:nth-child(4),
+  .scoreboard-page .scoreboard-table td:nth-child(4) {
+    min-width: 40px;
+    max-width: 40px;
+  }
+
+  /* 승률 (44px 유지) */
+  .scoreboard-page .scoreboard-table th:nth-child(5),
+  .scoreboard-page .scoreboard-table td:nth-child(5) {
+    min-width: 44px;
+    max-width: 44px;
+  }
+
+  /* 승 (28px → 30px) */
+  .scoreboard-page .scoreboard-table th:nth-child(6),
+  .scoreboard-page .scoreboard-table td:nth-child(6) {
+    min-width: 30px;
+    max-width: 30px;
+  }
+
+  /* 무 (28px → 30px) */
+  .scoreboard-page .scoreboard-table th:nth-child(7),
+  .scoreboard-page .scoreboard-table td:nth-child(7) {
+    min-width: 30px;
+    max-width: 30px;
+  }
+
+  /* 패 (28px → 30px) */
+  .scoreboard-page .scoreboard-table th:nth-child(8),
+  .scoreboard-page .scoreboard-table td:nth-child(8) {
+    min-width: 30px;
+    max-width: 30px;
+  }
+
+  .scoreboard-page .scoreboard-table td.rank {
+    font-size: var(--font-size-s);
+  }
+
+  .scoreboard-page .scoreboard-table td.name {
+    font-size: var(--font-size-s);
   }
 }
 
