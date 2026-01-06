@@ -155,17 +155,23 @@ export const restoreSessionIfValid = async (): Promise<boolean> => {
   }
 
   if (!user) {
-    console.log(`ℹ️ [${now}] Firebase 사용자 없음 (인증 상태 복원 실패) → 복원 불가`);
+    console.log(
+      `ℹ️ [${now}] Firebase 사용자 없음 (인증 상태 복원 실패) → 복원 불가`
+    );
     return false;
   }
 
   // 세션이 유효하고 사용자가 있으면 토큰 갱신 시도 (최대 3회 재시도)
   let retryCount = 0;
   const maxRetries = 3;
-  
+
   while (retryCount < maxRetries) {
     try {
-      console.log(`🔄 [${now}] 세션 복원 시도 (토큰 갱신) - 시도 ${retryCount + 1}/${maxRetries}`);
+      console.log(
+        `🔄 [${now}] 세션 복원 시도 (토큰 갱신) - 시도 ${
+          retryCount + 1
+        }/${maxRetries}`
+      );
       const idToken = await user.getIdToken(true);
 
       // localStorage 업데이트
@@ -185,7 +191,10 @@ export const restoreSessionIfValid = async (): Promise<boolean> => {
       retryCount++;
       if (retryCount < maxRetries) {
         const waitTime = retryCount * 500; // 500ms, 1000ms, 1500ms
-        console.warn(`⚠️ [${now}] 세션 복원 실패 (시도 ${retryCount}/${maxRetries}), ${waitTime}ms 후 재시도...`, error);
+        console.warn(
+          `⚠️ [${now}] 세션 복원 실패 (시도 ${retryCount}/${maxRetries}), ${waitTime}ms 후 재시도...`,
+          error
+        );
         await new Promise((resolve) => setTimeout(resolve, waitTime));
         // 사용자 재확인 (재시도 전에 다시 확인)
         user = auth.currentUser;
@@ -194,7 +203,10 @@ export const restoreSessionIfValid = async (): Promise<boolean> => {
           return false;
         }
       } else {
-        console.error(`❌ [${now}] 세션 복원 실패 (최대 재시도 횟수 초과):`, error);
+        console.error(
+          `❌ [${now}] 세션 복원 실패 (최대 재시도 횟수 초과):`,
+          error
+        );
         return false;
       }
     }
@@ -310,7 +322,9 @@ export const setupAuthListener = (
             // 재시도 전에 사용자 재확인
             user = auth.currentUser;
             if (!user) {
-              console.error(`❌ [${now}] 재시도 중 사용자 없음 → 토큰 갱신 중단`);
+              console.error(
+                `❌ [${now}] 재시도 중 사용자 없음 → 토큰 갱신 중단`
+              );
               break;
             }
           } else {
@@ -518,6 +532,42 @@ export const signInWithGooglePopup = async (): Promise<{
     console.error("Authentication failed:", error);
     alert("Error: " + (error as Error).message);
     return null;
+  }
+};
+
+/**
+ * Firebase 토큰 유효성 검증
+ * auth.currentUser 존재 여부와 토큰의 실제 만료 시간 확인
+ * @returns true: 토큰 유효, false: 토큰 무효 또는 사용자 없음
+ */
+export const isTokenValid = async (): Promise<boolean> => {
+  const user = auth.currentUser;
+  if (!user) {
+    return false;
+  }
+
+  try {
+    // 토큰 정보 가져오기 (만료 시간 포함)
+    const tokenResult = await user.getIdTokenResult(false);
+
+    // 토큰 만료 시간 확인
+    const expirationTime = new Date(tokenResult.expirationTime).getTime();
+    const now = Date.now();
+    const timeUntilExpiry = expirationTime - now;
+
+    // 안전 마진: 만료 시간이 5분 이내면 false 반환
+    const safetyMargin = 5 * 60 * 1000; // 5분
+
+    if (timeUntilExpiry < safetyMargin) {
+      const minutesLeft = Math.floor(timeUntilExpiry / 60000);
+      console.warn(`⚠️ 토큰 만료 임박 (${minutesLeft}분 남음) → 유효하지 않음으로 처리`);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("토큰 유효성 검증 실패:", error);
+    return false;
   }
 };
 

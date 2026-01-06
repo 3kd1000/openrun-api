@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { auth, clearLoginSession } from "../services/firebase";
 import { signOut } from "firebase/auth";
 import type {
@@ -17,6 +18,7 @@ import "./MorePage.css";
 
 const MorePage: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthReady, user: firebaseUser } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -27,32 +29,36 @@ const MorePage: React.FC = () => {
     loadUserProfile();
     loadOAuthProviders();
     // loadMyClubs(); // 클럽 메뉴 비활성화로 인해 임시 주석처리
-  }, []);
+  }, [isAuthReady, firebaseUser]);
 
   const loadUserProfile = async () => {
-    try {
-      console.log("🚀 App v2 실행"); // ← 이거!
+    // Firebase 인증 상태 복원이 완료될 때까지 대기
+    if (!isAuthReady) {
+      return;
+    }
 
+    // Firebase 사용자가 없으면 로그인 페이지로 리다이렉트
+    if (!firebaseUser) {
+      console.warn("⚠️ Firebase 사용자 없음 → 로그인 페이지로 리다이렉트");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // API 호출하여 사용자 프로필 가져오기
+      console.log("🚀 App v2 실행"); // ← 이거!
       const userProfile = await getCurrentUser();
       setUser(userProfile);
       // localStorage에도 저장 (다른 화면에서 사용)
       localStorage.setItem("user_name", userProfile.name);
     } catch (error) {
       console.error("사용자 정보 조회 실패:", error);
-      // 로컬스토리지에서 fallback
-      const name =
-        localStorage.getItem("user_name") ||
-        localStorage.getItem("devUserName");
-      if (name) {
-        setUser({
-          id: 0,
-          email: "",
-          name,
-          imageUrl: null,
-          createdAt: "",
-          updatedAt: "",
-        });
-      }
+      // API 호출 실패 시 로그인 페이지로 리다이렉트 (localStorage fallback 제거)
+      console.warn("⚠️ API 호출 실패 → 세션 클리어 및 로그인 페이지로 리다이렉트");
+      clearLoginSession();
+      navigate("/login");
     } finally {
       setIsLoading(false);
     }

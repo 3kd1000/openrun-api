@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { format } from "date-fns";
+import { useAuth } from "../../contexts/AuthContext";
 import { scheduleService } from "../../services/scheduleService";
 import { participantService } from "../../services/participantService";
 import type { Schedule, Participant } from "../../types/schedule";
@@ -18,6 +19,7 @@ type CapacityFilter = "all" | "available" | "full" | "participated";
 
 const ScheduleListPage: React.FC = () => {
   const location = useLocation();
+  const { user: firebaseUser } = useAuth();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -68,13 +70,23 @@ const ScheduleListPage: React.FC = () => {
       );
       setSchedules(sortedData);
 
-      // 내가 참여한 일정 목록 조회 (로그인한 경우에만)
-      const userId = localStorage.getItem("user_id");
-      if (userId) {
-        const participationIds = await scheduleService.getMyParticipations(
-          parseInt(userId)
-        );
-        setMyParticipations(new Set(participationIds));
+      // 내가 참여한 일정 목록 조회 (Firebase 사용자가 있는 경우에만)
+      if (firebaseUser) {
+        const userId = localStorage.getItem("user_id");
+        if (userId) {
+          try {
+            const participationIds = await scheduleService.getMyParticipations(
+              parseInt(userId)
+            );
+            setMyParticipations(new Set(participationIds));
+          } catch (err) {
+            console.error("참여 일정 조회 실패:", err);
+            // 참여 일정 조회 실패는 전체 일정 목록에는 영향을 주지 않음
+          }
+        }
+      } else {
+        // Firebase 사용자가 없으면 참여 일정 조회하지 않음
+        console.warn("⚠️ Firebase 사용자 없음 → 참여 일정 조회 건너뜀");
       }
     } catch (err) {
       console.error("일정 조회 실패:", err);
@@ -83,7 +95,7 @@ const ScheduleListPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, []);
+  }, [firebaseUser]);
 
   useEffect(() => {
     loadSchedules();
