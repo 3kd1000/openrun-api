@@ -1,0 +1,26 @@
+package com.example.openrunapi.domain.user.model.dto;
+
+import com.example.openrunapi.domain.user.model.UserProfile;
+import lombok.Getter;
+
+import java.time.LocalDate;
+
+@Getter
+public class UserProfileResponse {
+    private final LocalDate tennisStartedAt;
+    private final String backhandType;
+    private final String favoritePlayer;
+    private final String ntrp;
+    private final String tournamentHistory;
+    private final boolean formerPlayer;
+
+    public UserProfileResponse(UserProfile profile) {
+        this.tennisStartedAt = profile.getTennisStartedAt();
+        this.backhandType = profile.getBackhandType() != null ? profile.getBackhandType().name() : null;
+        this.favoritePlayer = profile.getFavoritePlayer();
+        this.ntrp = profile.getNtrp();
+        this.tournamentHistory = profile.getTournamentHistory();
+        this.formerPlayer = profile.isFormerPlayer();
+    }
+}
+

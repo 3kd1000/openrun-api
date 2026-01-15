@@ -29,4 +29,13 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
     List<ClubMember> findAllByUserIdAndStatus(Long userId, ClubMemberStatus status);
 
     void deleteByClubIdAndUserId(Long clubId, Long userId);
+
+    @Query("""
+        SELECT cm.user.id
+        FROM ClubMember cm
+        WHERE cm.club.id = :clubId
+          AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
+          AND cm.user.id IN :userIds
+    """)
+    List<Long> findActiveMemberUserIdsInClub(@Param("clubId") Long clubId, @Param("userIds") List<Long> userIds);
 }

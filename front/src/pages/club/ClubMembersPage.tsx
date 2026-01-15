@@ -1,0 +1,255 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axiosInstance from '../../services/api/axiosInstance';
+import type { Club } from '../../types/club';
+import { ArrowLeftIcon, CrownIcon, ShieldIcon, UserIcon, MailIcon } from '../../components/common/Icons';
+import { getErrorMessage, logError } from '../../utils/errorHandler';
+import { canManageClub, normalizeClubRole } from '../../utils/role';
+import { getOpenRunSession } from '../../utils/openrunSession';
+import './ClubMembersPage.css';
+
+// 신규 API 응답 형식: GET /clubs/{clubId}/membership
+interface ClubMembershipResponse {
+  memberId: number;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'REGULAR' | 'ASSOCIATE';
+  status: 'PENDING' | 'ACTIVE' | 'REJECTED';
+  joinedAt: string;
+  userId: number;
+  name: string;
+  email: string | null;
+  imageUrl: string | null;
+}
+
+const ClubMembersPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { clubId } = useParams<{ clubId: string }>();
+  const [members, setMembers] = useState<ClubMembershipResponse[]>([]);
+  const [club, setClub] = useState<Club | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [roleDraftByUserId, setRoleDraftByUserId] = useState<Record<number, ClubMembershipResponse["role"]>>({});
+  const [saving, setSaving] = useState(false);
+
+  const myRole = normalizeClubRole(
+    getOpenRunSession().currentClubRole ?? localStorage.getItem("current_club_role")
+  );
+  const canManage = canManageClub(myRole);
+  // 역할 변경은 OWNER 전용이지만, 프론트에서는 우선 canManage(ADMIN+)에서 버튼 노출 후
+  // 서버에서 최종 권한(OWNER)으로 한 번 더 막는다.
+  const canEditRoles = canManage;
+
+  const dirtyCount = useMemo(() => {
+    const currentByUserId = new Map(members.map((m) => [m.userId, m.role]));
+    return Object.entries(roleDraftByUserId).filter(([uid, role]) => currentByUserId.get(Number(uid)) !== role).length;
+  }, [members, roleDraftByUserId]);
+
+  useEffect(() => {
+    if (clubId) {
+      loadData();
+    }
+  }, [clubId]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 클럽 정보와 멤버 목록 동시 조회
+      const [clubResponse, membersResponse] = await Promise.all([
+        axiosInstance.get(`/clubs/${clubId}`),
+        axiosInstance.get(`/clubs/${clubId}/membership`, {
+          params: { status: 'ACTIVE' }
+        })
+      ]);
+
+      setClub(clubResponse.data);
+      setMembers(membersResponse.data);
+      setRoleDraftByUserId(
+        Object.fromEntries(
+          (membersResponse.data as ClubMembershipResponse[]).map((m) => [m.userId, m.role])
+        )
+      );
+    } catch (error: unknown) {
+      logError('클럽원 목록 조회', error);
+      setError(getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    navigate(`/clubs/${clubId}`);
+  };
+
+  const handleSaveRoles = async () => {
+    if (!clubId) return;
+    const currentByUserId = new Map(members.map((m) => [m.userId, m.role]));
+    const items = Object.entries(roleDraftByUserId)
+      .map(([userIdStr, role]) => ({ userId: Number(userIdStr), role }))
+      .filter((x) => Number.isFinite(x.userId))
+      .filter((x) => currentByUserId.get(x.userId) !== x.role)
+      // OWNER 변경은 서버에서 거절되지만 UX 상 미리 제거
+      .filter((x) => x.role !== "OWNER");
+
+    if (items.length === 0) {
+      setIsEditMode(false);
+      return;
+    }
+
+    if (!confirm(`역할 변경 ${items.length}건을 저장할까요?`)) return;
+    try {
+      setSaving(true);
+      await axiosInstance.patch(`/clubs/${clubId}/members/roles`, { items });
+      await loadData();
+      setIsEditMode(false);
+      alert("저장되었습니다.");
+    } catch (e: unknown) {
+      logError("클럽원 역할 변경", e);
+      alert(getErrorMessage(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    if (role === 'OWNER') {
+      return <CrownIcon size={16} color="#FFD700" />;
+    }
+    if (role === 'ADMIN') {
+      return <ShieldIcon size={16} color="#4A90D9" />;
+    }
+    return null;
+  };
+
+  const getRoleName = (role: string) => {
+    if (role === 'OWNER') {
+      return '클럽장';
+    }
+    if (role === 'ADMIN') {
+      return '운영진';
+    }
+    if (role === 'ASSOCIATE') {
+      return '준회원';
+    }
+    // legacy MEMBER 포함
+    return '정회원';
+  };
+
+  // 멤버를 역할순으로 정렬 (OWNER > ADMIN > REGULAR/MEMBER > ASSOCIATE)
+  const sortedMembers = [...members].sort((a, b) => {
+    const roleOrder: Record<string, number> = {
+      OWNER: 0,
+      ADMIN: 1,
+      REGULAR: 2,
+      MEMBER: 2,
+      ASSOCIATE: 3,
+    };
+    return (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3);
+  });
+
+  return (
+    <div className="club-members-page">
+      {/* 헤더 */}
+      <div className="club-members-page__header">
+        <button className="club-members-page__back-btn" onClick={handleBack}>
+          <ArrowLeftIcon size={20} />
+        </button>
+        <h1 className="club-members-page__title">
+          {club?.name ? `${club.name} 클럽원` : '클럽원 명단'}
+        </h1>
+        <div className="club-members-page__header-spacer" />
+        {canEditRoles && !loading && !error && (
+          <button
+            className="club-members-page__edit-btn"
+            onClick={() => (isEditMode ? void handleSaveRoles() : setIsEditMode(true))}
+            disabled={saving}
+            type="button"
+          >
+            {isEditMode ? (dirtyCount > 0 ? `저장(${dirtyCount})` : "완료") : "역할편집"}
+          </button>
+        )}
+      </div>
+
+      {/* 멤버 수 요약 */}
+      {!loading && !error && (
+        <div className="club-members-page__summary">
+          <UserIcon size={16} />
+          <span>총 {members.length}명</span>
+        </div>
+      )}
+
+      {/* 콘텐츠 */}
+      <div className="club-members-page__content">
+        {loading && (
+          <div className="club-members-page__loading">멤버 목록을 불러오는 중...</div>
+        )}
+
+        {error && (
+          <div className="club-members-page__error">{error}</div>
+        )}
+
+        {!loading && !error && members.length === 0 && (
+          <div className="club-members-page__empty">
+            <p className="club-members-page__empty-icon">👥</p>
+            <p className="club-members-page__empty-message">아직 멤버가 없습니다.</p>
+          </div>
+        )}
+
+        {!loading && !error && sortedMembers.length > 0 && (
+          <div className="club-members-page__list">
+            {sortedMembers.map((member) => (
+              <div key={member.memberId} className="club-members-page__item">
+                <div className="club-members-page__item-avatar">
+                  {member.imageUrl ? (
+                    <img src={member.imageUrl} alt={member.name} />
+                  ) : (
+                    <UserIcon size={24} />
+                  )}
+                </div>
+                <div className="club-members-page__item-info">
+                  <div className="club-members-page__item-name">
+                    {member.name}
+                    {getRoleIcon(member.role)}
+                  </div>
+                  <div className="club-members-page__item-role">
+                    {isEditMode && member.role !== "OWNER" ? (
+                      <select
+                        className="club-members-page__role-select"
+                        value={roleDraftByUserId[member.userId] ?? member.role}
+                        onChange={(e) =>
+                          setRoleDraftByUserId((prev) => ({
+                            ...prev,
+                            [member.userId]: e.target.value as ClubMembershipResponse["role"],
+                          }))
+                        }
+                        disabled={saving}
+                      >
+                        <option value="REGULAR">정회원</option>
+                        <option value="ASSOCIATE">준회원</option>
+                        <option value="ADMIN">운영진</option>
+                      </select>
+                    ) : (
+                      getRoleName(member.role)
+                    )}
+                  </div>
+                </div>
+                {member.email && (
+                  <a
+                    href={`mailto:${member.email}`}
+                    className="club-members-page__item-email"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MailIcon size={18} />
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ClubMembersPage;

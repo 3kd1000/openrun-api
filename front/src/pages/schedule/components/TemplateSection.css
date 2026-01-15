@@ -313,7 +313,7 @@
 }
 
 /* 360px 이하 - 가장 작은 모바일에도 s 사이즈 유지 */
-@media (max-width: 360px) {
+@media (max-width: 359px) {
   .template-header h4 {
     font-size: 12px; /* s 사이즈 */
   }

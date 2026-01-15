@@ -1,9 +1,9 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import "./Navigation.css";
 
 // 선 스타일 SVG 아이콘 컴포넌트
-const HomeIcon: React.FC<{ isActive: boolean }> = () => (
+const ClubIcon: React.FC<{ isActive: boolean }> = () => (
   <svg
     width="24"
     height="24"
@@ -14,8 +14,10 @@ const HomeIcon: React.FC<{ isActive: boolean }> = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
 
@@ -75,6 +77,15 @@ const MoreIcon: React.FC<{ isActive: boolean }> = () => (
 );
 
 const Navigation: React.FC = () => {
+  const location = useLocation();
+  const currentClubId = localStorage.getItem("current_club_id");
+  const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/clubs/explore";
+  const isClubRoute =
+    location.pathname === "/clubs" ||
+    location.pathname === "/clubs/explore" ||
+    location.pathname.startsWith("/clubs/") ||
+    location.pathname === "/club" ||
+    location.pathname.startsWith("/club/");
 
   const navItems: Array<{
     path: string;
@@ -82,7 +93,7 @@ const Navigation: React.FC = () => {
     icon: React.FC<{ isActive: boolean }>;
     comingSoon?: boolean;
   }> = [
-    { path: "/home", label: "홈", icon: HomeIcon, comingSoon: true },
+    { path: clubPath, label: "클럽", icon: ClubIcon },
     { path: "/schedules", label: "일정관리", icon: CalendarIcon },
     { path: "/scoreboard", label: "스코어보드", icon: TrophyIcon },
     { path: "/more", label: "더보기", icon: MoreIcon },
@@ -96,18 +107,24 @@ const Navigation: React.FC = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+            className={({ isActive }) => {
+              const forcedActive = item.label === "클럽" ? isClubRoute : isActive;
+              return `nav-item ${forcedActive ? "active" : ""}`;
+            }}
           >
-            {({ isActive }) => (
+            {({ isActive }) => {
+              const forcedActive = item.label === "클럽" ? isClubRoute : isActive;
+              return (
               <>
                 <span className="nav-icon">
-                  <IconComponent isActive={isActive} />
+                  <IconComponent isActive={forcedActive} />
                 </span>
                 <span className="nav-label">
                   {item.label}
                 </span>
               </>
-            )}
+              );
+            }}
           </NavLink>
         );
       })}

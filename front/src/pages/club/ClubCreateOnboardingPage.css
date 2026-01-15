@@ -1,0 +1,89 @@
+.club-create-onboarding-page {
+  padding: var(--space-l);
+}
+
+.club-create-onboarding-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-l);
+}
+
+.club-create-onboarding-page__back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+.club-create-onboarding-page__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.club-create-onboarding-page__header-spacer {
+  width: 40px;
+}
+
+.club-create-onboarding-page__card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  padding: var(--space-l);
+}
+
+.club-create-onboarding-page__headline {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-xs);
+}
+
+.club-create-onboarding-page__sub {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-l);
+  line-height: var(--line-height-relaxed);
+}
+
+.club-create-onboarding-page__cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  cursor: pointer;
+  margin-bottom: var(--space-s);
+}
+
+.club-create-onboarding-page__cta-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.club-create-onboarding-page__cta:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+}
+
+.club-create-onboarding-page__cta--secondary {
+  margin-bottom: 0;
+}
+
+.club-create-onboarding-page__error {
+  padding: var(--space-m);
+  border: 1px solid var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border-radius: var(--radius-m);
+}

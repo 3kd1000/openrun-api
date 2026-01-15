@@ -78,6 +78,7 @@ public class ScheduleParticipantService {
                 .userId(userId)
                 .status(status)
                 .position(nextPosition)
+                .asGuest(false)
                 .build();
 
         ScheduleParticipant savedParticipant = participantRepository.save(participant);
@@ -90,6 +91,86 @@ public class ScheduleParticipantService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
 
         return new ParticipantResponse(savedParticipant, user.getName());
+    }
+
+    /**
+     * 외부 승인 게스트 참가 반영 (운영진 승인 시 호출)
+     * - 참가자 슬롯/대기 로직은 joinSchedule과 동일하게 "현재 활성 참가자 수" 기준
+     * - asGuest=true로 기록
+     */
+    @Transactional
+    public ParticipantResponse addApprovedExternalGuest(Long scheduleId, Long userId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 이미 참가자라면(확정/대기) asGuest만 true로 보정
+        Optional<ScheduleParticipant> existing = participantRepository.findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED);
+        if (existing.isPresent()) {
+            ScheduleParticipant p = existing.get();
+            if (!p.isAsGuest()) {
+                // 기존 내부 참가자를 외부 게스트로 바꾸는 건 의도치 않으므로 그대로 둔다.
+                // (대리 신청 등으로 userId가 클럽원일 수 있음)
+            }
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
+            return new ParticipantResponse(p, user.getName());
+        }
+
+        Long currentParticipants = participantRepository.countActiveParticipants(scheduleId, ParticipantStatus.CANCELLED);
+        ParticipantStatus status = currentParticipants < schedule.getMaxCapacity()
+                ? ParticipantStatus.CONFIRMED
+                : ParticipantStatus.WAITING;
+        Integer nextPosition = participantRepository.getNextPosition(scheduleId);
+
+        ScheduleParticipant participant = ScheduleParticipant.builder()
+                .scheduleId(scheduleId)
+                .userId(userId)
+                .status(status)
+                .position(nextPosition)
+                .asGuest(true)
+                .build();
+
+        ScheduleParticipant saved = participantRepository.save(participant);
+        schedule.incrementParticipants();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
+        return new ParticipantResponse(saved, user.getName());
+    }
+
+    /**
+     * 외부 승인 게스트 참가 제거 (운영진 반려/외부신청 취소 시 호출)
+     * - asGuest=true인 참가자만 제거 (클럽원이 대리 신청한 케이스 보호)
+     */
+    @Transactional
+    public void removeApprovedExternalGuest(Long scheduleId, Long userId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        ScheduleParticipant participant = participantRepository
+                .findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED)
+                .orElse(null);
+        if (participant == null) return;
+        if (!participant.isAsGuest()) return;
+
+        boolean wasConfirmed = participant.isConfirmed();
+        participantRepository.delete(participant);
+        schedule.decrementParticipants();
+
+        schedule.invalidateDraw();
+
+        if (wasConfirmed) {
+            List<ScheduleParticipant> waitingList = participantRepository
+                    .findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED)
+                    .stream()
+                    .filter(ScheduleParticipant::isWaiting)
+                    .collect(Collectors.toList());
+
+            if (!waitingList.isEmpty()) {
+                ScheduleParticipant firstWaiting = waitingList.get(0);
+                firstWaiting.confirm();
+            }
+        }
     }
 
     /**

@@ -3,6 +3,7 @@ import Calendar from "react-calendar";
 import { format, isSameDay, lastDayOfMonth, getDate } from "date-fns";
 import type { Schedule } from "../../../types/schedule";
 import { holidayService, type Holiday } from "../../../services/holidayService";
+import { StarIcon } from "../../../components/common/Icons";
 import "react-calendar/dist/Calendar.css";
 import "./ScheduleCalendarView.css";
 
@@ -279,6 +280,11 @@ const ScheduleCalendarView: React.FC<Props> = ({
                       .replace(/\s+/g, "")
                       .substring(0, maxCourtNameLength)}
                   </span>
+                  {schedule.pinned ? (
+                    <span className="event-pin" title="강조">
+                      <StarIcon size={12} />
+                    </span>
+                  ) : null}
                   {drawStatus === "draw-valid" && (
                     <span className="draw-icon draw-icon-valid">✓</span>
                   )}

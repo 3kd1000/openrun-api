@@ -1,0 +1,302 @@
+/* ===== MyClubsPage 전용 스타일 ===== */
+/* 컴포넌트별 고유 prefix: my-clubs-page */
+
+.my-clubs-page {
+  padding: var(--space-l);
+  min-height: calc(100vh - 140px);
+  box-sizing: border-box;
+  padding-bottom: 80px;
+}
+
+.my-clubs-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 헤더 */
+.my-clubs-header {
+  margin-bottom: var(--space-xl);
+}
+
+.my-clubs-header .back-btn {
+  background: none;
+  border: none;
+  font-size: var(--font-size-base);
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: var(--space-s);
+  margin-bottom: var(--space-m);
+  margin-left: calc(var(--space-s) * -1);
+  transition: var(--transition-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.my-clubs-header .back-btn:hover {
+  color: var(--color-primary-hover);
+  transform: translateX(-2px);
+}
+
+.my-clubs-header h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* 로딩 */
+.loading {
+  text-align: center;
+  padding: var(--space-xl);
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+}
+
+/* 빈 상태 */
+.empty-state {
+  text-align: center;
+  padding: var(--space-xl);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: var(--space-m);
+}
+
+.empty-message {
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+/* 클럽 목록 */
+.clubs-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+}
+
+/* 클럽 카드 */
+.club-card {
+  background: var(--color-bg-primary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  padding: var(--space-l);
+  transition: var(--transition-base);
+}
+
+.club-card:hover {
+  box-shadow: var(--shadow-m);
+  border-color: var(--color-primary);
+}
+
+.club-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.club-icon {
+  font-size: var(--font-size-2xl);
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-secondary);
+  border-radius: 50%;
+}
+
+.club-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.club-name {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.my-clubs-page__notice-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  vertical-align: middle;
+}
+
+.club-description {
+  font-size: var(--font-size-s);
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 액션 버튼 영역 */
+.club-card-actions {
+  display: flex;
+  gap: var(--space-s);
+  justify-content: flex-end;
+}
+
+.btn-go-club,
+.btn-leave-club {
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+  border: var(--border-width-thin) solid;
+  min-width: 80px;
+}
+
+.btn-go-club {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.btn-go-club:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-s);
+}
+
+.btn-leave-club {
+  background: var(--color-bg-primary);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.btn-leave-club:hover:not(:disabled) {
+  background: var(--color-danger);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-s);
+}
+
+.btn-leave-club:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== 미디어 쿼리: 미디어 대형 (401px ~ 768px) ===== */
+@media (min-width: 426px) and (max-width: 768px) {
+  .my-clubs-page {
+    padding: var(--space-m);
+  }
+
+  .my-clubs-header h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .club-card {
+    padding: var(--space-m);
+  }
+
+  .club-icon {
+    width: 44px;
+    height: 44px;
+    font-size: var(--font-size-xl);
+  }
+
+  .club-name {
+    font-size: var(--font-size-base);
+  }
+
+  .btn-go-club,
+  .btn-leave-club {
+    min-width: 70px;
+  }
+}
+
+/* ===== 미디어 쿼리: 미디어 중형 (361px ~ 400px) ===== */
+@media (min-width: 360px) and (max-width: 425px) {
+  .my-clubs-page {
+    padding: var(--space-s);
+  }
+
+  .my-clubs-header {
+    margin-bottom: var(--space-l);
+  }
+
+  .my-clubs-header h1 {
+    font-size: var(--font-size-l);
+  }
+
+  .club-card {
+    padding: var(--space-s);
+  }
+
+  .club-icon {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-l);
+  }
+
+  .club-name {
+    font-size: var(--font-size-s);
+  }
+
+  .club-description {
+    font-size: var(--font-size-s);
+  }
+
+  .btn-go-club,
+  .btn-leave-club {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+    min-width: 60px;
+  }
+}
+
+/* ===== 미디어 쿼리: 미디어 소형 (360px 이하) ===== */
+@media (max-width: 359px) {
+  .my-clubs-page {
+    padding: var(--space-s);
+  }
+
+  .my-clubs-header {
+    margin-bottom: var(--space-m);
+  }
+
+  .my-clubs-header .back-btn {
+    font-size: var(--font-size-s);
+  }
+
+  .my-clubs-header h1 {
+    font-size: var(--font-size-base);
+  }
+
+  .club-card {
+    padding: var(--space-s);
+  }
+
+  .club-icon {
+    width: 36px;
+    height: 36px;
+    font-size: var(--font-size-base);
+  }
+
+  .club-name {
+    font-size: var(--font-size-s);
+  }
+
+  .club-description {
+    font-size: var(--font-size-s);
+  }
+
+  .btn-go-club,
+  .btn-leave-club {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+    min-width: 55px;
+  }
+}

@@ -1,0 +1,188 @@
+.recruit-clubs-page {
+  padding: var(--space-m);
+  background-color: var(--color-background);
+  min-height: calc(100vh - var(--header-height) - var(--navigation-height));
+  padding-bottom: 100px;
+}
+
+.recruit-clubs-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-s) 0;
+  margin-bottom: var(--space-m);
+}
+
+.recruit-clubs-page__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--radius-m);
+}
+
+.recruit-clubs-page__title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.recruit-clubs-page__header-spacer {
+  width: 36px;
+}
+
+.recruit-clubs-page__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.recruit-clubs-page__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.recruit-clubs-page__search-icon {
+  position: absolute;
+  left: var(--space-m);
+  color: var(--color-text-secondary);
+}
+
+.recruit-clubs-page__search-input {
+  width: 100%;
+  padding: var(--space-s) var(--space-m) var(--space-s) 44px;
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  outline: none;
+}
+
+.recruit-clubs-page__region-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-secondary);
+}
+
+.recruit-clubs-page__region-select {
+  flex: 1;
+  padding: var(--space-s) var(--space-m);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  cursor: pointer;
+  outline: none;
+}
+
+.recruit-clubs-page__content {
+  background-color: var(--color-white);
+  border-radius: var(--radius-l);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.recruit-clubs-page__loading,
+.recruit-clubs-page__error,
+.recruit-clubs-page__empty {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.recruit-clubs-page__error {
+  color: var(--color-error);
+}
+
+.recruit-clubs-page__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recruit-clubs-page__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  padding: var(--space-m);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.recruit-clubs-page__item:last-child {
+  border-bottom: none;
+}
+
+.recruit-clubs-page__item-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg-secondary);
+  border-radius: 50%;
+  font-size: var(--font-size-xl);
+  flex-shrink: 0;
+}
+
+.recruit-clubs-page__item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recruit-clubs-page__item-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.recruit-clubs-page__item-meta {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recruit-clubs-page__item-cta {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+/* Desktop (769px+) */
+@media (min-width: 769px) {
+  .recruit-clubs-page {
+    padding: var(--space-l);
+  }
+
+  .recruit-clubs-page__filters {
+    flex-direction: row;
+  }
+
+  .recruit-clubs-page__search {
+    flex: 1;
+  }
+
+  .recruit-clubs-page__region-filter {
+    width: 200px;
+  }
+}
+

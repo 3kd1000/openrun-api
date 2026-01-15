@@ -66,6 +66,21 @@ public class Schedule {
     @Column(name = "draw_created_at")
     private LocalDateTime drawCreatedAt;
 
+    @Column(name = "pinned", nullable = false)
+    private Boolean pinned = false;
+
+    @Column(name = "guest_recruit_open", nullable = false)
+    private Boolean guestRecruitOpen = false;
+
+    @Column(name = "guest_recruit_note", columnDefinition = "TEXT")
+    private String guestRecruitNote;
+
+    @Column(name = "interclub_recruit_open", nullable = false)
+    private Boolean interclubRecruitOpen = false;
+
+    @Column(name = "interclub_recruit_note", columnDefinition = "TEXT")
+    private String interclubRecruitNote;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -159,5 +174,19 @@ public class Schedule {
         this.drawType = null;
         this.isDrawValid = false;
         this.drawCreatedAt = null;
+    }
+
+    public void updatePinned(boolean pinned) {
+        this.pinned = pinned;
+    }
+
+    public void updateGuestRecruit(Boolean open, String note) {
+        if (open != null) this.guestRecruitOpen = open;
+        if (note != null) this.guestRecruitNote = note;
+    }
+
+    public void updateInterclubRecruit(Boolean open, String note) {
+        if (open != null) this.interclubRecruitOpen = open;
+        if (note != null) this.interclubRecruitNote = note;
     }
 }

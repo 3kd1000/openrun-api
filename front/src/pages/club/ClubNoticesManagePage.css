@@ -1,0 +1,166 @@
+.club-notices-manage-page {
+  padding: var(--space-m);
+}
+
+.club-notices-manage-page__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.club-notices-manage-page__back-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-white);
+}
+
+.club-notices-manage-page__title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+.club-notices-manage-page__header-spacer {
+  flex: 1;
+}
+
+.club-notices-manage-page__loading,
+.club-notices-manage-page__empty,
+.club-notices-manage-page__error {
+  padding: var(--space-l);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-l);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.club-notices-manage-page__error {
+  background: #fee;
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  margin-bottom: var(--space-m);
+}
+
+.club-notices-manage-page__add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-s) var(--space-m);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  border-radius: var(--radius-m);
+  margin-bottom: var(--space-m);
+}
+
+.club-notices-manage-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+}
+
+.club-notices-manage-page__item {
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  border-radius: var(--radius-l);
+  padding: var(--space-m);
+  display: flex;
+  gap: var(--space-m);
+  justify-content: space-between;
+}
+
+.club-notices-manage-page__content {
+  display: flex;
+  gap: var(--space-s);
+  flex: 1;
+  min-width: 0;
+}
+
+.club-notices-manage-page__number {
+  color: var(--color-text-secondary);
+  flex: 0 0 auto;
+}
+
+.club-notices-manage-page__text {
+  min-width: 0;
+}
+
+.club-notices-manage-page__item-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-xs);
+}
+
+.club-notices-manage-page__item-body {
+  white-space: pre-wrap;
+  color: var(--color-text-secondary);
+}
+
+.club-notices-manage-page__actions {
+  display: flex;
+  gap: var(--space-xs);
+  flex: 0 0 auto;
+}
+
+.club-notices-manage-page__icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  border-radius: var(--radius-m);
+}
+
+.club-notices-manage-page__icon-btn--danger {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.club-notices-manage-page__form {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-white);
+  padding: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.club-notices-manage-page__input,
+.club-notices-manage-page__textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  padding: var(--space-s);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.club-notices-manage-page__input {
+  margin-bottom: var(--space-s);
+}
+
+.club-notices-manage-page__form-actions {
+  display: flex;
+  gap: var(--space-s);
+  justify-content: flex-end;
+  margin-top: var(--space-s);
+}
+
+.club-notices-manage-page__btn {
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+.club-notices-manage-page__btn--save {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+}
+

@@ -38,7 +38,7 @@ public class ClubMember {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ClubRole role = ClubRole.MEMBER;
+    private ClubRole role = ClubRole.REGULAR;
 
     @CreatedDate
     @Column(updatable = false, nullable = false)
@@ -49,7 +49,7 @@ public class ClubMember {
         this.club = club;
         this.user = user;
         this.status = status;
-        this.role = ClubRole.MEMBER; // 기본값
+        this.role = ClubRole.REGULAR; // 기본값
     }
 
     public void updateStatus(ClubMemberStatus status) {

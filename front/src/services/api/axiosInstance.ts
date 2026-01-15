@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getCurrentToken, clearLoginSession } from '../firebase';
+import { getOpenRunSession, setOpenRunSession } from '../../utils/openrunSession';
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
@@ -8,9 +9,19 @@ const axiosInstance = axios.create({
   },
 });
 
+function sanitizeToken(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const t = String(raw).trim();
+  if (!t) return null;
+  if (t === "undefined" || t === "null") return null;
+  return t;
+}
+
 axiosInstance.interceptors.request.use((config) => {
   // Firebase token 추가 (OAuth 로그인 사용 시)
-  const firebaseToken = localStorage.getItem('firebase_token');
+  const sessionToken = getOpenRunSession().firebaseToken;
+  const legacyToken = localStorage.getItem('firebase_token');
+  const firebaseToken = sanitizeToken(sessionToken) ?? sanitizeToken(legacyToken);
   if (firebaseToken) {
     config.headers['Authorization'] = `Bearer ${firebaseToken}`;
   }
@@ -68,6 +79,11 @@ axiosInstance.interceptors.response.use(
         if (newToken) {
           // localStorage 업데이트
           localStorage.setItem('firebase_token', newToken);
+          // session(v1)도 함께 업데이트 (단일 소스 유지)
+          setOpenRunSession({
+            firebaseToken: newToken,
+            tokenLastRefresh: new Date().toISOString(),
+          });
 
           // 큐에 있는 요청들 처리
           processQueue(null, newToken);

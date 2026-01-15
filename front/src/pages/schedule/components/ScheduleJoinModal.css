@@ -177,7 +177,7 @@
 }
 
 /* Responsive - Desktop */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .sjm-schedule-list {
     max-height: 65vh;
   }

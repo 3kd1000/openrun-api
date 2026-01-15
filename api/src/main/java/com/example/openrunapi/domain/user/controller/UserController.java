@@ -3,7 +3,9 @@ package com.example.openrunapi.domain.user.controller;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.club.service.ClubService;
 import com.example.openrunapi.domain.user.model.dto.OAuthProviderResponse;
+import com.example.openrunapi.domain.user.model.dto.UpdateUserProfileRequest;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
+import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.service.UserService;
 import jakarta.validation.Valid;
@@ -25,6 +27,21 @@ public class UserController {
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         // userDetails.getUsername() 에는 우리 시스템의 경우 Firebase uid가 들어있습니다.
         UserResponse response = userService.getCurrentUser(userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me/profile")
+    public ResponseEntity<UserProfileResponse> getMyProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        UserProfileResponse response = userService.getMyProfile(userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me/profile")
+    public ResponseEntity<UserProfileResponse> updateMyProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody UpdateUserProfileRequest request
+    ) {
+        UserProfileResponse response = userService.updateMyProfile(userDetails.getUsername(), request);
         return ResponseEntity.ok(response);
     }
 

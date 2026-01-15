@@ -20,14 +20,14 @@ describe('DrawCreateModal', () => {
   };
 
   const mockParticipants: Participant[] = [
-    { id: 1, scheduleId: 1, userId: 1, userName: 'User 1', status: 'CONFIRMED', position: 1, joinedAt: '2025-01-01T00:00:00' },
-    { id: 2, scheduleId: 1, userId: 2, userName: 'User 2', status: 'CONFIRMED', position: 2, joinedAt: '2025-01-01T00:00:00' },
-    { id: 3, scheduleId: 1, userId: 3, userName: 'User 3', status: 'CONFIRMED', position: 3, joinedAt: '2025-01-01T00:00:00' },
-    { id: 4, scheduleId: 1, userId: 4, userName: 'User 4', status: 'CONFIRMED', position: 4, joinedAt: '2025-01-01T00:00:00' },
-    { id: 5, scheduleId: 1, userId: 5, userName: 'User 5', status: 'CONFIRMED', position: 5, joinedAt: '2025-01-01T00:00:00' },
-    { id: 6, scheduleId: 1, userId: 6, userName: 'User 6', status: 'CONFIRMED', position: 6, joinedAt: '2025-01-01T00:00:00' },
-    { id: 7, scheduleId: 1, userId: 7, userName: 'User 7', status: 'WAITING', position: 7, joinedAt: '2025-01-01T00:00:00' },
-    { id: 8, scheduleId: 1, userId: 8, userName: 'User 8', status: 'WAITING', position: 8, joinedAt: '2025-01-01T00:00:00' },
+    { id: 1, scheduleId: 1, userId: 1, userName: 'User 1', status: 'CONFIRMED', position: 1, joinedAt: '2025-01-01T00:00:00', asGuest: false },
+    { id: 2, scheduleId: 1, userId: 2, userName: 'User 2', status: 'CONFIRMED', position: 2, joinedAt: '2025-01-01T00:00:00', asGuest: false },
+    { id: 3, scheduleId: 1, userId: 3, userName: 'User 3', status: 'CONFIRMED', position: 3, joinedAt: '2025-01-01T00:00:00', asGuest: false },
+    { id: 4, scheduleId: 1, userId: 4, userName: 'User 4', status: 'CONFIRMED', position: 4, joinedAt: '2025-01-01T00:00:00', asGuest: false },
+    { id: 5, scheduleId: 1, userId: 5, userName: 'User 5', status: 'CONFIRMED', position: 5, joinedAt: '2025-01-01T00:00:00', asGuest: false },
+    { id: 6, scheduleId: 1, userId: 6, userName: 'User 6', status: 'CONFIRMED', position: 6, joinedAt: '2025-01-01T00:00:00', asGuest: false },
+    { id: 7, scheduleId: 1, userId: 7, userName: 'User 7', status: 'WAITING', position: 7, joinedAt: '2025-01-01T00:00:00', asGuest: false },
+    { id: 8, scheduleId: 1, userId: 8, userName: 'User 8', status: 'WAITING', position: 8, joinedAt: '2025-01-01T00:00:00', asGuest: false },
   ];
 
   const mockOnClose = vi.fn();

@@ -37,6 +37,18 @@ public class Club {
     @Column(nullable = false)
     private Long ownerUserId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "join_policy", nullable = false, length = 20)
+    private ClubJoinPolicy joinPolicy = ClubJoinPolicy.APPROVAL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "interclub_recruitment_status", nullable = false, length = 20)
+    private InterclubRecruitmentStatus interclubRecruitmentStatus = InterclubRecruitmentStatus.CLOSED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "member_recruitment_status", nullable = false, length = 20)
+    private MemberRecruitmentStatus memberRecruitmentStatus = MemberRecruitmentStatus.OPEN;
+
     private boolean deleted = false;
 
     @CreatedDate
@@ -59,6 +71,18 @@ public class Club {
         this.name = name;
         this.description = description;
         this.region = region;
+    }
+
+    public void updatePolicies(ClubJoinPolicy joinPolicy, InterclubRecruitmentStatus interclubRecruitmentStatus, MemberRecruitmentStatus memberRecruitmentStatus) {
+        if (joinPolicy != null) {
+            this.joinPolicy = joinPolicy;
+        }
+        if (interclubRecruitmentStatus != null) {
+            this.interclubRecruitmentStatus = interclubRecruitmentStatus;
+        }
+        if (memberRecruitmentStatus != null) {
+            this.memberRecruitmentStatus = memberRecruitmentStatus;
+        }
     }
 
     public void changeOwner(Long newOwnerUserId) {

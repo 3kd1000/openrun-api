@@ -28,6 +28,14 @@ public class ScheduleParticipant {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    /**
+     * 외부 승인 게스트(또는 외부요청 기반 참가자) 여부
+     * - true면 스케줄 참가자 목록 UI에서 '게스트'로 표시 가능
+     * - 랭킹/스코어보드 집계에서 제외하는 용도로도 활용 가능
+     */
+    @Column(name = "as_guest", nullable = false)
+    private boolean asGuest = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ParticipantStatus status;
@@ -40,11 +48,12 @@ public class ScheduleParticipant {
     private LocalDateTime joinedAt;
 
     @Builder
-    public ScheduleParticipant(Long scheduleId, Long userId, ParticipantStatus status, Integer position) {
+    public ScheduleParticipant(Long scheduleId, Long userId, ParticipantStatus status, Integer position, Boolean asGuest) {
         this.scheduleId = scheduleId;
         this.userId = userId;
         this.status = status;
         this.position = position;
+        this.asGuest = Boolean.TRUE.equals(asGuest);
     }
 
     public void cancel() {

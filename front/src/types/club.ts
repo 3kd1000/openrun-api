@@ -4,6 +4,9 @@ export interface Club {
     description: string;
     region: string;
     ownerUserId: number;
+    joinPolicy?: 'APPROVAL' | 'AUTO';
+    interclubRecruitmentStatus?: 'CLOSED' | 'OPEN';
+    memberRecruitmentStatus?: 'CLOSED' | 'OPEN';
     createdAt: string;
     updatedAt: string;
 }
@@ -23,6 +26,62 @@ export interface ClubMember {
 
 export interface CreateClubRequest {
     name: string;
-    description: string;
-    region: string;
+    description?: string;
+    region?: string;
+}
+
+export interface UpdateClubRequest {
+    name?: string;
+    description?: string;
+    region?: string;
+}
+
+export interface UpdateClubPolicyRequest {
+    joinPolicy: 'APPROVAL' | 'AUTO';
+    interclubRecruitmentStatus: 'CLOSED' | 'OPEN';
+    memberRecruitmentStatus: 'CLOSED' | 'OPEN';
+}
+
+export interface ClubRule {
+    id: number;
+    clubId: number;
+    title: string;
+    content: string;
+    displayOrder: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateClubRuleRequest {
+    title: string;
+    content: string;
+}
+
+export interface UpdateClubRuleRequest {
+    title: string;
+    content: string;
+}
+
+export interface ReorderClubRulesRequest {
+    orders: Record<number, number>; // ruleId -> newOrder
+}
+
+export interface ClubNotice {
+    id: number;
+    clubId: number;
+    title: string;
+    content: string;
+    displayOrder: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateClubNoticeRequest {
+    title: string;
+    content: string;
+}
+
+export interface UpdateClubNoticeRequest {
+    title: string;
+    content: string;
 }

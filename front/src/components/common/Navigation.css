@@ -59,8 +59,13 @@
 
 /* 사용자 섹션은 더보기 페이지로 이동 - 스타일 제거 */
 
-/* PC: 좌측 사이드바 (>= 768px) */
-@media (min-width: 768px) {
+/*
+  PC: 좌측 사이드바
+  - breakpoints.css 기준(데스크탑: 769px 이상)
+  - 터치 태블릿(iPad/갤탭/폴드 펼침)은 하단 네비를 유지하는 편이 UX가 좋아서
+    "hover 가능한(fine pointer)" 환경에서만 사이드 네비를 적용
+*/
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
   .navigation {
     position: fixed;
     top: 0;

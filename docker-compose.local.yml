@@ -1,13 +1,13 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres-db:
     image: postgres:15
     container_name: openrun-local-postgres
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=openrun
+      - POSTGRES_PASSWORD=openrun123#
     ports:
       - "5432:5432"
     volumes:

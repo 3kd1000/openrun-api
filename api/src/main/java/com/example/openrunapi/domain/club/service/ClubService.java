@@ -1,10 +1,16 @@
 package com.example.openrunapi.domain.club.service;
 
+import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubMemberStatus;
+import com.example.openrunapi.domain.club.model.ClubJoinPolicy;
+import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
+import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
@@ -30,6 +36,7 @@ public class ClubService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final PermissionService permissionService;
 
     @Transactional
     public ClubResponse createClub(CreateClubRequest request, Long ownerUserId) {
@@ -57,8 +64,10 @@ public class ClubService {
         return new ClubResponse(club);
     }
 
-    public Page<ClubResponse> findClubs(String keyword, Pageable pageable) {
-        Specification<Club> spec = search(keyword);
+    public Page<ClubResponse> findClubs(String keyword, String region, MemberRecruitmentStatus memberRecruitmentStatus, Pageable pageable) {
+        Specification<Club> spec = Specification.where(search(keyword))
+                .and(filterRegion(region))
+                .and(filterMemberRecruitmentStatus(memberRecruitmentStatus));
         Page<Club> clubs = clubRepository.findAll(spec, pageable);
         return clubs.map(ClubResponse::new);
     }
@@ -68,10 +77,8 @@ public class ClubService {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
 
-        // TODO: 추후 인증 기능 구현 시, currentUserId가 클럽의 소유자(또는 관리자)인지 확인하는 권한 검증 로직 필요
-        if (!club.getOwnerUserId().equals(currentUserId)) {
-            throw new SecurityException("클럽 정보를 수정할 권한이 없습니다.");
-        }
+        // 운영진 이상만 수정 가능
+        permissionService.requireScheduleManagePermission(currentUserId, clubId);
 
         club.update(request.getName(), request.getDescription(), request.getRegion());
 
@@ -82,6 +89,19 @@ public class ClubService {
             club.changeOwner(request.getOwnerUserId());
         }
 
+        return new ClubResponse(club);
+    }
+
+    /**
+     * 클럽 운영 정책 수정 - 운영진 이상
+     */
+    @Transactional
+    public ClubResponse updateClubPolicy(Long clubId, UpdateClubPolicyRequest request, Long currentUserId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
+
+        permissionService.requireScheduleManagePermission(currentUserId, clubId);
+        club.updatePolicies(request.getJoinPolicy(), request.getInterclubRecruitmentStatus(), request.getMemberRecruitmentStatus());
         return new ClubResponse(club);
     }
 
@@ -109,10 +129,13 @@ public class ClubService {
             throw new IllegalStateException("이미 가입 신청했거나 가입된 클럽입니다.");
         }
 
+        ClubMemberStatus status =
+                club.getJoinPolicy() == ClubJoinPolicy.AUTO ? ClubMemberStatus.ACTIVE : ClubMemberStatus.PENDING;
+
         ClubMember clubMember = ClubMember.builder()
                 .club(club)
                 .user(user)
-                .status(ClubMemberStatus.PENDING)
+                .status(status)
                 .build();
         clubMemberRepository.save(clubMember);
     }
@@ -197,6 +220,62 @@ public class ClubService {
         clubMemberRepository.delete(member);
     }
 
+    /**
+     * 클럽원 상세 정보 조회 (명단 조회용)
+     * - ClubMember 정보 + User 연락처 정보 포함
+     * - status 파라미터로 필터링 가능 (기본: ACTIVE)
+     */
+    public List<ClubMembershipResponse> getClubMembership(Long clubId, ClubMemberStatus status) {
+        if (!clubRepository.existsById(clubId)) {
+            throw new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId);
+        }
+
+        ClubMemberStatus targetStatus = (status != null) ? status : ClubMemberStatus.ACTIVE;
+        List<ClubMember> members = clubMemberRepository.findAllByClubIdAndStatus(clubId, targetStatus);
+
+        return members.stream()
+                .map(ClubMembershipResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 클럽원 역할 배치 변경 - OWNER(또는 System Admin)
+     * - OWNER 역할 변경/소유권 이전은 별도 기능으로 분리 (여기서는 금지)
+     */
+    @Transactional
+    public List<ClubMembershipResponse> updateMemberRoles(Long clubId, Long currentUserId, UpdateClubMemberRolesRequest request) {
+        permissionService.requireMemberManagePermission(currentUserId, clubId);
+
+        if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
+            throw new IllegalArgumentException("변경할 대상이 없습니다.");
+        }
+
+        for (UpdateClubMemberRolesRequest.Item item : request.getItems()) {
+            if (item == null) continue;
+            Long userId = item.getUserId();
+            if (userId == null) continue;
+
+            ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+                    .orElseThrow(() -> new EntityNotFoundException("해당 멤버를 찾을 수 없습니다. userId=" + userId));
+
+            // 소유자 역할 변경은 금지 (소유권 이전은 별도 플로우)
+            if (member.getRole() != null && member.getRole().isOwner()) {
+                throw new IllegalStateException("클럽장의 역할은 변경할 수 없습니다. (소유권 이전 기능으로 처리)");
+            }
+
+            if (item.getRole() != null && item.getRole().isOwner()) {
+                throw new IllegalArgumentException("OWNER 역할로 변경할 수 없습니다. (소유권 이전 기능으로 처리)");
+            }
+
+            if (item.getRole() != null) {
+                member.updateRole(item.getRole());
+            }
+        }
+
+        // 최신 상태 반환
+        return getClubMembership(clubId, ClubMemberStatus.ACTIVE);
+    }
+
     private Specification<Club> search(String keyword) {
         return (root, query, criteriaBuilder) -> {
             if (keyword == null || keyword.trim().isEmpty()) {
@@ -206,6 +285,24 @@ public class ClubService {
             return criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("region")), "%" + keyword.toLowerCase() + "%"));
+        };
+    }
+
+    private Specification<Club> filterRegion(String region) {
+        return (root, query, cb) -> {
+            if (region == null || region.trim().isEmpty()) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("region"), region);
+        };
+    }
+
+    private Specification<Club> filterMemberRecruitmentStatus(MemberRecruitmentStatus status) {
+        return (root, query, cb) -> {
+            if (status == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("memberRecruitmentStatus"), status);
         };
     }
 }

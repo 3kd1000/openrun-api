@@ -1,11 +1,14 @@
 package com.example.openrunapi.domain.club.controller;
 
 import com.example.openrunapi.domain.club.model.ClubMemberStatus;
+import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
+import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.service.ClubService;
-import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.service.UserService;
 import jakarta.validation.Valid;
@@ -47,8 +50,10 @@ public class ClubController {
     @GetMapping
     public ResponseEntity<Page<ClubResponse>> findClubs(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) MemberRecruitmentStatus memberRecruitmentStatus,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ClubResponse> responses = clubService.findClubs(keyword, pageable);
+        Page<ClubResponse> responses = clubService.findClubs(keyword, region, memberRecruitmentStatus, pageable);
         return ResponseEntity.ok(responses);
     }
 
@@ -58,6 +63,20 @@ public class ClubController {
             @AuthenticationPrincipal UserDetails userDetails) {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
         ClubResponse response = clubService.updateClub(clubId, request, currentUserResponse.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 클럽 운영 정책 수정 (가입 승인 방식/교류전 모집 상태) - 운영진 이상
+     */
+    @PatchMapping("/{clubId}/policy")
+    public ResponseEntity<ClubResponse> updateClubPolicy(
+            @PathVariable Long clubId,
+            @RequestBody UpdateClubPolicyRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        ClubResponse response = clubService.updateClubPolicy(clubId, request, currentUserResponse.getId());
         return ResponseEntity.ok(response);
     }
 
@@ -100,6 +119,31 @@ public class ClubController {
             @RequestParam(required = false) ClubMemberStatus status) {
         List<UserResponse> members = clubService.getClubMembers(clubId, status);
         return ResponseEntity.ok(members);
+    }
+
+    /**
+     * 클럽원 상세 정보 조회 (명단 조회용)
+     * - ClubMember 정보 (role, status, joinedAt) + User 연락처 정보 포함
+     */
+    @GetMapping("/{clubId}/membership")
+    public ResponseEntity<List<ClubMembershipResponse>> getClubMembership(@PathVariable Long clubId,
+            @RequestParam(required = false) ClubMemberStatus status) {
+        List<ClubMembershipResponse> membership = clubService.getClubMembership(clubId, status);
+        return ResponseEntity.ok(membership);
+    }
+
+    /**
+     * 클럽원 역할 배치 변경 - OWNER(또는 System Admin)
+     */
+    @PatchMapping("/{clubId}/members/roles")
+    public ResponseEntity<List<ClubMembershipResponse>> updateMemberRoles(
+            @PathVariable Long clubId,
+            @Valid @RequestBody UpdateClubMemberRolesRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        List<ClubMembershipResponse> res = clubService.updateMemberRoles(clubId, currentUserResponse.getId(), request);
+        return ResponseEntity.ok(res);
     }
 
     /**

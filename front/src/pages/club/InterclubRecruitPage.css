@@ -1,0 +1,197 @@
+.interclub-recruit-page {
+  padding: var(--space-m);
+}
+
+.interclub-recruit-page__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.interclub-recruit-page__back-btn,
+.interclub-recruit-page__copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.interclub-recruit-page__copy-btn:active {
+  transform: translateY(1px);
+}
+
+.interclub-recruit-page__title {
+  font-size: var(--font-size-l);
+  margin: 0;
+  flex: 1;
+}
+
+.interclub-recruit-page__loading {
+  padding: var(--space-l);
+  color: var(--color-text-secondary);
+}
+
+.interclub-recruit-page__error {
+  margin-bottom: var(--space-m);
+  padding: var(--space-s);
+  background: rgba(255, 0, 0, 0.08);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.interclub-recruit-page__card {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  padding: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.interclub-recruit-page__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-m);
+  margin-bottom: var(--space-s);
+}
+
+.interclub-recruit-page__label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+.interclub-recruit-page__value {
+  font-weight: 700;
+}
+
+.interclub-recruit-page__note {
+  margin-top: var(--space-s);
+  padding: var(--space-s);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+}
+
+.interclub-recruit-page__apply {
+  margin-bottom: var(--space-m);
+}
+
+.interclub-recruit-page__status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-s);
+}
+
+.interclub-recruit-page__status-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+.interclub-recruit-page__status-value {
+  font-weight: 800;
+}
+
+.interclub-recruit-page__status-value.tone-pending {
+  color: #b26b00;
+}
+
+.interclub-recruit-page__status-value.tone-success {
+  color: #0a6b0a;
+}
+
+.interclub-recruit-page__status-value.tone-danger {
+  color: #b00020;
+}
+
+.interclub-recruit-page__apply-actions {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.interclub-recruit-page__primary,
+.interclub-recruit-page__danger {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 800;
+}
+
+.interclub-recruit-page__primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.interclub-recruit-page__danger {
+  background: rgba(255, 0, 0, 0.12);
+  color: #b00020;
+}
+
+.interclub-recruit-page__section {
+  margin-bottom: var(--space-m);
+}
+
+.interclub-recruit-page__section-title {
+  font-weight: 800;
+  margin-bottom: var(--space-s);
+}
+
+.interclub-recruit-page__textarea {
+  width: 100%;
+  border: 1px solid #111;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: var(--font-size-s);
+  min-height: 88px;
+  resize: vertical;
+}
+
+.interclub-recruit-page__textarea:focus {
+  outline: none;
+  border-color: #111;
+}
+
+.interclub-recruit-page__thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.interclub-recruit-page__post,
+.interclub-recruit-page__comment {
+  border: 1px solid #111;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.interclub-recruit-page__post-meta,
+.interclub-recruit-page__comment-meta {
+  margin-top: 6px;
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+.interclub-recruit-page__comments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.interclub-recruit-page__comment-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.interclub-recruit-page__hint {
+  padding: var(--space-s);
+  color: var(--color-text-secondary);
+}
+

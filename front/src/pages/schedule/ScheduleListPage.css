@@ -209,19 +209,25 @@
 }
 
 /* 전체 필터 버튼 - 파란색 계열 */
-.capacity-filter-btn:not(.capacity-filter-available):not(.capacity-filter-full):not(.capacity-filter-participated) {
+.capacity-filter-btn:not(.capacity-filter-available):not(
+    .capacity-filter-full
+  ):not(.capacity-filter-participated) {
   background: #eff6ff;
   border-color: #60a5fa;
   color: #1e40af;
 }
 
-.capacity-filter-btn:not(.capacity-filter-available):not(.capacity-filter-full):not(.capacity-filter-participated):hover {
+.capacity-filter-btn:not(.capacity-filter-available):not(
+    .capacity-filter-full
+  ):not(.capacity-filter-participated):hover {
   background: #dbeafe;
   border-color: #3b82f6;
 }
 
 /* 전체 필터 버튼 active 상태 */
-.capacity-filter-btn.active:not(.capacity-filter-available):not(.capacity-filter-full):not(.capacity-filter-participated) {
+.capacity-filter-btn.active:not(.capacity-filter-available):not(
+    .capacity-filter-full
+  ):not(.capacity-filter-participated) {
   background: var(--color-primary);
   color: white;
   border-color: var(--color-primary);
@@ -352,7 +358,8 @@
 /* ========== 일정 리스트 ========== */
 .schedule-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* 카드 내부 레이아웃이 깨지지 않는 최소 너비 기준으로 자동 컬럼 수 결정 */
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: var(--space-l);
   margin-top: 0; /* 헤더와 리스트 사이 간격 제거 */
 }
@@ -436,6 +443,15 @@
   margin: 0;
   font-size: var(--font-size-l);
   font-weight: var(--font-weight-semibold);
+}
+
+.schedule-pin-badge {
+  display: inline-block;
+  margin-right: var(--space-xs);
+  font-size: 14px;
+  line-height: 1;
+  vertical-align: middle;
+  color: var(--color-warning-hover);
 }
 
 .schedule-reserved-by {
@@ -621,7 +637,6 @@
     padding: var(--space-m);
   }
 
-
   .header-top {
     margin-bottom: var(--space-s);
     gap: var(--space-xs);
@@ -721,7 +736,6 @@
   }
 }
 
-
 /* 미디어 중대형 (426px ~ 768px) */
 @media (min-width: 426px) and (max-width: 768px) {
   .header-actions {
@@ -750,8 +764,8 @@
   }
 }
 
-/* 미디어 소형 (361px ~ 425px) */
-@media (min-width: 361px) and (max-width: 425px) {
+/* 미디어 소형 (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
   .schedule-header {
     padding: var(--space-s);
   }
@@ -782,8 +796,8 @@
   }
 }
 
-/* 미디어 초소형 (360px 이하) */
-@media (max-width: 360px) {
+/* 미디어 초소형 (359px 이하) */
+@media (max-width: 359px) {
   .schedule-header {
     padding: var(--space-xs);
   }
@@ -824,7 +838,7 @@
 }
 
 /* ========== 데스크톱: 모바일 패딩 제거 ========== */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .schedule-page {
     padding-bottom: var(--space-l);
   }

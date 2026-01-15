@@ -26,6 +26,11 @@ public class ScheduleResponse {
     private final String drawType;
     private final Boolean isDrawValid;
     private final LocalDateTime drawCreatedAt;
+    private final Boolean pinned;
+    private final Boolean guestRecruitOpen;
+    private final String guestRecruitNote;
+    private final Boolean interclubRecruitOpen;
+    private final String interclubRecruitNote;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean canManageSchedule; // 권한 정보 (nullable, 요청 userId가 없으면 null)
@@ -62,6 +67,11 @@ public class ScheduleResponse {
         this.drawType = schedule.getDrawType() != null ? schedule.getDrawType().name() : null;
         this.isDrawValid = schedule.getIsDrawValid();
         this.drawCreatedAt = schedule.getDrawCreatedAt();
+        this.pinned = Boolean.TRUE.equals(schedule.getPinned());
+        this.guestRecruitOpen = Boolean.TRUE.equals(schedule.getGuestRecruitOpen());
+        this.guestRecruitNote = schedule.getGuestRecruitNote();
+        this.interclubRecruitOpen = Boolean.TRUE.equals(schedule.getInterclubRecruitOpen());
+        this.interclubRecruitNote = schedule.getInterclubRecruitNote();
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
 

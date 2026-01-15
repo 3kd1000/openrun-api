@@ -179,7 +179,7 @@
 }
 
 /* Mobile Medium: 361px ~ 425px */
-@media (min-width: 361px) and (max-width: 425px) {
+@media (min-width: 360px) and (max-width: 425px) {
   .form-row {
     gap: var(--space-xs);
   }
@@ -224,7 +224,7 @@
 }
 
 /* Mobile Small: 360px 이하 */
-@media (max-width: 360px) {
+@media (max-width: 359px) {
   .form-row {
     gap: var(--space-xs);
   }
