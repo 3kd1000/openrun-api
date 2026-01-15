@@ -55,6 +55,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const userId = localStorage.getItem("user_id");
   const currentUserId = userId ? parseInt(userId) : null;
 
+  // 삭제 권한: API 응답의 canManageSchedule 필드 사용
+  const canDelete = schedule?.canManageSchedule ?? false;
+
   // 클럽 회원 목록 조회 (참가자 관리 모달 열릴 때)
   useEffect(() => {
     if (!showParticipantManagementModal) return;
@@ -627,7 +630,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 type="button"
                 onClick={handleDelete}
                 className="btn-delete"
-                disabled={loading}
+                disabled={loading || !canDelete}
+                title={!canDelete ? "관리자만 일정을 삭제할 수 있습니다." : undefined}
               >
                 {loading ? "삭제 중..." : "삭제"}
               </button>
