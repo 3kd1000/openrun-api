@@ -21,8 +21,8 @@
   box-sizing: border-box;
 }
 
-/* PC: 좌측 네비게이션 여백 */
-@media (min-width: 768px) {
+/* PC: 좌측 네비게이션 여백 (hover 가능한 환경에서만) */
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
   .App {
     padding-top: 0;
     padding-bottom: 0;

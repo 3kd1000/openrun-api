@@ -64,7 +64,7 @@ const ClubAdminPage: React.FC = () => {
     return (
         <div style={{ padding: '20px' }}>
             <h1>가입 신청 관리</h1>
-            <Link to={`/clubs/${clubId}`}>&larr; 클럽으로 돌아가기</Link>
+            <Link to={`/clubs/${clubId}/detail`}>&larr; 클럽으로 돌아가기</Link>
 
             <div style={{ marginTop: '20px' }}>
                 {pendingMembers.length === 0 ? (

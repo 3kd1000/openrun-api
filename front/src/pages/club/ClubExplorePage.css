@@ -1,0 +1,459 @@
+/* ===== ClubExplorePage 전용 스타일 ===== */
+/* 컴포넌트별 고유 prefix: club-explore-page */
+
+.club-explore-page {
+  padding: var(--space-m);
+  background-color: var(--color-background);
+  min-height: calc(100vh - var(--header-height) - var(--navigation-height));
+  padding-bottom: 100px;
+}
+
+/* 헤더 */
+.club-explore-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-s) 0;
+  margin-bottom: var(--space-m);
+}
+
+.club-explore-page__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--radius-m);
+  transition: background-color 0.2s;
+}
+
+.club-explore-page__back-btn:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-explore-page__title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.club-explore-page__header-spacer {
+  width: 36px;
+}
+
+.club-explore-page__create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.club-explore-page__create-btn:hover {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* 검색 및 필터 */
+.club-explore-page__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+/* 모집 중 섹션 */
+.club-explore-page__recruit-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.club-explore-page__recruit-section {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-white);
+  padding: var(--space-m);
+}
+
+.club-explore-page__recruit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-s);
+}
+
+.club-explore-page__recruit-title-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.club-explore-page__recruit-title {
+  font-weight: var(--font-weight-bold);
+}
+
+.club-explore-page__recruit-more {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: var(--font-size-s);
+}
+
+.club-explore-page__recruit-empty {
+  color: var(--color-text-secondary);
+  padding: var(--space-s) 0;
+}
+
+.club-explore-page__recruit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.club-explore-page__recruit-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-bg-secondary);
+  padding: var(--space-s);
+}
+
+.club-explore-page__recruit-item-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 4px;
+}
+
+.club-explore-page__recruit-item-meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+.club-explore-page__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.club-explore-page__search-icon {
+  position: absolute;
+  left: var(--space-m);
+  color: var(--color-text-secondary);
+}
+
+.club-explore-page__search-input {
+  width: 100%;
+  padding: var(--space-s) var(--space-m) var(--space-s) 44px;
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.club-explore-page__search-input:focus {
+  border-color: var(--color-primary);
+}
+
+.club-explore-page__region-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-secondary);
+}
+
+.club-explore-page__region-select {
+  flex: 1;
+  padding: var(--space-s) var(--space-m);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  cursor: pointer;
+  outline: none;
+}
+
+/* 콘텐츠 영역 */
+.club-explore-page__content {
+  background-color: var(--color-white);
+  border-radius: var(--radius-l);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.club-explore-page__loading,
+.club-explore-page__error {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.club-explore-page__error {
+  color: var(--color-error);
+}
+
+.club-explore-page__empty {
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.club-explore-page__empty-icon {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-m);
+}
+
+.club-explore-page__empty-message {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* 클럽 목록 */
+.club-explore-page__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.club-explore-page__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  padding: var(--space-m);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.club-explore-page__item:last-child {
+  border-bottom: none;
+}
+
+.club-explore-page__item:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-explore-page__item-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg-secondary);
+  border-radius: 50%;
+  font-size: var(--font-size-xl);
+  flex-shrink: 0;
+}
+
+.club-explore-page__item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.club-explore-page__item-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.club-explore-page__item-description {
+  font-size: var(--font-size-m);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: var(--space-xs);
+}
+
+.club-explore-page__item-region {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+.club-explore-page__join-btn {
+  padding: var(--space-xs) var(--space-m);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.club-explore-page__join-btn:hover {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* Desktop (769px+) */
+@media (min-width: 769px) {
+  .club-explore-page {
+    padding: var(--space-l);
+  }
+
+  .club-explore-page__filters {
+    flex-direction: row;
+  }
+
+  .club-explore-page__search {
+    flex: 1;
+  }
+
+  .club-explore-page__region-filter {
+    width: 200px;
+  }
+
+  .club-explore-page__title {
+    font-size: var(--font-size-xl);
+  }
+
+  .club-explore-page__item {
+    padding: var(--space-m) var(--space-l);
+  }
+}
+
+/* Tablet (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
+  .club-explore-page__title {
+    font-size: var(--font-size-base);
+  }
+
+  .club-explore-page__item-icon {
+    width: 44px;
+    height: 44px;
+    font-size: var(--font-size-l);
+  }
+}
+
+/* Mobile Large (361px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
+  .club-explore-page {
+    padding: var(--space-s);
+  }
+
+  .club-explore-page__title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__back-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .club-explore-page__header-spacer {
+    width: 32px;
+  }
+
+  .club-explore-page__search-input {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__region-select {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__item {
+    padding: var(--space-s);
+    gap: var(--space-s);
+  }
+
+  .club-explore-page__item-icon {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-base);
+  }
+
+  .club-explore-page__item-name {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__item-description {
+    font-size: var(--font-size-s);
+  }
+
+  .club-explore-page__join-btn {
+    font-size: var(--font-size-s);
+    padding: var(--space-xs) var(--space-s);
+  }
+}
+
+/* Mobile Small (~ 360px) */
+@media (max-width: 359px) {
+  .club-explore-page {
+    padding: var(--space-xs);
+  }
+
+  .club-explore-page__title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__back-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .club-explore-page__header-spacer {
+    width: 28px;
+  }
+
+  .club-explore-page__search-input {
+    font-size: var(--font-size-s);
+    padding-left: 36px;
+  }
+
+  .club-explore-page__region-select {
+    font-size: var(--font-size-s);
+  }
+
+  .club-explore-page__item {
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+  }
+
+  .club-explore-page__item-icon {
+    width: 36px;
+    height: 36px;
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__item-name {
+    font-size: var(--font-size-s);
+  }
+
+  .club-explore-page__item-description {
+    font-size: var(--font-size-s);
+  }
+
+  .club-explore-page__join-btn {
+    font-size: var(--font-size-s);
+    padding: 2px var(--space-xs);
+  }
+}

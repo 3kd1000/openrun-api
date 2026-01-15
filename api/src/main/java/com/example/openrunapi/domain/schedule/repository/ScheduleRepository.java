@@ -23,4 +23,14 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long>, JpaSp
      * 특정 날짜 이후의 일정 조회 (오름차순)
      */
     List<Schedule> findByClubIdAndScheduledAtAfterOrderByScheduledAtAsc(Long clubId, LocalDateTime after);
+
+    /**
+     * 공개 게스트 모집 중인 향후 일정 조회 (오름차순)
+     */
+    List<Schedule> findByGuestRecruitOpenTrueAndScheduledAtAfterOrderByScheduledAtAsc(LocalDateTime after);
+
+    /**
+     * 공개 교류전 모집 중인 향후 일정 조회 (오름차순)
+     */
+    List<Schedule> findByInterclubRecruitOpenTrueAndScheduledAtAfterOrderByScheduledAtAsc(LocalDateTime after);
 }

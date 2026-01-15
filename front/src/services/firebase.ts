@@ -108,6 +108,9 @@ export const clearLoginSession = () => {
   localStorage.removeItem("user_name");
   localStorage.removeItem("user_email");
   localStorage.removeItem("user_image_url");
+  localStorage.removeItem("current_club_id");
+  localStorage.removeItem("current_club_role");
+  localStorage.removeItem("openrun_session_v1");
   localStorage.removeItem("login_expiry");
   localStorage.removeItem("token_last_refresh");
   console.log(`🧹 [${now}] 로그인 세션 클리어`);

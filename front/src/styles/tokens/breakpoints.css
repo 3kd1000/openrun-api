@@ -10,8 +10,8 @@
  * 360px 미만은 지원하지 않음 (global.css에서 min-width: 360px 설정)
  *
  * 사용 예시:
- * @media (max-width: 360px) { } // mobile-sm (360px 이하)
- * @media (min-width: 361px) and (max-width: 425px) { } // mobile-md
+ * @media (max-width: 359px) { } // mobile-sm (359px 이하)
+ * @media (min-width: 360px) and (max-width: 425px) { } // mobile-md
  * @media (min-width: 426px) and (max-width: 768px) { } // tablet
  * @media (min-width: 769px) { } // desktop
  */
@@ -35,14 +35,14 @@
   /* ========== Range Names (문서화용) ========== */
 
   /*
-   * Mobile Small: 360px 이하 (최소 지원 범위)
-   * - 사용: @media (max-width: 360px)
+   * Mobile Small: 359px 이하 (최소 지원 범위)
+   * - 사용: @media (max-width: 359px)
    * - 디바이스: 갤럭시 S24 (360x800), 소형 안드로이드
    */
 
   /*
-   * Mobile Medium: 361px ~ 425px
-   * - 사용: @media (min-width: 361px) and (max-width: 425px)
+   * Mobile Medium: 360px ~ 425px
+   * - 사용: @media (min-width: 360px) and (max-width: 425px)
    * - 디바이스: iPhone 12/13/14 (375x812), 중형 안드로이드
    */
 

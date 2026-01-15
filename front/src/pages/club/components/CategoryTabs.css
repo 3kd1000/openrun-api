@@ -1,0 +1,91 @@
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-tabs__tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 32px;
+}
+
+.category-tabs__tab:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.category-tabs__tab--active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.category-tabs__tab--active:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Mobile Small: 360px 이하 */
+@media (max-width: 359px) {
+  .category-tabs {
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+  }
+
+  .category-tabs__tab {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+    min-height: 28px;
+  }
+}
+
+/* Mobile Medium: 361px ~ 425px */
+@media (min-width: 360px) and (max-width: 425px) {
+  .category-tabs {
+    padding: var(--space-m);
+  }
+
+  .category-tabs__tab {
+    min-height: 36px;
+  }
+}
+
+/* Tablet: 426px ~ 768px */
+@media (min-width: 426px) and (max-width: 768px) {
+  .category-tabs {
+    justify-content: center;
+  }
+
+  .category-tabs__tab {
+    min-height: 40px;
+  }
+}
+
+/* Desktop: 769px 이상 */
+@media (min-width: 769px) {
+  .category-tabs {
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .category-tabs__tab {
+    min-height: 40px;
+    padding: var(--space-s) var(--space-l);
+  }
+}

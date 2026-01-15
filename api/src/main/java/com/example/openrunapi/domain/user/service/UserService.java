@@ -3,10 +3,14 @@ package com.example.openrunapi.domain.user.service;
 import com.example.openrunapi.domain.auth.service.OAuthService;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserOAuthProvider;
+import com.example.openrunapi.domain.user.model.UserProfile;
 import com.example.openrunapi.domain.user.model.dto.OAuthProviderResponse;
+import com.example.openrunapi.domain.user.model.dto.UpdateUserProfileRequest;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.repository.UserOAuthProviderRepository;
+import com.example.openrunapi.domain.user.repository.UserProfileRepository;
 import com.example.openrunapi.domain.user.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -26,13 +30,14 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final UserOAuthProviderRepository userOAuthProviderRepository;
+    private final UserProfileRepository userProfileRepository;
     private final OAuthService oauthService;
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String uid) throws UsernameNotFoundException {
         // Provider 구분 없이 provider_uid로 검색
-        User user = oauthService.findUserByProviderUid(uid)
+        oauthService.findUserByProviderUid(uid)
                 .orElseGet(() -> {
                     // Firebase에서 정보 가져와서 신규 생성
                     try {
@@ -73,6 +78,7 @@ public class UserService implements UserDetailsService {
     }
 
     public UserResponse getCurrentUser(String uid) {
+        // Firebase uid로 사용자 조회
         User user = oauthService.findUserByProviderUid(uid)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
         return new UserResponse(user);
@@ -118,5 +124,30 @@ public class UserService implements UserDetailsService {
         return providers.stream()
                 .map(OAuthProviderResponse::new)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public UserProfileResponse getMyProfile(String uid) {
+        User user = oauthService.findUserByProviderUid(uid)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
+        UserProfile profile = userProfileRepository.findById(user.getId())
+                .orElseGet(() -> userProfileRepository.save(new UserProfile(user)));
+        return new UserProfileResponse(profile);
+    }
+
+    @Transactional
+    public UserProfileResponse updateMyProfile(String uid, UpdateUserProfileRequest request) {
+        User user = oauthService.findUserByProviderUid(uid)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
+        UserProfile profile = userProfileRepository.findById(user.getId())
+                .orElseGet(() -> userProfileRepository.save(new UserProfile(user)));
+        profile.update(
+                request != null ? request.getTennisStartedAt() : null,
+                request != null ? request.getBackhandType() : null,
+                request != null ? request.getFavoritePlayer() : null,
+                request != null ? request.getNtrp() : null,
+                request != null ? request.getTournamentHistory() : null,
+                request != null ? request.getFormerPlayer() : null
+        );
+        return new UserProfileResponse(profile);
     }
 }

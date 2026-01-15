@@ -385,8 +385,8 @@
   }
 }
 
-/* ========== 360px 이하 최적화 (360px과 동일한 스타일, 좌우 스크롤 허용) ========== */
-@media (max-width: 361px) {
+/* ========== 359px 이하 최적화 (초소형, 좌우 스크롤 허용) ========== */
+@media (max-width: 359px) {
   .scoreboard-page {
     padding: var(--space-m);
   }
@@ -759,8 +759,8 @@
   }
 }
 
-/* 미디어 중형 (361px ~ 400px) */
-@media (min-width: 361px) and (max-width: 425px) {
+/* 미디어 중형 (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
   .match-card {
     font-size: var(--font-size-m);
   }
@@ -774,8 +774,8 @@
   }
 }
 
-/* 미디어 소형 (360px 이하) */
-@media (max-width: 360px) {
+/* 미디어 소형 (359px 이하) */
+@media (max-width: 359px) {
   .match-card {
     font-size: var(--font-size-s);
   }
@@ -825,7 +825,7 @@
 }
 
 /* ========== 데스크톱: 모바일 패딩 제거 ========== */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .scoreboard-page {
     padding-bottom: var(--space-l);
   }

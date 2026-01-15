@@ -90,6 +90,88 @@
   cursor: not-allowed;
 }
 
+/* ========== 헤더(2줄) + 토글 버튼 ========== */
+.schedule-detail-modal__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.schedule-detail-modal__header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+}
+
+.schedule-detail-modal__header-top h2 {
+  flex: 1;
+  text-align: left;
+}
+
+.schedule-detail-modal__header-top .btn-close {
+  flex: 0 0 auto;
+}
+
+.schedule-detail-modal__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  flex-wrap: wrap;
+}
+
+.btn-toggle-header {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  background: transparent;
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.btn-toggle-header.is-on {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.btn-toggle-header.is-off {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.btn-toggle-header:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-toggle-header:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-toggle-header__text {
+  white-space: nowrap;
+}
+
+.schedule-pin-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--space-xs);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
 /* ========== 참가 현황 스타일 ========== */
 .participant-stats {
   display: flex;
@@ -196,6 +278,17 @@
   font-size: var(--font-size-s);
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
+}
+
+.guest-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-bold);
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
 }
 
 /* ========== 내 참가 상태 ========== */
@@ -312,6 +405,51 @@
   font-size: var(--font-size-m);
 }
 
+/* ========== 대진표 섹션 ========== */
+.draw-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.draw-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+}
+
+.draw-section__header label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.draw-section__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+}
+
+.draw-section__status.valid {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: var(--border-width-thin) solid var(--color-success);
+}
+
+.draw-section__status.invalid {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-text);
+  border: var(--border-width-thin) solid var(--color-danger);
+}
+
 /* ========== 대진 관련 액션 버튼 영역 ========== */
 .draw-create-action {
   display: flex;
@@ -367,51 +505,10 @@
   box-shadow: none;
 }
 
-/* ========== 대진표 상태 표시 ========== */
-.draw-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-s);
-  padding: var(--space-xs) var(--space-m);
-  border-radius: var(--radius-m);
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-medium);
-  margin-bottom: 4px;
-}
-
-.draw-status.valid {
-  background-color: var(--color-success-bg);
-  color: var(--color-success-text);
-  border: var(--border-width-thin) solid var(--color-success);
-}
-
-.draw-status.invalid {
-  background-color: var(--color-danger-light);
-  color: var(--color-danger-text);
-  border: 2px dashed var(--color-danger);
-  animation: pulse 2s infinite;
-}
-
-.draw-status.empty {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-tertiary);
-  border: var(--border-width-thin) solid var(--color-border-tertiary);
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
+/* 기존 draw-status는 사용하지 않음 - draw-section__status로 대체 */
 
 /* ========== 대진표 보기/삭제 버튼 ========== */
 .draw-view-action {
-  margin-top: -4px;
-  margin-bottom: 4px;
   display: flex;
   gap: var(--space-s);
 }
@@ -482,7 +579,7 @@
 
   /* Badge 통일 높이 (참가 현황, 대진표 상태) */
   .stat-item,
-  .draw-status {
+  .draw-section__status {
     height: 26px;
     min-height: 26px;
     display: inline-flex;
@@ -510,7 +607,7 @@
   }
 
   /* 대진표 상태 통일 */
-  .draw-status {
+  .draw-section__status {
     padding: 0 var(--space-s);
   }
 
@@ -588,9 +685,9 @@
   }
 
   /* 360px 이하: 2x2 그리드 */
-  @media (max-width: 360px) {
+  @media (max-width: 359px) {
     .stat-item,
-    .draw-status {
+    .draw-section__status {
       font-size: var(--font-size-xs);
     }
     .schedule-detail-view .modal-actions {
@@ -618,7 +715,7 @@
   }
 
   /* 갤럭시 S24 등 360px~400px: 4개 한 줄 배치 */
-  @media (min-width: 361px) and (max-width: 425px) {
+  @media (min-width: 360px) and (max-width: 425px) {
     .schedule-detail-view .modal-actions {
       gap: 2px;
       flex-wrap: nowrap;
@@ -627,7 +724,7 @@
     }
 
     .stat-item,
-    .draw-status {
+    .draw-section__status {
       font-size: var(--font-size-m);
     }
 

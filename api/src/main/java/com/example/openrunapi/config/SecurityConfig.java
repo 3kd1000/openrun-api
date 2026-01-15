@@ -1,6 +1,5 @@
 package com.example.openrunapi.config;
 
-import com.example.openrunapi.config.auth.DevAuthenticationFilter;
 import com.example.openrunapi.config.auth.FirebaseTokenFilter;
 import com.example.openrunapi.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +36,16 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health/**").permitAll()
                         // 인증 불필요한 API 엔드포인트
                         .requestMatchers("/api/auth/**").permitAll() // 소셜 로그인 API
-                        .requestMatchers("/api/dev/**").permitAll() // 개발용 로그인 API
                         .requestMatchers("/api/webauthn/login").permitAll() // WebAuthn 로그인 API
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API
-                        .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/**").permitAll() // 클럽 목록 조회 API
+                        // 클럽 조회 API (미로그인 유저 포함) - 목록/상세만 허용
+                        .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/*").permitAll()
                         .requestMatchers("/api/schedules/**").permitAll() // 일정 관리 API (개발 단계)
-                        .requestMatchers("/api/clubs/**").permitAll() // 클럽 조회 API
+                        .requestMatchers("/api/clubs/*/posts/**").authenticated() // 게시판 API (로그인 필요)
+                        .requestMatchers("/api/clubs/*/rules/**").authenticated() // 회칙 관리 API (로그인 필요)
+                        .requestMatchers("/api/clubs/*/notices/**").authenticated() // 공지사항 API (로그인 필요)
+                        .requestMatchers("/api/clubs/*/members/**").authenticated() // 클럽 멤버/가입 관리 API (로그인 필요)
+                        .requestMatchers("/api/clubs/*/membership/**").authenticated() // 클럽원 상세(권한/상태) API (로그인 필요)
                         .requestMatchers("/api/users/guests").permitAll() // 게스트 목록 조회
                         // 그 외 모든 API 요청은 인증 필요
                         .requestMatchers("/api/**").authenticated()
@@ -58,9 +61,7 @@ public class SecurityConfig {
                 )
 
                 // Firebase 토큰 검증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
-                .addFilterBefore(new FirebaseTokenFilter(userService), UsernamePasswordAuthenticationFilter.class)
-                // 로컬 개발용 인증 필터 추가
-                .addFilterBefore(new DevAuthenticationFilter(userService), FirebaseTokenFilter.class);
+                .addFilterBefore(new FirebaseTokenFilter(userService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

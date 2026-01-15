@@ -1,0 +1,99 @@
+.recruit-schedules-page {
+  padding: var(--space-m);
+}
+
+.recruit-schedules-page__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.recruit-schedules-page__back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.recruit-schedules-page__title {
+  margin: 0;
+  font-size: var(--font-size-l);
+}
+
+.recruit-schedules-page__header-spacer {
+  flex: 1;
+}
+
+.recruit-schedules-page__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-m);
+}
+
+.recruit-schedules-page__search-icon {
+  position: absolute;
+  left: var(--space-m);
+  color: var(--color-text-secondary);
+}
+
+.recruit-schedules-page__search-input {
+  width: 100%;
+  padding: var(--space-s) var(--space-m) var(--space-s) 44px;
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  outline: none;
+}
+
+.recruit-schedules-page__loading,
+.recruit-schedules-page__empty {
+  padding: var(--space-l);
+  color: var(--color-text-secondary);
+}
+
+.recruit-schedules-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.recruit-schedules-page__item {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  padding: var(--space-m);
+  text-align: left;
+}
+
+.recruit-schedules-page__item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-m);
+  margin-bottom: 6px;
+}
+
+.recruit-schedules-page__club {
+  font-weight: 800;
+}
+
+.recruit-schedules-page__meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+.recruit-schedules-page__note {
+  margin-top: var(--space-s);
+  padding-top: var(--space-s);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+

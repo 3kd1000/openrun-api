@@ -5,6 +5,7 @@ import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserStatistics;
 import com.example.openrunapi.domain.user.model.dto.ScoreboardResponse;
+import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.user.repository.UserRepository;
 import com.example.openrunapi.domain.user.repository.UserStatisticsRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class ScoreboardService {
     private final UserStatisticsRepository userStatisticsRepository;
     private final UserRepository userRepository;
     private final MatchRepository matchRepository;
+    private final ClubMemberRepository clubMemberRepository;
 
     /**
      * 클럽 스코어보드 조회
@@ -76,6 +78,10 @@ public class ScoreboardService {
         Map<Long, String> userNameMap = users.stream()
                 .collect(Collectors.toMap(User::getId, User::getName));
 
+        // 3-1. 클럽 ACTIVE 멤버만 랭킹에 포함 (외부 승인 게스트/비멤버 제외)
+        List<Long> activeMemberIds = clubMemberRepository.findActiveMemberUserIdsInClub(clubId, userIds);
+        Set<Long> activeMemberIdSet = new HashSet<>(activeMemberIds);
+
         // 4. 랭킹 엔트리 생성 및 정렬
         List<ScoreboardResponse.RankingEntry> rankings = statistics.stream()
                 .map(stats -> {
@@ -93,6 +99,7 @@ public class ScoreboardService {
                             .losses(stats.getLosses())
                             .build();
                 })
+                .filter(entry -> activeMemberIdSet.contains(entry.getUserId()))
                 .sorted((a, b) -> compareRankings(a, b, sortBy))
                 .collect(Collectors.toList());
 
@@ -153,9 +160,14 @@ public class ScoreboardService {
                 .filter(user -> !user.isGuest())
                 .collect(Collectors.toMap(User::getId, User::getName));
 
+        // 3-1. 클럽 ACTIVE 멤버만 포함 (외부 승인 게스트/비멤버 제외)
+        List<Long> activeMemberIds = clubMemberRepository.findActiveMemberUserIdsInClub(clubId, new ArrayList<>(userNameMap.keySet()));
+        Set<Long> activeMemberIdSet = new HashSet<>(activeMemberIds);
+
         // 4. 통계를 랭킹 엔트리로 변환 및 정렬
         List<ScoreboardResponse.RankingEntry> rankings = statsMap.entrySet().stream()
                 .filter(entry -> userNameMap.containsKey(entry.getKey())) // 게스트 제외
+                .filter(entry -> activeMemberIdSet.contains(entry.getKey())) // 비멤버 제외
                 .map(entry -> {
                     Long userId = entry.getKey();
                     PlayerStats stats = entry.getValue();

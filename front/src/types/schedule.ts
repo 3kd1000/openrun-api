@@ -3,6 +3,11 @@ export interface Schedule {
   clubId: number;
   courtName: string;
   scheduledAt: string; // ISO 8601 format
+  pinned?: boolean; // 공지성 고정 일정 (없으면 false로 간주)
+  guestRecruitOpen?: boolean;
+  guestRecruitNote?: string | null;
+  interclubRecruitOpen?: boolean;
+  interclubRecruitNote?: string | null;
   maxCapacity: number;
   currentParticipants: number;
   cost?: number;
@@ -37,4 +42,5 @@ export interface Participant {
   status: 'CONFIRMED' | 'WAITING' | 'CANCELLED';
   position: number;
   joinedAt: string;
+  asGuest: boolean;
 }

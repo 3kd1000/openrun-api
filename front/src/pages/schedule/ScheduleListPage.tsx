@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useAuth } from "../../contexts/AuthContext";
@@ -12,6 +18,7 @@ import ScheduleCalendarView from "./components/ScheduleCalendarView";
 import ScheduleDetailModal from "./components/ScheduleDetailModal";
 import DrawViewModal from "./components/DrawViewModal";
 import Toast from "../../components/common/Toast";
+import { StarIcon } from "../../components/common/Icons";
 import { isNotEmpty } from "../../utils/isEmpty";
 import "./ScheduleListPage.css";
 
@@ -20,6 +27,7 @@ type CapacityFilter = "all" | "available" | "full" | "participated";
 
 const ScheduleListPage: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user: firebaseUser } = useAuth();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +60,14 @@ const ScheduleListPage: React.FC = () => {
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const todayScheduleRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
+
+  const openScheduleIdFromState = useMemo(() => {
+    const state = location.state as { openScheduleId?: number | string } | null;
+    const raw = state?.openScheduleId;
+    if (raw === null || raw === undefined) return null;
+    const n = typeof raw === "number" ? raw : Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }, [location.state]);
 
   const loadSchedules = useCallback(async () => {
     // 이미 로딩 중이면 중복 호출 방지
@@ -101,6 +117,30 @@ const ScheduleListPage: React.FC = () => {
   useEffect(() => {
     loadSchedules();
   }, [loadSchedules]);
+
+  // ClubMainPage "다가오는 일정" 클릭: 선택한 일정의 날짜로 전환 + 상세 모달 오픈
+  useEffect(() => {
+    if (!openScheduleIdFromState) return;
+    if (loading) return;
+    if (schedules.length === 0) return;
+
+    const target = schedules.find((s) => s.id === openScheduleIdFromState);
+    if (target) {
+      const d = new Date(target.scheduledAt);
+      setFilterDate(d);
+      setViewMode("list");
+      setSelectedScheduleId(target.id);
+      setShowDetailModal(true);
+    } else {
+      // 목록에 없으면 일단 상세 모달은 열되 필터는 유지하지 않음
+      setSelectedScheduleId(openScheduleIdFromState);
+      setShowDetailModal(true);
+    }
+
+    // state 재사용으로 인한 재오픈 방지
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openScheduleIdFromState, loading, schedules.length]);
 
   // 뷰 모드 변경 시 localStorage에 저장
   useEffect(() => {
@@ -239,16 +279,6 @@ const ScheduleListPage: React.FC = () => {
     const isParticipated = myParticipations.has(schedule.id);
     const isFull = currentParticipants >= maxCapacity;
     return { isParticipated, isFull };
-  };
-
-  // 기존 호환용: 단일 상태 반환 (participated 우선)
-  const getCapacityStatus = (
-    schedule: Schedule
-  ): "available" | "full" | "participated" => {
-    const { isParticipated, isFull } = getCapacityInfo(schedule);
-    if (isParticipated) return "participated";
-    if (isFull) return "full";
-    return "available";
   };
 
   // 필터링된 일정 목록
@@ -425,13 +455,20 @@ const ScheduleListPage: React.FC = () => {
                 ref={isFirstFuture ? todayScheduleRef : null}
                 className={`schedule-card ${
                   isPast ? "past-schedule" : ""
-                } ${capacityStatus} ${drawStatus} ${isParticipatedAndFull ? "participated-and-full" : ""}`}
+                } ${capacityStatus} ${drawStatus} ${
+                  isParticipatedAndFull ? "participated-and-full" : ""
+                }`}
                 onClick={() => handleScheduleClick(schedule)}
               >
                 <div className="schedule-info">
                   {/* 1. 코트명, 예약자명 */}
                   <div className="schedule-header-info">
                     <h3>
+                      {schedule.pinned ? (
+                        <span className="schedule-pin-badge" title="강조">
+                          <StarIcon size={14} />
+                        </span>
+                      ) : null}
                       코트명 : {schedule.courtName}
                       {schedule.reservedByUserName && (
                         <span className="schedule-reserved-by">
@@ -444,9 +481,13 @@ const ScheduleListPage: React.FC = () => {
                   {/* 2. 날짜 및 시간, 신청인원 / 총인원 */}
                   <div className="schedule-meta-row">
                     <p className="schedule-time">
-                      {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 (E) HH:mm", {
-                        locale: ko,
-                      })}
+                      {format(
+                        new Date(schedule.scheduledAt),
+                        "yyyy년 M월 d일 (E) HH:mm",
+                        {
+                          locale: ko,
+                        }
+                      )}
                     </p>
                     <div className="schedule-participants">
                       <span className="stat-confirmed">

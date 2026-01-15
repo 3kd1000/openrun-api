@@ -5,15 +5,22 @@ package com.example.openrunapi.domain.club.model;
  */
 public enum ClubRole {
     /**
-     * 일반 회원
+     * 정회원
      * - 참가신청/취소
      * - 본인 정보 조회
      */
-    MEMBER,
+    REGULAR,
+
+    /**
+     * 준회원
+     * - 정회원과 동일한 기본 기능
+     * - (정책 확정 전) 필요 시 일부 기능 제한 가능
+     */
+    ASSOCIATE,
 
     /**
      * 운영진
-     * - MEMBER 권한 포함
+     * - 정회원 권한 포함
      * - 일정 CRUD
      * - 참가자 관리 (추가/삭제)
      * - 대진 생성/수정/삭제

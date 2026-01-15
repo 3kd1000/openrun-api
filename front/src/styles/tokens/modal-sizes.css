@@ -21,8 +21,8 @@
   --modal-default-height: var(--modal-height-lg);
 }
 
-/* 데스크톱 (768px 이상) - 더 큰 사이즈 허용 */
-@media (min-width: 768px) {
+/* 데스크톱 (769px 이상) - breakpoints.css 기준 */
+@media (min-width: 769px) {
   :root {
     --modal-width-sm: 500px;
     --modal-width-md: 700px;

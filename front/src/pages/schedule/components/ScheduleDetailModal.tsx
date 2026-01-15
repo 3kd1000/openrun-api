@@ -45,7 +45,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
   );
   const [showDrawCreateModal, setShowDrawCreateModal] = useState(false);
   const [showDrawViewModal, setShowDrawViewModal] = useState(false);
-  const [showParticipantManagementModal, setShowParticipantManagementModal] = useState(false);
+  const [showParticipantManagementModal, setShowParticipantManagementModal] =
+    useState(false);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
 
   // 클럽 회원 목록 (참가자 관리 모달용)
@@ -57,6 +58,84 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
   // 삭제 권한: API 응답의 canManageSchedule 필드 사용
   const canDelete = schedule?.canManageSchedule ?? false;
+
+  const handleTogglePinned = async () => {
+    if (!schedule) return;
+    if (!currentUserId) {
+      alert("로그인이 필요합니다. /dev/login 페이지에서 로그인해주세요.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      const nextPinned = !(schedule.pinned === true);
+      const updated = await scheduleService.updateSchedulePinned(
+        schedule.id,
+        nextPinned,
+        currentUserId
+      );
+      setSchedule(updated);
+      onSuccess(); // 목록/위젯 새로고침
+    } catch (err) {
+      console.error("PIN 설정 실패:", err);
+      setError("PIN 설정에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleGuestRecruit = async () => {
+    if (!schedule) return;
+    if (!currentUserId) {
+      alert("로그인이 필요합니다. /dev/login 페이지에서 로그인해주세요.");
+      return;
+    }
+    try {
+      setLoading(true);
+      setError("");
+      const nextOpen = !(schedule.guestRecruitOpen === true);
+      const updated = await scheduleService.updateGuestRecruit(
+        schedule.id,
+        nextOpen,
+        currentUserId,
+        schedule.guestRecruitNote ?? null
+      );
+      setSchedule(updated);
+      onSuccess();
+    } catch (err) {
+      console.error("게스트 모집 설정 실패:", err);
+      setError("게스트 모집 설정에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleInterclubRecruit = async () => {
+    if (!schedule) return;
+    if (!currentUserId) {
+      alert("로그인이 필요합니다. /dev/login 페이지에서 로그인해주세요.");
+      return;
+    }
+    try {
+      setLoading(true);
+      setError("");
+      const nextOpen = !(schedule.interclubRecruitOpen === true);
+      const updated = await scheduleService.updateInterclubRecruit(
+        schedule.id,
+        nextOpen,
+        currentUserId,
+        schedule.interclubRecruitNote ?? null
+      );
+      setSchedule(updated);
+      onSuccess();
+    } catch (err) {
+      console.error("교류전 모집 설정 실패:", err);
+      setError("교류전 모집 설정에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 클럽 회원 목록 조회 (참가자 관리 모달 열릴 때)
   useEffect(() => {
@@ -81,11 +160,21 @@ const ScheduleDetailModal: React.FC<Props> = ({
     if (isEditMode) {
       // 편집 모드일 때는 편집 모드 종료
       setIsEditMode(false);
-    } else if (!showDrawCreateModal && !showDrawViewModal && !showParticipantManagementModal) {
+    } else if (
+      !showDrawCreateModal &&
+      !showDrawViewModal &&
+      !showParticipantManagementModal
+    ) {
       // 다른 모달이 열려있지 않을 때만 상세 모달 닫기
       onClose();
     }
-  }, [isEditMode, showDrawCreateModal, showDrawViewModal, showParticipantManagementModal, onClose]);
+  }, [
+    isEditMode,
+    showDrawCreateModal,
+    showDrawViewModal,
+    showParticipantManagementModal,
+    onClose,
+  ]);
 
   useEscapeKey(handleEscapeKey);
 
@@ -337,18 +426,67 @@ const ScheduleDetailModal: React.FC<Props> = ({
         className="modal-content schedule-detail-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2>{isEditMode ? "일정 수정" : "일정 상세"}</h2>
-          <button className="btn-close" onClick={onClose}>
-            &times;
-          </button>
+        <div className="modal-header schedule-detail-modal__header">
+          <div className="schedule-detail-modal__header-top">
+            <h2>{isEditMode ? "일정 수정" : "일정 상세"}</h2>
+            <button className="btn-close" onClick={onClose}>
+              &times;
+            </button>
+          </div>
+
+          {!isEditMode && canDelete && (
+            <div className="schedule-detail-modal__header-actions">
+              <button
+                type="button"
+                onClick={handleTogglePinned}
+                className={`btn-toggle-header ${schedule.pinned ? "is-on" : "is-off"}`}
+                disabled={loading}
+                title="고정"
+              >
+                <span className="btn-toggle-header__text">
+                  {schedule.pinned ? "고정 ON" : "고정 OFF"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleToggleGuestRecruit}
+                className={`btn-toggle-header ${schedule.guestRecruitOpen ? "is-on" : "is-off"}`}
+                disabled={loading}
+                title="게스트 모집"
+              >
+                <span className="btn-toggle-header__text">
+                  {schedule.guestRecruitOpen ? "게스트 ON" : "게스트 OFF"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleToggleInterclubRecruit}
+                className={`btn-toggle-header ${schedule.interclubRecruitOpen ? "is-on" : "is-off"}`}
+                disabled={loading}
+                title="교류전 모집"
+              >
+                <span className="btn-toggle-header__text">
+                  {schedule.interclubRecruitOpen ? "교류전 ON" : "교류전 OFF"}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {!isEditMode ? (
           <div className="schedule-detail-view">
             <div className="detail-item">
               <label>코트명</label>
-              <p>{schedule.courtName}</p>
+              <p>
+                {schedule.pinned ? (
+                  <span className="schedule-pin-badge-inline" title="고정됨">
+                    고정
+                  </span>
+                ) : null}
+                {schedule.courtName}
+              </p>
             </div>
 
             {schedule.reservedByUserName && (
@@ -361,9 +499,13 @@ const ScheduleDetailModal: React.FC<Props> = ({
             <div className="detail-item">
               <label>일정 시간</label>
               <p>
-                {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 (E) HH:mm", {
-                  locale: ko,
-                })}
+                {format(
+                  new Date(schedule.scheduledAt),
+                  "yyyy년 M월 d일 (E) HH:mm",
+                  {
+                    locale: ko,
+                  }
+                )}
               </p>
             </div>
 
@@ -398,28 +540,27 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* 대진표 상태 */}
-            <div className="detail-item">
-              <label>대진표 상태</label>
-              {schedule.drawType ? (
-                <div
-                  className={`draw-status ${
-                    schedule.isDrawValid ? "valid" : "invalid"
-                  }`}
-                >
-                  {schedule.isDrawValid ? (
-                    <>✓ 유효 ({schedule.drawType})</>
-                  ) : (
-                    <>⚠️ 참가자 변동으로 인한 재생성 필요</>
-                  )}
-                </div>
-              ) : (
-                <div className="draw-status empty">생성된 대진이 없습니다</div>
-              )}
-            </div>
+            {/* 대진표 상태 + 액션 버튼 */}
+            <div className="draw-section">
+              <div className="draw-section__header">
+                <label>대진표</label>
+                {schedule.drawType && (
+                  <span
+                    className={`draw-section__status ${
+                      schedule.isDrawValid ? "valid" : "invalid"
+                    }`}
+                  >
+                    {schedule.isDrawValid ? (
+                      <>✓ 유효 ({schedule.drawType})</>
+                    ) : (
+                      <>⚠️ 참가자 변동으로 인한 재생성 필요</>
+                    )}
+                  </span>
+                )}
+              </div>
 
-            {/* 대진 관련 액션 버튼 */}
-            {schedule.drawType ? (
+              {/* 대진 관련 액션 버튼 */}
+              {schedule.drawType ? (
               // 대진이 있는 경우: 보기 버튼과 삭제 버튼
               // 과거 일정이어도 대진이 있으면 보기 가능 (경기 결과 입력/수정을 위해)
               <div className="draw-view-action">
@@ -477,6 +618,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 )}
               </div>
             )}
+            </div>
 
             {/* 참가자 목록 */}
             {participants.length > 0 && (
@@ -514,6 +656,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
                         {confirmedParticipants.map((p, idx) => (
                           <li key={p.id}>
                             {idx + 1}. {p.userName}
+                            {p.asGuest ? (
+                              <span className="guest-badge"> 게스트</span>
+                            ) : null}
                             {p.userId === currentUserId && (
                               <span className="me-badge"> (나)</span>
                             )}
@@ -530,6 +675,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
                         {waitingParticipants.map((p, idx) => (
                           <li key={p.id} className="waiting">
                             {idx + 1}. {p.userName}
+                            {p.asGuest ? (
+                              <span className="guest-badge"> 게스트</span>
+                            ) : null}
                             {p.userId === currentUserId && (
                               <span className="me-badge"> (나)</span>
                             )}
@@ -631,7 +779,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 onClick={handleDelete}
                 className="btn-delete"
                 disabled={loading || !canDelete}
-                title={!canDelete ? "관리자만 일정을 삭제할 수 있습니다." : undefined}
+                title={
+                  !canDelete ? "관리자만 일정을 삭제할 수 있습니다." : undefined
+                }
               >
                 {loading ? "삭제 중..." : "삭제"}
               </button>
@@ -682,8 +832,12 @@ const ScheduleDetailModal: React.FC<Props> = ({
               // 과거 날짜 체크
               const validation = validateScheduleCreation(data.scheduledAt);
               if (!validation.isValid) {
-                setError(validation.errorMessage || "일정 수정에 실패했습니다.");
-                throw new Error(validation.errorMessage || "일정 수정에 실패했습니다.");
+                setError(
+                  validation.errorMessage || "일정 수정에 실패했습니다."
+                );
+                throw new Error(
+                  validation.errorMessage || "일정 수정에 실패했습니다."
+                );
               }
 
               setLoading(true);

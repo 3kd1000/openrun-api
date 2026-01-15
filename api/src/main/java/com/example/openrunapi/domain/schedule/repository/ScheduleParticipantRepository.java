@@ -49,7 +49,7 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     // 특정 일정의 취소되지 않은 참가자 + userName JOIN 조회
     @Query("""
         SELECT new com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse(
-            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt
+            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
         )
         FROM ScheduleParticipant sp
         JOIN User u ON sp.userId = u.id
@@ -61,7 +61,7 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     // 특정 사용자의 특정 일정 참가 신청 내역 + userName JOIN 조회
     @Query("""
         SELECT new com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse(
-            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt
+            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
         )
         FROM ScheduleParticipant sp
         JOIN User u ON sp.userId = u.id
