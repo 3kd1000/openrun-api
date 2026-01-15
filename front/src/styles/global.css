@@ -97,6 +97,18 @@ textarea {
   font-family: var(--font-family-base);
 }
 
+/* iOS Safari: input/textarea/select focus 시 자동 확대(zoom) 방지
+ * - iOS는 폰트가 16px 미만이면 포커스 시 자동 줌을 강제함
+ * - 다른 해법(최대확대 제한 viewport)은 접근성/사용성 영향이 커서 지양
+ */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;

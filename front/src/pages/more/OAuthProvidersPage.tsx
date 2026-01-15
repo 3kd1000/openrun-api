@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { OAuthProvider } from "../../services/api/userApi";
 import { getOAuthProviders } from "../../services/api/userApi";
+import { GoogleIcon, KakaoIcon, LinkIcon, NaverIcon } from "../../components/common/Icons";
 import "./OAuthProvidersPage.css";
 
 const OAuthProvidersPage: React.FC = () => {
@@ -37,17 +38,12 @@ const OAuthProvidersPage: React.FC = () => {
     }
   };
 
-  const getProviderIcon = (provider: string): string => {
-    switch (provider.toUpperCase()) {
-      case "GOOGLE":
-        return "🔵";
-      case "KAKAO":
-        return "🟡";
-      case "NAVER":
-        return "🟢";
-      default:
-        return "🔗";
-    }
+  const renderProviderIcon = (provider: string) => {
+    const p = provider.toUpperCase();
+    if (p === "GOOGLE") return <GoogleIcon size={24} />;
+    if (p === "KAKAO") return <KakaoIcon size={24} />;
+    if (p === "NAVER") return <NaverIcon size={24} />;
+    return <LinkIcon size={24} color="currentColor" />;
   };
 
   const formatDate = (dateString: string): string => {
@@ -73,7 +69,9 @@ const OAuthProvidersPage: React.FC = () => {
           <div className="loading">로딩 중...</div>
         ) : providers.length === 0 ? (
           <div className="empty-state">
-            <p className="empty-icon">🔗</p>
+            <p className="empty-icon">
+              <LinkIcon size={64} />
+            </p>
             <p className="empty-message">연동된 계정이 없습니다.</p>
           </div>
         ) : (
@@ -81,7 +79,7 @@ const OAuthProvidersPage: React.FC = () => {
             {providers.map((provider) => (
               <div key={provider.id} className="provider-item">
                 <div className="provider-icon">
-                  {getProviderIcon(provider.provider)}
+                  {renderProviderIcon(provider.provider)}
                 </div>
                 <div className="provider-info">
                   <div className="provider-name">

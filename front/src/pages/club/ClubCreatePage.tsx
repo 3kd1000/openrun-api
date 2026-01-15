@@ -58,7 +58,9 @@ const ClubCreatePage: React.FC = () => {
         {error && <div className="club-create-page__error">{error}</div>}
 
         <label className="club-create-page__label">
-          클럽 이름 <span className="club-create-page__required">*</span>
+          <span className="club-create-page__label-row">
+            클럽 이름 <span className="club-create-page__required">*</span>
+          </span>
           <input
             className="club-create-page__input"
             value={form.name}

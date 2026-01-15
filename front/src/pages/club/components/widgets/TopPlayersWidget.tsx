@@ -99,8 +99,22 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
     setInternalExpanded(next);
   };
 
+  const getOrdinalSuffix = (n: number) => {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return "st";
+    if (mod10 === 2 && mod100 !== 12) return "nd";
+    if (mod10 === 3 && mod100 !== 13) return "rd";
+    return "th";
+  };
+
   const getRankDisplay = (rank: number) => {
-    return <span className="top-players-widget__rank-number">{rank}</span>;
+    return (
+      <span className="top-players-widget__rank-label">
+        {rank}
+        {getOrdinalSuffix(rank)}
+      </span>
+    );
   };
 
   const getDisplayTitle = () => {
@@ -165,7 +179,7 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
               {rankings.map((entry, index) => (
                 <div
                   key={entry.userId}
-                  className={`top-players-widget__item top-players-widget__item--rank-${index + 1}`}
+                  className="top-players-widget__item"
                 >
                   <span className="top-players-widget__rank">
                     {getRankDisplay(index + 1)}

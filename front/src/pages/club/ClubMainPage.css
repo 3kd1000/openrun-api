@@ -228,16 +228,43 @@
   gap: var(--space-s);
 }
 
+.club-main-page__feed-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text);
+  background: none;
+  border: none;
+  padding: var(--space-xs) 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.club-main-page__feed-header-left:hover {
+  color: var(--color-primary);
+}
+
 .club-main-page__feed-title {
-  font-weight: 800;
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  color: inherit;
 }
 
 .club-main-page__feed-view-all {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: var(--font-size-s);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.club-main-page__feed-view-all:hover {
+  color: var(--color-primary);
 }
 
 /* 게시글 목록 */

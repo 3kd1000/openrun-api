@@ -181,13 +181,47 @@ const ClubExternalRequestsPage: React.FC = () => {
   };
 
   const formatProfileSummary = (r: ExternalRequestResponse) => {
+    const ym = (iso?: string | null) => (iso ? iso.slice(0, 7) : null);
     const parts: string[] = [];
     if (r.ntrp) parts.push(`NTRP ${r.ntrp}`);
     if (r.backhandType === "ONE_HAND") parts.push("원핸드");
     if (r.backhandType === "TWO_HAND") parts.push("투핸드");
     if (r.formerPlayer === true) parts.push("선수출신");
-    if (r.tennisStartedAt) parts.push(`시작 ${r.tennisStartedAt}`);
+    if (r.tennisStartedAt) parts.push(`시작 ${ym(r.tennisStartedAt)}`);
+    if (r.favoritePlayer) parts.push(`선호 ${r.favoritePlayer}`);
     return parts.length > 0 ? parts.join(" · ") : null;
+  };
+
+  const renderAuthorProfile = (r: ExternalRequestResponse) => {
+    const ym = (iso?: string | null) => (iso ? iso.slice(0, 7) : null);
+    const chips: Array<{ label: string; value: string }> = [];
+
+    if (r.ntrp) chips.push({ label: "NTRP", value: r.ntrp });
+    if (r.tennisStartedAt && ym(r.tennisStartedAt)) chips.push({ label: "시작", value: ym(r.tennisStartedAt) as string });
+    if (r.backhandType === "ONE_HAND") chips.push({ label: "백핸드", value: "원핸드" });
+    if (r.backhandType === "TWO_HAND") chips.push({ label: "백핸드", value: "투핸드" });
+    if (r.formerPlayer === true) chips.push({ label: "경력", value: "선수출신" });
+    if (r.favoritePlayer) chips.push({ label: "선호선수", value: r.favoritePlayer });
+
+    const note = (r.tournamentHistory ?? "").trim();
+    const hasAny = chips.length > 0 || note.length > 0;
+    if (!hasAny) return null;
+
+    return (
+      <div className="club-external-requests-page__author-profile">
+        {chips.length > 0 && (
+          <div className="club-external-requests-page__profile-chips">
+            {chips.map((c) => (
+              <div key={`${c.label}-${c.value}`} className="club-external-requests-page__profile-chip">
+                <span className="club-external-requests-page__profile-chip-label">{c.label}</span>
+                <span className="club-external-requests-page__profile-chip-value">{c.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {note.length > 0 && <div className="club-external-requests-page__profile-note">{note}</div>}
+      </div>
+    );
   };
 
   return (
@@ -381,6 +415,7 @@ const ClubExternalRequestsPage: React.FC = () => {
                             {postsById[r.postId].author?.name ?? postsById[r.postId].guestName ?? "익명"} ·{" "}
                             {new Date(postsById[r.postId].createdAt).toLocaleString()}
                           </div>
+                          {renderAuthorProfile(r)}
                         </div>
                       )}
 

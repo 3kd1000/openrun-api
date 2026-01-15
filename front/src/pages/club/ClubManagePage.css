@@ -380,12 +380,14 @@
   align-items: center;
   gap: var(--space-s);
   width: 100%;
-  padding: var(--space-m);
+  /* 메뉴 간격/터치 타겟 개선: '다다닥' 붙는 느낌 완화 */
+  padding: var(--space-l);
+  min-height: 56px;
   background: none;
   border: none;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-l);
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -502,6 +504,7 @@
   .club-manage-page__menu-item {
     padding: var(--space-s);
     font-size: var(--font-size-m);
+    min-height: 52px;
   }
 }
 
@@ -585,5 +588,6 @@
   .club-manage-page__menu-item {
     padding: var(--space-xs);
     font-size: var(--font-size-s);
+    min-height: 48px;
   }
 }

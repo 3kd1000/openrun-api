@@ -67,7 +67,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-2xl);
+  color: var(--color-text-tertiary);
   border: var(--border-width-thin) solid var(--color-border-secondary);
   flex-shrink: 0;
 }
@@ -96,14 +96,19 @@
 }
 
 .profile-edit-icon {
-  font-size: var(--font-size-xl);
   color: var(--color-text-tertiary);
   transition: var(--transition-base);
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-card:hover .profile-edit-icon {
   color: var(--color-primary);
+}
+
+.profile-card:hover .profile-edit-icon svg {
   transform: scale(1.1);
 }
 
@@ -141,7 +146,12 @@
 }
 
 .more-icon {
-  font-size: var(--font-size-xl);
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 

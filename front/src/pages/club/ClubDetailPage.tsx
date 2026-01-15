@@ -11,7 +11,7 @@ import './ClubDetailPage.css';
 
 interface ClubMembershipResponse {
   memberId: number;
-  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'REGULAR' | 'ASSOCIATE';
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'REGULAR';
   status: 'PENDING' | 'ACTIVE' | 'REJECTED';
   joinedAt: string;
   userId: number;

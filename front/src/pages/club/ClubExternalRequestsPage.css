@@ -214,6 +214,54 @@
   padding: 12px;
 }
 
+.club-external-requests-page__author-profile {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.club-external-requests-page__profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.club-external-requests-page__profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.club-external-requests-page__profile-chip-label {
+  font-size: var(--font-size-s);
+  font-weight: 800;
+  color: var(--color-text-secondary);
+}
+
+.club-external-requests-page__profile-chip-value {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.club-external-requests-page__profile-note {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  white-space: pre-wrap;
+}
+
 .club-external-requests-page__post-meta,
 .club-external-requests-page__comment-meta {
   margin-top: 6px;

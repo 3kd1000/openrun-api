@@ -33,6 +33,8 @@ public class ExternalRequestResponse {
     private final String backhandType;
     private final String ntrp;
     private final Boolean formerPlayer;
+    private final String favoritePlayer;
+    private final String tournamentHistory;
 
     public ExternalRequestResponse(ExternalRequest r) {
         this(r, null);
@@ -61,6 +63,8 @@ public class ExternalRequestResponse {
         this.backhandType = profile != null && profile.getBackhandType() != null ? profile.getBackhandType().name() : null;
         this.ntrp = profile != null ? profile.getNtrp() : null;
         this.formerPlayer = profile != null ? profile.isFormerPlayer() : null;
+        this.favoritePlayer = profile != null ? profile.getFavoritePlayer() : null;
+        this.tournamentHistory = profile != null ? profile.getTournamentHistory() : null;
     }
 }
 

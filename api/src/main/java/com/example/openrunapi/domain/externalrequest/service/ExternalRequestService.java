@@ -341,8 +341,8 @@ public class ExternalRequestService {
     public ExternalRequestResponse getMyJoinRequest(Long clubId, Long requesterUserId) {
         ExternalRequest req = externalRequestRepository
                 .findByClubIdAndScheduleIsNullAndTypeAndRequesterId(clubId, ExternalRequestType.JOIN, requesterUserId)
-                .orElseThrow(() -> new EntityNotFoundException("신청/문의 내역을 찾을 수 없습니다."));
-        return new ExternalRequestResponse(req);
+                .orElse(null);
+        return req != null ? new ExternalRequestResponse(req) : null;
     }
 
     @Transactional

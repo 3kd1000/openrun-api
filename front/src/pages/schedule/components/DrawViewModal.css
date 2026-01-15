@@ -24,6 +24,9 @@
 
 .draw-view-modal .modal-header h2 {
   color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 /* ========== 컨텐츠 영역 ========== */
@@ -157,6 +160,10 @@
 .btn-copy {
   background: var(--color-secondary);
   color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
 }
 
 .btn-copy:hover:not(:disabled) {

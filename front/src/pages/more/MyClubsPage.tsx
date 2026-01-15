@@ -5,6 +5,7 @@ import { getMyClubs } from "../../services/api/userApi";
 import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import { isNotEmpty } from "../../utils/isEmpty";
+import { UsersIcon } from "../../components/common/Icons";
 import "./MyClubsPage.css";
 
 const MyClubsPage: React.FC = () => {
@@ -86,7 +87,9 @@ const MyClubsPage: React.FC = () => {
           <div className="loading">로딩 중...</div>
         ) : clubs.length === 0 ? (
           <div className="empty-state">
-            <p className="empty-icon">🏟️</p>
+            <p className="empty-icon">
+              <UsersIcon size={64} />
+            </p>
             <p className="empty-message">가입한 클럽이 없습니다.</p>
           </div>
         ) : (
@@ -94,7 +97,9 @@ const MyClubsPage: React.FC = () => {
             {clubs.map((club) => (
               <div key={club.id} className="club-card">
                 <div className="club-card-header">
-                  <div className="club-icon">🏟️</div>
+                  <div className="club-icon">
+                    <UsersIcon size={22} />
+                  </div>
                   <div className="club-info">
                     <div className="club-name">
                       {club.name}

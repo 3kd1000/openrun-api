@@ -156,4 +156,16 @@ public class ClubController {
         clubService.leaveClub(clubId, currentUserResponse.getId());
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 클럽원 제명 (ADMIN 이상이 다른 회원을 제명)
+     */
+    @DeleteMapping("/{clubId}/members/{memberId}")
+    public ResponseEntity<Void> kickMember(@PathVariable Long clubId,
+            @PathVariable Long memberId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        clubService.kickMember(clubId, currentUserResponse.getId(), memberId);
+        return ResponseEntity.noContent().build();
+    }
 }

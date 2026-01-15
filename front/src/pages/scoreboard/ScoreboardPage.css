@@ -75,6 +75,10 @@
   transition: var(--transition-all);
   margin-bottom: calc(-1 * var(--border-width-base));
   min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
 }
 
 .tab-button:hover {
@@ -634,6 +638,9 @@
   font-weight: var(--font-weight-semibold);
   margin: 0;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .match-status-badge {

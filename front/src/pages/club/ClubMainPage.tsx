@@ -19,6 +19,8 @@ import {
   ClipboardListIcon,
   SettingsIcon,
 } from "../../components/common/Icons";
+import { ChevronRightIcon } from "../../components/common/Icons";
+import { ChevronDownIcon, ChevronUpIcon, MessageCircleIcon } from "../../components/common/Icons";
 import {
   canManageClub,
   normalizeClubRole,
@@ -814,92 +816,118 @@ const ClubMainPage: React.FC = () => {
               {widgetId === "board" && (
                 <div className="club-main-page__feed-section">
                   <div className="club-main-page__feed-header">
-                    <div className="club-main-page__feed-title">게시판</div>
+                    <button
+                      className="club-main-page__feed-header-left"
+                      type="button"
+                      onClick={() =>
+                        setWidgetExpanded(
+                          "board",
+                          !getWidgetExpanded("board", true)
+                        )
+                      }
+                    >
+                      <MessageCircleIcon size={16} />
+                      <span className="club-main-page__feed-title">게시판</span>
+                      {getWidgetExpanded("board", true) ? (
+                        <ChevronUpIcon size={14} />
+                      ) : (
+                        <ChevronDownIcon size={14} />
+                      )}
+                    </button>
                     <button
                       className="club-main-page__feed-view-all"
                       type="button"
                       onClick={() => navigate(`/clubs/${clubId}/posts`)}
                     >
                       전체보기
+                      <ChevronRightIcon size={14} />
                     </button>
                   </div>
-                  {/* 게시글 타입 탭: ADMIN+만 노출 (전체/자유/문의) */}
-                  {canManage && (
-                    <CategoryTabs
-                      selectedPostType={selectedPostType}
-                      onSelectPostType={handlePostTypeChange}
-                      allowedPostTypes={[PostType.GENERAL, PostType.INQUIRY]}
-                      showAllTab
-                    />
-                  )}
-
-                  {/* 게시글 목록 */}
-                  <div className="club-main-page__posts">
-                    {isLoadingPosts && (
-                      <div className="club-main-page__posts-loading">
-                        게시글을 불러오는 중...
-                      </div>
-                    )}
-
-                    {error && (
-                      <div className="club-main-page__posts-error">{error}</div>
-                    )}
-
-                    {!isLoadingPosts && !error && posts.length === 0 && (
-                      <div className="club-main-page__posts-empty">
-                        <p className="club-main-page__posts-empty-icon">📝</p>
-                        <p className="club-main-page__posts-empty-message">
-                          {selectedPostType
-                            ? "해당 카테고리에 게시글이 없습니다."
-                            : "아직 작성된 글이 없습니다."}
-                        </p>
-                        <p className="club-main-page__posts-empty-hint">
-                          첫 글을 작성해보세요!
-                        </p>
-                      </div>
-                    )}
-
-                    {!isLoadingPosts &&
-                      !error &&
-                      posts.map((post) => (
-                        <PostCard
-                          key={post.id}
-                          post={post}
-                          comments={comments[post.id] || []}
-                          isExpanded={expandedPostIds.has(post.id)}
-                          onToggleExpand={handleTogglePost}
-                          onLikePost={handleLikePost}
-                          onLikeComment={handleLikeComment}
-                          onAddComment={handleAddComment}
-                          onDeleteComment={handleDeleteComment}
-                          onDeletePost={handleDeletePost}
+                  {getWidgetExpanded("board", true) && (
+                    <>
+                      {/* 게시글 타입 탭: ADMIN+만 노출 (전체/자유/문의) */}
+                      {canManage && (
+                        <CategoryTabs
+                          selectedPostType={selectedPostType}
+                          onSelectPostType={handlePostTypeChange}
+                          allowedPostTypes={[PostType.GENERAL, PostType.INQUIRY]}
+                          showAllTab
                         />
-                      ))}
+                      )}
 
-                    {/* Infinite Scroll 트리거 */}
-                    {!isLoadingPosts && !error && posts.length > 0 && (
-                      <div
-                        ref={loadMoreRef}
-                        className="club-main-page__load-more"
-                      >
-                        {isLoadingMore && (
+                      {/* 게시글 목록 */}
+                      <div className="club-main-page__posts">
+                        {isLoadingPosts && (
                           <div className="club-main-page__posts-loading">
-                            더 불러오는 중...
+                            게시글을 불러오는 중...
                           </div>
                         )}
-                        {!hasMore && posts.length > PAGE_SIZE && (
-                          <div className="club-main-page__posts-end">
-                            모든 게시글을 불러왔습니다.
+
+                        {error && (
+                          <div className="club-main-page__posts-error">
+                            {error}
+                          </div>
+                        )}
+
+                        {!isLoadingPosts && !error && posts.length === 0 && (
+                          <div className="club-main-page__posts-empty">
+                            <p className="club-main-page__posts-empty-icon">
+                              📝
+                            </p>
+                            <p className="club-main-page__posts-empty-message">
+                              {selectedPostType
+                                ? "해당 카테고리에 게시글이 없습니다."
+                                : "아직 작성된 글이 없습니다."}
+                            </p>
+                            <p className="club-main-page__posts-empty-hint">
+                              첫 글을 작성해보세요!
+                            </p>
+                          </div>
+                        )}
+
+                        {!isLoadingPosts &&
+                          !error &&
+                          posts.map((post) => (
+                            <PostCard
+                              key={post.id}
+                              post={post}
+                              comments={comments[post.id] || []}
+                              isExpanded={expandedPostIds.has(post.id)}
+                              onToggleExpand={handleTogglePost}
+                              onLikePost={handleLikePost}
+                              onLikeComment={handleLikeComment}
+                              onAddComment={handleAddComment}
+                              onDeleteComment={handleDeleteComment}
+                              onDeletePost={handleDeletePost}
+                            />
+                          ))}
+
+                        {/* Infinite Scroll 트리거 */}
+                        {!isLoadingPosts && !error && posts.length > 0 && (
+                          <div
+                            ref={loadMoreRef}
+                            className="club-main-page__load-more"
+                          >
+                            {isLoadingMore && (
+                              <div className="club-main-page__posts-loading">
+                                더 불러오는 중...
+                              </div>
+                            )}
+                            {!hasMore && posts.length > PAGE_SIZE && (
+                              <div className="club-main-page__posts-end">
+                                모든 게시글을 불러왔습니다.
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* 빠른 글쓰기 입력 */}
-                  <div className="club-main-page__feed-input">
-                    <QuickPostInput onSubmit={handleCreatePost} />
-                  </div>
+                      {/* 빠른 글쓰기 입력 */}
+                      <div className="club-main-page__feed-input">
+                        <QuickPostInput onSubmit={handleCreatePost} />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
