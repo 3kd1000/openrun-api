@@ -232,13 +232,22 @@ const ScheduleListPage: React.FC = () => {
     setSelectedScheduleId(null);
   };
 
-  // 정원 상태 계산 헬퍼 함수
+  // 정원 상태 계산 헬퍼 함수 (필터용)
+  // participated+full 동시 상태 판별을 위해 개별 상태도 반환
+  const getCapacityInfo = (schedule: Schedule) => {
+    const { currentParticipants, maxCapacity } = schedule;
+    const isParticipated = myParticipations.has(schedule.id);
+    const isFull = currentParticipants >= maxCapacity;
+    return { isParticipated, isFull };
+  };
+
+  // 기존 호환용: 단일 상태 반환 (participated 우선)
   const getCapacityStatus = (
     schedule: Schedule
   ): "available" | "full" | "participated" => {
-    const { currentParticipants, maxCapacity } = schedule;
-    if (myParticipations.has(schedule.id)) return "participated";
-    if (currentParticipants >= maxCapacity) return "full";
+    const { isParticipated, isFull } = getCapacityInfo(schedule);
+    if (isParticipated) return "participated";
+    if (isFull) return "full";
     return "available";
   };
 
@@ -251,10 +260,20 @@ const ScheduleListPage: React.FC = () => {
       if (scheduleDate !== filterDateStr) return false;
     }
 
-    // 정원 상태 필터
+    // 정원 상태 필터: participated+full 동시 상태는 양쪽 필터에 모두 노출
     if (capacityFilter !== "all") {
-      const status = getCapacityStatus(schedule);
-      if (status !== capacityFilter) return false;
+      const { isParticipated, isFull } = getCapacityInfo(schedule);
+
+      if (capacityFilter === "participated") {
+        // 신청완료 필터: 내가 신청한 일정 (마감 여부 무관)
+        if (!isParticipated) return false;
+      } else if (capacityFilter === "full") {
+        // 마감/초과 필터: 정원 마감된 일정 (내가 신청했어도 마감이면 노출)
+        if (!isFull) return false;
+      } else if (capacityFilter === "available") {
+        // 신청가능 필터: 정원 여유 있고 내가 신청 안 한 일정
+        if (isParticipated || isFull) return false;
+      }
     }
 
     return true;
@@ -379,14 +398,17 @@ const ScheduleListPage: React.FC = () => {
             const hasValidDraw = schedule.drawType && schedule.isDrawValid;
 
             // 정원 상태 계산 (3단계: 신청 가능 / 마감 또는 초과 / 신청 완료)
-            const getCapacityStatus = () => {
-              const { currentParticipants, maxCapacity } = schedule;
+            // + 신청완료+마감 동시 상태 표시
+            const isFull = schedule.currentParticipants >= schedule.maxCapacity;
+            const getCapacityStatusClass = () => {
               if (isParticipating) return "capacity-participated";
-              if (currentParticipants >= maxCapacity) return "capacity-full";
+              if (isFull) return "capacity-full";
               return "capacity-available";
             };
 
-            const capacityStatus = getCapacityStatus();
+            const capacityStatus = getCapacityStatusClass();
+            // 신청완료 + 마감 동시 상태: 테두리로 구분
+            const isParticipatedAndFull = isParticipating && isFull;
 
             // 대진 상태 결정
             const getDrawStatus = () => {
@@ -403,7 +425,7 @@ const ScheduleListPage: React.FC = () => {
                 ref={isFirstFuture ? todayScheduleRef : null}
                 className={`schedule-card ${
                   isPast ? "past-schedule" : ""
-                } ${capacityStatus} ${drawStatus}`}
+                } ${capacityStatus} ${drawStatus} ${isParticipatedAndFull ? "participated-and-full" : ""}`}
                 onClick={() => handleScheduleClick(schedule)}
               >
                 <div className="schedule-info">

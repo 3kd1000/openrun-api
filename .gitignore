@@ -51,6 +51,7 @@ temp/
 
 # API specific ignores
 api/build/
+api/bin/
 
 # Environment files with secrets
 .env

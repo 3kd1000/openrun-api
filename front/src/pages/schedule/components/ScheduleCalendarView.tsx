@@ -228,14 +228,17 @@ const ScheduleCalendarView: React.FC<Props> = ({
             const hasValidDraw = schedule.drawType && schedule.isDrawValid;
 
             // 정원 상태 계산 (3단계: 신청 가능 / 마감 또는 초과 / 신청 완료)
+            // + 신청완료+마감 동시 상태 표시
+            const isFull = schedule.currentParticipants >= schedule.maxCapacity;
             const getCapacityStatus = () => {
-              const { currentParticipants, maxCapacity } = schedule;
               if (isParticipating) return "capacity-participated";
-              if (currentParticipants >= maxCapacity) return "capacity-full";
+              if (isFull) return "capacity-full";
               return "capacity-available";
             };
 
             const capacityStatus = getCapacityStatus();
+            // 신청완료 + 마감 동시 상태: 테두리로 구분
+            const isParticipatedAndFull = isParticipating && isFull;
 
             // 대진 상태 결정
             const getDrawStatus = () => {
@@ -251,7 +254,7 @@ const ScheduleCalendarView: React.FC<Props> = ({
                 key={schedule.id}
                 className={`calendar-event ${
                   isPast ? "past-event" : ""
-                } ${capacityStatus} ${drawStatus}`}
+                } ${capacityStatus} ${drawStatus} ${isParticipatedAndFull ? "participated-and-full" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onScheduleClick(schedule);
