@@ -49,14 +49,23 @@
 }
 
 .club-members-page__edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   border: 1px solid var(--color-border);
   background: var(--color-white);
   border-radius: 999px;
-  padding: 6px 10px;
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-bold);
+  padding: 8px 14px;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.club-members-page__edit-btn:hover:not(:disabled) {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-text-secondary);
 }
 
 .club-members-page__edit-btn:disabled {
@@ -180,7 +189,14 @@
   color: var(--color-text-secondary);
 }
 
-.club-members-page__item-email {
+.club-members-page__item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.club-members-page__item-email,
+.club-members-page__item-kick {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -194,6 +210,22 @@
 .club-members-page__item-email:hover {
   background-color: var(--color-bg-secondary);
   color: var(--color-primary);
+}
+
+.club-members-page__item-kick {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.club-members-page__item-kick:hover:not(:disabled) {
+  background-color: #fee;
+  color: var(--color-error);
+}
+
+.club-members-page__item-kick:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Desktop (769px+) */
@@ -264,7 +296,8 @@
     font-size: var(--font-size-s);
   }
 
-  .club-members-page__item-email {
+  .club-members-page__item-email,
+  .club-members-page__item-kick {
     width: 32px;
     height: 32px;
   }
@@ -312,7 +345,8 @@
     font-size: var(--font-size-s);
   }
 
-  .club-members-page__item-email {
+  .club-members-page__item-email,
+  .club-members-page__item-kick {
     width: 28px;
     height: 28px;
   }

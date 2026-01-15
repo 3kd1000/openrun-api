@@ -94,6 +94,8 @@
 .schedule-detail-modal__header {
   display: flex;
   flex-direction: column;
+  /* 전역 .modal-header의 align-items:center 때문에 header-top이 내용 너비로 줄어드는 문제 방지 */
+  align-items: stretch;
   gap: var(--space-s);
 }
 
@@ -102,6 +104,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-s);
+  width: 100%;
 }
 
 .schedule-detail-modal__header-top h2 {
@@ -524,6 +527,10 @@
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   transition: var(--transition-all);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
   box-shadow: var(--shadow-primary);
 }
 

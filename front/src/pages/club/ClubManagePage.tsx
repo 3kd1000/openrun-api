@@ -4,6 +4,7 @@ import axiosInstance from '../../services/api/axiosInstance';
 import type { Club } from '../../types/club';
 import {
   ArrowLeftIcon,
+  InboxIcon,
   FileTextIcon,
   ChevronRightIcon,
   EditIcon,
@@ -114,18 +115,8 @@ const ClubManagePage: React.FC = () => {
           onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
         >
           <div className="club-manage-page__menu-left">
-            <FileTextIcon size={18} />
+            <InboxIcon size={18} />
             <span>외부 요청</span>
-          </div>
-          <ChevronRightIcon size={18} />
-        </button>
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/join-requests`)}
-        >
-          <div className="club-manage-page__menu-left">
-            <FileTextIcon size={18} />
-            <span>가입 신청 관리</span>
           </div>
           <ChevronRightIcon size={18} />
         </button>
@@ -137,18 +128,6 @@ const ClubManagePage: React.FC = () => {
             <FileTextIcon size={18} />
             <span>공지/회칙 관리</span>
           </div>
-          <ChevronRightIcon size={18} />
-        </button>
-      </div>
-
-      {/* 추가 관리 메뉴 */}
-      <div className="club-manage-page__menu">
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/members`)}
-        >
-          <FileTextIcon size={18} />
-          <span>클럽원 명단 보기</span>
           <ChevronRightIcon size={18} />
         </button>
       </div>

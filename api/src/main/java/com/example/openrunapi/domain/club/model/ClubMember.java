@@ -45,11 +45,11 @@ public class ClubMember {
     private LocalDateTime joinedAt;
 
     @Builder
-    public ClubMember(Club club, User user, ClubMemberStatus status) {
+    public ClubMember(Club club, User user, ClubMemberStatus status, ClubRole role) {
         this.club = club;
         this.user = user;
         this.status = status;
-        this.role = ClubRole.REGULAR; // 기본값
+        this.role = role; // 기본값
     }
 
     public void updateStatus(ClubMemberStatus status) {

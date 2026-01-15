@@ -27,15 +27,28 @@ const LoginPage: React.FC = () => {
   const [registering, setRegistering] = useState(false);
   const [autoLoginEnabled, setAutoLoginEnabled] = useState(true); // 기본값: 자동 로그인 사용
 
+  // 로그인 후 원래 페이지로 돌아가기 (returnUrl이 있으면 그곳으로, 없으면 /schedules)
+  const navigateAfterLogin = () => {
+    const returnUrl = sessionStorage.getItem('returnUrl');
+    if (returnUrl) {
+      console.log(`✅ 저장된 URL로 이동: ${returnUrl}`);
+      sessionStorage.removeItem('returnUrl'); // 사용 후 제거
+      navigate(returnUrl, { replace: true });
+    } else {
+      console.log(`✅ 기본 페이지(/schedules)로 이동`);
+      navigate("/schedules", { replace: true });
+    }
+  };
+
   // 이미 로그인되어있는지 체크 (PWA 시작 시 자동 로그인)
   useEffect(() => {
     const firebaseToken = localStorage.getItem("firebase_token");
     const userId = localStorage.getItem("user_id");
 
-    // 이미 로그인되어있으면 메인 화면으로 이동
+    // 이미 로그인되어있으면 원래 페이지 또는 메인 화면으로 이동
     if (firebaseToken && userId) {
-      console.log("✅ 이미 로그인되어 있음 → /schedules로 자동 이동");
-      navigate("/schedules", { replace: true });
+      console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules로 자동 이동");
+      navigateAfterLogin();
     }
   }, [navigate]);
 
@@ -152,13 +165,13 @@ const LoginPage: React.FC = () => {
             } else {
               console.log("✅ 메인 화면으로 이동");
               if (debugMode) alert("Step 5: /schedules로 이동");
-              navigate("/schedules");
+              navigateAfterLogin();
             }
           } catch (error) {
             console.error("WebAuthn 등록 여부 확인 실패:", error);
             if (debugMode) alert(`WebAuthn 확인 실패 → /schedules로 이동\n${error}`);
             // 에러가 나도 메인 화면으로 이동
-            navigate("/schedules");
+            navigateAfterLogin();
           }
         }
       } catch (err: unknown) {
@@ -253,12 +266,12 @@ const LoginPage: React.FC = () => {
             setShowWebAuthnModal(true);
           } else {
             console.log("✅ 메인 화면으로 이동");
-            navigate("/schedules");
+            navigateAfterLogin();
           }
         } catch (error) {
           console.error("WebAuthn 등록 여부 확인 실패:", error);
           // 에러가 나도 메인 화면으로 이동
-          navigate("/schedules");
+          navigateAfterLogin();
         }
       }
     } catch (err: unknown) {
@@ -342,7 +355,7 @@ const LoginPage: React.FC = () => {
       console.log("✅ 사용자 정보:", userInfo);
 
       // 9. 메인 화면으로 이동 (WebAuthn은 이미 등록된 사용자만 사용 가능)
-      navigate("/schedules");
+      navigateAfterLogin();
     } catch (err: unknown) {
       console.error("❌ WebAuthn 로그인 실패:", err);
       if (err instanceof Error) {
@@ -403,7 +416,7 @@ const LoginPage: React.FC = () => {
 
       // 4. 모달 닫고 메인 화면으로 이동
       setShowWebAuthnModal(false);
-      navigate("/schedules");
+      navigateAfterLogin();
     } catch (err: unknown) {
       console.error("❌ WebAuthn 등록 실패:", err);
       if (err instanceof Error) {
@@ -427,7 +440,7 @@ const LoginPage: React.FC = () => {
   // WebAuthn 등록 건너뛰기
   const handleSkipWebAuthn = () => {
     setShowWebAuthnModal(false);
-    navigate("/schedules");
+    navigateAfterLogin();
   };
 
   return (

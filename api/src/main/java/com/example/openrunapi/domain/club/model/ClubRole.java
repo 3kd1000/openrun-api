@@ -12,13 +12,6 @@ public enum ClubRole {
     REGULAR,
 
     /**
-     * 준회원
-     * - 정회원과 동일한 기본 기능
-     * - (정책 확정 전) 필요 시 일부 기능 제한 가능
-     */
-    ASSOCIATE,
-
-    /**
      * 운영진
      * - 정회원 권한 포함
      * - 일정 CRUD

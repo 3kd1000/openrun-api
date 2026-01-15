@@ -18,7 +18,11 @@ import ScheduleCalendarView from "./components/ScheduleCalendarView";
 import ScheduleDetailModal from "./components/ScheduleDetailModal";
 import DrawViewModal from "./components/DrawViewModal";
 import Toast from "../../components/common/Toast";
-import { StarIcon } from "../../components/common/Icons";
+import {
+  StarIcon,
+  CalendarIcon,
+  ClipboardListIcon,
+} from "../../components/common/Icons";
 import { isNotEmpty } from "../../utils/isEmpty";
 import "./ScheduleListPage.css";
 
@@ -325,7 +329,8 @@ const ScheduleListPage: React.FC = () => {
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
-              📅 캘린더
+              <CalendarIcon size={18} />
+              <span>캘린더</span>
             </button>
             <button
               className={`header-action-btn view-toggle-btn ${
@@ -333,7 +338,8 @@ const ScheduleListPage: React.FC = () => {
               }`}
               onClick={() => setViewMode("list")}
             >
-              📋 리스트
+              <ClipboardListIcon size={18} />
+              <span>리스트</span>
             </button>
           </div>
           <button
@@ -410,7 +416,9 @@ const ScheduleListPage: React.FC = () => {
         />
       ) : filteredSchedules.length === 0 ? (
         <div className="empty-state">
-          <p>📅</p>
+          <p className="empty-icon">
+            <CalendarIcon size={64} color="var(--color-text-secondary)" />
+          </p>
           <p>등록된 일정이 없습니다.</p>
           <p className="empty-hint">새로운 일정을 생성해보세요!</p>
         </div>
@@ -521,12 +529,12 @@ const ScheduleListPage: React.FC = () => {
                     <div className="schedule-draw-badges">
                       {hasInvalidDraw && (
                         <span className="draw-badge draw-badge-invalid">
-                          ⚠️ 무효
+                          무효
                         </span>
                       )}
                       {hasValidDraw && (
                         <span className="draw-badge draw-badge-valid">
-                          ✓ 완료
+                          완료
                         </span>
                       )}
                       {(hasValidDraw || hasInvalidDraw) && (
@@ -534,7 +542,8 @@ const ScheduleListPage: React.FC = () => {
                           className="draw-badge draw-badge-view"
                           onClick={(e) => handleDrawViewClick(e, schedule)}
                         >
-                          📋 보기
+                          <ClipboardListIcon size={14} />
+                          <span>보기</span>
                         </button>
                       )}
                     </div>

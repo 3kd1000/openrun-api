@@ -6,13 +6,23 @@ import { signOut } from "firebase/auth";
 import type {
   UserProfile,
   OAuthProvider,
-  // MyClub,
+  MyClub,
 } from "../../services/api/userApi";
 import {
   getCurrentUser,
   getOAuthProviders,
-  // getMyClubs,
+  getMyClubs,
 } from "../../services/api/userApi";
+import {
+  BookOpenIcon,
+  EditIcon,
+  FileTextIcon,
+  LinkIcon,
+  MailIcon,
+  ScaleIcon,
+  UsersIcon,
+  UserIcon,
+} from "../../components/common/Icons";
 import ProfileEditModal from "../../components/ProfileEditModal";
 import "./MorePage.css";
 
@@ -23,12 +33,12 @@ const MorePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
-  // const [_myClubs, setMyClubs] = useState<MyClub[]>([]);
+  const [myClubs, setMyClubs] = useState<MyClub[]>([]);
 
   useEffect(() => {
     loadUserProfile();
     loadOAuthProviders();
-    // loadMyClubs(); // 클럽 메뉴 비활성화로 인해 임시 주석처리
+    loadMyClubs();
   }, [isAuthReady, firebaseUser]);
 
   const loadUserProfile = async () => {
@@ -73,14 +83,14 @@ const MorePage: React.FC = () => {
     }
   };
 
-  // const _loadMyClubs = async () => {
-  //   try {
-  //     const clubs = await getMyClubs();
-  //     setMyClubs(clubs);
-  //   } catch (error) {
-  //     console.error("내 클럽 목록 조회 실패:", error);
-  //   }
-  // };
+  const loadMyClubs = async () => {
+    try {
+      const clubs = await getMyClubs();
+      setMyClubs(clubs);
+    } catch (error) {
+      console.error("내 클럽 목록 조회 실패:", error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -121,7 +131,9 @@ const MorePage: React.FC = () => {
                   className="profile-image"
                 />
               ) : (
-                <div className="profile-icon">👤</div>
+                <div className="profile-icon">
+                  <UserIcon size={28} />
+                </div>
               )}
               <div className="profile-text">
                 <div className="profile-name">{user.name}</div>
@@ -130,7 +142,9 @@ const MorePage: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="profile-edit-icon">✏️</div>
+            <div className="profile-edit-icon">
+              <EditIcon size={20} />
+            </div>
           </div>
         )}
 
@@ -142,7 +156,9 @@ const MorePage: React.FC = () => {
             className="more-item"
             onClick={() => navigate("/more/oauth-providers")}
           >
-            <span className="more-icon">🔗</span>
+            <span className="more-icon">
+              <LinkIcon size={20} />
+            </span>
             <div className="more-link-container">
               <span className="more-link">연동된 계정</span>
               {oauthProviders.length > 0 && (
@@ -151,16 +167,17 @@ const MorePage: React.FC = () => {
             </div>
           </div>
 
-          {/* 가입한 클럽 메뉴 - 클럽 가입 기능 구현 전까지 임시 비활성화 */}
-          {/* <div className="more-item" onClick={() => navigate("/more/my-clubs")}>
-            <span className="more-icon">🏟️</span>
+          <div className="more-item" onClick={() => navigate("/more/my-clubs")}>
+            <span className="more-icon">
+              <UsersIcon size={20} />
+            </span>
             <div className="more-link-container">
               <span className="more-link">가입한 클럽</span>
               {myClubs.length > 0 && (
                 <span className="more-badge">{myClubs.length}</span>
               )}
             </div>
-          </div> */}
+          </div>
         </div>
 
         {/* 서비스 섹션 */}
@@ -170,23 +187,31 @@ const MorePage: React.FC = () => {
             className="more-item"
             onClick={() => navigate("/more/user-guide")}
           >
-            <span className="more-icon">📘</span>
+            <span className="more-icon">
+              <BookOpenIcon size={20} />
+            </span>
             <span className="more-link">이용 가이드</span>
           </div>
           <div className="more-item">
-            <span className="more-icon">📄</span>
+            <span className="more-icon">
+              <FileTextIcon size={20} />
+            </span>
             <div onClick={() => navigate("/more/terms")} className="more-link cursor-pointer">
               이용약관
             </div>
           </div>
           <div className="more-item">
-            <span className="more-icon">⚖️</span>
+            <span className="more-icon">
+              <ScaleIcon size={20} />
+            </span>
             <div onClick={() => navigate("/more/license")} className="more-link cursor-pointer">
               오픈소스 라이센스
             </div>
           </div>
           <div className="more-item">
-            <span className="more-icon">✉️</span>
+            <span className="more-icon">
+              <MailIcon size={20} />
+            </span>
             <a href="mailto:dev.openrun@gmail.com" className="more-link">
               문의하기
             </a>

@@ -4,6 +4,7 @@ import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubMemberStatus;
+import com.example.openrunapi.domain.club.model.ClubRole;
 import com.example.openrunapi.domain.club.model.ClubJoinPolicy;
 import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
 import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
@@ -47,10 +48,11 @@ public class ClubService {
         Club newClub = request.toEntity(ownerUserId);
         Club savedClub = clubRepository.save(newClub);
 
-        // 클럽 생성자를 자동으로 멤버로 추가 (ACTIVE 상태)
+        // 클럽 생성자를 자동으로 멤버로 추가 (OWNER 역할, ACTIVE 상태)
         ClubMember clubMember = ClubMember.builder()
                 .club(savedClub)
                 .user(owner)
+                .role(ClubRole.OWNER)
                 .status(ClubMemberStatus.ACTIVE)
                 .build();
         clubMemberRepository.save(clubMember);
@@ -135,6 +137,7 @@ public class ClubService {
         ClubMember clubMember = ClubMember.builder()
                 .club(club)
                 .user(user)
+                .role(ClubRole.REGULAR)
                 .status(status)
                 .build();
         clubMemberRepository.save(clubMember);
@@ -218,6 +221,46 @@ public class ClubService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 클럽의 멤버가 아닙니다."));
 
         clubMemberRepository.delete(member);
+    }
+
+    /**
+     * 클럽원 제명 (OWNER만 가능)
+     * - OWNER 권한 필요
+     * - OWNER 본인은 제명 불가
+     */
+    @Transactional
+    public void kickMember(Long clubId, Long adminUserId, Long targetMemberId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
+
+        // OWNER 권한 확인
+        ClubMember adminMember = clubMemberRepository.findByClubIdAndUserId(clubId, adminUserId)
+                .orElseThrow(() -> new EntityNotFoundException("클럽 멤버가 아닙니다."));
+
+        if (!adminMember.isOwner()) {
+            throw new IllegalStateException("클럽원 제명은 클럽장만 가능합니다.");
+        }
+
+        // memberId로 직접 조회
+        ClubMember targetMember = clubMemberRepository.findById(targetMemberId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 멤버를 찾을 수 없습니다."));
+
+        // 클럽이 일치하는지 확인
+        if (!targetMember.getClub().getId().equals(clubId)) {
+            throw new IllegalStateException("해당 멤버는 이 클럽에 속하지 않습니다.");
+        }
+
+        // 자기 자신은 제명 불가 (탈퇴 사용)
+        if (targetMember.getUser().getId().equals(adminUserId)) {
+            throw new IllegalStateException("자기 자신을 제명할 수 없습니다. 탈퇴 기능을 사용하세요.");
+        }
+
+        // OWNER는 제명 불가
+        if (targetMember.isOwner()) {
+            throw new IllegalStateException("클럽 소유자는 제명할 수 없습니다. 소유권을 먼저 이전하세요.");
+        }
+
+        clubMemberRepository.delete(targetMember);
     }
 
     /**

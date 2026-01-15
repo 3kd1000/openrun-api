@@ -21,6 +21,7 @@ import {
   isPastDate,
 } from "../../../utils/scheduleValidation";
 import { isNotEmpty } from "../../../utils/isEmpty";
+import { ClipboardListIcon } from "../../../components/common/Icons";
 import "./ScheduleDetailModal.css";
 
 interface Props {
@@ -569,7 +570,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   onClick={() => setShowDrawViewModal(true)}
                   className="btn-view-draw"
                 >
-                  📋 대진표 보기
+                  <ClipboardListIcon size={16} />
+                  <span>대진표 보기</span>
                 </button>
                 <button
                   type="button"

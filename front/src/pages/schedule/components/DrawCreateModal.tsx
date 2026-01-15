@@ -13,6 +13,7 @@ import type { Schedule } from "../../../types/schedule";
 import DrawGamesList from "../../../components/draw/DrawGamesList";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import Toast from "../../../components/common/Toast";
+import { CheckIcon, CopyIcon } from "../../../components/common/Icons";
 import "./DrawCreateModal.css";
 import "./DrawViewModal.css";
 
@@ -987,7 +988,17 @@ const DrawCreateModal: React.FC<Props> = ({
             ) : (
               <>
                 <button type="button" onClick={handleCopy} className="btn-copy">
-                  {copied ? "✓ 복사됨" : "📋 복사"}
+                  {copied ? (
+                    <>
+                      <CheckIcon size={16} />
+                      <span>복사됨</span>
+                    </>
+                  ) : (
+                    <>
+                      <CopyIcon size={16} />
+                      <span>복사</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"

@@ -13,6 +13,7 @@ import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
 import { isNotEmpty } from "../../../utils/isEmpty";
+import { ClipboardListIcon, CheckIcon, CopyIcon } from "../../../components/common/Icons";
 import "./DrawViewModal.css";
 
 interface Props {
@@ -260,7 +261,10 @@ const DrawViewModal: React.FC<Props> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h2>📋 대진표</h2>
+          <h2>
+            <ClipboardListIcon size={24} />
+            <span>대진표</span>
+          </h2>
           <button className="btn-close" onClick={onClose}>
             &times;
           </button>
@@ -304,7 +308,17 @@ const DrawViewModal: React.FC<Props> = ({
               className="btn-copy"
               disabled={!drawResult || isEditMode}
             >
-              {copied ? "✓ 복사됨" : "📋 복사"}
+              {copied ? (
+                <>
+                  <CheckIcon size={16} />
+                  <span>복사됨</span>
+                </>
+              ) : (
+                <>
+                  <CopyIcon size={16} />
+                  <span>복사</span>
+                </>
+              )}
             </button>
             <div
               className="btn-wrapper"

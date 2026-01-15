@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../services/api/axiosInstance';
 import type { Club } from '../../types/club';
-import { ArrowLeftIcon, CrownIcon, ShieldIcon, UserIcon, MailIcon } from '../../components/common/Icons';
+import { ArrowLeftIcon, CrownIcon, ShieldIcon, UserIcon, MailIcon, SettingsIcon, XIcon } from '../../components/common/Icons';
 import { getErrorMessage, logError } from '../../utils/errorHandler';
 import { canManageClub, normalizeClubRole } from '../../utils/role';
 import { getOpenRunSession } from '../../utils/openrunSession';
@@ -11,7 +11,7 @@ import './ClubMembersPage.css';
 // 신규 API 응답 형식: GET /clubs/{clubId}/membership
 interface ClubMembershipResponse {
   memberId: number;
-  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'REGULAR' | 'ASSOCIATE';
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'REGULAR';
   status: 'PENDING' | 'ACTIVE' | 'REJECTED';
   joinedAt: string;
   userId: number;
@@ -30,11 +30,13 @@ const ClubMembersPage: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [roleDraftByUserId, setRoleDraftByUserId] = useState<Record<number, ClubMembershipResponse["role"]>>({});
   const [saving, setSaving] = useState(false);
+  const [kickingUserId, setKickingUserId] = useState<number | null>(null);
 
   const myRole = normalizeClubRole(
     getOpenRunSession().currentClubRole ?? localStorage.getItem("current_club_role")
   );
   const canManage = canManageClub(myRole);
+  const isOwner = myRole === 'OWNER';
   // 역할 변경은 OWNER 전용이지만, 프론트에서는 우선 canManage(ADMIN+)에서 버튼 노출 후
   // 서버에서 최종 권한(OWNER)으로 한 번 더 막는다.
   const canEditRoles = canManage;
@@ -112,6 +114,23 @@ const ClubMembersPage: React.FC = () => {
     }
   };
 
+  const handleKickMember = async (memberId: number, userName: string) => {
+    if (!clubId) return;
+    if (!confirm(`'${userName}' 님을 클럽에서 제명하시겠습니까?`)) return;
+
+    try {
+      setKickingUserId(memberId);
+      await axiosInstance.delete(`/clubs/${clubId}/members/${memberId}`);
+      alert("제명되었습니다.");
+      await loadData();
+    } catch (e: unknown) {
+      logError("클럽원 제명", e);
+      alert(getErrorMessage(e));
+    } finally {
+      setKickingUserId(null);
+    }
+  };
+
   const getRoleIcon = (role: string) => {
     if (role === 'OWNER') {
       return <CrownIcon size={16} color="#FFD700" />;
@@ -129,23 +148,19 @@ const ClubMembersPage: React.FC = () => {
     if (role === 'ADMIN') {
       return '운영진';
     }
-    if (role === 'ASSOCIATE') {
-      return '준회원';
-    }
-    // legacy MEMBER 포함
+    // legacy MEMBER, REGULAR
     return '정회원';
   };
 
-  // 멤버를 역할순으로 정렬 (OWNER > ADMIN > REGULAR/MEMBER > ASSOCIATE)
+  // 멤버를 역할순으로 정렬 (OWNER > ADMIN > REGULAR/MEMBER)
   const sortedMembers = [...members].sort((a, b) => {
     const roleOrder: Record<string, number> = {
       OWNER: 0,
       ADMIN: 1,
       REGULAR: 2,
-      MEMBER: 2,
-      ASSOCIATE: 3,
+      MEMBER: 2, // legacy
     };
-    return (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3);
+    return (roleOrder[a.role] ?? 2) - (roleOrder[b.role] ?? 2);
   });
 
   return (
@@ -166,7 +181,14 @@ const ClubMembersPage: React.FC = () => {
             disabled={saving}
             type="button"
           >
-            {isEditMode ? (dirtyCount > 0 ? `저장(${dirtyCount})` : "완료") : "역할편집"}
+            {isEditMode ? (
+              dirtyCount > 0 ? `저장(${dirtyCount})` : "완료"
+            ) : (
+              <>
+                <SettingsIcon size={16} />
+                <span>편집</span>
+              </>
+            )}
           </button>
         )}
       </div>
@@ -226,7 +248,6 @@ const ClubMembersPage: React.FC = () => {
                         disabled={saving}
                       >
                         <option value="REGULAR">정회원</option>
-                        <option value="ASSOCIATE">준회원</option>
                         <option value="ADMIN">운영진</option>
                       </select>
                     ) : (
@@ -234,15 +255,27 @@ const ClubMembersPage: React.FC = () => {
                     )}
                   </div>
                 </div>
-                {member.email && (
-                  <a
-                    href={`mailto:${member.email}`}
-                    className="club-members-page__item-email"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MailIcon size={18} />
-                  </a>
-                )}
+                <div className="club-members-page__item-actions">
+                  {member.email && (
+                    <a
+                      href={`mailto:${member.email}`}
+                      className="club-members-page__item-email"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MailIcon size={18} />
+                    </a>
+                  )}
+                  {isOwner && member.role !== "OWNER" && (
+                    <button
+                      className="club-members-page__item-kick"
+                      onClick={() => handleKickMember(member.memberId, member.name)}
+                      disabled={kickingUserId === member.memberId}
+                      title="제명 (클럽장 전용)"
+                    >
+                      <XIcon size={18} />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

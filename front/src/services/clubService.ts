@@ -35,6 +35,8 @@ export interface ExternalRequestResponse {
   backhandType?: 'ONE_HAND' | 'TWO_HAND' | null;
   ntrp?: string | null;
   formerPlayer?: boolean | null;
+  favoritePlayer?: string | null;
+  tournamentHistory?: string | null;
 }
 
 export interface ClubNoticeUnreadCountResponse {

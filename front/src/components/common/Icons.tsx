@@ -449,6 +449,95 @@ export const MailIcon: React.FC<IconProps> = ({
   </svg>
 );
 
+// 인박스 아이콘 (외부요청/받은함 느낌)
+export const InboxIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = 'currentColor',
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+    <path d="M5.5 12V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v7"></path>
+    <path d="M2 12l2 9h16l2-9"></path>
+  </svg>
+);
+
+// OAuth Provider Icons - Brand logos (filled, recognizable)
+export const GoogleIcon: React.FC<IconProps> = ({
+  size = 20,
+  color,
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+  >
+    {/* Google's 4-color "G" logo */}
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+    <path fill="none" d="M0 0h48v48H0z"></path>
+  </svg>
+);
+
+export const KakaoIcon: React.FC<IconProps> = ({
+  size = 20,
+  color,
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+  >
+    {/* Kakao yellow circle background */}
+    <circle cx="24" cy="24" r="24" fill="#FEE500"></circle>
+    {/* Kakao speech bubble character */}
+    <path
+      fill="#000000"
+      d="M24 10c-7.73 0-14 4.92-14 11 0 3.52 2.13 6.63 5.42 8.68-.22.82-.76 2.87-.88 3.33-.14.55.2.54.42.39.17-.11 2.67-1.82 3.1-2.12 1.95.44 4.02.72 5.94.72 7.73 0 14-4.92 14-11s-6.27-11-14-11z"
+    ></path>
+  </svg>
+);
+
+export const NaverIcon: React.FC<IconProps> = ({
+  size = 20,
+  color,
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={className}
+  >
+    {/* Naver green square background */}
+    <rect width="48" height="48" rx="6" fill="#03C75A"></rect>
+    {/* Naver "N" mark */}
+    <path
+      fill="#FFFFFF"
+      d="M16 10h6.5l9.5 16V10h6v28h-6.5L22 22v16h-6z"
+    ></path>
+  </svg>
+);
+
 // 체크 아이콘
 export const CheckIcon: React.FC<IconProps> = ({
   size = 20,
@@ -489,6 +578,52 @@ export const XIcon: React.FC<IconProps> = ({
   >
     <line x1="18" y1="6" x2="6" y2="18"></line>
     <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
+
+// X 원형 아이콘
+export const XCircleIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = 'currentColor',
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="15" y1="9" x2="9" y2="15"></line>
+    <line x1="9" y1="9" x2="15" y2="15"></line>
+  </svg>
+);
+
+// 경고 삼각형 아이콘
+export const AlertTriangleIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = 'currentColor',
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+    <line x1="12" y1="9" x2="12" y2="13"></line>
+    <line x1="12" y1="17" x2="12.01" y2="17"></line>
   </svg>
 );
 
@@ -623,6 +758,52 @@ export const CopyIcon: React.FC<IconProps> = ({
   >
     <rect x="9" y="9" width="13" height="13" rx="2"></rect>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+  </svg>
+);
+
+// 링크(체인) 아이콘 (연동된 계정 등)
+export const LinkIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = 'currentColor',
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07L10.5 4.43"></path>
+    <path d="M14 11a5 5 0 0 0-7.07 0L5.52 12.4a5 5 0 0 0 7.07 7.07L13.5 19.57"></path>
+  </svg>
+);
+
+// 저울 아이콘 (약관/라이선스 느낌)
+export const ScaleIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = 'currentColor',
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M12 3v18"></path>
+    <path d="M6 7h12"></path>
+    <path d="M7 7l-4 7h8l-4-7z"></path>
+    <path d="M17 7l-4 7h8l-4-7z"></path>
   </svg>
 );
 

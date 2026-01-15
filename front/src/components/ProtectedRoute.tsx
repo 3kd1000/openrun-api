@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isTokenValid, clearLoginSession } from '../services/firebase';
 
@@ -19,6 +19,7 @@ interface ProtectedRouteProps {
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthReady, user } = useAuth();
+  const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -67,6 +68,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
+    // 로그인 후 돌아올 URL 저장 (pathname + search)
+    const returnUrl = location.pathname + location.search;
+    sessionStorage.setItem('returnUrl', returnUrl);
+    console.log(`🔗 로그인 후 돌아갈 URL 저장: ${returnUrl}`);
     return <Navigate to="/login" replace />;
   }
 

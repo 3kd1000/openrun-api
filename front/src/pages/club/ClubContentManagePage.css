@@ -44,21 +44,39 @@
 
 .club-content-manage-page__tabs {
   display: flex;
-  gap: var(--space-s);
+  gap: var(--space-m);
   margin-bottom: var(--space-m);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-xs);
 }
 
 .club-content-manage-page__tab {
-  flex: 1;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-weight: 700;
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  padding: 12px 8px;
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  position: relative;
 }
 
 .club-content-manage-page__tab.is-active {
-  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.club-content-manage-page__tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px; /* tabs container bottom border 위에 덮기 */
+  height: 3px;
+  background: var(--color-primary);
+  border-radius: 999px;
+}
+
+.club-content-manage-page__tab:hover {
   color: var(--color-primary);
 }
 
@@ -71,8 +89,8 @@
 
 .club-content-manage-page__add-btn {
   width: 100%;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  background: var(--color-bg-secondary);
   border-radius: 12px;
   padding: 12px 14px;
   display: inline-flex;
@@ -81,6 +99,11 @@
   gap: 8px;
   font-weight: 700;
   margin-bottom: var(--space-m);
+}
+
+.club-content-manage-page__add-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .club-content-manage-page__form {

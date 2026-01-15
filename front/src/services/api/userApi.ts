@@ -14,6 +14,26 @@ export interface UserProfile {
   updatedAt: string;
 }
 
+export type BackhandType = 'ONE_HAND' | 'TWO_HAND';
+
+export interface UserTennisProfile {
+  tennisStartedAt: string | null; // ISO date string (YYYY-MM-DD). UI에서는 YYYY-MM로 다룸
+  backhandType: BackhandType | null;
+  favoritePlayer: string | null;
+  ntrp: string | null;
+  tournamentHistory: string | null;
+  formerPlayer: boolean;
+}
+
+export interface UpdateUserTennisProfileRequest {
+  tennisStartedAt: string | null; // ISO date string (YYYY-MM-DD)
+  backhandType: BackhandType | null;
+  favoritePlayer: string | null;
+  ntrp: string | null;
+  tournamentHistory: string | null;
+  formerPlayer: boolean | null;
+}
+
 export interface UpdateUserRequest {
   name: string;
   imageUrl: string | null;
@@ -48,6 +68,22 @@ export const getCurrentUser = async (): Promise<UserProfile> => {
  */
 export const updateUser = async (data: UpdateUserRequest): Promise<UserProfile> => {
   const response = await axiosInstance.put<UserProfile>('/users/me', data);
+  return response.data;
+};
+
+/**
+ * 내 테니스 프로필(user_profile) 조회
+ */
+export const getMyTennisProfile = async (): Promise<UserTennisProfile> => {
+  const response = await axiosInstance.get<UserTennisProfile>('/users/me/profile');
+  return response.data;
+};
+
+/**
+ * 내 테니스 프로필(user_profile) 수정
+ */
+export const updateMyTennisProfile = async (data: UpdateUserTennisProfileRequest): Promise<UserTennisProfile> => {
+  const response = await axiosInstance.put<UserTennisProfile>('/users/me/profile', data);
   return response.data;
 };
 

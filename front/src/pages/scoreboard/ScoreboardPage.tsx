@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match } from "../../types/match";
 import { format } from "date-fns";
+import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon } from "../../components/common/Icons";
 import "./ScoreboardPage.css";
 
 interface RankingEntry {
@@ -233,13 +234,15 @@ const ScoreboardPage: React.FC = () => {
           className={`tab-button ${activeTab === "ranking" ? "active" : ""}`}
           onClick={() => setActiveTab("ranking")}
         >
-          🏆 랭킹
+          <TrophyIcon size={20} />
+          <span>랭킹</span>
         </button>
         <button
           className={`tab-button ${activeTab === "matches" ? "active" : ""}`}
           onClick={() => setActiveTab("matches")}
         >
-          🔍 경기 기록 검색
+          <ClipboardListIcon size={20} />
+          <span>경기 기록</span>
         </button>
       </div>
 
@@ -303,7 +306,9 @@ const ScoreboardPage: React.FC = () => {
             </div>
           ) : rankings.length === 0 ? (
             <div className="empty-state">
-              <p>🏆</p>
+              <p className="empty-icon">
+                <TrophyIcon size={64} color="var(--color-text-secondary)" />
+              </p>
               <p>아직 경기 기록이 없습니다.</p>
               <p className="empty-hint">경기를 등록하면 랭킹이 표시됩니다!</p>
             </div>
@@ -398,7 +403,9 @@ const ScoreboardPage: React.FC = () => {
               </div>
             ) : matches.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-icon">🔍</div>
+                <div className="empty-icon">
+                  <SearchIcon size={64} color="var(--color-text-secondary)" />
+                </div>
                 <h3>
                   {playerName || dateRange !== "all"
                     ? "검색 결과가 없습니다"
@@ -439,8 +446,8 @@ const ScoreboardPage: React.FC = () => {
                     >
                       <div className="match-header-row">
                         <div className="match-date">
-                          📅{" "}
-                          {format(new Date(match.playedAt), "yyyy-MM-dd HH:mm")}
+                          <CalendarIcon size={16} />
+                          <span>{format(new Date(match.playedAt), "yyyy-MM-dd HH:mm")}</span>
                         </div>
                         {future && (
                           <div className="match-status-badge future">예정</div>

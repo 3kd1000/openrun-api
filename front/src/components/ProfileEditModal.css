@@ -65,9 +65,32 @@
   padding: var(--space-l);
 }
 
+.profile-edit-modal__section-title {
+  margin: var(--space-xl) 0 var(--space-m);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
 /* 폼 그룹 - 동일 계층 컴포넌트 */
 .profile-edit-modal .form-group {
   margin-bottom: var(--space-l);
+}
+
+.profile-edit-modal__grid-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 10px;
+  margin-bottom: var(--space-l);
+}
+
+.profile-edit-modal__grid-row .form-group {
+  margin-bottom: 0;
+}
+
+.profile-edit-modal__grid-row--tennis-1,
+.profile-edit-modal__grid-row--tennis-2 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .profile-edit-modal .form-group label {
@@ -80,17 +103,31 @@
 
 /* 입력 필드 - 동일 계층, 동일 높이 */
 .profile-edit-modal .form-group input,
-.profile-edit-modal .form-group select {
+.profile-edit-modal .form-group select,
+.profile-edit-modal .form-group textarea {
   width: 100%;
-  padding: var(--space-m);
-  font-size: var(--font-size-base);
-  min-height: 44px;
+  /* spacing 토큰은 데스크탑에서 커져서(min-height 대비 padding 과다) 텍스트가 잘릴 수 있어 고정값 사용 */
+  padding: 8px 10px;
+  font-size: var(--font-size-m);
+  min-height: 40px;
   border: var(--border-width-thin) solid var(--color-border-secondary);
   border-radius: var(--radius-s);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   transition: var(--transition-base);
   box-sizing: border-box;
+  line-height: 1.2;
+}
+
+.profile-edit-modal .form-group select {
+  /* 브라우저 기본 화살표 영역 때문에 텍스트가 ... 처리되는 문제 완화 */
+  padding-right: 40px;
+}
+
+.profile-edit-modal .form-group textarea {
+  min-height: 72px;
+  resize: vertical;
+  line-height: var(--line-height-normal);
 }
 
 .profile-edit-modal .form-group select {
@@ -98,7 +135,8 @@
 }
 
 .profile-edit-modal .form-group input:focus,
-.profile-edit-modal .form-group select:focus {
+.profile-edit-modal .form-group select:focus,
+.profile-edit-modal .form-group textarea:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
@@ -226,9 +264,10 @@
   }
 
   .profile-edit-modal .form-group input,
-  .profile-edit-modal .form-group select {
-    padding: var(--space-s);
-    font-size: var(--font-size-s);
+  .profile-edit-modal .form-group select,
+  .profile-edit-modal .form-group textarea {
+    padding: 10px 12px;
+    font-size: var(--font-size-base);
     min-height: 40px;
   }
 
@@ -275,10 +314,15 @@
   }
 
   .profile-edit-modal .form-group input,
-  .profile-edit-modal .form-group select {
-    padding: var(--space-s);
-    font-size: var(--font-size-s);
-    min-height: 36px;
+  .profile-edit-modal .form-group select,
+  .profile-edit-modal .form-group textarea {
+    padding: 8px 10px;
+    font-size: var(--font-size-m);
+    min-height: 40px;
+  }
+
+  .profile-edit-modal__grid-row {
+    grid-template-columns: minmax(0, 1fr) 140px;
   }
 
   .profile-edit-modal .modal-actions {
@@ -337,10 +381,15 @@
   }
 
   .profile-edit-modal .form-group input,
-  .profile-edit-modal .form-group select {
-    padding: var(--space-s);
-    font-size: var(--font-size-s);
-    min-height: 36px;
+  .profile-edit-modal .form-group select,
+  .profile-edit-modal .form-group textarea {
+    padding: 8px 10px;
+    font-size: var(--font-size-m);
+    min-height: 40px;
+  }
+
+  .profile-edit-modal__grid-row {
+    grid-template-columns: 1fr;
   }
 
   .profile-edit-modal .form-help {

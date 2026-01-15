@@ -28,7 +28,7 @@
 }
 
 .top-players-widget__title {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-m);
   font-weight: var(--font-weight-semibold);
   color: inherit;
 }
@@ -41,7 +41,7 @@
   background: none;
   border: none;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-m);
   cursor: pointer;
   transition: color 0.2s;
 }
@@ -106,48 +106,19 @@
   font-size: var(--font-size-m);
 }
 
-.top-players-widget__item--rank-1 {
-  background-color: #fef9c3;
-}
-
-.top-players-widget__item--rank-2 {
-  background-color: #f1f5f9;
-}
-
-.top-players-widget__item--rank-3 {
-  background-color: #ffedd5;
-}
-
 .top-players-widget__rank {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
+  /* 이름과 베이스라인/중앙 정렬이 어긋나 보이지 않도록 폭/라인하이트를 고정 */
+  min-width: 40px;
 }
 
-.top-players-widget__rank-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background-color: var(--color-text-tertiary);
-  color: var(--color-white);
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-bold);
-}
-
-.top-players-widget__item--rank-1 .top-players-widget__rank-number {
-  background-color: #eab308;
-}
-
-.top-players-widget__item--rank-2 .top-players-widget__rank-number {
-  background-color: #94a3b8;
-}
-
-.top-players-widget__item--rank-3 .top-players-widget__rank-number {
-  background-color: #f97316;
+.top-players-widget__rank-label {
+  font-size: var(--font-size-m); /* 이름과 동일 */
+  font-weight: var(--font-weight-semibold); /* 이름과 동일 톤 */
+  color: var(--color-text-secondary);
+  line-height: 1;
 }
 
 .top-players-widget__name {
@@ -188,7 +159,7 @@
 /* Tablet (426px ~ 768px) */
 @media (min-width: 426px) and (max-width: 768px) {
   .top-players-widget__rank {
-    min-width: 22px;
+    min-width: 36px;
   }
 }
 
