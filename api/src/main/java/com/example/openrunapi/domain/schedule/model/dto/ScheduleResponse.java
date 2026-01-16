@@ -1,6 +1,8 @@
 package com.example.openrunapi.domain.schedule.model.dto;
 
 import com.example.openrunapi.common.service.PermissionService;
+import com.example.openrunapi.domain.club.model.Club;
+import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
@@ -14,6 +16,7 @@ public class ScheduleResponse {
 
     private final Long id;
     private final Long clubId;
+    private final String clubName;
     private final String courtName;
     private final LocalDateTime scheduledAt;
     private final Integer maxCapacity;
@@ -35,17 +38,19 @@ public class ScheduleResponse {
     private final LocalDateTime updatedAt;
     private final Boolean canManageSchedule; // 권한 정보 (nullable, 요청 userId가 없으면 null)
 
-    public ScheduleResponse(Schedule schedule) {
-        this(schedule, null, null, null);
+    public ScheduleResponse(Schedule schedule, ClubRepository clubRepository, UserRepository userRepository) {
+        this(schedule, clubRepository, userRepository, null, null);
     }
 
-    public ScheduleResponse(Schedule schedule, UserRepository userRepository) {
-        this(schedule, userRepository, null, null);
-    }
-
-    public ScheduleResponse(Schedule schedule, UserRepository userRepository, PermissionService permissionService, Long requestUserId) {
+    public ScheduleResponse(Schedule schedule, ClubRepository clubRepository, UserRepository userRepository, PermissionService permissionService, Long requestUserId) {
         this.id = schedule.getId();
         this.clubId = schedule.getClubId();
+
+        // 클럽명 조회 (항상 수행)
+        this.clubName = clubRepository.findById(schedule.getClubId())
+                .map(Club::getName)
+                .orElse(null);
+
         this.courtName = schedule.getCourtName();
         this.scheduledAt = schedule.getScheduledAt();
         this.maxCapacity = schedule.getMaxCapacity();

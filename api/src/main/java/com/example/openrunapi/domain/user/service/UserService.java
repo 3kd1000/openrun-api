@@ -247,7 +247,7 @@ public class UserService implements UserDetailsService {
             }
 
             // ScheduleResponse 생성 (생성자 사용)
-            ScheduleResponse scheduleResponse = new ScheduleResponse(schedule, userRepository);
+            ScheduleResponse scheduleResponse = new ScheduleResponse(schedule, clubRepository, userRepository);
 
             responses.add(MyScheduleResponse.builder()
                     .schedule(scheduleResponse)

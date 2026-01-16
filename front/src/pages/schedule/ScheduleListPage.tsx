@@ -43,12 +43,6 @@ import "./ScheduleListPage.css";
 type ViewMode = "calendar" | "list";
 type ScheduleMode = "club" | "personal";
 type CapacityFilter = "all" | "available" | "full" | "participated";
-type PersonalFilter = {
-  confirmed: boolean;
-  waiting: boolean;
-  pending: boolean;
-  rejected: boolean;
-};
 
 const ScheduleListPage: React.FC = () => {
   const location = useLocation();
@@ -87,12 +81,6 @@ const ScheduleListPage: React.FC = () => {
   );
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>("all");
-  const [personalFilter, setPersonalFilter] = useState<PersonalFilter>({
-    confirmed: true,
-    waiting: true,
-    pending: true,
-    rejected: false,
-  });
   const [myParticipations, setMyParticipations] = useState<Set<number>>(
     new Set()
   );
@@ -436,40 +424,10 @@ const ScheduleListPage: React.FC = () => {
       if (scheduleDate !== filterDateStr) return false;
     }
 
-    // 참가 상태 필터
-    const hasActiveFilter =
-      personalFilter.confirmed ||
-      personalFilter.waiting ||
-      personalFilter.pending ||
-      personalFilter.rejected;
-
-    if (hasActiveFilter) {
-      const participation = item.myParticipation;
-      const externalRequest = item.myExternalRequest;
-
-      let matchFilter = false;
-
-      // CONFIRMED 체크
-      if (personalFilter.confirmed && participation?.status === "CONFIRMED") {
-        matchFilter = true;
-      }
-
-      // WAITING 체크
-      if (personalFilter.waiting && participation?.status === "WAITING") {
-        matchFilter = true;
-      }
-
-      // PENDING (승인대기) 체크
-      if (personalFilter.pending && externalRequest?.status === "PENDING") {
-        matchFilter = true;
-      }
-
-      // REJECTED (거절) 체크
-      if (personalFilter.rejected && externalRequest?.status === "REJECTED") {
-        matchFilter = true;
-      }
-
-      if (!matchFilter) return false;
+    // 거절된 일정은 자동으로 제외
+    const externalRequest = item.myExternalRequest;
+    if (externalRequest?.status === "REJECTED") {
+      return false;
     }
 
     return true;
@@ -618,63 +576,7 @@ const ScheduleListPage: React.FC = () => {
             </div>
           )}
 
-          {/* 개인일정 모드: 새로운 필터 (체크박스 형태) */}
-          {scheduleMode === "personal" && (
-            <div className="personal-filters">
-              <label className="personal-filter-checkbox">
-                <input
-                  type="checkbox"
-                  checked={personalFilter.confirmed}
-                  onChange={(e) =>
-                    setPersonalFilter({
-                      ...personalFilter,
-                      confirmed: e.target.checked,
-                    })
-                  }
-                />
-                <span>확정</span>
-              </label>
-              <label className="personal-filter-checkbox">
-                <input
-                  type="checkbox"
-                  checked={personalFilter.waiting}
-                  onChange={(e) =>
-                    setPersonalFilter({
-                      ...personalFilter,
-                      waiting: e.target.checked,
-                    })
-                  }
-                />
-                <span>대기</span>
-              </label>
-              <label className="personal-filter-checkbox">
-                <input
-                  type="checkbox"
-                  checked={personalFilter.pending}
-                  onChange={(e) =>
-                    setPersonalFilter({
-                      ...personalFilter,
-                      pending: e.target.checked,
-                    })
-                  }
-                />
-                <span>승인대기</span>
-              </label>
-              <label className="personal-filter-checkbox">
-                <input
-                  type="checkbox"
-                  checked={personalFilter.rejected}
-                  onChange={(e) =>
-                    setPersonalFilter({
-                      ...personalFilter,
-                      rejected: e.target.checked,
-                    })
-                  }
-                />
-                <span>거절</span>
-              </label>
-            </div>
-          )}
+          {/* 개인일정 모드: 거절된 일정은 자동으로 제외 (필터 UI 없음) */}
         </div>
       </div>
 
@@ -773,6 +675,12 @@ const ScheduleListPage: React.FC = () => {
                     </h3>
                   </div>
 
+                  {scheduleMode === "personal" && schedule.clubName && (
+                    <div className="schedule-club-name">
+                      <span>클럽 : {schedule.clubName}</span>
+                    </div>
+                  )}
+
                   {/* 2. 날짜 및 시간, 신청인원 / 총인원 */}
                   <div className="schedule-meta-row">
                     <p className="schedule-time">
@@ -821,7 +729,7 @@ const ScheduleListPage: React.FC = () => {
                         <>
                           {participation?.status === "CONFIRMED" && (
                             <span className="participation-badge participation-confirmed">
-                              확정
+                              참가확정
                             </span>
                           )}
                           {participation?.status === "WAITING" && (
@@ -838,7 +746,7 @@ const ScheduleListPage: React.FC = () => {
                           )}
                           {externalRequest?.status === "REJECTED" && (
                             <span className="participation-badge participation-rejected">
-                              거절
+                              참가거절
                             </span>
                           )}
                         </>
@@ -848,22 +756,21 @@ const ScheduleListPage: React.FC = () => {
                       {viewMode === "list" && (
                         <>
                           {hasInvalidDraw && (
-                            <span className="draw-badge draw-badge-invalid">
+                            <span className="participation-badge draw-invalid">
                               대진무효
                             </span>
                           )}
                           {hasValidDraw && (
-                            <span className="draw-badge draw-badge-valid">
+                            <span className="participation-badge draw-valid">
                               대진생성완료
                             </span>
                           )}
                           {(hasValidDraw || hasInvalidDraw) && (
                             <button
-                              className="draw-badge draw-badge-view"
+                              className="participation-badge draw-view"
                               onClick={(e) => handleDrawViewClick(e, schedule)}
                             >
-                              <ClipboardListIcon size={14} />
-                              <span>보기</span>
+                              <span>대진보기</span>
                             </button>
                           )}
                         </>

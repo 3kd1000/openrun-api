@@ -49,6 +49,10 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const [showDrawViewModal, setShowDrawViewModal] = useState(false);
   const [showParticipantManagementModal, setShowParticipantManagementModal] =
     useState(false);
+  const [guestRecruitNote, setGuestRecruitNote] = useState("");
+  const [interclubRecruitNote, setInterclubRecruitNote] = useState("");
+  const [editingRecruitType, setEditingRecruitType] = useState<"guest" | "interclub" | null>(null);
+  const [tempRecruitNote, setTempRecruitNote] = useState("");
   const [schedule, setSchedule] = useState<Schedule | null>(null);
 
   // 클럽 회원 목록 (참가자 관리 모달용)
@@ -93,17 +97,28 @@ const ScheduleDetailModal: React.FC<Props> = ({
       alert("로그인이 필요합니다. /dev/login 페이지에서 로그인해주세요.");
       return;
     }
+
+    const currentOpen = schedule.guestRecruitOpen === true;
+
+    // OFF → ON: 편집 모드 진입
+    if (!currentOpen) {
+      setEditingRecruitType("guest");
+      setTempRecruitNote(guestRecruitNote);
+      return;
+    }
+
+    // ON → OFF: 바로 API 호출 (note는 유지)
     try {
       setLoading(true);
       setError("");
-      const nextOpen = !(schedule.guestRecruitOpen === true);
       const updated = await scheduleService.updateGuestRecruit(
         schedule.id,
-        nextOpen,
+        false,
         currentUserId,
-        schedule.guestRecruitNote ?? null
+        schedule.guestRecruitNote || null
       );
       setSchedule(updated);
+      setEditingRecruitType(null);
       onSuccess();
     } catch (err) {
       console.error("게스트 모집 설정 실패:", err);
@@ -119,17 +134,28 @@ const ScheduleDetailModal: React.FC<Props> = ({
       alert("로그인이 필요합니다. /dev/login 페이지에서 로그인해주세요.");
       return;
     }
+
+    const currentOpen = schedule.interclubRecruitOpen === true;
+
+    // OFF → ON: 편집 모드 진입
+    if (!currentOpen) {
+      setEditingRecruitType("interclub");
+      setTempRecruitNote(interclubRecruitNote);
+      return;
+    }
+
+    // ON → OFF: 바로 API 호출 (note는 유지)
     try {
       setLoading(true);
       setError("");
-      const nextOpen = !(schedule.interclubRecruitOpen === true);
       const updated = await scheduleService.updateInterclubRecruit(
         schedule.id,
-        nextOpen,
+        false,
         currentUserId,
-        schedule.interclubRecruitNote ?? null
+        schedule.interclubRecruitNote || null
       );
       setSchedule(updated);
+      setEditingRecruitType(null);
       onSuccess();
     } catch (err) {
       console.error("교류전 모집 설정 실패:", err);
@@ -137,6 +163,49 @@ const ScheduleDetailModal: React.FC<Props> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmitRecruitNote = async () => {
+    if (!schedule || !currentUserId || !editingRecruitType) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      if (editingRecruitType === "guest") {
+        const updated = await scheduleService.updateGuestRecruit(
+          schedule.id,
+          true,
+          currentUserId,
+          tempRecruitNote || null
+        );
+        setSchedule(updated);
+        setGuestRecruitNote(updated.guestRecruitNote ?? "");
+      } else {
+        const updated = await scheduleService.updateInterclubRecruit(
+          schedule.id,
+          true,
+          currentUserId,
+          tempRecruitNote || null
+        );
+        setSchedule(updated);
+        setInterclubRecruitNote(updated.interclubRecruitNote ?? "");
+      }
+
+      setEditingRecruitType(null);
+      setTempRecruitNote("");
+      onSuccess();
+    } catch (err) {
+      console.error("모집글 등록 실패:", err);
+      setError("모집글 등록에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelRecruitNote = () => {
+    setEditingRecruitType(null);
+    setTempRecruitNote("");
   };
 
   // 클럽 회원 목록 조회 (참가자 관리 모달 열릴 때)
@@ -221,6 +290,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
       setSchedule(scheduleData);
       setParticipants(participantsList);
       setMyParticipation(myStatus);
+      setGuestRecruitNote(scheduleData.guestRecruitNote ?? "");
+      setInterclubRecruitNote(scheduleData.interclubRecruitNote ?? "");
 
       // 폼 데이터 초기화 (Edit 모드 진입 시 사용)
       const scheduledAt = new Date(scheduleData.scheduledAt);
@@ -461,7 +532,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 title="게스트 모집"
               >
                 <span className="btn-toggle-header__text">
-                  {schedule.guestRecruitOpen ? "게스트 ON" : "게스트 OFF"}
+                  게스트 {schedule.guestRecruitOpen ? "ON" : "OFF"}
                 </span>
               </button>
 
@@ -475,15 +546,55 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 title="교류전 모집"
               >
                 <span className="btn-toggle-header__text">
-                  {schedule.interclubRecruitOpen ? "교류전 ON" : "교류전 OFF"}
+                  교류전 {schedule.interclubRecruitOpen ? "ON" : "OFF"}
                 </span>
               </button>
             </div>
           )}
         </div>
 
+        {!isEditMode && editingRecruitType && (
+          <div className="recruit-note-section">
+            <label className="recruit-note-label">
+              {editingRecruitType === "guest" ? "게스트" : "교류전"} 모집 메시지
+            </label>
+            <textarea
+              className="recruit-note-textarea"
+              placeholder="모집 메시지를 작성하세요 (선택사항)"
+              value={tempRecruitNote}
+              onChange={(e) => setTempRecruitNote(e.target.value)}
+              disabled={loading}
+              rows={3}
+            />
+            <div className="recruit-note-actions">
+              <button
+                type="button"
+                onClick={handleCancelRecruitNote}
+                className="btn-cancel-recruit"
+                disabled={loading}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmitRecruitNote}
+                className="btn-submit-recruit"
+                disabled={loading}
+              >
+                등록
+              </button>
+            </div>
+          </div>
+        )}
+
         {!isEditMode ? (
           <div className="schedule-detail-view">
+            {schedule.clubName && (
+              <div className="detail-item">
+                <label>클럽</label>
+                <p>{schedule.clubName}</p>
+              </div>
+            )}
             <div className="detail-item">
               <label>코트명</label>
               <p>{schedule.courtName}</p>
@@ -605,7 +716,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                       new Date() >= new Date(schedule.scheduledAt)
                         ? "이미 지난 일정에는 대진을 생성할 수 없습니다."
                         : schedule.maxCapacity < 6
-                        ? `대진 생성에는 최소 6명 모임이 필요합니다 (현재 총원: ${schedule.maxCapacity}명)`
+                        ? `대진 생성은 6인 이상의 모임일 때 가능합니다. (현재 모임 총원: ${schedule.maxCapacity}명)`
                         : undefined
                     }
                   >
@@ -613,8 +724,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   </button>
                   {schedule.maxCapacity < 6 && (
                     <p className="draw-min-notice">
-                      대진 생성에는 최소 6명 모임이 필요합니다 (현재 총원:{" "}
-                      {schedule.maxCapacity}명)
+                      대진 생성은 6인 이상의 모임일 때 가능합니다.
+                      <br /> (현재 모임 총원: {schedule.maxCapacity}명)
                     </p>
                   )}
                 </div>
@@ -641,12 +752,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     <h4>확정 ({confirmedParticipants.length}명)</h4>
                     <ul>
                       {confirmedParticipants.map((p, idx) => (
-                        <li
-                          key={p.id}
-                          className={
-                            p.userId === currentUserId ? "is-me" : undefined
-                          }
-                        >
+                        <li key={p.id}>
                           {idx + 1}. {p.userName}
                           {p.asGuest ? (
                             <span className="guest-badge"> 게스트</span>
@@ -665,14 +771,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     <h4>대기 ({waitingParticipants.length}명)</h4>
                     <ul>
                       {waitingParticipants.map((p, idx) => (
-                        <li
-                          key={p.id}
-                          className={
-                            p.userId === currentUserId
-                              ? "waiting is-me"
-                              : "waiting"
-                          }
-                        >
+                        <li key={p.id} className="waiting">
                           {idx + 1}. {p.userName}
                           {p.asGuest ? (
                             <span className="guest-badge"> 게스트</span>
@@ -688,13 +787,37 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
                 {participants.length === 0 && (
                   <div className="participant-group">
-                    <p className="participant-empty-message">
+                    <p
+                      style={{
+                        textAlign: "center",
+                        color: "var(--color-text-secondary)",
+                        padding: "var(--space-m)",
+                      }}
+                    >
                       아직 참가자가 없습니다
                     </p>
                   </div>
                 )}
               </div>
             </div>
+
+            {/* 내 참가 상태 */}
+            {myParticipation && (
+              <div className="my-status">
+                {myParticipation.status === "CONFIRMED" && (
+                  <p className="status-confirmed">✓ 참가 확정</p>
+                )}
+                {myParticipation.status === "WAITING" && (
+                  <p className="status-waiting">
+                    ⏱ 대기 중 (
+                    {waitingParticipants.findIndex(
+                      (p) => p.userId === currentUserId
+                    ) + 1}
+                    번째)
+                  </p>
+                )}
+              </div>
+            )}
 
             {error && <div className="error-message">{error}</div>}
 

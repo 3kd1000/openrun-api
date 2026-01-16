@@ -39,6 +39,7 @@
 .club-manage-policy-page__hint {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-xs);
   color: var(--color-text-secondary);
   margin-bottom: var(--space-m);

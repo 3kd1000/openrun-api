@@ -9,6 +9,7 @@ import com.example.openrunapi.domain.club.model.ClubJoinPolicy;
 import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
 import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
+import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
@@ -16,7 +17,9 @@ import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.user.model.User;
+import com.example.openrunapi.domain.user.model.UserProfile;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.repository.UserProfileRepository;
 import com.example.openrunapi.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,7 @@ public class ClubService {
 
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final PermissionService permissionService;
 
@@ -279,6 +283,39 @@ public class ClubService {
         return members.stream()
                 .map(ClubMembershipResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 클럽 멤버 프로필 조회 (User + UserProfile + ClubMember 통합)
+     * - 연락처 정보는 ContactVisibility에 따라 필터링됨
+     * - PUBLIC: 같은 클럽 멤버에게만 공개
+     *
+     * @param clubId 클럽 ID
+     * @param userId 조회할 사용자 ID
+     * @param currentUserId 현재 로그인한 사용자 ID
+     * @return MemberProfileResponse
+     */
+    public MemberProfileResponse getMemberProfile(Long clubId, Long userId, Long currentUserId) {
+        // 클럽 존재 여부 확인
+        if (!clubRepository.existsById(clubId)) {
+            throw new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId);
+        }
+
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
+
+        // 클럽 멤버십 조회
+        ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 사용자는 클럽 멤버가 아닙니다. userId=" + userId + ", clubId=" + clubId));
+
+        // UserProfile 조회 (없을 수도 있음)
+        UserProfile userProfile = userProfileRepository.findById(userId).orElse(null);
+
+        // 현재 사용자가 같은 클럽 멤버인지 확인
+        boolean isSameClub = clubMemberRepository.findByClubIdAndUserId(clubId, currentUserId).isPresent();
+
+        return new MemberProfileResponse(user, userProfile, clubMember, isSameClub);
     }
 
     /**

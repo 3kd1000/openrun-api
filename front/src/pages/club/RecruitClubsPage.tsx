@@ -36,7 +36,10 @@ const RecruitClubsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const params: Record<string, string> = { memberRecruitmentStatus: "OPEN" };
+      const params: Record<string, string> = {
+        memberRecruitmentStatus: "OPEN",
+        sort: "updatedAt,desc",
+      };
       if (regionFilter) params.region = regionFilter;
       if (searchKeyword) params.keyword = searchKeyword;
       params.size = "30";

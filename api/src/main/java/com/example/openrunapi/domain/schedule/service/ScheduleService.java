@@ -66,7 +66,7 @@ public class ScheduleService {
 
         Schedule schedule = request.toEntity();
         Schedule savedSchedule = scheduleRepository.save(schedule);
-        return new ScheduleResponse(savedSchedule, userRepository);
+        return new ScheduleResponse(savedSchedule, clubRepository, userRepository);
     }
 
     /**
@@ -74,7 +74,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getAllSchedules() {
         return scheduleRepository.findAll().stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -91,7 +91,7 @@ public class ScheduleService {
     public ScheduleResponse getScheduleById(Long scheduleId, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
-        return new ScheduleResponse(schedule, userRepository, permissionService, userId);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
     /**
@@ -99,7 +99,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getSchedulesByClubId(Long clubId) {
         return scheduleRepository.findByClubId(clubId).stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -109,7 +109,7 @@ public class ScheduleService {
     public List<ScheduleResponse> getUpcomingSchedules(Long clubId) {
         LocalDateTime nowKST = TimeValidationUtils.getNowKST();
         return scheduleRepository.findByClubIdAndScheduledAtAfterOrderByScheduledAtAsc(clubId, nowKST).stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -149,7 +149,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getSchedulesByDateRange(Long clubId, LocalDateTime start, LocalDateTime end) {
         return scheduleRepository.findByClubIdAndScheduledAtBetween(clubId, start, end).stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -192,7 +192,7 @@ public class ScheduleService {
             promoteWaitingParticipants(scheduleId, request.getMaxCapacity());
         }
 
-        return new ScheduleResponse(schedule, userRepository);
+        return new ScheduleResponse(schedule, clubRepository, userRepository);
     }
 
     /**
@@ -212,7 +212,7 @@ public class ScheduleService {
 
         boolean pinned = request != null && Boolean.TRUE.equals(request.getPinned());
         schedule.updatePinned(pinned);
-        return new ScheduleResponse(schedule, userRepository, permissionService, userId);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
     /**
@@ -233,7 +233,7 @@ public class ScheduleService {
         Boolean open = request != null ? request.getOpen() : null;
         String note = request != null ? request.getNote() : null;
         schedule.updateGuestRecruit(open, note);
-        return new ScheduleResponse(schedule, userRepository, permissionService, userId);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
     /**
@@ -254,7 +254,7 @@ public class ScheduleService {
         Boolean open = request != null ? request.getOpen() : null;
         String note = request != null ? request.getNote() : null;
         schedule.updateInterclubRecruit(open, note);
-        return new ScheduleResponse(schedule, userRepository, permissionService, userId);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
     /**

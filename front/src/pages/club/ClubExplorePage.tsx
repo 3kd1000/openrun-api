@@ -103,7 +103,7 @@ const ClubExplorePage: React.FC = () => {
       const response = await axiosInstance.get<PublicRecruitSchedule[]>(
         "/schedules/recruit",
         {
-          params: { type, limit: 5 },
+          params: { type, limit: 4 },
         }
       );
       if (type === "GUEST") setGuestRecruit(response.data);
@@ -116,7 +116,11 @@ const ClubExplorePage: React.FC = () => {
   const fetchRecruitClubs = async () => {
     try {
       const response = await axiosInstance.get<ClubListResponse>("/clubs", {
-        params: { memberRecruitmentStatus: "OPEN", size: 5 },
+        params: {
+          memberRecruitmentStatus: "OPEN",
+          size: 4,
+          sort: "updatedAt,desc",
+        },
       });
       setRecruitClubs(response.data.content ?? []);
     } catch {

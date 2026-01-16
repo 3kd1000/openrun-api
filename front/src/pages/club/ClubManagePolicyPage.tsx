@@ -3,14 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import type { Club, UpdateClubPolicyRequest } from "../../types/club";
-import { ArrowLeftIcon, StarIcon } from "../../components/common/Icons";
+import { ArrowLeftIcon } from "../../components/common/Icons";
 import "./ClubManagePolicyPage.css";
 
 const ClubManagePolicyPage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
 
-  const [club, setClub] = useState<Club | null>(null);
   const [policy, setPolicy] = useState<UpdateClubPolicyRequest>({
     joinPolicy: "APPROVAL",
     interclubRecruitmentStatus: "CLOSED",
@@ -26,7 +25,6 @@ const ClubManagePolicyPage: React.FC = () => {
       try {
         setLoading(true);
         const res = await axiosInstance.get<Club>(`/clubs/${clubId}`);
-        setClub(res.data);
         setPolicy({
           joinPolicy: res.data.joinPolicy ?? "APPROVAL",
           interclubRecruitmentStatus:
@@ -50,8 +48,7 @@ const ClubManagePolicyPage: React.FC = () => {
     try {
       setSaving(true);
       setError(null);
-      const updated = await clubService.updateClubPolicy(Number(clubId), policy);
-      setClub(updated);
+      await clubService.updateClubPolicy(Number(clubId), policy);
       alert("저장되었습니다.");
     } catch (e) {
       console.error(e);
@@ -72,24 +69,27 @@ const ClubManagePolicyPage: React.FC = () => {
   return (
     <div className="club-manage-policy-page">
       <div className="club-manage-policy-page__header">
-        <button className="club-manage-policy-page__back-btn" onClick={handleBack}>
+        <button
+          className="club-manage-policy-page__back-btn"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
         <h1 className="club-manage-policy-page__title">운영 정책</h1>
         <div className="club-manage-policy-page__header-spacer" />
       </div>
 
-      {club?.name && (
-        <div className="club-manage-policy-page__hint">
-          <StarIcon size={16} /> {club.name}의 운영 룰을 설정합니다.
-        </div>
-      )}
+      <div className="club-manage-policy-page__hint">
+        클럽의 운영 정책을 설정합니다.
+      </div>
 
       {error && <div className="club-manage-policy-page__error">{error}</div>}
 
       <div className="club-manage-policy-page__section">
         <div className="club-manage-policy-page__row">
-          <div className="club-manage-policy-page__row-title">가입 승인 방식</div>
+          <div className="club-manage-policy-page__row-title">
+            가입 승인 방식
+          </div>
           <div className="club-manage-policy-page__row-desc">
             기본값은 <b>승인 필요</b>입니다.
           </div>
@@ -99,7 +99,9 @@ const ClubManagePolicyPage: React.FC = () => {
               className={`club-manage-policy-page__seg-btn ${
                 policy.joinPolicy === "APPROVAL" ? "active" : ""
               }`}
-              onClick={() => setPolicy((p) => ({ ...p, joinPolicy: "APPROVAL" }))}
+              onClick={() =>
+                setPolicy((p) => ({ ...p, joinPolicy: "APPROVAL" }))
+              }
               disabled={saving}
             >
               승인 필요
@@ -120,7 +122,9 @@ const ClubManagePolicyPage: React.FC = () => {
         <div className="club-manage-policy-page__divider" />
 
         <div className="club-manage-policy-page__row">
-          <div className="club-manage-policy-page__row-title">교류전 모집 상태</div>
+          <div className="club-manage-policy-page__row-title">
+            교류전 모집 상태
+          </div>
           <div className="club-manage-policy-page__row-desc">
             기본값은 <b>CLOSED</b>입니다.
           </div>
@@ -131,7 +135,10 @@ const ClubManagePolicyPage: React.FC = () => {
                 policy.interclubRecruitmentStatus === "CLOSED" ? "active" : ""
               }`}
               onClick={() =>
-                setPolicy((p) => ({ ...p, interclubRecruitmentStatus: "CLOSED" }))
+                setPolicy((p) => ({
+                  ...p,
+                  interclubRecruitmentStatus: "CLOSED",
+                }))
               }
               disabled={saving}
             >
@@ -155,7 +162,9 @@ const ClubManagePolicyPage: React.FC = () => {
         <div className="club-manage-policy-page__divider" />
 
         <div className="club-manage-policy-page__row">
-          <div className="club-manage-policy-page__row-title">신규회원 모집 상태</div>
+          <div className="club-manage-policy-page__row-title">
+            신규회원 모집 상태
+          </div>
           <div className="club-manage-policy-page__row-desc">
             기본값은 <b>모집중(OPEN)</b>입니다.
           </div>
@@ -165,7 +174,9 @@ const ClubManagePolicyPage: React.FC = () => {
               className={`club-manage-policy-page__seg-btn ${
                 policy.memberRecruitmentStatus === "OPEN" ? "active" : ""
               }`}
-              onClick={() => setPolicy((p) => ({ ...p, memberRecruitmentStatus: "OPEN" }))}
+              onClick={() =>
+                setPolicy((p) => ({ ...p, memberRecruitmentStatus: "OPEN" }))
+              }
               disabled={saving}
             >
               모집중
@@ -175,7 +186,9 @@ const ClubManagePolicyPage: React.FC = () => {
               className={`club-manage-policy-page__seg-btn ${
                 policy.memberRecruitmentStatus === "CLOSED" ? "active" : ""
               }`}
-              onClick={() => setPolicy((p) => ({ ...p, memberRecruitmentStatus: "CLOSED" }))}
+              onClick={() =>
+                setPolicy((p) => ({ ...p, memberRecruitmentStatus: "CLOSED" }))
+              }
               disabled={saving}
             >
               모집안함
@@ -197,4 +210,3 @@ const ClubManagePolicyPage: React.FC = () => {
 };
 
 export default ClubManagePolicyPage;
-

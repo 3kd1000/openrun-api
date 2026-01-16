@@ -1,6 +1,7 @@
 export interface Schedule {
   id: number;
   clubId: number;
+  clubName?: string;
   courtName: string;
   scheduledAt: string; // ISO 8601 format
   pinned?: boolean; // 공지성 고정 일정 (없으면 false로 간주)
