@@ -56,6 +56,14 @@ public class ScheduleService {
             throw new IllegalStateException("과거 날짜에는 일정을 생성할 수 없습니다.");
         }
 
+        // 참가신청 시작시간 검증
+        if (request.getParticipationStartAt() != null) {
+            if (request.getParticipationStartAt().isAfter(request.getScheduledAt()) ||
+                request.getParticipationStartAt().isEqual(request.getScheduledAt())) {
+                throw new IllegalArgumentException("참가신청 시작시간은 일정 시간보다 이전이어야 합니다.");
+            }
+        }
+
         Schedule schedule = request.toEntity();
         Schedule savedSchedule = scheduleRepository.save(schedule);
         return new ScheduleResponse(savedSchedule, userRepository);
@@ -156,6 +164,14 @@ public class ScheduleService {
         // 과거 날짜 체크 (KST 기준)
         if (TimeValidationUtils.isPast(request.getScheduledAt())) {
             throw new IllegalStateException("과거 날짜에는 일정을 수정할 수 없습니다.");
+        }
+
+        // 참가신청 시작시간 검증
+        if (request.getParticipationStartAt() != null) {
+            if (request.getParticipationStartAt().isAfter(request.getScheduledAt()) ||
+                request.getParticipationStartAt().isEqual(request.getScheduledAt())) {
+                throw new IllegalArgumentException("참가신청 시작시간은 일정 시간보다 이전이어야 합니다.");
+            }
         }
 
         // 기존 정원 저장

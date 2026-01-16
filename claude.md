@@ -95,6 +95,20 @@ openrun/
 
 자세한 내용: `@docs/guides/documentation-guide.md`
 
+### CSS 레이아웃 가이드
+
+신규 페이지 또는 CSS 작업 시 **`docs/frontend/css-layout-guidelines.md`를 반드시 참고**하여:
+
+- **기존 페이지 구조 참고 필수** (ClubMainPage, ScheduleListPage, ScoreboardPage)
+- 최대한 심플하고 유사한 계층구조 유지
+- 페이지 컨테이너는 **항상 `padding-top: 0`**
+- 공통 wrapper 클래스 우선 사용 (`.page-club-selector-container` 등)
+- 미디어쿼리에서 상단 padding 덮어쓰지 않기
+
+⚠️ **중요**: 각 페이지마다 고유한 wrapper 구조를 만들지 말 것!
+
+자세한 내용: `@docs/frontend/css-layout-guidelines.md`
+
 ## 🔄 개발 패턴
 
 - **최소 변경으로 기능 구현**: 기존 아키텍처 유지하면서 점진적 개선
@@ -104,5 +118,5 @@ openrun/
 
 ---
 
-**프로젝트 상태**: 운영 중 (Production Ready)  
-**마지막 업데이트**: 2025-11-20
+**프로젝트 상태**: 운영 중 (Production Ready)
+**마지막 업데이트**: 2026-01-16 (CSS 레이아웃 가이드라인 추가)

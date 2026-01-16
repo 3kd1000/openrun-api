@@ -4,6 +4,8 @@ import axiosInstance from "../../services/api/axiosInstance";
 import type { Match } from "../../types/match";
 import { format } from "date-fns";
 import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon } from "../../components/common/Icons";
+import { ClubSelector } from "../../components/ClubSelector";
+import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
 import "./ScoreboardPage.css";
 
 interface RankingEntry {
@@ -53,8 +55,23 @@ const ScoreboardPage: React.FC = () => {
   const todayMatchRef = useRef<HTMLDivElement>(null);
   const isLoadingMatchesRef = useRef(false);
 
-  const clubId = 1; // TODO: Context나 URL param에서 가져오기
+  // 클럽 선택 상태
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(() => {
+    const session = getOpenRunSession();
+    return session.currentClubId ? parseInt(session.currentClubId) : null;
+  });
+
+  const clubId = selectedClubId || 1; // selectedClubId가 없으면 1 사용
   const isLoadingRef = useRef(false);
+
+  // 클럽 변경 시 세션에 저장
+  const handleClubChange = (clubId: number | null) => {
+    setSelectedClubId(clubId);
+    if (clubId) {
+      const session = getOpenRunSession();
+      setOpenRunSession({ ...session, currentClubId: clubId.toString() });
+    }
+  };
 
   // Tab 1: Fetch rankings
   const fetchScoreboard = useCallback(async () => {
@@ -227,6 +244,13 @@ const ScoreboardPage: React.FC = () => {
 
   return (
     <div className="scoreboard-page">
+      {/* ClubSelector */}
+      <div className="page-club-selector-container">
+        <ClubSelector
+          selectedClubId={selectedClubId}
+          onClubChange={handleClubChange}
+        />
+      </div>
 
       {/* Tab Navigation */}
       <div className="tab-navigation">

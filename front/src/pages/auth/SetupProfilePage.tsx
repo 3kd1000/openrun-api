@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../../services/api/axiosInstance';
+import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
 
 interface LocationState {
   token: string;
@@ -18,11 +19,13 @@ const SetupProfilePage: React.FC = () => {
   const state = location.state as LocationState;
 
   const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // OAuth에서 받은 기본 이름 표시
-  const defaultName = state?.userInfo?.name || localStorage.getItem('user_name') || '';
+  const session = getOpenRunSession();
+  const defaultName = state?.userInfo?.name || session.userName || '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +39,8 @@ const SetupProfilePage: React.FC = () => {
     setError(null);
 
     try {
-      // state 또는 localStorage에서 token 가져오기
-      const token = state?.token || localStorage.getItem('firebase_token');
+      // state 또는 세션에서 token 가져오기
+      const token = state?.token || session.firebaseToken;
 
       if (!token) {
         setError('인증 정보가 없습니다. 다시 로그인해주세요.');
@@ -47,11 +50,14 @@ const SetupProfilePage: React.FC = () => {
 
       console.log('🔍 token 존재 확인:', token ? `${token.substring(0, 20)}...` : 'NULL');
 
-      // PUT /api/users/me - 이름 업데이트 (명시적으로 헤더 전달)
+      // PUT /api/users/me - 이름 및 연락처 업데이트 (명시적으로 헤더 전달)
       const response = await axiosInstance.put('/users/me',
         {
           name: name.trim(),
-          imageUrl: localStorage.getItem('user_image_url') || null
+          imageUrl: session.userImageUrl || null,
+          phoneNumber: phoneNumber.trim() || null,
+          phoneVisibility: 'PUBLIC',
+          emailVisibility: 'PUBLIC'
         },
         {
           headers: {
@@ -60,8 +66,8 @@ const SetupProfilePage: React.FC = () => {
         }
       );
 
-      // localStorage 업데이트
-      localStorage.setItem('user_name', response.data.name);
+      // 세션 업데이트
+      setOpenRunSession({ userName: response.data.name });
 
       console.log('✅ 프로필 설정 완료:', response.data);
 
@@ -107,7 +113,7 @@ const SetupProfilePage: React.FC = () => {
           fontSize: '14px',
           lineHeight: '1.5'
         }}>
-          OpenRun에서 사용할 이름을 설정해주세요.<br/>
+          OpenRun에서 사용할 이름과 연락처를 설정해주세요.<br/>
           대진표 및 스코어보드에 표시되는 이름입니다.
         </p>
 
@@ -164,6 +170,41 @@ const SetupProfilePage: React.FC = () => {
               }}
               autoFocus
             />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#333',
+            }}>
+              전화번호 (선택)
+            </label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="010-1234-5678"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '16px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                boxSizing: 'border-box',
+              }}
+            />
+            <p style={{
+              marginTop: '8px',
+              fontSize: '12px',
+              color: '#666',
+              lineHeight: '1.4',
+            }}>
+              서버에는 암호화되어 저장되고 클럽과 게스트 신청 시에만 사용됩니다.
+            </p>
           </div>
 
           <button

@@ -8,6 +8,7 @@ import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
 import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.service.UserService;
+import com.example.openrunapi.domain.schedule.model.dto.MyScheduleResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -88,5 +89,27 @@ public class UserController {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
         java.util.List<ClubResponse> clubs = clubService.getMyClubs(currentUserResponse.getId());
         return ResponseEntity.ok(clubs);
+    }
+
+    /**
+     * 내가 참가한 모든 일정 조회 (개인일정)
+     * - ScheduleParticipant + ExternalRequest 조합
+     * - 클럽 멤버로 참가한 일정 + 게스트로 신청한 일정
+     *
+     * @param userDetails 현재 사용자 정보
+     * @param upcoming true면 미래 일정만 조회
+     * @return 내 일정 목록
+     */
+    @GetMapping("/me/schedules")
+    public ResponseEntity<java.util.List<MyScheduleResponse>> getMySchedules(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Boolean upcoming
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        java.util.List<MyScheduleResponse> schedules = userService.getMySchedules(
+                currentUserResponse.getId(),
+                upcoming
+        );
+        return ResponseEntity.ok(schedules);
     }
 }

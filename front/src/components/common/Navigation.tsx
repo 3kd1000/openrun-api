@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { getOpenRunSession } from "../../utils/openrunSession";
 import "./Navigation.css";
 
 // 선 스타일 SVG 아이콘 컴포넌트
@@ -78,7 +79,8 @@ const MoreIcon: React.FC<{ isActive: boolean }> = () => (
 
 const Navigation: React.FC = () => {
   const location = useLocation();
-  const currentClubId = localStorage.getItem("current_club_id");
+  const session = getOpenRunSession();
+  const currentClubId = session.currentClubId;
   const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/clubs/explore";
   const isClubRoute =
     location.pathname === "/clubs" ||

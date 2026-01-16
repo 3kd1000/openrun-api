@@ -25,9 +25,12 @@ const ClubJoinRequestsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const pendingResponse = await axiosInstance.get(`/clubs/${clubId}/members`, {
-        params: { status: "PENDING" },
-      });
+      const pendingResponse = await axiosInstance.get(
+        `/clubs/${clubId}/members`,
+        {
+          params: { status: "PENDING" },
+        }
+      );
       setPendingMembers(pendingResponse.data);
     } catch (e: unknown) {
       logError("가입 신청 조회", e);
@@ -74,7 +77,10 @@ const ClubJoinRequestsPage: React.FC = () => {
   return (
     <div className="club-join-requests-page">
       <div className="club-join-requests-page__header">
-        <button className="club-join-requests-page__back-btn" onClick={handleBack}>
+        <button
+          className="club-join-requests-page__back-btn"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
         <h1 className="club-join-requests-page__title">가입 신청 관리</h1>
@@ -85,13 +91,19 @@ const ClubJoinRequestsPage: React.FC = () => {
 
       <div className="club-join-requests-page__list">
         {pendingMembers.length === 0 ? (
-          <div className="club-join-requests-page__empty">대기 중인 가입 신청이 없습니다.</div>
+          <div className="club-join-requests-page__empty">
+            대기 중인 가입 신청이 없습니다.
+          </div>
         ) : (
           pendingMembers.map((m) => (
             <div key={m.id} className="club-join-requests-page__item">
               <div className="club-join-requests-page__info">
-                <div className="club-join-requests-page__name">{m.user.name}</div>
-                <div className="club-join-requests-page__email">{m.user.email}</div>
+                <div className="club-join-requests-page__name">
+                  {m.user.name}
+                </div>
+                <div className="club-join-requests-page__email">
+                  {m.user.email}
+                </div>
               </div>
               <div className="club-join-requests-page__actions">
                 <button
@@ -118,4 +130,3 @@ const ClubJoinRequestsPage: React.FC = () => {
 };
 
 export default ClubJoinRequestsPage;
-

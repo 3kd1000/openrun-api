@@ -6,9 +6,9 @@
 
 /* ========== 페이지 컨테이너 ========== */
 .scoreboard-page {
-  padding: var(--space-l);
+  padding: 0 var(--space-m);
   width: 100%;
-  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+  padding-bottom: 80px;
   box-sizing: border-box;
 }
 
@@ -16,6 +16,7 @@
 .scoreboard-header {
   margin-bottom: var(--space-xl);
 }
+
 
 /* ========== Tab Navigation ========== */
 .tab-navigation {
@@ -303,7 +304,7 @@
 /* ========== 모바일 대응 (362px 이상 768px 이하) ========== */
 @media (min-width: 362px) and (max-width: 768px) {
   .scoreboard-page {
-    padding: var(--space-l);
+    padding: 0 var(--space-l);
   }
 
   .scoreboard-page .scoreboard-table {
@@ -392,7 +393,7 @@
 /* ========== 359px 이하 최적화 (초소형, 좌우 스크롤 허용) ========== */
 @media (max-width: 359px) {
   .scoreboard-page {
-    padding: var(--space-m);
+    padding: 0 var(--space-m);
   }
 
   .scoreboard-page .scoreboard-table {

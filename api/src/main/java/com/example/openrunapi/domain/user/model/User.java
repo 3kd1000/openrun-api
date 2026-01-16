@@ -44,11 +44,11 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "phone_visibility", length = 20)
-    private ContactVisibility phoneVisibility = ContactVisibility.PRIVATE; // 연락처 공개 범위
+    private ContactVisibility phoneVisibility = ContactVisibility.PUBLIC; // 연락처 공개 범위
 
     @Enumerated(EnumType.STRING)
     @Column(name = "email_visibility", length = 20)
-    private ContactVisibility emailVisibility = ContactVisibility.CLUB_ONLY; // 이메일 공개 범위
+    private ContactVisibility emailVisibility = ContactVisibility.PUBLIC; // 이메일 공개 범위
 
     @Column(name = "is_guest", nullable = false)
     private boolean isGuest = false; // 게스트 사용자 여부 (스코어보드 집계 제외)

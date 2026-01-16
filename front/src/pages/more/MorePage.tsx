@@ -24,6 +24,7 @@ import {
   UserIcon,
 } from "../../components/common/Icons";
 import ProfileEditModal from "../../components/ProfileEditModal";
+import { setOpenRunSession } from "../../utils/openrunSession";
 import "./MorePage.css";
 
 const MorePage: React.FC = () => {
@@ -61,8 +62,8 @@ const MorePage: React.FC = () => {
       console.log("🚀 App v2 실행"); // ← 이거!
       const userProfile = await getCurrentUser();
       setUser(userProfile);
-      // localStorage에도 저장 (다른 화면에서 사용)
-      localStorage.setItem("user_name", userProfile.name);
+      // 세션에도 저장 (다른 화면에서 사용)
+      setOpenRunSession({ userName: userProfile.name });
     } catch (error) {
       console.error("사용자 정보 조회 실패:", error);
       // API 호출 실패 시 로그인 페이지로 리다이렉트 (localStorage fallback 제거)

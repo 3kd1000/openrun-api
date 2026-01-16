@@ -8,6 +8,7 @@ import ScheduleFormSection, {
   type ScheduleFormData,
 } from "./ScheduleFormSection";
 import "./ScheduleCreateModal.css";
+import { getOpenRunSession } from "../../../utils/openrunSession";
 
 interface Props {
   initialDate?: string;
@@ -23,8 +24,8 @@ const ScheduleCreateModal: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const userId = localStorage.getItem("user_id");
-  const currentUserId = userId ? parseInt(userId) : null;
+  const session = getOpenRunSession();
+  const currentUserId = session.userId ?? null;
 
   // ESC 키로 모달 닫기
   useEscapeKey(onClose);
@@ -35,6 +36,17 @@ const ScheduleCreateModal: React.FC<Props> = ({
     if (!validation.isValid) {
       setError(validation.errorMessage || "일정 생성에 실패했습니다.");
       throw new Error(validation.errorMessage || "일정 생성에 실패했습니다.");
+    }
+
+    // 참가신청 시작시간 검증
+    if (data.participationStartAt) {
+      const scheduledDate = new Date(data.scheduledAt);
+      const participationStartDate = new Date(data.participationStartAt);
+
+      if (participationStartDate >= scheduledDate) {
+        setError("참가신청 시작시간은 일정 시간보다 이전이어야 합니다.");
+        throw new Error("참가신청 시작시간은 일정 시간보다 이전이어야 합니다.");
+      }
     }
 
     setLoading(true);
@@ -73,8 +85,13 @@ const ScheduleCreateModal: React.FC<Props> = ({
     ? initialDate.split("T")[1]?.substring(0, 5) || "06:00"
     : "06:00";
 
+  // 현재 선택된 클럽 ID 가져오기
+  const currentClubId = session.currentClubId
+    ? parseInt(session.currentClubId)
+    : 0;
+
   const initialData = {
-    clubId: 1, // TODO: 실제 클럽 ID로 변경
+    clubId: currentClubId,
     scheduledAt: `${defaultDate}T${defaultTime}:00`,
     courtName: "",
     maxCapacity: 4,

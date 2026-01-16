@@ -68,4 +68,11 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
         WHERE sp.scheduleId = :scheduleId AND sp.userId = :userId AND sp.status != :status
     """)
     Optional<ParticipantResponse> findActiveParticipationWithUserName(@Param("scheduleId") Long scheduleId, @Param("userId") Long userId, @Param("status") ParticipantStatus status);
+
+    // 대기 순번 계산 (특정 일정의 WAITING 상태에서 나보다 먼저 신청한 사람 수 + 1)
+    @Query("SELECT COUNT(sp) + 1 FROM ScheduleParticipant sp " +
+           "WHERE sp.scheduleId = :scheduleId " +
+           "AND sp.status = 'WAITING' " +
+           "AND sp.joinedAt < :joinedAt")
+    Long calculateWaitingNumber(@Param("scheduleId") Long scheduleId, @Param("joinedAt") java.time.LocalDateTime joinedAt);
 }

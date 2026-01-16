@@ -8,7 +8,7 @@ import {
 import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
-import { setOpenRunSession } from "../../utils/openrunSession";
+import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
 
 interface UserInfo {
   id: number;
@@ -42,8 +42,9 @@ const LoginPage: React.FC = () => {
 
   // 이미 로그인되어있는지 체크 (PWA 시작 시 자동 로그인)
   useEffect(() => {
-    const firebaseToken = localStorage.getItem("firebase_token");
-    const userId = localStorage.getItem("user_id");
+    const session = getOpenRunSession();
+    const firebaseToken = session.firebaseToken;
+    const userId = session.userId;
 
     // 이미 로그인되어있으면 원래 페이지 또는 메인 화면으로 이동
     if (firebaseToken && userId) {
@@ -108,13 +109,15 @@ const LoginPage: React.FC = () => {
         const firebaseUser = userCredential.user;
         console.log("✅ [Kakao Login] Step 2-1: Firebase ID Token 받기 완료");
 
-        // 3. Firebase token을 localStorage에 저장
-        console.log("🟡 [Kakao Login] Step 3: localStorage 저장 중...");
-        localStorage.setItem("firebase_token", idToken);
-        localStorage.setItem("firebase_uid", firebaseUser.uid);
+        // 3. Firebase token을 세션에 저장
+        console.log("🟡 [Kakao Login] Step 3: 세션 저장 중...");
         const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-        localStorage.setItem("token_last_refresh", refreshTime);
-        console.log("✅ [Kakao Login] Step 3: localStorage 저장 완료");
+        setOpenRunSession({
+          firebaseToken: idToken,
+          firebaseUid: firebaseUser.uid,
+          tokenLastRefresh: refreshTime,
+        });
+        console.log("✅ [Kakao Login] Step 3: 세션 저장 완료");
 
         // 3-1. axios 기본 헤더에 즉시 설정 (타이밍 이슈 방지)
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
@@ -218,11 +221,13 @@ const LoginPage: React.FC = () => {
       const isNewUser = loginResponse.data.newUser;
       console.log("✅ [2/4] 백엔드 로그인 완료, isNewUser:", isNewUser);
 
-      // 3. Firebase token을 localStorage에 저장
-      localStorage.setItem("firebase_token", idToken);
-      localStorage.setItem("firebase_uid", firebaseUser.uid);
+      // 3. Firebase token을 세션에 저장
       const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-      localStorage.setItem("token_last_refresh", refreshTime);
+      setOpenRunSession({
+        firebaseToken: idToken,
+        firebaseUid: firebaseUser.uid,
+        tokenLastRefresh: refreshTime,
+      });
 
       console.log("🔵 [3/4] 사용자 정보 조회...");
       // 4. 백엔드에서 사용자 정보 조회
@@ -324,11 +329,13 @@ const LoginPage: React.FC = () => {
       const firebaseUser = userCredential.user;
       console.log("✅ [2/5] Firebase 로그인 완료");
 
-      // 4. Firebase token을 localStorage에 저장
-      localStorage.setItem("firebase_token", idToken);
-      localStorage.setItem("firebase_uid", firebaseUser.uid);
+      // 4. Firebase token을 세션에 저장
       const refreshTime = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-      localStorage.setItem("token_last_refresh", refreshTime);
+      setOpenRunSession({
+        firebaseToken: idToken,
+        firebaseUid: firebaseUser.uid,
+        tokenLastRefresh: refreshTime,
+      });
 
       console.log("🔐 [3/5] 사용자 정보 조회...");
       // 5. 백엔드에서 사용자 정보 조회

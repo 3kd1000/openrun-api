@@ -21,7 +21,8 @@ import {
   isPastDate,
 } from "../../../utils/scheduleValidation";
 import { isNotEmpty } from "../../../utils/isEmpty";
-import { ClipboardListIcon } from "../../../components/common/Icons";
+import { ClipboardListIcon, EditIcon } from "../../../components/common/Icons";
+import { getOpenRunSession } from "../../../utils/openrunSession";
 import "./ScheduleDetailModal.css";
 
 interface Props {
@@ -54,8 +55,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
   const [clubMembers, setClubMembers] = useState<UserResponse[]>([]);
 
   // 로그인한 사용자 ID 가져오기
-  const userId = localStorage.getItem("user_id");
-  const currentUserId = userId ? parseInt(userId) : null;
+  const session = getOpenRunSession();
+  const currentUserId = session.userId ?? null;
 
   // 삭제 권한: API 응답의 canManageSchedule 필드 사용
   const canDelete = schedule?.canManageSchedule ?? false;
@@ -144,9 +145,8 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
     const fetchClubMembers = async () => {
       try {
-        const currentClubId = parseInt(
-          localStorage.getItem("current_club_id") || "1"
-        );
+        const session = getOpenRunSession();
+        const currentClubId = parseInt(session.currentClubId ?? "1");
         const members = await clubService.getClubMembers(currentClubId);
         setClubMembers(members);
       } catch (err) {
@@ -440,7 +440,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={handleTogglePinned}
-                className={`btn-toggle-header ${schedule.pinned ? "is-on" : "is-off"}`}
+                className={`btn-toggle-header ${
+                  schedule.pinned ? "is-on" : "is-off"
+                }`}
                 disabled={loading}
                 title="고정"
               >
@@ -452,7 +454,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={handleToggleGuestRecruit}
-                className={`btn-toggle-header ${schedule.guestRecruitOpen ? "is-on" : "is-off"}`}
+                className={`btn-toggle-header ${
+                  schedule.guestRecruitOpen ? "is-on" : "is-off"
+                }`}
                 disabled={loading}
                 title="게스트 모집"
               >
@@ -464,7 +468,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={handleToggleInterclubRecruit}
-                className={`btn-toggle-header ${schedule.interclubRecruitOpen ? "is-on" : "is-off"}`}
+                className={`btn-toggle-header ${
+                  schedule.interclubRecruitOpen ? "is-on" : "is-off"
+                }`}
                 disabled={loading}
                 title="교류전 모집"
               >
@@ -480,14 +486,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
           <div className="schedule-detail-view">
             <div className="detail-item">
               <label>코트명</label>
-              <p>
-                {schedule.pinned ? (
-                  <span className="schedule-pin-badge-inline" title="고정됨">
-                    고정
-                  </span>
-                ) : null}
-                {schedule.courtName}
-              </p>
+              <p>{schedule.courtName}</p>
             </div>
 
             {schedule.reservedByUserName && (
@@ -554,7 +553,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     {schedule.isDrawValid ? (
                       <>✓ 유효 ({schedule.drawType})</>
                     ) : (
-                      <>⚠️ 참가자 변동으로 인한 재생성 필요</>
+                      <>대진 재생성 필요(참가자 변동)</>
                     )}
                   </span>
                 )}
@@ -562,153 +561,140 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
               {/* 대진 관련 액션 버튼 */}
               {schedule.drawType ? (
-              // 대진이 있는 경우: 보기 버튼과 삭제 버튼
-              // 과거 일정이어도 대진이 있으면 보기 가능 (경기 결과 입력/수정을 위해)
-              <div className="draw-view-action">
-                <button
-                  type="button"
-                  onClick={() => setShowDrawViewModal(true)}
-                  className="btn-view-draw"
-                >
-                  <ClipboardListIcon size={16} />
-                  <span>대진표 보기</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteDraw}
-                  className="btn-delete-draw"
-                  disabled={loading || isPastDate(schedule.scheduledAt)}
-                  title={
-                    isPastDate(schedule.scheduledAt)
-                      ? "이미 지난 경기에는 대진표를 삭제할 수 없습니다."
-                      : undefined
-                  }
-                >
-                  🗑️ 대진표 삭제
-                </button>
-              </div>
-            ) : (
-              // 대진이 없는 경우: 생성 버튼
-              <div className="draw-create-action">
-                <button
-                  type="button"
-                  onClick={() => setShowDrawCreateModal(true)}
-                  className="btn-create-draw"
-                  disabled={
-                    !!(
-                      (schedule.scheduledAt &&
-                        new Date() >= new Date(schedule.scheduledAt)) ||
-                      confirmedParticipants.length < 6
-                    )
-                  }
-                  title={
-                    schedule.scheduledAt &&
-                    new Date() >= new Date(schedule.scheduledAt)
-                      ? "이미 지난 일정에는 대진을 생성할 수 없습니다."
-                      : confirmedParticipants.length < 6
-                      ? `대진 생성에는 최소 6명이 필요합니다 (현재: ${confirmedParticipants.length}명)`
-                      : undefined
-                  }
-                >
-                  🎯 대진 생성
-                </button>
-                {confirmedParticipants.length < 6 && (
-                  <p className="draw-min-notice">
-                    대진 생성에는 최소 6명이 필요합니다 (현재:{" "}
-                    {confirmedParticipants.length}명)
-                  </p>
-                )}
-              </div>
-            )}
+                // 대진이 있는 경우: 보기 버튼과 삭제 버튼
+                // 과거 일정이어도 대진이 있으면 보기 가능 (경기 결과 입력/수정을 위해)
+                <div className="draw-view-action">
+                  <button
+                    type="button"
+                    onClick={() => setShowDrawViewModal(true)}
+                    className="btn-view-draw"
+                  >
+                    <ClipboardListIcon size={16} />
+                    <span>대진표 보기</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteDraw}
+                    className="btn-delete-draw"
+                    disabled={loading || isPastDate(schedule.scheduledAt)}
+                    title={
+                      isPastDate(schedule.scheduledAt)
+                        ? "이미 지난 경기에는 대진표를 삭제할 수 없습니다."
+                        : undefined
+                    }
+                  >
+                    🗑️ 대진표 삭제
+                  </button>
+                </div>
+              ) : (
+                // 대진이 없는 경우: 생성 버튼
+                <div className="draw-create-action">
+                  <button
+                    type="button"
+                    onClick={() => setShowDrawCreateModal(true)}
+                    className="btn-create-draw"
+                    disabled={
+                      !!(
+                        (schedule.scheduledAt &&
+                          new Date() >= new Date(schedule.scheduledAt)) ||
+                        schedule.maxCapacity < 6
+                      )
+                    }
+                    title={
+                      schedule.scheduledAt &&
+                      new Date() >= new Date(schedule.scheduledAt)
+                        ? "이미 지난 일정에는 대진을 생성할 수 없습니다."
+                        : schedule.maxCapacity < 6
+                        ? `대진 생성에는 최소 6명 모임이 필요합니다 (현재 총원: ${schedule.maxCapacity}명)`
+                        : undefined
+                    }
+                  >
+                    🎯 대진 생성
+                  </button>
+                  {schedule.maxCapacity < 6 && (
+                    <p className="draw-min-notice">
+                      대진 생성에는 최소 6명 모임이 필요합니다 (현재 총원:{" "}
+                      {schedule.maxCapacity}명)
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* 참가자 목록 */}
-            {participants.length > 0 && (
-              <div className="participants-section">
-                <div className="section-header-with-button">
-                  <label>참가자 목록</label>
-                  {schedule?.canManageSchedule && !isEditMode && (
-                    <button
-                      className="manage-participants-button"
-                      onClick={() => setShowParticipantManagementModal(true)}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ marginRight: "6px" }}
-                      >
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                      참가자 수정
-                    </button>
-                  )}
-                </div>
-                <div className="participants-list">
-                  {confirmedParticipants.length > 0 && (
-                    <div className="participant-group">
-                      <h4>확정 ({confirmedParticipants.length}명)</h4>
-                      <ul>
-                        {confirmedParticipants.map((p, idx) => (
-                          <li key={p.id}>
-                            {idx + 1}. {p.userName}
-                            {p.asGuest ? (
-                              <span className="guest-badge"> 게스트</span>
-                            ) : null}
-                            {p.userId === currentUserId && (
-                              <span className="me-badge"> (나)</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {waitingParticipants.length > 0 && (
-                    <div className="participant-group">
-                      <h4>대기 ({waitingParticipants.length}명)</h4>
-                      <ul>
-                        {waitingParticipants.map((p, idx) => (
-                          <li key={p.id} className="waiting">
-                            {idx + 1}. {p.userName}
-                            {p.asGuest ? (
-                              <span className="guest-badge"> 게스트</span>
-                            ) : null}
-                            {p.userId === currentUserId && (
-                              <span className="me-badge"> (나)</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 내 참가 상태 */}
-            {myParticipation && (
-              <div className="my-status">
-                {myParticipation.status === "CONFIRMED" && (
-                  <p className="status-confirmed">✓ 참가 확정</p>
-                )}
-                {myParticipation.status === "WAITING" && (
-                  <p className="status-waiting">
-                    ⏱ 대기 중 (
-                    {waitingParticipants.findIndex(
-                      (p) => p.userId === currentUserId
-                    ) + 1}
-                    번째)
-                  </p>
+            <div className="participants-section">
+              <div className="section-header-with-button">
+                <label>참가자 목록</label>
+                {schedule?.canManageSchedule && !isEditMode && (
+                  <button
+                    className="manage-participants-button"
+                    onClick={() => setShowParticipantManagementModal(true)}
+                  >
+                    <EditIcon size={16} />
+                    참가자 수정
+                  </button>
                 )}
               </div>
-            )}
+              <div className="participants-list">
+                {confirmedParticipants.length > 0 && (
+                  <div className="participant-group">
+                    <h4>확정 ({confirmedParticipants.length}명)</h4>
+                    <ul>
+                      {confirmedParticipants.map((p, idx) => (
+                        <li
+                          key={p.id}
+                          className={
+                            p.userId === currentUserId ? "is-me" : undefined
+                          }
+                        >
+                          {idx + 1}. {p.userName}
+                          {p.asGuest ? (
+                            <span className="guest-badge"> 게스트</span>
+                          ) : null}
+                          {p.userId === currentUserId && (
+                            <span className="me-badge"> (나)</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {waitingParticipants.length > 0 && (
+                  <div className="participant-group">
+                    <h4>대기 ({waitingParticipants.length}명)</h4>
+                    <ul>
+                      {waitingParticipants.map((p, idx) => (
+                        <li
+                          key={p.id}
+                          className={
+                            p.userId === currentUserId
+                              ? "waiting is-me"
+                              : "waiting"
+                          }
+                        >
+                          {idx + 1}. {p.userName}
+                          {p.asGuest ? (
+                            <span className="guest-badge"> 게스트</span>
+                          ) : null}
+                          {p.userId === currentUserId && (
+                            <span className="me-badge"> (나)</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {participants.length === 0 && (
+                  <div className="participant-group">
+                    <p className="participant-empty-message">
+                      아직 참가자가 없습니다
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {error && <div className="error-message">{error}</div>}
 
@@ -840,6 +826,23 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 throw new Error(
                   validation.errorMessage || "일정 수정에 실패했습니다."
                 );
+              }
+
+              // 참가신청 시작시간 검증
+              if (data.participationStartAt) {
+                const scheduledDate = new Date(data.scheduledAt);
+                const participationStartDate = new Date(
+                  data.participationStartAt
+                );
+
+                if (participationStartDate >= scheduledDate) {
+                  setError(
+                    "참가신청 시작시간은 일정 시간보다 이전이어야 합니다."
+                  );
+                  throw new Error(
+                    "참가신청 시작시간은 일정 시간보다 이전이어야 합니다."
+                  );
+                }
               }
 
               setLoading(true);
