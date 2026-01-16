@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getOpenRunSession } from "../../utils/openrunSession";
 
 /**
  * 레거시 진입 경로(/club, /club/posts 등) 호환을 위한 리다이렉트 페이지
@@ -10,7 +11,8 @@ const ClubEntryRedirectPage = ({ to }: Props) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const clubId = localStorage.getItem("current_club_id");
+    const session = getOpenRunSession();
+    const clubId = session.currentClubId;
     if (clubId) {
       navigate(to === "posts" ? `/clubs/${clubId}/posts` : `/clubs/${clubId}`, {
         replace: true,

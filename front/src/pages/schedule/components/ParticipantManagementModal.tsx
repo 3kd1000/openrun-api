@@ -3,6 +3,7 @@ import type { Participant, Schedule } from "../../../types/schedule";
 import type { UserResponse } from "../../../services/userService";
 import { participantService } from "../../../services/participantService";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
+import { getOpenRunSession } from "../../../utils/openrunSession";
 import "./ParticipantManagementModal.css";
 
 interface Props {
@@ -86,15 +87,15 @@ const ParticipantManagementModal: React.FC<Props> = ({
       setLoading(true);
       setError("");
 
-      const userId = localStorage.getItem("user_id");
-      if (!userId) {
+      const session = getOpenRunSession();
+      if (!session.userId) {
         throw new Error("로그인이 필요합니다.");
       }
 
       await participantService.bulkUpdateParticipants(
         scheduleId,
         Array.from(selectedUserIds),
-        parseInt(userId)
+        session.userId
       );
 
       onSuccess();

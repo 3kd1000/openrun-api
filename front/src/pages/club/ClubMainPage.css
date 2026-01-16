@@ -1,5 +1,5 @@
 .club-main-page {
-  padding: var(--space-m);
+  padding: 0 var(--space-m);
   background-color: var(--color-background);
   min-height: calc(100vh - var(--header-height) - var(--navigation-height));
   padding-bottom: 120px; /* QuickPostInput height + Navigation height */
@@ -46,16 +46,11 @@
   flex-direction: column;
   align-items: stretch;
   gap: var(--space-s);
-  padding: var(--space-s) var(--space-m);
+  padding: var(--space-s);
   background-color: var(--color-white);
   border-radius: var(--radius-l);
   margin-bottom: var(--space-s);
   border: 1px solid var(--color-border);
-}
-
-.club-main-page__header-top {
-  display: flex;
-  justify-content: center;
 }
 
 .club-main-page__header-actions {
@@ -130,18 +125,7 @@
   text-align: center;
 }
 
-/* 클럽 선택기 */
-.club-main-page__club-selector {
-  padding: var(--space-xs) var(--space-s);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-m);
-  background-color: var(--color-white);
-  cursor: pointer;
-  min-height: 36px;
-  text-align: center;
-}
+/* 클럽 선택기 - ClubSelector 컴포넌트 사용 */
 
 /* 위젯 영역 */
 .club-main-page__widgets {
@@ -340,7 +324,7 @@
 /* Desktop (769px+) - 게시판도 전체 너비 사용 */
 @media (min-width: 769px) {
   .club-main-page {
-    padding: var(--space-l);
+    padding: 0 var(--space-l);
   }
 
   .club-main-page__header {
@@ -363,12 +347,6 @@
 
   .club-main-page__title {
     font-size: var(--font-size-xl);
-  }
-
-  .club-main-page__club-selector {
-    font-size: var(--font-size-l);
-    min-height: 40px;
-    padding: var(--space-s) var(--space-m);
   }
 
   .club-main-page__feed-section {
@@ -405,11 +383,6 @@
   .club-main-page__title {
     font-size: var(--font-size-base);
   }
-
-  .club-main-page__club-selector {
-    font-size: var(--font-size-m);
-    min-height: 34px;
-  }
 }
 
 /* Mobile Small (~ 360px): 버튼 라벨로 인해 깨지지 않게 여백/폰트 살짝 축소 */
@@ -427,7 +400,7 @@
 /* Mobile Large (361px ~ 425px) */
 @media (min-width: 360px) and (max-width: 425px) {
   .club-main-page {
-    padding: var(--space-s);
+    padding: 0 var(--space-s);
   }
 
   .club-main-page__header {
@@ -443,21 +416,19 @@
   .club-main-page__title {
     font-size: var(--font-size-m);
   }
+}
 
-  .club-main-page__club-selector {
-    font-size: var(--font-size-m);
-    min-height: 32px;
-  }
-
+/* Tablet (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
   .club-main-page__feed-section {
     padding: var(--space-s);
   }
 }
 
-/* Mobile Small (~ 360px) */
+/* Mobile Small (~ 359px) */
 @media (max-width: 359px) {
   .club-main-page {
-    padding: var(--space-xs);
+    padding: 0 var(--space-xs);
   }
 
   .club-main-page__header {
@@ -472,12 +443,6 @@
 
   .club-main-page__title {
     font-size: var(--font-size-m);
-  }
-
-  .club-main-page__club-selector {
-    font-size: var(--font-size-s);
-    padding: var(--space-xs);
-    min-height: 28px;
   }
 
   .club-main-page__feed-section {

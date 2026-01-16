@@ -16,9 +16,8 @@ const PostListPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
   const [searchParams] = useSearchParams();
 
-  const myRole = normalizeClubRole(
-    getOpenRunSession().currentClubRole ?? localStorage.getItem("current_club_role")
-  );
+  const session = getOpenRunSession();
+  const myRole = normalizeClubRole(session.currentClubRole);
   const canManage = canManageClub(myRole);
 
   const [posts, setPosts] = useState<Post[]>([]);

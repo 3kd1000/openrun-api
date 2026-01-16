@@ -19,9 +19,8 @@ function sanitizeToken(raw: string | null | undefined): string | null {
 
 axiosInstance.interceptors.request.use((config) => {
   // Firebase token 추가 (OAuth 로그인 사용 시)
-  const sessionToken = getOpenRunSession().firebaseToken;
-  const legacyToken = localStorage.getItem('firebase_token');
-  const firebaseToken = sanitizeToken(sessionToken) ?? sanitizeToken(legacyToken);
+  const session = getOpenRunSession();
+  const firebaseToken = sanitizeToken(session.firebaseToken);
   if (firebaseToken) {
     config.headers['Authorization'] = `Bearer ${firebaseToken}`;
   }
@@ -77,9 +76,7 @@ axiosInstance.interceptors.response.use(
         const newToken = await getCurrentToken();
 
         if (newToken) {
-          // localStorage 업데이트
-          localStorage.setItem('firebase_token', newToken);
-          // session(v1)도 함께 업데이트 (단일 소스 유지)
+          // session 업데이트
           setOpenRunSession({
             firebaseToken: newToken,
             tokenLastRefresh: new Date().toISOString(),

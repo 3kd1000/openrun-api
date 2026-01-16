@@ -6,6 +6,7 @@ import { ArrowLeftIcon, CrownIcon, ShieldIcon, UserIcon, MailIcon, SettingsIcon,
 import { getErrorMessage, logError } from '../../utils/errorHandler';
 import { canManageClub, normalizeClubRole } from '../../utils/role';
 import { getOpenRunSession } from '../../utils/openrunSession';
+import MemberProfileDrawer from '../../components/MemberProfileDrawer';
 import './ClubMembersPage.css';
 
 // 신규 API 응답 형식: GET /clubs/{clubId}/membership
@@ -31,10 +32,10 @@ const ClubMembersPage: React.FC = () => {
   const [roleDraftByUserId, setRoleDraftByUserId] = useState<Record<number, ClubMembershipResponse["role"]>>({});
   const [saving, setSaving] = useState(false);
   const [kickingUserId, setKickingUserId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
-  const myRole = normalizeClubRole(
-    getOpenRunSession().currentClubRole ?? localStorage.getItem("current_club_role")
-  );
+  const session = getOpenRunSession();
+  const myRole = normalizeClubRole(session.currentClubRole);
   const canManage = canManageClub(myRole);
   const isOwner = myRole === 'OWNER';
   // 역할 변경은 OWNER 전용이지만, 프론트에서는 우선 canManage(ADMIN+)에서 버튼 노출 후
@@ -221,7 +222,12 @@ const ClubMembersPage: React.FC = () => {
         {!loading && !error && sortedMembers.length > 0 && (
           <div className="club-members-page__list">
             {sortedMembers.map((member) => (
-              <div key={member.memberId} className="club-members-page__item">
+              <div
+                key={member.memberId}
+                className="club-members-page__item"
+                onClick={() => !isEditMode && setSelectedUserId(member.userId)}
+                style={{ cursor: isEditMode ? 'default' : 'pointer' }}
+              >
                 <div className="club-members-page__item-avatar">
                   {member.imageUrl ? (
                     <img src={member.imageUrl} alt={member.name} />
@@ -281,6 +287,15 @@ const ClubMembersPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 멤버 프로필 드로어 */}
+      {selectedUserId && clubId && (
+        <MemberProfileDrawer
+          clubId={Number(clubId)}
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      )}
     </div>
   );
 };

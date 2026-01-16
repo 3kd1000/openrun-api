@@ -1,6 +1,11 @@
 import axiosInstance from './axiosInstance';
 
-export type ContactVisibility = 'PRIVATE' | 'CLUB_ONLY' | 'PUBLIC';
+/**
+ * 연락처 공개 범위
+ * - PRIVATE: 비공개 (나만 볼 수 있음)
+ * - PUBLIC: 공개 (클럽원 및 게스트 참여 시 공유)
+ */
+export type ContactVisibility = 'PRIVATE' | 'PUBLIC';
 
 export interface UserProfile {
   id: number;
@@ -100,5 +105,58 @@ export const getOAuthProviders = async (): Promise<OAuthProvider[]> => {
  */
 export const getMyClubs = async (): Promise<MyClub[]> => {
   const response = await axiosInstance.get<MyClub[]>('/users/me/clubs');
+  return response.data;
+};
+
+/**
+ * 내가 참가한 모든 일정 조회 (개인일정)
+ * - ScheduleParticipant + ExternalRequest 조합
+ * - 클럽 멤버로 참가한 일정 + 게스트로 신청한 일정
+ *
+ * @param upcoming true면 미래 일정만 조회
+ */
+export const getMySchedules = async (upcoming?: boolean): Promise<import('../../types/schedule').MyScheduleResponse[]> => {
+  const response = await axiosInstance.get<import('../../types/schedule').MyScheduleResponse[]>('/users/me/schedules', {
+    params: upcoming !== undefined ? { upcoming } : undefined
+  });
+  return response.data;
+};
+
+/**
+ * 클럽 멤버 프로필 (user + user_profile + membership 통합)
+ */
+export interface MemberProfile {
+  // User 기본 정보
+  id: number;
+  name: string;
+  email: string | null;         // 공개범위에 따라 null 가능
+  imageUrl: string | null;
+  phoneNumber: string | null;    // 공개범위에 따라 null 가능
+
+  // Tennis Profile (user_profile)
+  tennisStartedAt: string | null;
+  backhandType: BackhandType | null;
+  ntrp: string | null;
+  favoritePlayer: string | null;
+  tournamentHistory: string | null;
+  formerPlayer: boolean;
+
+  // Club Membership 정보
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'REGULAR';
+  joinedAt: string;
+}
+
+/**
+ * 클럽 멤버의 프로필 조회
+ * - 공개범위(PRIVATE/PUBLIC)에 따라 email/phoneNumber 필터링됨
+ * - PUBLIC: 클럽원 + 게스트 참여 시 공유
+ */
+export const getClubMemberProfile = async (
+  clubId: number,
+  userId: number
+): Promise<MemberProfile> => {
+  const response = await axiosInstance.get<MemberProfile>(
+    `/clubs/${clubId}/members/${userId}`
+  );
   return response.data;
 };

@@ -154,3 +154,11 @@ input[type="number"] {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* ========== ClubSelector 공통 컨테이너 ========== */
+.page-club-selector-container {
+  margin: var(--space-s) 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}

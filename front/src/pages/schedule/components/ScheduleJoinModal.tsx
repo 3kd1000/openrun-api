@@ -7,6 +7,7 @@ import { ko } from "date-fns/locale";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
 import "./ScheduleJoinModal.css";
+import { getOpenRunSession } from "../../../utils/openrunSession";
 
 interface Props {
   onClose: () => void;
@@ -22,9 +23,9 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
   // 체크박스 상태 변경에 따른 인원수 추적
   const [localParticipantCounts, setLocalParticipantCounts] = useState<Map<number, number>>(new Map());
 
-  const userId = localStorage.getItem("user_id");
-  const currentUserId = userId ? parseInt(userId) : null;
-  const currentClubId = parseInt(localStorage.getItem("current_club_id") || "1");
+  const session = getOpenRunSession();
+  const currentUserId = session.userId ?? null;
+  const currentClubId = session.currentClubId ? parseInt(session.currentClubId) : 1;
 
   // ESC 키로 모달 닫기
   useEscapeKey(onClose, !saving);

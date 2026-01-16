@@ -12,6 +12,17 @@ import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.repository.UserOAuthProviderRepository;
 import com.example.openrunapi.domain.user.repository.UserProfileRepository;
 import com.example.openrunapi.domain.user.repository.UserRepository;
+import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepository;
+import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
+import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
+import com.example.openrunapi.domain.schedule.model.Schedule;
+import com.example.openrunapi.domain.schedule.model.dto.MyScheduleResponse;
+import com.example.openrunapi.domain.schedule.model.dto.MyParticipationInfo;
+import com.example.openrunapi.domain.schedule.model.dto.MyExternalRequestInfo;
+import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
+import com.example.openrunapi.domain.externalrequest.repository.ExternalRequestRepository;
+import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
+import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
@@ -32,6 +43,10 @@ public class UserService implements UserDetailsService {
     private final UserOAuthProviderRepository userOAuthProviderRepository;
     private final UserProfileRepository userProfileRepository;
     private final OAuthService oauthService;
+    private final ScheduleParticipantRepository participantRepository;
+    private final ExternalRequestRepository externalRequestRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final ClubRepository clubRepository;
 
     @Override
     @Transactional
@@ -149,5 +164,103 @@ public class UserService implements UserDetailsService {
                 request != null ? request.getFormerPlayer() : null
         );
         return new UserProfileResponse(profile);
+    }
+
+    /**
+     * 내가 참가한 모든 일정 조회
+     * - ScheduleParticipant + ExternalRequest 조합
+     * - 미래 일정만 조회 가능
+     */
+    public java.util.List<MyScheduleResponse> getMySchedules(Long userId, Boolean upcoming) {
+        // 1. ScheduleParticipant에서 내 참가 목록 조회 (CANCELLED 제외)
+        java.util.List<ScheduleParticipant> participants = participantRepository.findByUserIdAndStatusNot(
+                userId,
+                ScheduleParticipant.ParticipantStatus.CANCELLED
+        );
+
+        // 2. ExternalRequest에서 내가 신청한 목록 조회
+        java.util.List<ExternalRequest> externalRequests = externalRequestRepository
+                .findByRequesterIdAndScheduleIsNotNullOrderByCreatedAtDesc(userId);
+
+        // 3. scheduleId 기준으로 그룹핑
+        java.util.Map<Long, ScheduleParticipant> participantMap = participants.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        ScheduleParticipant::getScheduleId,
+                        p -> p,
+                        (p1, p2) -> p1  // 중복 시 첫 번째 유지
+                ));
+
+        java.util.Map<Long, ExternalRequest> externalRequestMap = externalRequests.stream()
+                .filter(req -> req.getSchedule() != null)
+                .collect(java.util.stream.Collectors.toMap(
+                        req -> req.getSchedule().getId(),
+                        req -> req,
+                        (r1, r2) -> r1  // 중복 시 첫 번째 유지
+                ));
+
+        // 4. 모든 scheduleId 수집
+        java.util.Set<Long> scheduleIds = new java.util.HashSet<>();
+        scheduleIds.addAll(participantMap.keySet());
+        scheduleIds.addAll(externalRequestMap.keySet());
+
+        // 5. Schedule 정보 조회
+        java.util.List<Schedule> schedules = scheduleRepository.findAllById(scheduleIds);
+
+        // 6. MyScheduleResponse 생성
+        java.util.List<MyScheduleResponse> responses = new java.util.ArrayList<>();
+        for (Schedule schedule : schedules) {
+            // upcoming 필터링
+            if (Boolean.TRUE.equals(upcoming) && schedule.getScheduledAt().isBefore(java.time.LocalDateTime.now())) {
+                continue;
+            }
+
+            ScheduleParticipant participant = participantMap.get(schedule.getId());
+            ExternalRequest externalRequest = externalRequestMap.get(schedule.getId());
+
+            // MyParticipationInfo 생성
+            MyParticipationInfo participationInfo = null;
+            if (participant != null) {
+                Long waitingNumber = null;
+                if (participant.getStatus() == ScheduleParticipant.ParticipantStatus.WAITING) {
+                    waitingNumber = participantRepository.calculateWaitingNumber(
+                            schedule.getId(),
+                            participant.getJoinedAt()
+                    );
+                }
+
+                participationInfo = MyParticipationInfo.builder()
+                        .status(participant.getStatus().name())
+                        .waitingNumber(waitingNumber != null ? waitingNumber.intValue() : null)
+                        .asGuest(participant.isAsGuest())
+                        .build();
+            }
+
+            // MyExternalRequestInfo 생성
+            MyExternalRequestInfo externalRequestInfo = null;
+            if (externalRequest != null) {
+                externalRequestInfo = MyExternalRequestInfo.builder()
+                        .requestId(externalRequest.getId())
+                        .status(externalRequest.getStatus().name())
+                        .type(externalRequest.getType().name())
+                        .createdAt(externalRequest.getCreatedAt())
+                        .build();
+            }
+
+            // ScheduleResponse 생성 (생성자 사용)
+            ScheduleResponse scheduleResponse = new ScheduleResponse(schedule, userRepository);
+
+            responses.add(MyScheduleResponse.builder()
+                    .schedule(scheduleResponse)
+                    .myParticipation(participationInfo)
+                    .myExternalRequest(externalRequestInfo)
+                    .build());
+        }
+
+        // 7. 날짜순 정렬
+        responses.sort(java.util.Comparator.comparing(
+                r -> r.getSchedule().getScheduledAt()
+        ));
+
+        return responses;
     }
 }

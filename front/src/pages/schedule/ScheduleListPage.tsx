@@ -11,7 +11,13 @@ import { ko } from "date-fns/locale";
 import { useAuth } from "../../contexts/AuthContext";
 import { scheduleService } from "../../services/scheduleService";
 import { participantService } from "../../services/participantService";
-import type { Schedule, Participant } from "../../types/schedule";
+import { getMySchedules } from "../../services/api/userApi";
+import type {
+  Schedule,
+  Participant,
+  MyScheduleResponse,
+} from "../../types/schedule";
+import { ClubSelector } from "../../components/ClubSelector";
 import ScheduleCreateModal from "./components/ScheduleCreateModal";
 import ScheduleJoinModal from "./components/ScheduleJoinModal";
 import ScheduleCalendarView from "./components/ScheduleCalendarView";
@@ -24,16 +30,34 @@ import {
   ClipboardListIcon,
 } from "../../components/common/Icons";
 import { isNotEmpty } from "../../utils/isEmpty";
+import {
+  getOpenRunSession,
+  setOpenRunSession,
+} from "../../utils/openrunSession";
+import {
+  getOpenRunUiSettings,
+  setOpenRunUiSettings,
+} from "../../utils/openrunUiSettings";
 import "./ScheduleListPage.css";
 
 type ViewMode = "calendar" | "list";
+type ScheduleMode = "club" | "personal";
 type CapacityFilter = "all" | "available" | "full" | "participated";
+type PersonalFilter = {
+  confirmed: boolean;
+  waiting: boolean;
+  pending: boolean;
+  rejected: boolean;
+};
 
 const ScheduleListPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user: firebaseUser } = useAuth();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [personalSchedules, setPersonalSchedules] = useState<
+    MyScheduleResponse[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -43,9 +67,16 @@ const ScheduleListPage: React.FC = () => {
   const [selectedScheduleForDraw, setSelectedScheduleForDraw] =
     useState<Schedule | null>(null);
   const [drawParticipants, setDrawParticipants] = useState<Participant[]>([]);
-  // localStorage에서 뷰 모드 복원
+  // 클럽 선택 상태
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(() => {
+    const session = getOpenRunSession();
+    return session.currentClubId ? parseInt(session.currentClubId) : null;
+  });
+  // 일정 모드 (클럽일정 / 개인일정)
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("club");
+  // UI 설정에서 뷰 모드 복원
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    const saved = localStorage.getItem("schedule_viewMode");
+    const saved = getOpenRunUiSettings().scheduleViewMode;
     return (
       saved === "calendar" || saved === "list" ? saved : "calendar"
     ) as ViewMode;
@@ -56,6 +87,12 @@ const ScheduleListPage: React.FC = () => {
   );
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [capacityFilter, setCapacityFilter] = useState<CapacityFilter>("all");
+  const [personalFilter, setPersonalFilter] = useState<PersonalFilter>({
+    confirmed: true,
+    waiting: true,
+    pending: true,
+    rejected: false,
+  });
   const [myParticipations, setMyParticipations] = useState<Set<number>>(
     new Set()
   );
@@ -73,7 +110,17 @@ const ScheduleListPage: React.FC = () => {
     return Number.isFinite(n) ? n : null;
   }, [location.state]);
 
-  const loadSchedules = useCallback(async () => {
+  // 클럽 변경 시 세션에 저장
+  const handleClubChange = (clubId: number | null) => {
+    setSelectedClubId(clubId);
+    if (clubId) {
+      const session = getOpenRunSession();
+      setOpenRunSession({ ...session, currentClubId: clubId.toString() });
+    }
+  };
+
+  // 클럽 일정 조회
+  const loadClubSchedules = useCallback(async () => {
     // 이미 로딩 중이면 중복 호출 방지
     if (isLoadingRef.current) return;
 
@@ -82,8 +129,14 @@ const ScheduleListPage: React.FC = () => {
       setLoading(true);
       setError("");
 
-      // 일정 목록 조회
-      const data = await scheduleService.getAllSchedules();
+      if (!selectedClubId) {
+        setError("클럽을 선택해주세요.");
+        setSchedules([]);
+        return;
+      }
+
+      // 일정 목록 조회 (선택된 클럽의 일정만)
+      const data = await scheduleService.getAllSchedules(selectedClubId);
       // 일정날짜순으로 정렬 (오름차순)
       const sortedData = data.sort(
         (a, b) =>
@@ -93,11 +146,12 @@ const ScheduleListPage: React.FC = () => {
 
       // 내가 참여한 일정 목록 조회 (Firebase 사용자가 있는 경우에만)
       if (firebaseUser) {
-        const userId = localStorage.getItem("user_id");
+        const session = getOpenRunSession();
+        const userId = session.userId;
         if (userId) {
           try {
             const participationIds = await scheduleService.getMyParticipations(
-              parseInt(userId)
+              userId
             );
             setMyParticipations(new Set(participationIds));
           } catch (err) {
@@ -116,11 +170,49 @@ const ScheduleListPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
+  }, [selectedClubId, firebaseUser]);
+
+  // 개인 일정 조회
+  const loadPersonalSchedules = useCallback(async () => {
+    if (isLoadingRef.current) return;
+
+    isLoadingRef.current = true;
+    try {
+      setLoading(true);
+      setError("");
+
+      if (!firebaseUser) {
+        setError("로그인이 필요합니다.");
+        setPersonalSchedules([]);
+        return;
+      }
+
+      // 내 일정 조회 (upcoming=false로 과거 일정도 포함)
+      const data = await getMySchedules(false);
+      // 일정날짜순으로 정렬 (오름차순)
+      const sortedData = data.sort(
+        (a, b) =>
+          new Date(a.schedule.scheduledAt).getTime() -
+          new Date(b.schedule.scheduledAt).getTime()
+      );
+      setPersonalSchedules(sortedData);
+    } catch (err) {
+      console.error("개인 일정 조회 실패:", err);
+      setError("개인 일정을 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
+      isLoadingRef.current = false;
+    }
   }, [firebaseUser]);
 
+  // 일정 로드 (모드에 따라 분기)
   useEffect(() => {
-    loadSchedules();
-  }, [loadSchedules]);
+    if (scheduleMode === "club") {
+      loadClubSchedules();
+    } else {
+      loadPersonalSchedules();
+    }
+  }, [scheduleMode, loadClubSchedules, loadPersonalSchedules]);
 
   // ClubMainPage "다가오는 일정" 클릭: 선택한 일정의 날짜로 전환 + 상세 모달 오픈
   useEffect(() => {
@@ -133,6 +225,7 @@ const ScheduleListPage: React.FC = () => {
       const d = new Date(target.scheduledAt);
       setFilterDate(d);
       setViewMode("list");
+      setScheduleMode("club"); // 클럽일정 모드로 전환
       setSelectedScheduleId(target.id);
       setShowDetailModal(true);
     } else {
@@ -146,16 +239,16 @@ const ScheduleListPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openScheduleIdFromState, loading, schedules.length]);
 
-  // 뷰 모드 변경 시 localStorage에 저장
+  // 뷰 모드 변경 시 UI 설정에 저장
   useEffect(() => {
-    localStorage.setItem("schedule_viewMode", viewMode);
+    setOpenRunUiSettings({ scheduleViewMode: viewMode });
   }, [viewMode]);
 
   // 리스트뷰 진입 시 오늘 날짜로 스크롤
   useEffect(() => {
     if (
       viewMode === "list" &&
-      schedules.length > 0 &&
+      (schedules.length > 0 || personalSchedules.length > 0) &&
       !filterDate &&
       location.pathname === "/schedules"
     ) {
@@ -194,7 +287,13 @@ const ScheduleListPage: React.FC = () => {
       setTimeout(tryScroll, 500);
       setTimeout(tryScroll, 800);
     }
-  }, [viewMode, schedules.length, filterDate, location.pathname]);
+  }, [
+    viewMode,
+    schedules.length,
+    personalSchedules.length,
+    filterDate,
+    location.pathname,
+  ]);
 
   if (loading) {
     return (
@@ -210,7 +309,16 @@ const ScheduleListPage: React.FC = () => {
         <div className="error-state">
           <p>⚠️</p>
           <p>{error}</p>
-          <button className="btn-retry" onClick={loadSchedules}>
+          <button
+            className="btn-retry"
+            onClick={() => {
+              if (scheduleMode === "club") {
+                loadClubSchedules();
+              } else {
+                loadPersonalSchedules();
+              }
+            }}
+          >
             다시 시도
           </button>
         </div>
@@ -259,7 +367,11 @@ const ScheduleListPage: React.FC = () => {
   };
 
   const handleDrawViewModalSuccess = () => {
-    loadSchedules(); // 일정 목록 새로고침
+    if (scheduleMode === "club") {
+      loadClubSchedules();
+    } else {
+      loadPersonalSchedules();
+    }
   };
 
   const handleClearFilter = () => {
@@ -285,8 +397,8 @@ const ScheduleListPage: React.FC = () => {
     return { isParticipated, isFull };
   };
 
-  // 필터링된 일정 목록
-  const filteredSchedules = schedules.filter((schedule) => {
+  // 클럽일정 필터링
+  const filteredClubSchedules = schedules.filter((schedule) => {
     // 날짜 필터
     if (filterDate) {
       const scheduleDate = format(new Date(schedule.scheduledAt), "yyyy-MM-dd");
@@ -313,9 +425,104 @@ const ScheduleListPage: React.FC = () => {
     return true;
   });
 
+  // 개인일정 필터링
+  const filteredPersonalSchedules = personalSchedules.filter((item) => {
+    const schedule = item.schedule;
+
+    // 날짜 필터
+    if (filterDate) {
+      const scheduleDate = format(new Date(schedule.scheduledAt), "yyyy-MM-dd");
+      const filterDateStr = format(filterDate, "yyyy-MM-dd");
+      if (scheduleDate !== filterDateStr) return false;
+    }
+
+    // 참가 상태 필터
+    const hasActiveFilter =
+      personalFilter.confirmed ||
+      personalFilter.waiting ||
+      personalFilter.pending ||
+      personalFilter.rejected;
+
+    if (hasActiveFilter) {
+      const participation = item.myParticipation;
+      const externalRequest = item.myExternalRequest;
+
+      let matchFilter = false;
+
+      // CONFIRMED 체크
+      if (personalFilter.confirmed && participation?.status === "CONFIRMED") {
+        matchFilter = true;
+      }
+
+      // WAITING 체크
+      if (personalFilter.waiting && participation?.status === "WAITING") {
+        matchFilter = true;
+      }
+
+      // PENDING (승인대기) 체크
+      if (personalFilter.pending && externalRequest?.status === "PENDING") {
+        matchFilter = true;
+      }
+
+      // REJECTED (거절) 체크
+      if (personalFilter.rejected && externalRequest?.status === "REJECTED") {
+        matchFilter = true;
+      }
+
+      if (!matchFilter) return false;
+    }
+
+    return true;
+  });
+
+  // 렌더링할 일정 목록 (모드에 따라 분기)
+  const displaySchedules =
+    scheduleMode === "club"
+      ? filteredClubSchedules.map((s) => ({
+          schedule: s,
+          myParticipation: null,
+          myExternalRequest: null,
+        }))
+      : filteredPersonalSchedules;
+
+  // 캘린더뷰용 Schedule[] 변환
+  const calendarSchedules = displaySchedules.map((item) => item.schedule);
+
   return (
     <div className="schedule-page">
+      {/* ClubSelector */}
+      <div className="page-club-selector-container">
+        <ClubSelector
+          selectedClubId={selectedClubId}
+          onClubChange={handleClubChange}
+        />
+      </div>
+
       <div className="schedule-header">
+        {/* 일정 모드 탭 (클럽일정 / 개인일정) */}
+        <div className="schedule-mode-tabs">
+          <button
+            className={`mode-tab ${scheduleMode === "club" ? "active" : ""}`}
+            onClick={() => {
+              setScheduleMode("club");
+              setFilterDate(null);
+            }}
+          >
+            클럽일정
+          </button>
+          <button
+            className={`mode-tab ${
+              scheduleMode === "personal" ? "active" : ""
+            }`}
+            onClick={() => {
+              setScheduleMode("personal");
+              setFilterDate(null);
+            }}
+          >
+            개인일정
+          </button>
+        </div>
+
         <div className="header-actions">
           <div className="view-toggle-group">
             <button
@@ -342,21 +549,26 @@ const ScheduleListPage: React.FC = () => {
               <span>리스트</span>
             </button>
           </div>
-          <button
-            className="header-action-btn btn-join"
-            onClick={() => setShowJoinModal(true)}
-          >
-            ✓ 일정 참여
-          </button>
-          <button
-            className="header-action-btn btn-create"
-            onClick={() => {
-              setShowCreateModal(true);
-            }}
-          >
-            + 일정 등록
-          </button>
+          {scheduleMode === "club" && (
+            <>
+              <button
+                className="header-action-btn btn-join"
+                onClick={() => setShowJoinModal(true)}
+              >
+                ✓ 일정 참여
+              </button>
+              <button
+                className="header-action-btn btn-create"
+                onClick={() => {
+                  setShowCreateModal(true);
+                }}
+              >
+                + 일정 등록
+              </button>
+            </>
+          )}
         </div>
+
         {/* 필터 영역 - header 안에 배치 */}
         <div className="header-filters">
           {filterDate && viewMode === "list" && (
@@ -367,46 +579,108 @@ const ScheduleListPage: React.FC = () => {
               </button>
             </div>
           )}
-          <div className="capacity-filters">
-            <button
-              className={`capacity-filter-btn ${
-                capacityFilter === "all" ? "active" : ""
-              }`}
-              onClick={() => setCapacityFilter("all")}
-            >
-              전체
-            </button>
-            <button
-              className={`capacity-filter-btn capacity-filter-available ${
-                capacityFilter === "available" ? "active" : ""
-              }`}
-              onClick={() => setCapacityFilter("available")}
-            >
-              신청 가능
-            </button>
-            <button
-              className={`capacity-filter-btn capacity-filter-full ${
-                capacityFilter === "full" ? "active" : ""
-              }`}
-              onClick={() => setCapacityFilter("full")}
-            >
-              마감/초과
-            </button>
-            <button
-              className={`capacity-filter-btn capacity-filter-participated ${
-                capacityFilter === "participated" ? "active" : ""
-              }`}
-              onClick={() => setCapacityFilter("participated")}
-            >
-              신청완료
-            </button>
-          </div>
+
+          {/* 클럽일정 모드: 기존 필터 */}
+          {scheduleMode === "club" && (
+            <div className="capacity-filters">
+              <button
+                className={`capacity-filter-btn ${
+                  capacityFilter === "all" ? "active" : ""
+                }`}
+                onClick={() => setCapacityFilter("all")}
+              >
+                전체
+              </button>
+              <button
+                className={`capacity-filter-btn capacity-filter-available ${
+                  capacityFilter === "available" ? "active" : ""
+                }`}
+                onClick={() => setCapacityFilter("available")}
+              >
+                신청 가능
+              </button>
+              <button
+                className={`capacity-filter-btn capacity-filter-full ${
+                  capacityFilter === "full" ? "active" : ""
+                }`}
+                onClick={() => setCapacityFilter("full")}
+              >
+                마감/초과
+              </button>
+              <button
+                className={`capacity-filter-btn capacity-filter-participated ${
+                  capacityFilter === "participated" ? "active" : ""
+                }`}
+                onClick={() => setCapacityFilter("participated")}
+              >
+                신청완료
+              </button>
+            </div>
+          )}
+
+          {/* 개인일정 모드: 새로운 필터 (체크박스 형태) */}
+          {scheduleMode === "personal" && (
+            <div className="personal-filters">
+              <label className="personal-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={personalFilter.confirmed}
+                  onChange={(e) =>
+                    setPersonalFilter({
+                      ...personalFilter,
+                      confirmed: e.target.checked,
+                    })
+                  }
+                />
+                <span>확정</span>
+              </label>
+              <label className="personal-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={personalFilter.waiting}
+                  onChange={(e) =>
+                    setPersonalFilter({
+                      ...personalFilter,
+                      waiting: e.target.checked,
+                    })
+                  }
+                />
+                <span>대기</span>
+              </label>
+              <label className="personal-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={personalFilter.pending}
+                  onChange={(e) =>
+                    setPersonalFilter({
+                      ...personalFilter,
+                      pending: e.target.checked,
+                    })
+                  }
+                />
+                <span>승인대기</span>
+              </label>
+              <label className="personal-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={personalFilter.rejected}
+                  onChange={(e) =>
+                    setPersonalFilter({
+                      ...personalFilter,
+                      rejected: e.target.checked,
+                    })
+                  }
+                />
+                <span>거절</span>
+              </label>
+            </div>
+          )}
         </div>
       </div>
 
       {viewMode === "calendar" ? (
         <ScheduleCalendarView
-          schedules={filteredSchedules}
+          schedules={calendarSchedules}
           onDateClick={handleDateClick}
           onDateDoubleClick={handleDateDoubleClick}
           onScheduleClick={handleScheduleClick}
@@ -414,23 +688,32 @@ const ScheduleListPage: React.FC = () => {
           calendarDate={calendarDate}
           onCalendarDateChange={setCalendarDate}
         />
-      ) : filteredSchedules.length === 0 ? (
+      ) : displaySchedules.length === 0 ? (
         <div className="empty-state">
           <p className="empty-icon">
             <CalendarIcon size={64} color="var(--color-text-secondary)" />
           </p>
-          <p>등록된 일정이 없습니다.</p>
-          <p className="empty-hint">새로운 일정을 생성해보세요!</p>
+          <p>
+            {scheduleMode === "club"
+              ? "등록된 일정이 없습니다."
+              : "참가한 일정이 없습니다."}
+          </p>
+          <p className="empty-hint">
+            {scheduleMode === "club"
+              ? "새로운 일정을 생성해보세요!"
+              : "클럽 일정에 참가해보세요!"}
+          </p>
         </div>
       ) : (
         <div className="schedule-list">
-          {filteredSchedules.map((schedule, index) => {
+          {displaySchedules.map((item, index) => {
+            const schedule = item.schedule;
             const isPast = new Date(schedule.scheduledAt) < new Date();
             const isFirstFuture =
               !isPast &&
-              filteredSchedules
+              displaySchedules
                 .slice(0, index)
-                .every((s) => new Date(s.scheduledAt) < new Date());
+                .every((s) => new Date(s.schedule.scheduledAt) < new Date());
             const isParticipating = myParticipations.has(schedule.id);
             const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
             const hasValidDraw = schedule.drawType && schedule.isDrawValid;
@@ -456,6 +739,10 @@ const ScheduleListPage: React.FC = () => {
             };
 
             const drawStatus = getDrawStatus();
+
+            // 개인일정 모드: 참가 상태 뱃지
+            const participation = item.myParticipation;
+            const externalRequest = item.myExternalRequest;
 
             return (
               <div
@@ -526,25 +813,60 @@ const ScheduleListPage: React.FC = () => {
                           </span>
                         )}
                     </div>
+
+                    {/* 대진표 + 참가 상태 뱃지 영역 */}
                     <div className="schedule-draw-badges">
-                      {hasInvalidDraw && (
-                        <span className="draw-badge draw-badge-invalid">
-                          무효
-                        </span>
+                      {/* 개인일정 모드: 참가 상태 뱃지 */}
+                      {scheduleMode === "personal" && viewMode === "list" && (
+                        <>
+                          {participation?.status === "CONFIRMED" && (
+                            <span className="participation-badge participation-confirmed">
+                              확정
+                            </span>
+                          )}
+                          {participation?.status === "WAITING" && (
+                            <span className="participation-badge participation-waiting">
+                              대기
+                              {participation.waitingNumber &&
+                                ` ${participation.waitingNumber}번`}
+                            </span>
+                          )}
+                          {externalRequest?.status === "PENDING" && (
+                            <span className="participation-badge participation-pending">
+                              승인대기
+                            </span>
+                          )}
+                          {externalRequest?.status === "REJECTED" && (
+                            <span className="participation-badge participation-rejected">
+                              거절
+                            </span>
+                          )}
+                        </>
                       )}
-                      {hasValidDraw && (
-                        <span className="draw-badge draw-badge-valid">
-                          완료
-                        </span>
-                      )}
-                      {(hasValidDraw || hasInvalidDraw) && (
-                        <button
-                          className="draw-badge draw-badge-view"
-                          onClick={(e) => handleDrawViewClick(e, schedule)}
-                        >
-                          <ClipboardListIcon size={14} />
-                          <span>보기</span>
-                        </button>
+
+                      {/* 대진표 뱃지 (리스트뷰에서만) */}
+                      {viewMode === "list" && (
+                        <>
+                          {hasInvalidDraw && (
+                            <span className="draw-badge draw-badge-invalid">
+                              대진무효
+                            </span>
+                          )}
+                          {hasValidDraw && (
+                            <span className="draw-badge draw-badge-valid">
+                              대진생성완료
+                            </span>
+                          )}
+                          {(hasValidDraw || hasInvalidDraw) && (
+                            <button
+                              className="draw-badge draw-badge-view"
+                              onClick={(e) => handleDrawViewClick(e, schedule)}
+                            >
+                              <ClipboardListIcon size={14} />
+                              <span>보기</span>
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -566,7 +888,7 @@ const ScheduleListPage: React.FC = () => {
           }
           onClose={handleCreateModalClose}
           onSuccess={() => {
-            loadSchedules();
+            loadClubSchedules();
             setToastMessage("일정이 생성되었습니다.");
           }}
         />
@@ -576,7 +898,7 @@ const ScheduleListPage: React.FC = () => {
         <ScheduleJoinModal
           onClose={() => setShowJoinModal(false)}
           onSuccess={() => {
-            loadSchedules();
+            loadClubSchedules();
           }}
         />
       )}
@@ -586,7 +908,11 @@ const ScheduleListPage: React.FC = () => {
           scheduleId={selectedScheduleId}
           onClose={handleDetailModalClose}
           onSuccess={() => {
-            loadSchedules();
+            if (scheduleMode === "club") {
+              loadClubSchedules();
+            } else {
+              loadPersonalSchedules();
+            }
           }}
           onJoinSuccess={() => {
             setToastMessage("참가신청이 완료되었습니다.");

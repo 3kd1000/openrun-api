@@ -9,6 +9,7 @@ import {
   updateMyTennisProfile,
   updateUser,
 } from "../services/api/userApi";
+import { setOpenRunSession } from "../utils/openrunSession";
 import "./ProfileEditModal.css";
 
 interface ProfileEditModalProps {
@@ -31,7 +32,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     user.phoneVisibility || "PRIVATE"
   );
   const [emailVisibility, setEmailVisibility] = useState<ContactVisibility>(
-    user.emailVisibility || "CLUB_ONLY"
+    user.emailVisibility || "PUBLIC"
   );
   const [tennisStartedMonth, setTennisStartedMonth] = useState<string>(""); // YYYY-MM
   const [backhandType, setBackhandType] = useState<BackhandType | "">("");
@@ -153,8 +154,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         }),
       ]);
 
-      // localStorage에 업데이트된 이름 저장 (다른 화면에서도 사용)
-      localStorage.setItem("user_name", updatedUser.name);
+      // 세션에 업데이트된 이름 저장 (다른 화면에서도 사용)
+      setOpenRunSession({ userName: updatedUser.name });
 
       onUpdate(updatedUser);
       onClose();
@@ -180,11 +181,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const getVisibilityShortLabel = (visibility: ContactVisibility): string => {
     switch (visibility) {
       case "PRIVATE":
-        return "본인";
-      case "CLUB_ONLY":
-        return "클럽";
+        return "비공개";
       case "PUBLIC":
-        return "전체";
+        return "공개";
     }
   };
 
@@ -192,10 +191,12 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="profile-edit-modal">
         <div className="modal-header">
-          <h2>프로필 수정</h2>
-          <button className="close-btn" onClick={onClose}>
-            ✕
-          </button>
+          <div className="modal-header-top">
+            <h2>프로필 수정</h2>
+            <button className="close-btn" onClick={onClose}>
+              ✕
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="modal-body">
@@ -243,12 +244,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                     setEmailVisibility(e.target.value as ContactVisibility)
                   }
                   className="visibility-select"
+                  title="비공개: 나만 볼 수 있음 / 공개: 클럽원 및 게스트 참여 시 공유"
                 >
                   <option value="PRIVATE">
                     {getVisibilityShortLabel("PRIVATE")}
-                  </option>
-                  <option value="CLUB_ONLY">
-                    {getVisibilityShortLabel("CLUB_ONLY")}
                   </option>
                   <option value="PUBLIC">
                     {getVisibilityShortLabel("PUBLIC")}
@@ -281,12 +280,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                     setPhoneVisibility(e.target.value as ContactVisibility)
                   }
                   className="visibility-select"
+                  title="비공개: 나만 볼 수 있음 / 공개: 클럽원 및 게스트 참여 시 공유"
                 >
                   <option value="PRIVATE">
                     {getVisibilityShortLabel("PRIVATE")}
-                  </option>
-                  <option value="CLUB_ONLY">
-                    {getVisibilityShortLabel("CLUB_ONLY")}
                   </option>
                   <option value="PUBLIC">
                     {getVisibilityShortLabel("PUBLIC")}

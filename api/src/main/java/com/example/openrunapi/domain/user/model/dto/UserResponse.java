@@ -78,14 +78,14 @@ public class UserResponse {
     }
 
     private static boolean shouldShowEmail(ContactVisibility visibility, boolean isSameClub) {
-        if (visibility == null || visibility == ContactVisibility.PUBLIC) return true;
-        if (visibility == ContactVisibility.CLUB_ONLY) return isSameClub;
+        // PUBLIC: 클럽원 및 게스트 참여 시 공유
+        if (visibility == null || visibility == ContactVisibility.PUBLIC) return isSameClub;
         return false; // PRIVATE
     }
 
     private static boolean shouldShowPhone(ContactVisibility visibility, boolean isSameClub) {
-        if (visibility == null || visibility == ContactVisibility.PUBLIC) return true;
-        if (visibility == ContactVisibility.CLUB_ONLY) return isSameClub;
+        // PUBLIC: 클럽원 및 게스트 참여 시 공유
+        if (visibility == null || visibility == ContactVisibility.PUBLIC) return isSameClub;
         return false; // PRIVATE
     }
 }

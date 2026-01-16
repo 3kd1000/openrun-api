@@ -20,7 +20,11 @@ import {
   SettingsIcon,
 } from "../../components/common/Icons";
 import { ChevronRightIcon } from "../../components/common/Icons";
-import { ChevronDownIcon, ChevronUpIcon, MessageCircleIcon } from "../../components/common/Icons";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  MessageCircleIcon,
+} from "../../components/common/Icons";
 import {
   canManageClub,
   normalizeClubRole,
@@ -40,6 +44,7 @@ import { PostCard } from "./components/PostCard";
 import QuickPostInput from "./components/QuickPostInput";
 import UpcomingSchedulesWidget from "./components/widgets/UpcomingSchedulesWidget";
 import TopPlayersWidget from "./components/widgets/TopPlayersWidget";
+import { ClubSelector } from "../../components/ClubSelector";
 import "./ClubMainPage.css";
 import { clubService } from "../../services/clubService";
 
@@ -75,14 +80,13 @@ const ClubMainPage: React.FC = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const clubId = clubIdParam ?? localStorage.getItem("current_club_id");
-  const userIdStr = localStorage.getItem("user_id");
+  const session = getOpenRunSession();
+  const clubId = clubIdParam ?? session.currentClubId;
+  const userIdStr = session.userId ? String(session.userId) : null;
 
   const [myRole, setMyRole] = useState<ClubRoleOrUnknown>(() => {
     const session = getOpenRunSession();
-    return normalizeClubRole(
-      session.currentClubRole ?? localStorage.getItem("current_club_role")
-    );
+    return normalizeClubRole(session.currentClubRole);
   });
   const canManage = canManageClub(myRole);
 
@@ -91,11 +95,10 @@ const ClubMainPage: React.FC = () => {
     if (!canManage) setSelectedPostType(PostType.GENERAL);
   }, [canManage]);
 
-  // URL 기준 clubId를 session/localStorage에 동기화 (클럽 내 라우팅 표준화)
+  // URL 기준 clubId를 session에 동기화 (클럽 내 라우팅 표준화)
   useEffect(() => {
     if (!clubIdParam) return;
     try {
-      localStorage.setItem("current_club_id", clubIdParam);
       setOpenRunSession({ currentClubId: clubIdParam });
     } catch {
       // ignore
@@ -120,8 +123,8 @@ const ClubMainPage: React.FC = () => {
   const [isWidgetEditMode, setIsWidgetEditMode] = useState(false);
   const [widgetOrder, setWidgetOrder] = useState<ClubWidgetId[]>(() => {
     try {
-      const resolvedClubId =
-        clubIdParam ?? localStorage.getItem("current_club_id");
+      const session = getOpenRunSession();
+      const resolvedClubId = clubIdParam ?? session.currentClubId;
       if (!resolvedClubId) return DEFAULT_WIDGET_ORDER;
       const settings = getClubSettings(String(resolvedClubId));
       const saved = settings.widgets?.order;
@@ -149,8 +152,8 @@ const ClubMainPage: React.FC = () => {
     Record<string, boolean>
   >(() => {
     try {
-      const resolvedClubId =
-        clubIdParam ?? localStorage.getItem("current_club_id");
+      const session = getOpenRunSession();
+      const resolvedClubId = clubIdParam ?? session.currentClubId;
       if (!resolvedClubId) return {};
       const settings = getClubSettings(String(resolvedClubId));
       return settings.widgets?.expanded ?? {};
@@ -306,7 +309,7 @@ const ClubMainPage: React.FC = () => {
         setClub(response.data);
       } else if (clubs.length > 0) {
         // clubId가 없으면 첫 번째 클럽을 기본으로 설정
-        localStorage.setItem("current_club_id", String(clubs[0].id));
+        setOpenRunSession({ currentClubId: String(clubs[0].id) });
         const response = await axiosInstance.get(`/clubs/${clubs[0].id}`);
         setClub(response.data);
       }
@@ -467,8 +470,6 @@ const ClubMainPage: React.FC = () => {
   };
 
   const handleClubChange = (newClubId: string) => {
-    localStorage.setItem("current_club_id", newClubId);
-    localStorage.removeItem("current_club_role");
     setOpenRunSession({ currentClubId: newClubId, currentClubRole: "UNKNOWN" });
     navigate(`/clubs/${newClubId}`, { replace: true });
   };
@@ -688,30 +689,20 @@ const ClubMainPage: React.FC = () => {
 
   return (
     <div className="club-main-page">
-      {/* 클럽 헤더 */}
-      <div className="club-main-page__header">
-        <div className="club-main-page__header-top">
-          {/* 의사결정/레이아웃 확인을 위해 클럽이 1개여도 드롭다운 UI를 항상 노출 */}
-          <select
-            className="club-main-page__club-selector"
-            value={clubId || ""}
-            onChange={(e) => handleClubChange(e.target.value)}
-            disabled={myClubs.length <= 1}
-            aria-label="클럽 선택"
-          >
-            {(myClubs.length > 0
-              ? myClubs
-              : club
-              ? [{ id: Number(clubId || 0), name: club.name } as MyClub]
-              : []
-            ).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* ClubSelector */}
+      <div className="page-club-selector-container">
+        <ClubSelector
+          selectedClubId={clubId ? Number(clubId) : null}
+          onClubChange={(newClubId) => {
+            if (newClubId) {
+              handleClubChange(newClubId.toString());
+            }
+          }}
+        />
+      </div>
 
+      {/* 클럽 헤더 액션 버튼 */}
+      <div className="club-main-page__header">
         <div className="club-main-page__header-actions">
           <button
             className="club-main-page__header-btn"
@@ -850,7 +841,10 @@ const ClubMainPage: React.FC = () => {
                         <CategoryTabs
                           selectedPostType={selectedPostType}
                           onSelectPostType={handlePostTypeChange}
-                          allowedPostTypes={[PostType.GENERAL, PostType.INQUIRY]}
+                          allowedPostTypes={[
+                            PostType.GENERAL,
+                            PostType.INQUIRY,
+                          ]}
                           showAllTab
                         />
                       )}

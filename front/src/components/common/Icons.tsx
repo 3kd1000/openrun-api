@@ -475,7 +475,6 @@ export const InboxIcon: React.FC<IconProps> = ({
 // OAuth Provider Icons - Brand logos (filled, recognizable)
 export const GoogleIcon: React.FC<IconProps> = ({
   size = 20,
-  color,
   className = ''
 }) => (
   <svg
@@ -496,7 +495,6 @@ export const GoogleIcon: React.FC<IconProps> = ({
 
 export const KakaoIcon: React.FC<IconProps> = ({
   size = 20,
-  color,
   className = ''
 }) => (
   <svg
@@ -518,7 +516,6 @@ export const KakaoIcon: React.FC<IconProps> = ({
 
 export const NaverIcon: React.FC<IconProps> = ({
   size = 20,
-  color,
   className = ''
 }) => (
   <svg

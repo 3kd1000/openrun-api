@@ -78,16 +78,8 @@ public class ScheduleResponse {
         // 권한 체크 (permissionService와 requestUserId가 제공된 경우에만)
         if (permissionService != null && requestUserId != null) {
             this.canManageSchedule = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
-            System.out.println("[DEBUG] ScheduleResponse - scheduleId: " + schedule.getId()
-                + ", requestUserId: " + requestUserId
-                + ", clubId: " + schedule.getClubId()
-                + ", canManageSchedule: " + this.canManageSchedule);
         } else {
             this.canManageSchedule = null;
-            System.out.println("[DEBUG] ScheduleResponse - scheduleId: " + schedule.getId()
-                + ", permissionService: " + (permissionService != null ? "NOT NULL" : "NULL")
-                + ", requestUserId: " + requestUserId
-                + " -> canManageSchedule = NULL");
         }
     }
 }

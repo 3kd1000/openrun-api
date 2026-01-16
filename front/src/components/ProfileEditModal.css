@@ -29,21 +29,30 @@
 
 /* 모달 헤더 */
 .profile-edit-modal .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: var(--space-l);
   border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
 }
 
-.profile-edit-modal .modal-header h2 {
+.profile-edit-modal .modal-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  width: 100%;
+}
+
+.profile-edit-modal .modal-header-top h2 {
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
+  flex: 1;
+  text-align: left;
+  line-height: 1.2;
 }
 
-.profile-edit-modal .close-btn {
+.profile-edit-modal .modal-header-top .close-btn {
+  flex: 0 0 auto;
   background: none;
   border: none;
   font-size: var(--font-size-xl);
@@ -54,15 +63,19 @@
   transition: var(--transition-base);
   min-width: 32px;
   min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.profile-edit-modal .close-btn:hover {
+.profile-edit-modal .modal-header-top .close-btn:hover {
   color: var(--color-text-primary);
 }
 
 /* 모달 바디 */
 .profile-edit-modal .modal-body {
   padding: var(--space-l);
+  overflow-x: hidden;
 }
 
 .profile-edit-modal__section-title {
@@ -106,6 +119,7 @@
 .profile-edit-modal .form-group select,
 .profile-edit-modal .form-group textarea {
   width: 100%;
+  max-width: 100%;
   /* spacing 토큰은 데스크탑에서 커져서(min-height 대비 padding 과다) 텍스트가 잘릴 수 있어 고정값 사용 */
   padding: 8px 10px;
   font-size: var(--font-size-m);
@@ -117,6 +131,12 @@
   transition: var(--transition-base);
   box-sizing: border-box;
   line-height: 1.2;
+}
+
+/* month 타입 입력 필드는 브라우저 기본 렌더링으로 인해 추가 공간을 차지할 수 있으므로 명시적으로 제한 */
+.profile-edit-modal .form-group input[type="month"] {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .profile-edit-modal .form-group select {
@@ -249,14 +269,19 @@
     padding: var(--space-m);
   }
 
-  .profile-edit-modal .modal-header h2 {
+  .profile-edit-modal .modal-header-top {
+    gap: var(--space-s);
+  }
+
+  .profile-edit-modal .modal-header-top h2 {
     font-size: var(--font-size-l);
   }
 
-  .profile-edit-modal .close-btn {
+  .profile-edit-modal .modal-header-top .close-btn {
     font-size: var(--font-size-l);
     min-width: 28px;
     min-height: 28px;
+    padding: var(--space-xxs);
   }
 
   .profile-edit-modal .modal-body {
@@ -269,6 +294,12 @@
     padding: 10px 12px;
     font-size: var(--font-size-base);
     min-height: 40px;
+    max-width: 100%;
+  }
+
+  .profile-edit-modal .form-group input[type="month"] {
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .profile-edit-modal .modal-actions button {
@@ -295,14 +326,19 @@
     padding: var(--space-s);
   }
 
-  .profile-edit-modal .modal-header h2 {
+  .profile-edit-modal .modal-header-top {
+    gap: var(--space-xs);
+  }
+
+  .profile-edit-modal .modal-header-top h2 {
     font-size: var(--font-size-base);
   }
 
-  .profile-edit-modal .close-btn {
+  .profile-edit-modal .modal-header-top .close-btn {
     font-size: var(--font-size-base);
     min-width: 24px;
     min-height: 24px;
+    padding: var(--space-xxs);
   }
 
   .profile-edit-modal .modal-body {
@@ -319,6 +355,12 @@
     padding: 8px 10px;
     font-size: var(--font-size-m);
     min-height: 40px;
+    max-width: 100%;
+  }
+
+  .profile-edit-modal .form-group input[type="month"] {
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .profile-edit-modal__grid-row {
@@ -358,14 +400,19 @@
     padding: var(--space-s);
   }
 
-  .profile-edit-modal .modal-header h2 {
+  .profile-edit-modal .modal-header-top {
+    gap: var(--space-xs);
+  }
+
+  .profile-edit-modal .modal-header-top h2 {
     font-size: var(--font-size-s);
   }
 
-  .profile-edit-modal .close-btn {
+  .profile-edit-modal .modal-header-top .close-btn {
     font-size: var(--font-size-s);
-    min-width: 24px;
-    min-height: 24px;
+    min-width: 20px;
+    min-height: 20px;
+    padding: 2px;
   }
 
   .profile-edit-modal .modal-body {
@@ -386,6 +433,12 @@
     padding: 8px 10px;
     font-size: var(--font-size-m);
     min-height: 40px;
+    max-width: 100%;
+  }
+
+  .profile-edit-modal .form-group input[type="month"] {
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .profile-edit-modal__grid-row {

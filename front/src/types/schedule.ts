@@ -44,3 +44,32 @@ export interface Participant {
   joinedAt: string;
   asGuest: boolean;
 }
+
+/**
+ * 내 참가 정보 (ScheduleParticipant)
+ */
+export interface MyParticipationInfo {
+  status: 'CONFIRMED' | 'WAITING' | null;
+  waitingNumber: number | null;  // WAITING일 때 대기 순번
+  asGuest: boolean | null;       // 게스트로 참가했는지
+}
+
+/**
+ * 내 외부 신청 정보 (ExternalRequest)
+ */
+export interface MyExternalRequestInfo {
+  requestId: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  type: 'GUEST' | 'INTERCLUB';
+  createdAt: string;
+}
+
+/**
+ * 내 일정 응답 (개인일정 조회용)
+ * - 일정 기본 정보 + 내 참가 정보 + 내 외부 신청 정보
+ */
+export interface MyScheduleResponse {
+  schedule: Schedule;
+  myParticipation: MyParticipationInfo | null;
+  myExternalRequest: MyExternalRequestInfo | null;
+}

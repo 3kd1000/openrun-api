@@ -15,6 +15,10 @@ import {
 } from "../services/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getTimestamp } from "../utils/dateUtils";
+import {
+  getOpenRunSession,
+  setOpenRunSession,
+} from "../utils/openrunSession";
 
 interface AuthContextType {
   isAuthReady: boolean; // Firebase 인증 상태 복원 완료 여부
@@ -61,8 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return;
     }
 
-    const autoLoginEnabled =
-      localStorage.getItem("auto_login_enabled") === "true";
+    const autoLoginEnabled = getOpenRunSession().autoLoginEnabled ?? false;
 
     // 자동 로그인 비활성화 시 세션 만료 체크
     if (!autoLoginEnabled && isLoginExpired()) {
@@ -87,11 +90,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         const idToken = await currentUser.getIdToken(true);
-        localStorage.setItem("firebase_token", idToken);
-        localStorage.setItem("firebase_uid", currentUser.uid);
+        setOpenRunSession({
+          firebaseToken: idToken,
+          firebaseUid: currentUser.uid,
+          tokenLastRefresh: getTimestamp(),
+        });
 
         const refreshTime = getTimestamp();
-        localStorage.setItem("token_last_refresh", refreshTime);
 
         // 토큰 만료 시간 계산
         const tokenExpiry = new Date();
@@ -178,8 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (firebaseUser) {
           const loginExpiryStr = localStorage.getItem("login_expiry");
           const isNewLogin = !loginExpiryStr;
-          const autoLoginEnabled =
-            localStorage.getItem("auto_login_enabled") === "true";
+          const autoLoginEnabled = getOpenRunSession().autoLoginEnabled ?? false;
 
           // 자동 로그인 비활성화 시 세션 만료 체크
           if (!isNewLogin && !autoLoginEnabled && isLoginExpired()) {
@@ -204,11 +208,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             while (retryCount < maxRetries && !tokenRefreshSuccess) {
               try {
                 const idToken = await firebaseUser.getIdToken(true);
-                localStorage.setItem("firebase_token", idToken);
-                localStorage.setItem("firebase_uid", firebaseUser.uid);
+                setOpenRunSession({
+                  firebaseToken: idToken,
+                  firebaseUid: firebaseUser.uid,
+                  tokenLastRefresh: getTimestamp(),
+                });
 
                 const refreshTime = getTimestamp();
-                localStorage.setItem("token_last_refresh", refreshTime);
 
                 const tokenExpiry = new Date();
                 tokenExpiry.setHours(tokenExpiry.getHours() + 1);

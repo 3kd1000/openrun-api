@@ -6,7 +6,7 @@
 
 /* ========== 페이지 컨테이너 ========== */
 .schedule-page {
-  padding: var(--space-xxs) 0 var(--space-l) 0;
+  padding: 0 var(--space-m);
   width: 100%;
   padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
   box-sizing: border-box;
@@ -17,14 +17,12 @@
 /* ========== 헤더 ========== */
 .schedule-header {
   margin-bottom: 0; /* 헤더와 캘린더 사이 간격 제거 */
-  margin-top: calc(
-    -1 * var(--space-xxs)
-  ); /* schedule-page의 padding-top 상쇄 */
+  margin-top: 0;
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
   background: var(--color-bg-primary);
-  padding: var(--space-l);
+  padding: var(--space-m);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   width: 100%;
 }
@@ -641,7 +639,8 @@
 /* ========== 모바일 최적화 (768px 이하) ========== */
 @media (max-width: 768px) {
   .schedule-header {
-    padding: var(--space-m);
+    /* ClubMainPage와 동일한 상단 거리 유지 */
+    padding: var(--space-m) var(--space-m) var(--space-m) var(--space-m);
   }
 
   .header-top {
@@ -774,7 +773,7 @@
 /* 미디어 소형 (360px ~ 425px) */
 @media (min-width: 360px) and (max-width: 425px) {
   .schedule-header {
-    padding: var(--space-s);
+    padding: var(--space-xs) var(--space-s) var(--space-s) var(--space-s);
   }
 
   .header-actions {
@@ -806,7 +805,7 @@
 /* 미디어 초소형 (359px 이하) */
 @media (max-width: 359px) {
   .schedule-header {
-    padding: var(--space-xs);
+    padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-xs);
   }
 
   .header-actions {
@@ -842,11 +841,220 @@
   .schedule-draw-badges .draw-badge {
     font-size: var(--font-size-s);
   }
+
+  /* 360px 이하에서 카드가 100% width로 조정되도록 */
+  .schedule-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ========== 일정 모드 탭 (클럽일정/개인일정) ========== */
+.schedule-mode-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--color-bg-disabled);
+  border-radius: var(--radius-m);
+  padding: 2px;
+  margin-bottom: var(--space-m);
+}
+
+.mode-tab {
+  flex: 1;
+  padding: var(--space-s) var(--space-m);
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  text-align: center;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* view-toggle-btn의 실제 높이(34px)와 동일하게 맞춤
+   * view-toggle-btn: padding(8px top + 8px bottom) + 내용 높이 = 34px
+   * mode-tab: padding(8px top + 8px bottom) + min-height = 34px
+   * 따라서 min-height = 34px - 8px - 8px = 18px
+   */
+  min-height: 18px;
+  height: 34px; /* 실제 높이를 명시적으로 34px로 고정 */
+  box-sizing: border-box;
+}
+
+.mode-tab:first-child {
+  border-top-left-radius: var(--radius-m);
+  border-bottom-left-radius: var(--radius-m);
+}
+
+.mode-tab:last-child {
+  border-top-right-radius: var(--radius-m);
+  border-bottom-right-radius: var(--radius-m);
+}
+
+.mode-tab:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.mode-tab.active {
+  background: var(--color-bg-primary);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ========== 개인일정 필터 (체크박스) ========== */
+.personal-filters {
+  display: flex;
+  gap: var(--space-m);
+  flex-wrap: wrap;
+}
+
+.personal-filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+.personal-filter-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.personal-filter-checkbox:hover {
+  color: var(--color-primary);
+}
+
+/* ========== 참가 상태 뱃지 ========== */
+.participation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.participation-confirmed {
+  background-color: rgba(34, 139, 34, 0.1);
+  color: #228b22;
+  border: 1px solid rgba(34, 139, 34, 0.3);
+}
+
+.participation-waiting {
+  background-color: rgba(255, 165, 0, 0.1);
+  color: #ff8c00;
+  border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+.participation-pending {
+  background-color: rgba(30, 144, 255, 0.1);
+  color: #1e90ff;
+  border: 1px solid rgba(30, 144, 255, 0.3);
+}
+
+.participation-rejected {
+  background-color: rgba(220, 20, 60, 0.1);
+  color: #dc143c;
+  border: 1px solid rgba(220, 20, 60, 0.3);
+}
+
+/* ========== 모바일 대응 (개인일정 필터) ========== */
+@media (max-width: 768px) {
+  .schedule-mode-tabs {
+    margin-bottom: var(--space-s);
+  }
+
+  .mode-tab {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+    /* view-toggle-btn의 실제 높이(34px)와 동일하게 맞춤
+     * view-toggle-btn @media (max-width: 768px): padding(8px top + 8px bottom) + 내용 높이 = 34px
+     * mode-tab: padding(4px top + 4px bottom) + min-height = 34px
+     * min-height = 34px - 4px - 4px = 26px
+     * 실제 보이는 높이 = 4px(padding-top) + 26px + 4px(padding-bottom) = 34px
+     */
+    min-height: 26px;
+    height: 34px; /* 실제 높이를 명시적으로 34px로 고정 */
+    box-sizing: border-box;
+  }
+
+  .personal-filters {
+    gap: var(--space-s);
+  }
+
+  .personal-filter-checkbox {
+    font-size: var(--font-size-s);
+  }
+
+  .personal-filter-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+  .participation-badge {
+    padding: var(--space-xxs) var(--space-xs);
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 359px) {
+  .mode-tab {
+    padding: var(--space-xxs) var(--space-xs);
+    font-size: var(--font-size-s);
+    /* view-toggle-btn의 실제 높이와 동일하게 맞춤
+     * view-toggle-btn: view-toggle-group padding(1px top + 1px bottom) + view-toggle-btn padding(2px top + 2px bottom) + 내용 높이
+     * mode-tab: schedule-mode-tabs padding(2px top + 2px bottom) + mode-tab padding(2px top + 2px bottom) + min-height
+     * view-toggle-btn과 동일한 실제 높이로 맞추기 위해 min-height를 조정
+     * view-toggle-btn의 실제 높이가 더 납작해지므로, mode-tab도 동일하게 납작하게 조정
+     */
+    min-height: 22px; /* view-toggle-btn과 동일한 실제 높이로 조정 (더 납작하게) */
+    height: auto; /* min-height로 자동 조정 */
+    box-sizing: border-box;
+  }
+
+  .personal-filters {
+    gap: var(--space-xs);
+  }
+
+  .personal-filter-checkbox {
+    font-size: var(--font-size-xs);
+  }
+
+  .personal-filter-checkbox input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 /* ========== 데스크톱: 모바일 패딩 제거 ========== */
 @media (min-width: 769px) {
   .schedule-page {
     padding-bottom: var(--space-l);
+  }
+
+  /* 데스크탑에서 mode-tab과 view-toggle-btn의 높이 동일하게 맞춤 */
+  .mode-tab {
+    /* view-toggle-btn의 실제 높이와 동일하게 맞춤
+     * 데스크탑에서 spacing 토큰이 커짐: --space-s = 12px, --space-m = 18px
+     * view-toggle-btn: view-toggle-group padding(2px) + view-toggle-btn padding(12px top + 12px bottom) + 내용 높이
+     * mode-tab: schedule-mode-tabs padding(2px) + mode-tab padding(12px top + 12px bottom) + min-height
+     * view-toggle-btn의 실제 높이에 맞추기 위해 height를 제거하고 min-height만 사용
+     * 데스크탑에서 padding이 커지므로 실제 높이가 더 커짐
+     */
+    height: auto; /* height 고정 제거, padding과 min-height로 자동 조정 */
+    min-height: 18px; /* view-toggle-btn과 동일한 내용 높이 유지 */
   }
 }

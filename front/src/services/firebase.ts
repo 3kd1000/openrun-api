@@ -10,6 +10,10 @@ import {
 } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { getTimestamp } from "../utils/dateUtils";
+import {
+  getOpenRunSession,
+  setOpenRunSession,
+} from "../utils/openrunSession";
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -102,17 +106,8 @@ export const isLoginExpired = (): boolean => {
  */
 export const clearLoginSession = () => {
   const now = getTimestamp();
-  localStorage.removeItem("firebase_token");
-  localStorage.removeItem("firebase_uid");
-  localStorage.removeItem("user_id");
-  localStorage.removeItem("user_name");
-  localStorage.removeItem("user_email");
-  localStorage.removeItem("user_image_url");
-  localStorage.removeItem("current_club_id");
-  localStorage.removeItem("current_club_role");
   localStorage.removeItem("openrun_session_v1");
   localStorage.removeItem("login_expiry");
-  localStorage.removeItem("token_last_refresh");
   console.log(`🧹 [${now}] 로그인 세션 클리어`);
 };
 
@@ -124,8 +119,7 @@ export const clearLoginSession = () => {
 export const restoreSessionIfValid = async (): Promise<boolean> => {
   const now = getTimestamp();
   const loginExpiryStr = localStorage.getItem("login_expiry");
-  const autoLoginEnabled =
-    localStorage.getItem("auto_login_enabled") === "true";
+  const autoLoginEnabled = getOpenRunSession().autoLoginEnabled ?? false;
 
   // login_expiry가 없으면 복원할 세션이 없음
   if (!loginExpiryStr) {
@@ -177,13 +171,13 @@ export const restoreSessionIfValid = async (): Promise<boolean> => {
       );
       const idToken = await user.getIdToken(true);
 
-      // localStorage 업데이트
-      localStorage.setItem("firebase_token", idToken);
-      localStorage.setItem("firebase_uid", user.uid);
-
-      // 토큰 갱신 시간 저장
+      // 세션 업데이트
       const refreshTime = getTimestamp();
-      localStorage.setItem("token_last_refresh", refreshTime);
+      setOpenRunSession({
+        firebaseToken: idToken,
+        firebaseUid: user.uid,
+        tokenLastRefresh: refreshTime,
+      });
 
       // 만료 시간 연장 (자동 로그인 활성화 시)
       setLoginExpiry(true);
@@ -235,8 +229,7 @@ export const setupAuthListener = (
       // 세션 만료 체크 (login_expiry가 있을 때만)
       // 단, 자동 로그인이 활성화되어 있으면 토큰 갱신으로 만료 시간을 연장할 수 있으므로
       // 만료 체크를 건너뛰고 토큰 갱신을 먼저 시도
-      const autoLoginEnabled =
-        localStorage.getItem("auto_login_enabled") === "true";
+      const autoLoginEnabled = getOpenRunSession().autoLoginEnabled ?? false;
 
       if (!isNewLogin && !autoLoginEnabled && isLoginExpired()) {
         console.warn(`⏰ [${now}] 로그인 세션 만료 감지 → 자동 로그아웃`);
@@ -255,13 +248,13 @@ export const setupAuthListener = (
           // forceRefresh=true로 항상 최신 토큰 가져오기
           const idToken = await user.getIdToken(true);
 
-          // localStorage 업데이트
-          localStorage.setItem("firebase_token", idToken);
-          localStorage.setItem("firebase_uid", user.uid);
-
-          // 토큰 갱신 시간 저장 (디버깅용)
+          // 세션 업데이트
           const refreshTime = getTimestamp();
-          localStorage.setItem("token_last_refresh", refreshTime);
+          setOpenRunSession({
+            firebaseToken: idToken,
+            firebaseUid: user.uid,
+            tokenLastRefresh: refreshTime,
+          });
 
           // 토큰 만료 시간 계산 (Firebase 토큰은 1시간 유효)
           const tokenExpiry = new Date();
@@ -271,8 +264,7 @@ export const setupAuthListener = (
           });
 
           // 자동 로그인 설정 확인
-          const autoLoginEnabled =
-            localStorage.getItem("auto_login_enabled") === "true";
+          const autoLoginEnabled = getOpenRunSession().autoLoginEnabled ?? false;
 
           // 새로 로그인한 경우 또는 자동 로그인 활성화 시 만료 시간 설정/갱신
           if (isNewLogin || autoLoginEnabled) {
@@ -362,8 +354,7 @@ export const setupAuthListener = (
     // 사용자가 있으면 세션 만료 체크
     // 단, 토큰 갱신이 성공하면 만료 시간을 연장할 수 있으므로
     // 자동 로그인이 활성화되어 있으면 만료 체크를 건너뛰고 토큰 갱신 시도
-    const autoLoginEnabled =
-      localStorage.getItem("auto_login_enabled") === "true";
+    const autoLoginEnabled = getOpenRunSession().autoLoginEnabled ?? false;
 
     if (!autoLoginEnabled && isLoginExpired()) {
       console.warn(
@@ -387,12 +378,14 @@ export const setupAuthListener = (
         }
 
         const idToken = await user.getIdToken(true);
-        localStorage.setItem("firebase_token", idToken);
-        localStorage.setItem("firebase_uid", user.uid);
 
-        // 토큰 갱신 시간 저장 (디버깅용)
+        // 세션 업데이트
         const refreshTime = getTimestamp();
-        localStorage.setItem("token_last_refresh", refreshTime);
+        setOpenRunSession({
+          firebaseToken: idToken,
+          firebaseUid: user.uid,
+          tokenLastRefresh: refreshTime,
+        });
 
         // 토큰 만료 시간 계산 (Firebase 토큰은 1시간 유효)
         const tokenExpiry = new Date();
