@@ -3,7 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { scheduleService } from "../../services/scheduleService";
-import { clubService, type ExternalRequestResponse } from "../../services/clubService";
+import {
+  clubService,
+  type ExternalRequestResponse,
+} from "../../services/clubService";
 import { postService } from "../../services/postService";
 import { commentService } from "../../services/commentService";
 import type { Schedule } from "../../types/schedule";
@@ -13,7 +16,10 @@ import "./GuestRecruitPage.css";
 
 const GuestRecruitPage: React.FC = () => {
   const navigate = useNavigate();
-  const { clubId, scheduleId } = useParams<{ clubId: string; scheduleId: string }>();
+  const { clubId, scheduleId } = useParams<{
+    clubId: string;
+    scheduleId: string;
+  }>();
 
   const cid = clubId ? Number(clubId) : NaN;
   const sid = scheduleId ? Number(scheduleId) : NaN;
@@ -125,7 +131,9 @@ const GuestRecruitPage: React.FC = () => {
       setMyReq(req);
     } catch (e) {
       console.error(e);
-      alert("신청에 실패했습니다. (로그인이 필요하거나 모집이 닫혀있을 수 있습니다)");
+      alert(
+        "신청에 실패했습니다. (로그인이 필요하거나 모집이 닫혀있을 수 있습니다)"
+      );
     } finally {
       setActionLoading(false);
     }
@@ -151,7 +159,11 @@ const GuestRecruitPage: React.FC = () => {
     if (!inquiryContent.trim()) return;
     try {
       setActionLoading(true);
-      const p = await clubService.createGuestRecruitInquiry(cid, sid, inquiryContent.trim());
+      const p = await clubService.createGuestRecruitInquiry(
+        cid,
+        sid,
+        inquiryContent.trim()
+      );
       setPost(p);
       const cs = await commentService.getComments(cid, p.id);
       setComments(cs);
@@ -169,7 +181,9 @@ const GuestRecruitPage: React.FC = () => {
     if (!commentContent.trim()) return;
     try {
       setActionLoading(true);
-      const created = await commentService.createComment(cid, post.id, { content: commentContent.trim() });
+      const created = await commentService.createComment(cid, post.id, {
+        content: commentContent.trim(),
+      });
       setComments((prev) => [...prev, created]);
       setCommentContent("");
     } catch (e) {
@@ -222,11 +236,15 @@ const GuestRecruitPage: React.FC = () => {
           </div>
           <div className="guest-recruit-page__row">
             <div className="guest-recruit-page__label">장소</div>
-            <div className="guest-recruit-page__value">{schedule.courtName}</div>
+            <div className="guest-recruit-page__value">
+              {schedule.courtName}
+            </div>
           </div>
           <div className="guest-recruit-page__row">
             <div className="guest-recruit-page__label">비용</div>
-            <div className="guest-recruit-page__value">{schedule.cost ?? "-"} </div>
+            <div className="guest-recruit-page__value">
+              {schedule.cost ?? "-"}{" "}
+            </div>
           </div>
           <div className="guest-recruit-page__row">
             <div className="guest-recruit-page__label">현재/정원</div>
@@ -235,7 +253,9 @@ const GuestRecruitPage: React.FC = () => {
             </div>
           </div>
           {schedule.guestRecruitNote && (
-            <div className="guest-recruit-page__note">{schedule.guestRecruitNote}</div>
+            <div className="guest-recruit-page__note">
+              {schedule.guestRecruitNote}
+            </div>
           )}
         </div>
       )}
@@ -243,7 +263,9 @@ const GuestRecruitPage: React.FC = () => {
       <div className="guest-recruit-page__apply">
         <div className="guest-recruit-page__status-row">
           <div className="guest-recruit-page__status-label">신청상태</div>
-          <div className={`guest-recruit-page__status-value tone-${statusTone}`}>
+          <div
+            className={`guest-recruit-page__status-value tone-${statusTone}`}
+          >
             {statusLabel}
           </div>
         </div>
@@ -276,7 +298,7 @@ const GuestRecruitPage: React.FC = () => {
           <textarea
             className="guest-recruit-page__textarea"
             placeholder={
-              "연락 방법/질문/요청사항 등을 자유롭게 작성해주세요.\n\n(문의글은 신청 여부와 무관하게 남길 수 있어요. 운영진 답변은 댓글로 달립니다)"
+              "연락 방법/질문/요청사항 등을 자유롭게 작성해주세요.\n문의글은 신청 여부와 무관하게 남길 수 있어요. \n운영진 답변은 댓글로 달립니다"
             }
             value={inquiryContent}
             onChange={(e) => setInquiryContent(e.target.value)}
@@ -288,7 +310,7 @@ const GuestRecruitPage: React.FC = () => {
             disabled={actionLoading}
             type="button"
           >
-            문의를 남기기
+            문의하기
           </button>
         </div>
       )}
@@ -298,7 +320,9 @@ const GuestRecruitPage: React.FC = () => {
           <div className="guest-recruit-page__section-title">대화</div>
           <div className="guest-recruit-page__thread">
             <div className="guest-recruit-page__post">
-              <div className="guest-recruit-page__post-content">{sanitizeInquiryText(post.content)}</div>
+              <div className="guest-recruit-page__post-content">
+                {sanitizeInquiryText(post.content)}
+              </div>
               <div className="guest-recruit-page__post-meta">
                 {post.author?.name ?? post.guestName ?? "익명"} ·{" "}
                 {new Date(post.createdAt).toLocaleString()}
@@ -307,13 +331,18 @@ const GuestRecruitPage: React.FC = () => {
 
             <div className="guest-recruit-page__comments">
               {comments.length === 0 ? (
-                <div className="guest-recruit-page__hint">아직 댓글이 없습니다.</div>
+                <div className="guest-recruit-page__hint">
+                  아직 댓글이 없습니다.
+                </div>
               ) : (
                 comments.map((c) => (
                   <div key={c.id} className="guest-recruit-page__comment">
-                    <div className="guest-recruit-page__comment-content">{c.content}</div>
+                    <div className="guest-recruit-page__comment-content">
+                      {c.content}
+                    </div>
                     <div className="guest-recruit-page__comment-meta">
-                      {c.author?.name ?? "익명"} · {new Date(c.createdAt).toLocaleString()}
+                      {c.author?.name ?? "익명"} ·{" "}
+                      {new Date(c.createdAt).toLocaleString()}
                     </div>
                   </div>
                 ))
@@ -345,4 +374,3 @@ const GuestRecruitPage: React.FC = () => {
 };
 
 export default GuestRecruitPage;
-

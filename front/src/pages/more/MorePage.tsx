@@ -14,7 +14,7 @@ import {
   getMyClubs,
 } from "../../services/api/userApi";
 import {
-  BookOpenIcon,
+  // BookOpenIcon,
   EditIcon,
   FileTextIcon,
   LinkIcon,
@@ -67,7 +67,9 @@ const MorePage: React.FC = () => {
     } catch (error) {
       console.error("사용자 정보 조회 실패:", error);
       // API 호출 실패 시 로그인 페이지로 리다이렉트 (localStorage fallback 제거)
-      console.warn("⚠️ API 호출 실패 → 세션 클리어 및 로그인 페이지로 리다이렉트");
+      console.warn(
+        "⚠️ API 호출 실패 → 세션 클리어 및 로그인 페이지로 리다이렉트"
+      );
       clearLoginSession();
       navigate("/login");
     } finally {
@@ -117,7 +119,6 @@ const MorePage: React.FC = () => {
   return (
     <div className="more-page">
       <div className="more-content">
-
         {/* 프로필 카드 */}
         {!isLoading && user && (
           <div
@@ -184,7 +185,7 @@ const MorePage: React.FC = () => {
         {/* 서비스 섹션 */}
         <div className="more-section">
           <h2>서비스</h2>
-          <div
+          {/* <div
             className="more-item"
             onClick={() => navigate("/more/user-guide")}
           >
@@ -192,12 +193,15 @@ const MorePage: React.FC = () => {
               <BookOpenIcon size={20} />
             </span>
             <span className="more-link">이용 가이드</span>
-          </div>
+          </div> */}
           <div className="more-item">
             <span className="more-icon">
               <FileTextIcon size={20} />
             </span>
-            <div onClick={() => navigate("/more/terms")} className="more-link cursor-pointer">
+            <div
+              onClick={() => navigate("/more/terms")}
+              className="more-link cursor-pointer"
+            >
               이용약관
             </div>
           </div>
@@ -205,7 +209,10 @@ const MorePage: React.FC = () => {
             <span className="more-icon">
               <ScaleIcon size={20} />
             </span>
-            <div onClick={() => navigate("/more/license")} className="more-link cursor-pointer">
+            <div
+              onClick={() => navigate("/more/license")}
+              className="more-link cursor-pointer"
+            >
               오픈소스 라이센스
             </div>
           </div>

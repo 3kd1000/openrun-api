@@ -38,11 +38,19 @@ const ClubExternalRequestsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState<ExternalRequestType | "">("");
   const [status, setStatus] = useState<ExternalRequestStatus | "">("PENDING");
-  const [expandedRequestIds, setExpandedRequestIds] = useState<Set<number>>(new Set());
+  const [expandedRequestIds, setExpandedRequestIds] = useState<Set<number>>(
+    new Set()
+  );
   const [postsById, setPostsById] = useState<Record<number, Post>>({});
-  const [commentsByPostId, setCommentsByPostId] = useState<Record<number, Comment[]>>({});
-  const [commentDraftByPostId, setCommentDraftByPostId] = useState<Record<number, string>>({});
-  const [threadLoadingByPostId, setThreadLoadingByPostId] = useState<Record<number, boolean>>({});
+  const [commentsByPostId, setCommentsByPostId] = useState<
+    Record<number, Comment[]>
+  >({});
+  const [commentDraftByPostId, setCommentDraftByPostId] = useState<
+    Record<number, string>
+  >({});
+  const [threadLoadingByPostId, setThreadLoadingByPostId] = useState<
+    Record<number, boolean>
+  >({});
 
   const targetPostId = useMemo(() => {
     const raw = searchParams.get("postId");
@@ -130,8 +138,12 @@ const ClubExternalRequestsPage: React.FC = () => {
     setThreadLoadingByPostId((prev) => ({ ...prev, [postId]: true }));
     try {
       const [p, cs] = await Promise.all([
-        postsById[postId] ? Promise.resolve(postsById[postId]) : postService.getPost(cid, postId),
-        commentsByPostId[postId] ? Promise.resolve(commentsByPostId[postId]) : commentService.getComments(cid, postId),
+        postsById[postId]
+          ? Promise.resolve(postsById[postId])
+          : postService.getPost(cid, postId),
+        commentsByPostId[postId]
+          ? Promise.resolve(commentsByPostId[postId])
+          : commentService.getComments(cid, postId),
       ]);
       setPostsById((prev) => ({ ...prev, [postId]: p }));
       setCommentsByPostId((prev) => ({ ...prev, [postId]: cs }));
@@ -158,8 +170,13 @@ const ClubExternalRequestsPage: React.FC = () => {
     if (!content) return;
     try {
       setThreadLoadingByPostId((prev) => ({ ...prev, [postId]: true }));
-      const created = await commentService.createComment(cid, postId, { content });
-      setCommentsByPostId((prev) => ({ ...prev, [postId]: [...(prev[postId] ?? []), created] }));
+      const created = await commentService.createComment(cid, postId, {
+        content,
+      });
+      setCommentsByPostId((prev) => ({
+        ...prev,
+        [postId]: [...(prev[postId] ?? []), created],
+      }));
       setCommentDraftByPostId((prev) => ({ ...prev, [postId]: "" }));
     } catch (e) {
       console.error(e);
@@ -174,7 +191,8 @@ const ClubExternalRequestsPage: React.FC = () => {
     const at = r.scheduleAt ? new Date(r.scheduleAt).toLocaleString() : "";
     const court = r.courtName ?? "";
     const cap =
-      typeof r.currentParticipants === "number" && typeof r.maxCapacity === "number"
+      typeof r.currentParticipants === "number" &&
+      typeof r.maxCapacity === "number"
         ? `${r.currentParticipants}/${r.maxCapacity}`
         : "";
     return [at, court, cap].filter(Boolean).join(" · ");
@@ -184,50 +202,19 @@ const ClubExternalRequestsPage: React.FC = () => {
     const ym = (iso?: string | null) => (iso ? iso.slice(0, 7) : null);
     const parts: string[] = [];
     if (r.ntrp) parts.push(`NTRP ${r.ntrp}`);
-    if (r.backhandType === "ONE_HAND") parts.push("원핸드");
-    if (r.backhandType === "TWO_HAND") parts.push("투핸드");
     if (r.formerPlayer === true) parts.push("선수출신");
-    if (r.tennisStartedAt) parts.push(`시작 ${ym(r.tennisStartedAt)}`);
-    if (r.favoritePlayer) parts.push(`선호 ${r.favoritePlayer}`);
+    if (r.tennisStartedAt) parts.push(`시작시기 ${ym(r.tennisStartedAt)}`);
     return parts.length > 0 ? parts.join(" · ") : null;
   };
 
-  const renderAuthorProfile = (r: ExternalRequestResponse) => {
-    const ym = (iso?: string | null) => (iso ? iso.slice(0, 7) : null);
-    const chips: Array<{ label: string; value: string }> = [];
-
-    if (r.ntrp) chips.push({ label: "NTRP", value: r.ntrp });
-    if (r.tennisStartedAt && ym(r.tennisStartedAt)) chips.push({ label: "시작", value: ym(r.tennisStartedAt) as string });
-    if (r.backhandType === "ONE_HAND") chips.push({ label: "백핸드", value: "원핸드" });
-    if (r.backhandType === "TWO_HAND") chips.push({ label: "백핸드", value: "투핸드" });
-    if (r.formerPlayer === true) chips.push({ label: "경력", value: "선수출신" });
-    if (r.favoritePlayer) chips.push({ label: "선호선수", value: r.favoritePlayer });
-
-    const note = (r.tournamentHistory ?? "").trim();
-    const hasAny = chips.length > 0 || note.length > 0;
-    if (!hasAny) return null;
-
-    return (
-      <div className="club-external-requests-page__author-profile">
-        {chips.length > 0 && (
-          <div className="club-external-requests-page__profile-chips">
-            {chips.map((c) => (
-              <div key={`${c.label}-${c.value}`} className="club-external-requests-page__profile-chip">
-                <span className="club-external-requests-page__profile-chip-label">{c.label}</span>
-                <span className="club-external-requests-page__profile-chip-value">{c.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {note.length > 0 && <div className="club-external-requests-page__profile-note">{note}</div>}
-      </div>
-    );
-  };
 
   return (
     <div className="club-external-requests-page">
       <div className="club-external-requests-page__header">
-        <button className="club-external-requests-page__back-btn" onClick={() => navigate(-1)}>
+        <button
+          className="club-external-requests-page__back-btn"
+          onClick={() => navigate(-1)}
+        >
           <ArrowLeftIcon size={20} />
         </button>
         <h1 className="club-external-requests-page__title">외부 요청</h1>
@@ -237,10 +224,14 @@ const ClubExternalRequestsPage: React.FC = () => {
       <div className="club-external-requests-page__section">
         <div className="club-external-requests-page__filters">
           <div className="club-external-requests-page__filter-row">
-            <div className="club-external-requests-page__filter-label">타입</div>
+            <div className="club-external-requests-page__filter-label">
+              타입
+            </div>
             <div className="club-external-requests-page__chips">
               <button
-                className={`club-external-requests-page__chip ${type === "" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  type === "" ? "is-active" : ""
+                }`}
                 onClick={() => setType("")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -248,7 +239,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 전체
               </button>
               <button
-                className={`club-external-requests-page__chip ${type === "JOIN" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  type === "JOIN" ? "is-active" : ""
+                }`}
                 onClick={() => setType("JOIN")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -256,7 +249,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 가입
               </button>
               <button
-                className={`club-external-requests-page__chip ${type === "GUEST" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  type === "GUEST" ? "is-active" : ""
+                }`}
                 onClick={() => setType("GUEST")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -264,7 +259,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 게스트
               </button>
               <button
-                className={`club-external-requests-page__chip ${type === "INTERCLUB" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  type === "INTERCLUB" ? "is-active" : ""
+                }`}
                 onClick={() => setType("INTERCLUB")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -275,10 +272,14 @@ const ClubExternalRequestsPage: React.FC = () => {
           </div>
 
           <div className="club-external-requests-page__filter-row">
-            <div className="club-external-requests-page__filter-label">상태</div>
+            <div className="club-external-requests-page__filter-label">
+              상태
+            </div>
             <div className="club-external-requests-page__chips">
               <button
-                className={`club-external-requests-page__chip ${status === "PENDING" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  status === "PENDING" ? "is-active" : ""
+                }`}
                 onClick={() => setStatus("PENDING")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -286,7 +287,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 대기
               </button>
               <button
-                className={`club-external-requests-page__chip ${status === "APPROVED" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  status === "APPROVED" ? "is-active" : ""
+                }`}
                 onClick={() => setStatus("APPROVED")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -294,7 +297,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 승인
               </button>
               <button
-                className={`club-external-requests-page__chip ${status === "REJECTED" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  status === "REJECTED" ? "is-active" : ""
+                }`}
                 onClick={() => setStatus("REJECTED")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -302,7 +307,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 반려
               </button>
               <button
-                className={`club-external-requests-page__chip ${status === "CANCELLED" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  status === "CANCELLED" ? "is-active" : ""
+                }`}
                 onClick={() => setStatus("CANCELLED")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -310,7 +317,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 취소
               </button>
               <button
-                className={`club-external-requests-page__chip ${status === "" ? "is-active" : ""}`}
+                className={`club-external-requests-page__chip ${
+                  status === "" ? "is-active" : ""
+                }`}
                 onClick={() => setStatus("")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -331,13 +340,17 @@ const ClubExternalRequestsPage: React.FC = () => {
       {loading ? (
         <div className="club-external-requests-page__loading">로딩 중...</div>
       ) : list.length === 0 ? (
-        <div className="club-external-requests-page__empty">요청이 없습니다.</div>
+        <div className="club-external-requests-page__empty">
+          요청이 없습니다.
+        </div>
       ) : (
         <div className="club-external-requests-page__list">
           {list.map((r) => (
             <div
               key={r.id}
-              className={`club-external-requests-page__card ${expandedRequestIds.has(r.id) ? "is-expanded" : ""}`}
+              className={`club-external-requests-page__card ${
+                expandedRequestIds.has(r.id) ? "is-expanded" : ""
+              }`}
             >
               <div className="club-external-requests-page__card-header">
                 <div className="club-external-requests-page__card-title">
@@ -351,7 +364,9 @@ const ClubExternalRequestsPage: React.FC = () => {
                 onClick={() => void handleToggleCard(r)}
               >
                 <div className="club-external-requests-page__meta-row">
-                  <span className="club-external-requests-page__meta-strong">{r.requesterName}</span>
+                  <span className="club-external-requests-page__meta-strong">
+                    {r.requesterName}
+                  </span>
                   <span className="club-external-requests-page__meta">
                     {new Date(r.createdAt).toLocaleString()}
                   </span>
@@ -402,8 +417,11 @@ const ClubExternalRequestsPage: React.FC = () => {
                     <div className="club-external-requests-page__thread-empty">
                       문의글이 아직 없습니다.
                     </div>
-                  ) : threadLoadingByPostId[r.postId] && !postsById[r.postId] ? (
-                    <div className="club-external-requests-page__thread-loading">대화를 불러오는 중...</div>
+                  ) : threadLoadingByPostId[r.postId] &&
+                    !postsById[r.postId] ? (
+                    <div className="club-external-requests-page__thread-loading">
+                      대화를 불러오는 중...
+                    </div>
                   ) : (
                     <>
                       {postsById[r.postId] && (
@@ -412,22 +430,34 @@ const ClubExternalRequestsPage: React.FC = () => {
                             {sanitizeInquiryText(postsById[r.postId].content)}
                           </div>
                           <div className="club-external-requests-page__post-meta">
-                            {postsById[r.postId].author?.name ?? postsById[r.postId].guestName ?? "익명"} ·{" "}
-                            {new Date(postsById[r.postId].createdAt).toLocaleString()}
+                            {postsById[r.postId].author?.name ??
+                              postsById[r.postId].guestName ??
+                              "익명"}{" "}
+                            ·{" "}
+                            {new Date(
+                              postsById[r.postId].createdAt
+                            ).toLocaleString()}
                           </div>
-                          {renderAuthorProfile(r)}
                         </div>
                       )}
 
                       <div className="club-external-requests-page__comments">
                         {(commentsByPostId[r.postId] ?? []).length === 0 ? (
-                          <div className="club-external-requests-page__thread-empty">아직 댓글이 없습니다.</div>
+                          <div className="club-external-requests-page__thread-empty">
+                            아직 댓글이 없습니다.
+                          </div>
                         ) : (
                           (commentsByPostId[r.postId] ?? []).map((c) => (
-                            <div key={c.id} className="club-external-requests-page__comment">
-                              <div className="club-external-requests-page__comment-content">{c.content}</div>
+                            <div
+                              key={c.id}
+                              className="club-external-requests-page__comment"
+                            >
+                              <div className="club-external-requests-page__comment-content">
+                                {c.content}
+                              </div>
                               <div className="club-external-requests-page__comment-meta">
-                                {c.author?.name ?? "익명"} · {new Date(c.createdAt).toLocaleString()}
+                                {c.author?.name ?? "익명"} ·{" "}
+                                {new Date(c.createdAt).toLocaleString()}
                               </div>
                             </div>
                           ))
@@ -440,14 +470,22 @@ const ClubExternalRequestsPage: React.FC = () => {
                           placeholder="운영진 답변을 댓글로 남겨주세요"
                           value={commentDraftByPostId[r.postId] ?? ""}
                           onChange={(e) =>
-                            setCommentDraftByPostId((prev) => ({ ...prev, [r.postId as number]: e.target.value }))
+                            setCommentDraftByPostId((prev) => ({
+                              ...prev,
+                              [r.postId as number]: e.target.value,
+                            }))
                           }
                         />
                         <button
                           className="club-external-requests-page__btn-comment"
                           type="button"
-                          disabled={threadLoadingByPostId[r.postId] || !(commentDraftByPostId[r.postId] ?? "").trim()}
-                          onClick={() => void handleCreateComment(r.postId as number)}
+                          disabled={
+                            threadLoadingByPostId[r.postId] ||
+                            !(commentDraftByPostId[r.postId] ?? "").trim()
+                          }
+                          onClick={() =>
+                            void handleCreateComment(r.postId as number)
+                          }
                         >
                           댓글 작성
                         </button>
@@ -465,4 +503,3 @@ const ClubExternalRequestsPage: React.FC = () => {
 };
 
 export default ClubExternalRequestsPage;
-

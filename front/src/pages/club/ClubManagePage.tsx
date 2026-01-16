@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import axiosInstance from '../../services/api/axiosInstance';
-import type { Club } from '../../types/club';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axiosInstance from "../../services/api/axiosInstance";
+import type { Club } from "../../types/club";
 import {
   ArrowLeftIcon,
   InboxIcon,
   FileTextIcon,
   ChevronRightIcon,
   EditIcon,
-  SettingsIcon
-} from '../../components/common/Icons';
-import { getErrorMessage, logError } from '../../utils/errorHandler';
-import './ClubManagePage.css';
+  SettingsIcon,
+} from "../../components/common/Icons";
+import { getErrorMessage, logError } from "../../utils/errorHandler";
+import "./ClubManagePage.css";
 
 const ClubManagePage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const ClubManagePage: React.FC = () => {
 
       setClub(clubResponse.data);
     } catch (error: unknown) {
-      logError('클럽 관리 데이터 조회', error);
+      logError("클럽 관리 데이터 조회", error);
       setError(getErrorMessage(error));
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ const ClubManagePage: React.FC = () => {
           <ArrowLeftIcon size={20} />
         </button>
         <h1 className="club-manage-page__title">
-          {club?.name ? `${club.name} 관리` : '클럽 관리'}
+          {club?.name ? `${club.name} 관리` : "클럽 관리"}
         </h1>
         <div className="club-manage-page__header-spacer" />
       </div>
@@ -112,21 +112,21 @@ const ClubManagePage: React.FC = () => {
         </button>
         <button
           className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
+          onClick={() => navigate(`/clubs/${clubId}/manage/content`)}
         >
           <div className="club-manage-page__menu-left">
-            <InboxIcon size={18} />
-            <span>외부 요청</span>
+            <FileTextIcon size={18} />
+            <span>공지사항 / 회칙</span>
           </div>
           <ChevronRightIcon size={18} />
         </button>
         <button
           className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/content`)}
+          onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
         >
           <div className="club-manage-page__menu-left">
-            <FileTextIcon size={18} />
-            <span>공지/회칙 관리</span>
+            <InboxIcon size={18} />
+            <span>외부 요청 관리</span>
           </div>
           <ChevronRightIcon size={18} />
         </button>

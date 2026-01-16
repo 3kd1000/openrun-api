@@ -75,7 +75,10 @@ const ClubManageInfoPage: React.FC = () => {
   return (
     <div className="club-manage-info-page">
       <div className="club-manage-info-page__header">
-        <button className="club-manage-info-page__back-btn" onClick={handleBack}>
+        <button
+          className="club-manage-info-page__back-btn"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
         <h1 className="club-manage-info-page__title">
@@ -88,7 +91,9 @@ const ClubManageInfoPage: React.FC = () => {
 
       <div className="club-manage-info-page__form">
         <label className="club-manage-info-page__label">
-          클럽 이름 <span className="club-manage-info-page__required">*</span>
+          <span>
+            클럽 이름 <span className="club-manage-info-page__required">*</span>
+          </span>
           <input
             className="club-manage-info-page__input"
             value={form.name ?? ""}
@@ -99,7 +104,7 @@ const ClubManageInfoPage: React.FC = () => {
         </label>
 
         <label className="club-manage-info-page__label">
-          지역
+          <span>지역</span>
           <input
             className="club-manage-info-page__input"
             value={form.region ?? ""}
@@ -110,7 +115,7 @@ const ClubManageInfoPage: React.FC = () => {
         </label>
 
         <label className="club-manage-info-page__label">
-          소개
+          <span>소개</span>
           <textarea
             className="club-manage-info-page__textarea"
             value={form.description ?? ""}
@@ -136,4 +141,3 @@ const ClubManageInfoPage: React.FC = () => {
 };
 
 export default ClubManageInfoPage;
-

@@ -4,6 +4,7 @@ import com.example.openrunapi.domain.club.model.ClubMemberStatus;
 import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
 import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
+import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
@@ -119,6 +120,20 @@ public class ClubController {
             @RequestParam(required = false) ClubMemberStatus status) {
         List<UserResponse> members = clubService.getClubMembers(clubId, status);
         return ResponseEntity.ok(members);
+    }
+
+    /**
+     * 클럽 멤버 프로필 조회 (User + UserProfile + ClubMember 통합)
+     * - 연락처 정보는 ContactVisibility에 따라 필터링됨
+     */
+    @GetMapping("/{clubId}/members/{userId}")
+    public ResponseEntity<MemberProfileResponse> getMemberProfile(
+            @PathVariable Long clubId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        MemberProfileResponse profile = clubService.getMemberProfile(clubId, userId, currentUserResponse.getId());
+        return ResponseEntity.ok(profile);
     }
 
     /**

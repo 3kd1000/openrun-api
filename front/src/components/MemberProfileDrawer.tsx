@@ -158,13 +158,13 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
               <div className="profile-section">
                 <h3 className="section-title">테니스 프로필</h3>
                 <div className="profile-item">
-                  <span className="profile-label">테니스 시작</span>
+                  <span className="profile-label">테니스 시작시기</span>
                   <span className="profile-value">
                     {formatMonthOnly(profile.tennisStartedAt)}
                   </span>
                 </div>
                 <div className="profile-item">
-                  <span className="profile-label">백핸드</span>
+                  <span className="profile-label">백핸드 타입</span>
                   <span className="profile-value">
                     {getBackhandLabel(profile.backhandType)}
                   </span>
@@ -174,9 +174,9 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                   <span className="profile-value">{profile.ntrp || "-"}</span>
                 </div>
                 <div className="profile-item">
-                  <span className="profile-label">선수출신</span>
+                  <span className="profile-label">선출여부</span>
                   <span className="profile-value">
-                    {profile.formerPlayer ? "예" : "아니오"}
+                    {profile.formerPlayer ? "O" : "X"}
                   </span>
                 </div>
                 {profile.favoritePlayer && (
@@ -189,7 +189,7 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                 )}
                 {profile.tournamentHistory && (
                   <div className="profile-item profile-item--full">
-                    <span className="profile-label">대회/리그 경력</span>
+                    <span className="profile-label">입상 경력</span>
                     <span className="profile-value profile-value--multiline">
                       {profile.tournamentHistory}
                     </span>

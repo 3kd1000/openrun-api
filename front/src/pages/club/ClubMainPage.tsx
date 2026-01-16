@@ -710,7 +710,7 @@ const ClubMainPage: React.FC = () => {
             title="클럽 탐색"
           >
             <CompassIcon size={20} />
-            <span className="club-main-page__header-btn-text">탐색</span>
+            <span className="club-main-page__header-btn-text">클럽탐색</span>
           </button>
           <button
             className="club-main-page__header-btn"
@@ -735,7 +735,7 @@ const ClubMainPage: React.FC = () => {
               title="클럽 관리"
             >
               <SettingsIcon size={20} />
-              <span className="club-main-page__header-btn-text">관리</span>
+              <span className="club-main-page__header-btn-text">클럽관리</span>
             </button>
           )}
           <button
