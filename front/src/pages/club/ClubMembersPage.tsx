@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../services/api/axiosInstance';
 import type { Club } from '../../types/club';
-import { ArrowLeftIcon, CrownIcon, ShieldIcon, UserIcon, MailIcon, SettingsIcon, XIcon } from '../../components/common/Icons';
+import { ArrowLeftIcon, CrownIcon, StarIcon, UserIcon, SettingsIcon, XIcon, ChevronRightIcon } from '../../components/common/Icons';
 import { getErrorMessage, logError } from '../../utils/errorHandler';
 import { canManageClub, normalizeClubRole } from '../../utils/role';
 import { getOpenRunSession } from '../../utils/openrunSession';
@@ -19,7 +19,26 @@ interface ClubMembershipResponse {
   name: string;
   email: string | null;
   imageUrl: string | null;
+  tennisStartedAt: string | null; // 테니스 시작시기 (YYYY-MM-DD)
 }
+
+// 테니스 시작시기 포맷: "2021년 05월"
+const formatTennisStarted = (dateStr: string | null): string | null => {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}년 ${month}월`;
+};
+
+// 클럽 가입일 포맷: "2025.12.29"
+const formatJoinedAt = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
+};
 
 const ClubMembersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -137,7 +156,7 @@ const ClubMembersPage: React.FC = () => {
       return <CrownIcon size={16} color="#FFD700" />;
     }
     if (role === 'ADMIN') {
-      return <ShieldIcon size={16} color="#4A90D9" />;
+      return <StarIcon size={16} color="#4A90D9" />;
     }
     return null;
   };
@@ -260,26 +279,29 @@ const ClubMembersPage: React.FC = () => {
                       getRoleName(member.role)
                     )}
                   </div>
+                  <div className="club-members-page__item-sub-info">
+                    {formatTennisStarted(member.tennisStartedAt) && (
+                      <span>{formatTennisStarted(member.tennisStartedAt)} 시작</span>
+                    )}
+                    <span>가입 {formatJoinedAt(member.joinedAt)}</span>
+                  </div>
                 </div>
                 <div className="club-members-page__item-actions">
-                  {member.email && (
-                    <a
-                      href={`mailto:${member.email}`}
-                      className="club-members-page__item-email"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MailIcon size={18} />
-                    </a>
-                  )}
-                  {isOwner && member.role !== "OWNER" && (
+                  {isEditMode && isOwner && member.role !== "OWNER" && (
                     <button
                       className="club-members-page__item-kick"
-                      onClick={() => handleKickMember(member.memberId, member.name)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleKickMember(member.memberId, member.name);
+                      }}
                       disabled={kickingUserId === member.memberId}
                       title="제명 (클럽장 전용)"
                     >
                       <XIcon size={18} />
                     </button>
+                  )}
+                  {!isEditMode && (
+                    <ChevronRightIcon size={18} color="#999" />
                   )}
                 </div>
               </div>

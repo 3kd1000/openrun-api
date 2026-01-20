@@ -4,6 +4,7 @@ import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import type { Club, UpdateClubPolicyRequest } from "../../types/club";
 import { ArrowLeftIcon } from "../../components/common/Icons";
+import { FEATURE_FLAGS } from "../../config/featureFlags";
 import "./ClubManagePolicyPage.css";
 
 const ClubManagePolicyPage: React.FC = () => {
@@ -119,45 +120,49 @@ const ClubManagePolicyPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="club-manage-policy-page__divider" />
+        {FEATURE_FLAGS.INTERCLUB_ENABLED && (
+          <>
+            <div className="club-manage-policy-page__divider" />
 
-        <div className="club-manage-policy-page__row">
-          <div className="club-manage-policy-page__row-title">
-            교류전 모집 상태
-          </div>
-          <div className="club-manage-policy-page__row-desc">
-            기본값은 <b>CLOSED</b>입니다.
-          </div>
-          <div className="club-manage-policy-page__seg">
-            <button
-              type="button"
-              className={`club-manage-policy-page__seg-btn ${
-                policy.interclubRecruitmentStatus === "CLOSED" ? "active" : ""
-              }`}
-              onClick={() =>
-                setPolicy((p) => ({
-                  ...p,
-                  interclubRecruitmentStatus: "CLOSED",
-                }))
-              }
-              disabled={saving}
-            >
-              CLOSED
-            </button>
-            <button
-              type="button"
-              className={`club-manage-policy-page__seg-btn ${
-                policy.interclubRecruitmentStatus === "OPEN" ? "active" : ""
-              }`}
-              onClick={() =>
-                setPolicy((p) => ({ ...p, interclubRecruitmentStatus: "OPEN" }))
-              }
-              disabled={saving}
-            >
-              OPEN
-            </button>
-          </div>
-        </div>
+            <div className="club-manage-policy-page__row">
+              <div className="club-manage-policy-page__row-title">
+                교류전 모집 상태
+              </div>
+              <div className="club-manage-policy-page__row-desc">
+                기본값은 <b>CLOSED</b>입니다.
+              </div>
+              <div className="club-manage-policy-page__seg">
+                <button
+                  type="button"
+                  className={`club-manage-policy-page__seg-btn ${
+                    policy.interclubRecruitmentStatus === "CLOSED" ? "active" : ""
+                  }`}
+                  onClick={() =>
+                    setPolicy((p) => ({
+                      ...p,
+                      interclubRecruitmentStatus: "CLOSED",
+                    }))
+                  }
+                  disabled={saving}
+                >
+                  CLOSED
+                </button>
+                <button
+                  type="button"
+                  className={`club-manage-policy-page__seg-btn ${
+                    policy.interclubRecruitmentStatus === "OPEN" ? "active" : ""
+                  }`}
+                  onClick={() =>
+                    setPolicy((p) => ({ ...p, interclubRecruitmentStatus: "OPEN" }))
+                  }
+                  disabled={saving}
+                >
+                  OPEN
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="club-manage-policy-page__divider" />
 
