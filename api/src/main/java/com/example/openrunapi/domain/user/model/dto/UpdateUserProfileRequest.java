@@ -8,8 +8,6 @@ import java.time.LocalDate;
 @Getter
 public class UpdateUserProfileRequest {
     private LocalDate tennisStartedAt;
-    private UserProfile.BackhandType backhandType;
-    private String favoritePlayer;
     private String ntrp;
     private String tournamentHistory;
     private Boolean formerPlayer;

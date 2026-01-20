@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import type { MemberProfile } from "../services/api/userApi";
 import { getClubMemberProfile } from "../services/api/userApi";
-import "./MemberProfileDrawer.css";
+import "./RequestProfileDrawer.css";
 
-interface MemberProfileDrawerProps {
+interface RequestProfileDrawerProps {
   clubId: number;
   userId: number;
   onClose: () => void;
 }
 
-const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
+const RequestProfileDrawer: React.FC<RequestProfileDrawerProps> = ({
   clubId,
   userId,
   onClose,
@@ -30,7 +30,7 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
         setProfile(data);
       } catch (err) {
         if (!mounted) return;
-        console.error("멤버 프로필 조회 실패:", err);
+        console.error("프로필 조회 실패:", err);
         setError("프로필을 불러오는데 실패했습니다.");
       } finally {
         if (mounted) {
@@ -52,21 +52,6 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
     }
   };
 
-  const getRoleLabel = (role: string): string => {
-    switch (role) {
-      case "OWNER":
-        return "운영자";
-      case "ADMIN":
-        return "관리자";
-      case "MEMBER":
-        return "멤버";
-      case "REGULAR":
-        return "정회원";
-      default:
-        return role;
-    }
-  };
-
   const getGenderLabel = (gender: string | null | undefined): string => {
     if (!gender || gender === "PRIVATE") return "비공개";
     switch (gender) {
@@ -76,20 +61,6 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
         return "여자";
       default:
         return "비공개";
-    }
-  };
-
-  const formatDate = (dateString: string | null): string => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch {
-      return dateString;
     }
   };
 
@@ -106,9 +77,9 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
 
   return (
     <div className="drawer-backdrop" onClick={handleBackdropClick}>
-      <div className="member-profile-drawer">
+      <div className="request-profile-drawer">
         <div className="drawer-header">
-          <h2>멤버 프로필</h2>
+          <h2>신청자 프로필</h2>
           <button className="btn-close" onClick={onClose}>
             ✕
           </button>
@@ -131,6 +102,12 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                   <span className="profile-value">{profile.name}</span>
                 </div>
                 <div className="profile-item">
+                  <span className="profile-label">성별</span>
+                  <span className="profile-value">
+                    {getGenderLabel(profile.gender)}
+                  </span>
+                </div>
+                <div className="profile-item">
                   <span className="profile-label">이메일</span>
                   <span className="profile-value">
                     {profile.email || "비공개"}
@@ -140,29 +117,6 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                   <span className="profile-label">전화번호</span>
                   <span className="profile-value">
                     {profile.phoneNumber || "비공개"}
-                  </span>
-                </div>
-                <div className="profile-item">
-                  <span className="profile-label">성별</span>
-                  <span className="profile-value">
-                    {getGenderLabel(profile.gender)}
-                  </span>
-                </div>
-              </div>
-
-              {/* 클럽 정보 */}
-              <div className="profile-section">
-                <h3 className="section-title">클럽 정보</h3>
-                <div className="profile-item">
-                  <span className="profile-label">역할</span>
-                  <span className="profile-value">
-                    {getRoleLabel(profile.role)}
-                  </span>
-                </div>
-                <div className="profile-item">
-                  <span className="profile-label">가입일</span>
-                  <span className="profile-value">
-                    {formatDate(profile.joinedAt)}
                   </span>
                 </div>
               </div>
@@ -203,4 +157,4 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
   );
 };
 
-export default MemberProfileDrawer;
+export default RequestProfileDrawer;

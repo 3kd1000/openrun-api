@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import type {
   UserProfile,
   ContactVisibility,
-  BackhandType,
 } from "../services/api/userApi";
 import {
   getMyTennisProfile,
@@ -34,11 +33,12 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [emailVisibility, setEmailVisibility] = useState<ContactVisibility>(
     user.emailVisibility || "PUBLIC"
   );
+  const [gender, setGender] = useState<"MALE" | "FEMALE" | "PRIVATE">(
+    (user.gender as "MALE" | "FEMALE" | "PRIVATE") || "PRIVATE"
+  );
   const [tennisStartedMonth, setTennisStartedMonth] = useState<string>(""); // YYYY-MM
-  const [backhandType, setBackhandType] = useState<BackhandType | "">("");
   const [ntrp, setNtrp] = useState<string>("");
   const [formerPlayer, setFormerPlayer] = useState<boolean>(false);
-  const [favoritePlayer, setFavoritePlayer] = useState<string>("");
   const [tournamentHistory, setTournamentHistory] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,10 +54,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         setTennisStartedMonth(
           p.tennisStartedAt ? p.tennisStartedAt.slice(0, 7) : ""
         );
-        setBackhandType((p.backhandType ?? "") as BackhandType | "");
         setNtrp(p.ntrp ?? "");
         setFormerPlayer(Boolean(p.formerPlayer));
-        setFavoritePlayer(p.favoritePlayer ?? "");
         setTournamentHistory(p.tournamentHistory ?? "");
       } catch (e) {
         // user_profile은 없으면 서버에서 생성해주지만, 네트워크/권한 이슈는 무시하지 않고 안내만
@@ -134,7 +132,6 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       const tennisStartedAt = tennisStartedMonth
         ? `${tennisStartedMonth}-01`
         : null; // month-only 입력 -> LocalDate(day=1)
-      const nextBackhandType = backhandType === "" ? null : backhandType;
 
       const [updatedUser] = await Promise.all([
         updateUser({
@@ -143,11 +140,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           phoneNumber: phoneNumber.trim() || null,
           phoneVisibility,
           emailVisibility,
+          gender,
         }),
         updateMyTennisProfile({
           tennisStartedAt,
-          backhandType: nextBackhandType,
-          favoritePlayer: favoritePlayer.trim() || null,
           ntrp: ntrp.trim() || null,
           tournamentHistory: tournamentHistory.trim() || null,
           formerPlayer,
@@ -193,7 +189,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         <div className="modal-header">
           <div className="modal-header-top">
             <h2>프로필 수정</h2>
-            <button className="close-btn" onClick={onClose}>
+            <button className="btn-close" onClick={onClose}>
               ✕
             </button>
           </div>
@@ -202,22 +198,42 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         <form onSubmit={handleSubmit} className="modal-body">
           {error && <div className="error-message">{error}</div>}
 
-          <div className="form-group">
-            <label htmlFor="name">이름 *</label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={handleNameChange}
-              onBlur={() => validateName(name)}
-              placeholder="이름을 입력하세요"
-              maxLength={50}
-              required
-              className={nameError ? "input-error" : ""}
-            />
-            {nameError && (
-              <div className="field-error-message">{nameError}</div>
-            )}
+          <div className="profile-edit-modal__section-title">기본 정보</div>
+
+          <div className="profile-edit-modal__grid-row profile-edit-modal__grid-row--name-gender">
+            <div className="form-group profile-edit-modal__grid-item">
+              <label htmlFor="name">이름 *</label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={handleNameChange}
+                onBlur={() => validateName(name)}
+                placeholder="이름을 입력하세요"
+                maxLength={50}
+                required
+                className={nameError ? "input-error" : ""}
+              />
+              {nameError && (
+                <div className="field-error-message">{nameError}</div>
+              )}
+            </div>
+
+            <div className="form-group profile-edit-modal__grid-item profile-edit-modal__grid-item--compact">
+              <label htmlFor="gender">성별 *</label>
+              <select
+                id="gender"
+                value={gender}
+                onChange={(e) =>
+                  setGender(e.target.value as "MALE" | "FEMALE" | "PRIVATE")
+                }
+                className="visibility-select"
+              >
+                <option value="MALE">남자</option>
+                <option value="FEMALE">여자</option>
+                <option value="PRIVATE">비공개</option>
+              </select>
+            </div>
           </div>
 
           <div className="form-group">
@@ -307,28 +323,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               onChange={(e) => setTennisStartedMonth(e.target.value)}
               placeholder="YYYY-MM"
             />
-            <small className="form-help">
-              날짜(일)까지는 입력하지 않고 연/월만 저장합니다.
-            </small>
           </div>
 
           <div className="profile-edit-modal__grid-row profile-edit-modal__grid-row--tennis-1">
-            <div className="form-group profile-edit-modal__grid-item">
-              <label htmlFor="backhandType">백핸드</label>
-              <select
-                id="backhandType"
-                value={backhandType}
-                onChange={(e) =>
-                  setBackhandType(e.target.value as BackhandType | "")
-                }
-                className="visibility-select"
-              >
-                <option value="">없음</option>
-                <option value="ONE_HAND">원핸드</option>
-                <option value="TWO_HAND">투핸드</option>
-              </select>
-            </div>
-
             <div className="form-group profile-edit-modal__grid-item">
               <label htmlFor="ntrp">NTRP</label>
               <input
@@ -339,19 +336,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 placeholder="예: 3.5"
               />
             </div>
-          </div>
 
-          <div className="profile-edit-modal__grid-row profile-edit-modal__grid-row--tennis-2">
-            <div className="form-group profile-edit-modal__grid-item">
-              <label htmlFor="favoritePlayer">좋아하는 선수</label>
-              <input
-                type="text"
-                id="favoritePlayer"
-                value={favoritePlayer}
-                onChange={(e) => setFavoritePlayer(e.target.value)}
-                placeholder="예: 페더러"
-              />
-            </div>
             <div className="form-group profile-edit-modal__grid-item profile-edit-modal__grid-item--compact">
               <label htmlFor="formerPlayer">선수출신</label>
               <select

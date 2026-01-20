@@ -1,4 +1,5 @@
-/* ===== MemberProfileDrawer 전용 스타일 ===== */
+/* ===== RequestProfileDrawer 전용 스타일 ===== */
+/* MemberProfileDrawer와 동일한 스타일 사용 */
 
 /* 드로어 배경 */
 .drawer-backdrop {
@@ -22,7 +23,7 @@
 }
 
 /* 드로어 컨테이너 - 데스크탑 (우측 슬라이드) */
-.member-profile-drawer {
+.request-profile-drawer {
   position: fixed;
   top: 0;
   right: 0;
@@ -45,7 +46,7 @@
 }
 
 /* 드로어 헤더 */
-.member-profile-drawer .drawer-header {
+.request-profile-drawer .drawer-header {
   position: sticky;
   top: 0;
   background: var(--color-bg-primary);
@@ -57,7 +58,7 @@
   z-index: 1;
 }
 
-.member-profile-drawer .drawer-header h2 {
+.request-profile-drawer .drawer-header h2 {
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
@@ -65,19 +66,19 @@
 }
 
 /* 드로어 바디 */
-.member-profile-drawer .drawer-body {
+.request-profile-drawer .drawer-body {
   padding: var(--space-l);
 }
 
 /* 로딩/에러 상태 */
-.member-profile-drawer .drawer-loading {
+.request-profile-drawer .drawer-loading {
   padding: var(--space-xl);
   text-align: center;
   color: var(--color-text-secondary);
   font-size: var(--font-size-base);
 }
 
-.member-profile-drawer .drawer-error {
+.request-profile-drawer .drawer-error {
   padding: var(--space-m);
   margin-bottom: var(--space-l);
   background-color: #fee;
@@ -88,15 +89,15 @@
 }
 
 /* 프로필 섹션 */
-.member-profile-drawer .profile-section {
+.request-profile-drawer .profile-section {
   margin-bottom: var(--space-xl);
 }
 
-.member-profile-drawer .profile-section:last-child {
+.request-profile-drawer .profile-section:last-child {
   margin-bottom: 0;
 }
 
-.member-profile-drawer .section-title {
+.request-profile-drawer .section-title {
   margin: 0 0 var(--space-m) 0;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
@@ -104,12 +105,12 @@
 }
 
 /* 첫 번째 섹션이 아닌 경우 상단 여백 추가 */
-.member-profile-drawer .profile-section:not(:first-child) .section-title {
+.request-profile-drawer .profile-section:not(:first-child) .section-title {
   padding-top: var(--space-l);
 }
 
 /* 프로필 아이템 */
-.member-profile-drawer .profile-item {
+.request-profile-drawer .profile-item {
   display: grid;
   grid-template-columns: 120px 1fr;
   gap: var(--space-m);
@@ -117,52 +118,52 @@
   border-bottom: var(--border-width-thin) solid var(--color-border-tertiary);
 }
 
-.member-profile-drawer .profile-item:last-child {
+.request-profile-drawer .profile-item:last-child {
   border-bottom: none;
 }
 
-.member-profile-drawer .profile-item--full {
+.request-profile-drawer .profile-item--full {
   grid-template-columns: 1fr;
 }
 
-.member-profile-drawer .profile-label {
+.request-profile-drawer .profile-label {
   font-size: var(--font-size-s);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
-.member-profile-drawer .profile-value {
+.request-profile-drawer .profile-value {
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
   line-height: 1.5;
   word-break: break-word;
 }
 
-.member-profile-drawer .profile-value--multiline {
+.request-profile-drawer .profile-value--multiline {
   white-space: pre-wrap;
   margin-top: var(--space-xs);
 }
 
 /* ===== 미디어 쿼리: 태블릿 (426px ~ 768px) ===== */
 @media (min-width: 426px) and (max-width: 768px) {
-  .member-profile-drawer {
+  .request-profile-drawer {
     max-width: 380px;
   }
 
-  .member-profile-drawer .drawer-header {
+  .request-profile-drawer .drawer-header {
     padding: var(--space-m);
   }
 
-  .member-profile-drawer .drawer-header h2 {
+  .request-profile-drawer .drawer-header h2 {
     font-size: var(--font-size-l);
   }
 
-  .member-profile-drawer .drawer-body {
+  .request-profile-drawer .drawer-body {
     padding: var(--space-m);
   }
 
-  .member-profile-drawer .profile-item {
+  .request-profile-drawer .profile-item {
     grid-template-columns: 100px 1fr;
     gap: var(--space-s);
   }
@@ -175,7 +176,7 @@
     align-items: flex-end;
   }
 
-  .member-profile-drawer {
+  .request-profile-drawer {
     position: relative;
     top: auto;
     right: auto;
@@ -195,70 +196,70 @@
     }
   }
 
-  .member-profile-drawer .drawer-header {
+  .request-profile-drawer .drawer-header {
     padding: var(--space-m);
   }
 
-  .member-profile-drawer .drawer-header h2 {
+  .request-profile-drawer .drawer-header h2 {
     font-size: var(--font-size-base);
   }
 
-  .member-profile-drawer .drawer-body {
+  .request-profile-drawer .drawer-body {
     padding: var(--space-m);
   }
 
-  .member-profile-drawer .section-title {
+  .request-profile-drawer .section-title {
     font-size: var(--font-size-s);
   }
 
-  .member-profile-drawer .profile-item {
+  .request-profile-drawer .profile-item {
     grid-template-columns: 80px 1fr;
     gap: var(--space-s);
     padding: var(--space-xs) 0;
   }
 
-  .member-profile-drawer .profile-label {
+  .request-profile-drawer .profile-label {
     font-size: var(--font-size-s);
   }
 
-  .member-profile-drawer .profile-value {
+  .request-profile-drawer .profile-value {
     font-size: var(--font-size-s);
   }
 }
 
 /* ===== 미디어 쿼리: 모바일 소형 (359px 이하) ===== */
 @media (max-width: 359px) {
-  .member-profile-drawer {
+  .request-profile-drawer {
     max-height: 90vh;
   }
 
-  .member-profile-drawer .drawer-header {
+  .request-profile-drawer .drawer-header {
     padding: var(--space-s);
   }
 
-  .member-profile-drawer .drawer-header h2 {
+  .request-profile-drawer .drawer-header h2 {
     font-size: var(--font-size-s);
   }
 
-  .member-profile-drawer .drawer-body {
+  .request-profile-drawer .drawer-body {
     padding: var(--space-s);
   }
 
-  .member-profile-drawer .profile-section {
+  .request-profile-drawer .profile-section {
     margin-bottom: var(--space-l);
   }
 
-  .member-profile-drawer .profile-item {
+  .request-profile-drawer .profile-item {
     grid-template-columns: 1fr;
     gap: var(--space-xxs);
   }
 
-  .member-profile-drawer .profile-label {
+  .request-profile-drawer .profile-label {
     font-size: var(--font-size-s);
     margin-bottom: var(--space-xxs);
   }
 
-  .member-profile-drawer .profile-value {
+  .request-profile-drawer .profile-value {
     font-size: var(--font-size-s);
   }
 }

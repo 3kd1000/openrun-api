@@ -1,5 +1,7 @@
 package com.example.openrunapi.domain.schedule.controller;
 
+import com.example.openrunapi.domain.club.model.Club;
+import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.draw.model.DrawType;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
 import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
@@ -8,6 +10,7 @@ import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
 import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
+import com.example.openrunapi.domain.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Disabled;
@@ -23,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -52,7 +56,14 @@ class ScheduleControllerDrawTest {
     @MockBean
     private ScheduleParticipantService participantService;
 
+    @MockBean
+    private ClubRepository clubRepository;
+
+    @MockBean
+    private UserRepository userRepository;
+
     private static final Long SCHEDULE_ID = 1L;
+    private static final Long CLUB_ID = 1L;
 
     @Test
     @DisplayName("대진 생성 성공 - AA 타입")
@@ -268,7 +279,7 @@ class ScheduleControllerDrawTest {
 
     private ScheduleResponse createMockScheduleResponse() {
         Schedule schedule = Schedule.builder()
-                .clubId(1L)
+                .clubId(CLUB_ID)
                 .courtName("테니스장 A")
                 .scheduledAt(LocalDateTime.now().plusDays(1))
                 .maxCapacity(8)
@@ -276,7 +287,14 @@ class ScheduleControllerDrawTest {
                 .description("테스트 일정")
                 .build();
 
-        return new ScheduleResponse(schedule);
+        // Mock Club for clubRepository (id는 불필요, name만 있으면 됨)
+        Club mockClub = Club.builder()
+                .name("테스트 클럽")
+                .ownerUserId(1L)
+                .build();
+        given(clubRepository.findById(CLUB_ID)).willReturn(Optional.of(mockClub));
+
+        return new ScheduleResponse(schedule, clubRepository, userRepository);
     }
 
     private DrawResponse createMockDrawResponse() {

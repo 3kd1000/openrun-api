@@ -27,6 +27,7 @@ public class ScheduleResponse {
     private final String reservedByUserName;
     private final LocalDateTime participationStartAt;
     private final String drawType;
+    private final String matchType;
     private final Boolean isDrawValid;
     private final LocalDateTime drawCreatedAt;
     private final Boolean pinned;
@@ -70,6 +71,7 @@ public class ScheduleResponse {
 
         this.participationStartAt = schedule.getParticipationStartAt();
         this.drawType = schedule.getDrawType() != null ? schedule.getDrawType().name() : null;
+        this.matchType = schedule.getMatchType() != null ? schedule.getMatchType().name() : null;
         this.isDrawValid = schedule.getIsDrawValid();
         this.drawCreatedAt = schedule.getDrawCreatedAt();
         this.pinned = Boolean.TRUE.equals(schedule.getPinned());

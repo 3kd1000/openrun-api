@@ -39,6 +39,7 @@
   justify-content: space-between;
   gap: var(--space-s);
   width: 100%;
+  min-height: 32px;
 }
 
 .profile-edit-modal .modal-header-top h2 {
@@ -49,27 +50,6 @@
   flex: 1;
   text-align: left;
   line-height: 1.2;
-}
-
-.profile-edit-modal .modal-header-top .close-btn {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
-  font-size: var(--font-size-xl);
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  padding: var(--space-xs);
-  line-height: 1;
-  transition: var(--transition-base);
-  min-width: 32px;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.profile-edit-modal .modal-header-top .close-btn:hover {
-  color: var(--color-text-primary);
 }
 
 /* 모달 바디 */
@@ -83,6 +63,15 @@
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
+}
+
+.profile-edit-modal__section-title:first-of-type {
+  margin-top: 0;
+}
+
+/* 기본정보와 테니스 프로필 사이 여백 */
+.profile-edit-modal__section-title:not(:first-of-type) {
+  padding-top: var(--space-xl);
 }
 
 /* 폼 그룹 - 동일 계층 컴포넌트 */
@@ -101,9 +90,12 @@
   margin-bottom: 0;
 }
 
-.profile-edit-modal__grid-row--tennis-1,
-.profile-edit-modal__grid-row--tennis-2 {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+.profile-edit-modal__grid-row--name-gender {
+  grid-template-columns: minmax(0, 1fr) 160px;
+}
+
+.profile-edit-modal__grid-row--tennis-1 {
+  grid-template-columns: minmax(0, 1fr) 160px;
 }
 
 .profile-edit-modal .form-group label {
@@ -277,13 +269,6 @@
     font-size: var(--font-size-l);
   }
 
-  .profile-edit-modal .modal-header-top .close-btn {
-    font-size: var(--font-size-l);
-    min-width: 28px;
-    min-height: 28px;
-    padding: var(--space-xxs);
-  }
-
   .profile-edit-modal .modal-body {
     padding: var(--space-m);
   }
@@ -334,13 +319,6 @@
     font-size: var(--font-size-base);
   }
 
-  .profile-edit-modal .modal-header-top .close-btn {
-    font-size: var(--font-size-base);
-    min-width: 24px;
-    min-height: 24px;
-    padding: var(--space-xxs);
-  }
-
   .profile-edit-modal .modal-body {
     padding: var(--space-s);
   }
@@ -364,6 +342,14 @@
   }
 
   .profile-edit-modal__grid-row {
+    grid-template-columns: minmax(0, 1fr) 140px;
+  }
+
+  .profile-edit-modal__grid-row--name-gender {
+    grid-template-columns: minmax(0, 1fr) 140px;
+  }
+
+  .profile-edit-modal__grid-row--tennis-1 {
     grid-template-columns: minmax(0, 1fr) 140px;
   }
 
@@ -406,13 +392,6 @@
 
   .profile-edit-modal .modal-header-top h2 {
     font-size: var(--font-size-s);
-  }
-
-  .profile-edit-modal .modal-header-top .close-btn {
-    font-size: var(--font-size-s);
-    min-width: 20px;
-    min-height: 20px;
-    padding: 2px;
   }
 
   .profile-edit-modal .modal-body {

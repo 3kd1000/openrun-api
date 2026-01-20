@@ -3,6 +3,7 @@ package com.example.openrunapi.domain.club.model.dto;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubRole;
 import com.example.openrunapi.domain.user.model.ContactVisibility;
+import com.example.openrunapi.domain.user.model.Gender;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserProfile;
 import lombok.Getter;
@@ -24,12 +25,11 @@ public class MemberProfileResponse {
     private final String email;           // 공개범위에 따라 null 가능
     private final String imageUrl;
     private final String phoneNumber;     // 공개범위에 따라 null 가능
+    private final Gender gender;
 
     // Tennis Profile (user_profile)
     private final LocalDate tennisStartedAt;
-    private final String backhandType;
     private final String ntrp;
-    private final String favoritePlayer;
     private final String tournamentHistory;
     private final boolean formerPlayer;
 
@@ -48,6 +48,7 @@ public class MemberProfileResponse {
         this.id = user.getId();
         this.name = user.getName();
         this.imageUrl = user.getImageUrl();
+        this.gender = user.getGender();
 
         // 연락처 공개 범위에 따라 필터링
         this.email = shouldShowEmail(user.getEmailVisibility(), isSameClub) ? user.getEmail() : null;
@@ -56,16 +57,12 @@ public class MemberProfileResponse {
         // Tennis Profile (없으면 기본값)
         if (userProfile != null) {
             this.tennisStartedAt = userProfile.getTennisStartedAt();
-            this.backhandType = userProfile.getBackhandType() != null ? userProfile.getBackhandType().name() : null;
             this.ntrp = userProfile.getNtrp();
-            this.favoritePlayer = userProfile.getFavoritePlayer();
             this.tournamentHistory = userProfile.getTournamentHistory();
             this.formerPlayer = userProfile.isFormerPlayer();
         } else {
             this.tennisStartedAt = null;
-            this.backhandType = null;
             this.ntrp = null;
-            this.favoritePlayer = null;
             this.tournamentHistory = null;
             this.formerPlayer = false;
         }

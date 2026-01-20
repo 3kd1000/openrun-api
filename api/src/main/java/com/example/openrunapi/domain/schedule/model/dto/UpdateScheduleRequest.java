@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.model.dto;
 
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -32,4 +33,6 @@ public class UpdateScheduleRequest {
     private Long reservedByUserId;
 
     private LocalDateTime participationStartAt;
+
+    private MatchType matchType;
 }

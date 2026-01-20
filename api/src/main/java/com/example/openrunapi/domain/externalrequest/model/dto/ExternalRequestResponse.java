@@ -27,13 +27,12 @@ public class ExternalRequestResponse {
     private final String courtName;
     private final Integer currentParticipants;
     private final Integer maxCapacity;
+    private final String matchType;
 
     // 신청자 프로필 요약 (optional)
     private final LocalDate tennisStartedAt;
-    private final String backhandType;
     private final String ntrp;
     private final Boolean formerPlayer;
-    private final String favoritePlayer;
     private final String tournamentHistory;
 
     public ExternalRequestResponse(ExternalRequest r) {
@@ -58,12 +57,11 @@ public class ExternalRequestResponse {
         this.courtName = s != null ? s.getCourtName() : null;
         this.currentParticipants = s != null ? s.getCurrentParticipants() : null;
         this.maxCapacity = s != null ? s.getMaxCapacity() : null;
+        this.matchType = s != null && s.getMatchType() != null ? s.getMatchType().name() : null;
 
         this.tennisStartedAt = profile != null ? profile.getTennisStartedAt() : null;
-        this.backhandType = profile != null && profile.getBackhandType() != null ? profile.getBackhandType().name() : null;
         this.ntrp = profile != null ? profile.getNtrp() : null;
         this.formerPlayer = profile != null ? profile.isFormerPlayer() : null;
-        this.favoritePlayer = profile != null ? profile.getFavoritePlayer() : null;
         this.tournamentHistory = profile != null ? profile.getTournamentHistory() : null;
     }
 }

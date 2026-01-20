@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.user.model.dto;
 
 import com.example.openrunapi.domain.user.model.ContactVisibility;
+import com.example.openrunapi.domain.user.model.Gender;
 import com.example.openrunapi.domain.user.model.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
@@ -19,12 +20,13 @@ public class UserResponse {
     private final String phoneNumber;
     private final ContactVisibility phoneVisibility;
     private final ContactVisibility emailVisibility;
+    private final Gender gender;
     private final LocalDateTime createdAt;
     private final String lastLoginProvider;
     private final LocalDateTime lastLoginAt;
 
     public UserResponse(Long id, String email, String name, String imageUrl, String phoneNumber,
-                       ContactVisibility phoneVisibility, ContactVisibility emailVisibility,
+                       ContactVisibility phoneVisibility, ContactVisibility emailVisibility, Gender gender,
                        LocalDateTime createdAt, String lastLoginProvider, LocalDateTime lastLoginAt) {
         this.id = id;
         this.email = email;
@@ -33,6 +35,7 @@ public class UserResponse {
         this.phoneNumber = phoneNumber;
         this.phoneVisibility = phoneVisibility;
         this.emailVisibility = emailVisibility;
+        this.gender = gender;
         this.createdAt = createdAt;
         this.lastLoginProvider = lastLoginProvider;
         this.lastLoginAt = lastLoginAt;
@@ -43,7 +46,7 @@ public class UserResponse {
      */
     public UserResponse(User user) {
         this(user.getId(), user.getEmail(), user.getName(), user.getImageUrl(),
-             user.getPhoneNumber(), user.getPhoneVisibility(), user.getEmailVisibility(),
+             user.getPhoneNumber(), user.getPhoneVisibility(), user.getEmailVisibility(), user.getGender(),
              user.getCreatedAt(), user.getLastLoginProvider(), user.getLastLoginAt());
     }
 
@@ -71,6 +74,7 @@ public class UserResponse {
                 .phoneNumber(filteredPhone)
                 .phoneVisibility(user.getPhoneVisibility())
                 .emailVisibility(user.getEmailVisibility())
+                .gender(user.getGender())
                 .createdAt(user.getCreatedAt())
                 .lastLoginProvider(user.getLastLoginProvider())
                 .lastLoginAt(user.getLastLoginAt())
