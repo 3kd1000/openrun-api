@@ -198,7 +198,7 @@ const SetupProfilePage: React.FC = () => {
       console.log("✅ 프로필 설정 완료:", updatedUser);
 
       // 메인 화면으로 이동
-      navigate("/schedules");
+      navigate("/schedules/club");
     } catch (err: unknown) {
       console.error("❌ 프로필 설정 실패:", err);
       const errorMessage =

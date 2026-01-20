@@ -23,6 +23,9 @@ import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
 import com.example.openrunapi.domain.externalrequest.repository.ExternalRequestRepository;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
+import com.example.openrunapi.domain.match.model.Match;
+import com.example.openrunapi.domain.match.repository.MatchRepository;
+import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
@@ -47,6 +50,7 @@ public class UserService implements UserDetailsService {
     private final ExternalRequestRepository externalRequestRepository;
     private final ScheduleRepository scheduleRepository;
     private final ClubRepository clubRepository;
+    private final MatchRepository matchRepository;
 
     @Override
     @Transactional
@@ -261,5 +265,108 @@ public class UserService implements UserDetailsService {
         ));
 
         return responses;
+    }
+
+    /**
+     * 특정 클럽에서의 내 최근 전적 조회
+     *
+     * @param userId 사용자 ID
+     * @param clubId 클럽 ID
+     * @param limit  조회할 경기 수 (기본 5)
+     * @return 최근 전적 목록
+     */
+    public java.util.List<MyRecentMatchResponse> getMyRecentMatches(Long userId, Long clubId, Integer limit) {
+        // 클럽에서 내가 참여한 경기 조회 (결과가 있는 경기만)
+        java.util.List<Match> matches = matchRepository.findByClubIdAndPlayerId(clubId, userId);
+
+        // 결과가 있는 경기만 필터링하고, limit 적용
+        int maxResults = limit != null ? limit : 5;
+
+        return matches.stream()
+                .filter(match -> match.getResult() != null)  // 결과가 있는 경기만
+                .limit(maxResults)
+                .map(match -> toMyRecentMatchResponse(match, userId))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Match -> MyRecentMatchResponse 변환 (내 관점)
+     */
+    private MyRecentMatchResponse toMyRecentMatchResponse(Match match, Long userId) {
+        // 내가 Team A인지 Team B인지 판단
+        boolean isTeamA = userId.equals(match.getTeamAPlayer1Id()) ||
+                          userId.equals(match.getTeamAPlayer2Id());
+
+        // 내 파트너 이름
+        String myPartnerName = null;
+        if (isTeamA) {
+            Long partnerId = userId.equals(match.getTeamAPlayer1Id())
+                    ? match.getTeamAPlayer2Id()
+                    : match.getTeamAPlayer1Id();
+            if (partnerId != null) {
+                myPartnerName = getUserName(partnerId);
+            }
+        } else {
+            Long partnerId = userId.equals(match.getTeamBPlayer1Id())
+                    ? match.getTeamBPlayer2Id()
+                    : match.getTeamBPlayer1Id();
+            if (partnerId != null) {
+                myPartnerName = getUserName(partnerId);
+            }
+        }
+
+        // 상대팀 정보
+        String opponent1Name;
+        String opponent2Name = null;
+        Integer myTeamScore;
+        Integer opponentTeamScore;
+
+        if (isTeamA) {
+            opponent1Name = getUserName(match.getTeamBPlayer1Id());
+            if (match.getTeamBPlayer2Id() != null) {
+                opponent2Name = getUserName(match.getTeamBPlayer2Id());
+            }
+            myTeamScore = match.getTeamAScore();
+            opponentTeamScore = match.getTeamBScore();
+        } else {
+            opponent1Name = getUserName(match.getTeamAPlayer1Id());
+            if (match.getTeamAPlayer2Id() != null) {
+                opponent2Name = getUserName(match.getTeamAPlayer2Id());
+            }
+            myTeamScore = match.getTeamBScore();
+            opponentTeamScore = match.getTeamAScore();
+        }
+
+        // 내 관점에서의 결과 판정
+        String myResult;
+        if (match.getResult() == Match.MatchResult.DRAW) {
+            myResult = "DRAW";
+        } else if ((isTeamA && match.getResult() == Match.MatchResult.TEAM_A_WIN) ||
+                   (!isTeamA && match.getResult() == Match.MatchResult.TEAM_B_WIN)) {
+            myResult = "WIN";
+        } else {
+            myResult = "LOSE";
+        }
+
+        return MyRecentMatchResponse.builder()
+                .matchId(match.getId())
+                .scheduleId(match.getScheduleId())
+                .playedAt(match.getPlayedAt())
+                .myPartnerName(myPartnerName)
+                .opponent1Name(opponent1Name)
+                .opponent2Name(opponent2Name)
+                .myTeamScore(myTeamScore)
+                .opponentTeamScore(opponentTeamScore)
+                .result(myResult)
+                .build();
+    }
+
+    /**
+     * 사용자 ID로 이름 조회
+     */
+    private String getUserName(Long userId) {
+        return userRepository.findById(userId)
+                .map(User::getName)
+                .orElse("알 수 없음");
     }
 }

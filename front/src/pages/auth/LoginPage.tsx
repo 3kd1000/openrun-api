@@ -27,7 +27,7 @@ const LoginPage: React.FC = () => {
   const [registering, setRegistering] = useState(false);
   const [autoLoginEnabled, setAutoLoginEnabled] = useState(true); // 기본값: 자동 로그인 사용
 
-  // 로그인 후 원래 페이지로 돌아가기 (returnUrl이 있으면 그곳으로, 없으면 /schedules)
+  // 로그인 후 원래 페이지로 돌아가기 (returnUrl이 있으면 그곳으로, 없으면 /schedules/club)
   const navigateAfterLogin = () => {
     const returnUrl = sessionStorage.getItem('returnUrl');
     if (returnUrl) {
@@ -35,8 +35,8 @@ const LoginPage: React.FC = () => {
       sessionStorage.removeItem('returnUrl'); // 사용 후 제거
       navigate(returnUrl, { replace: true });
     } else {
-      console.log(`✅ 기본 페이지(/schedules)로 이동`);
-      navigate("/schedules", { replace: true });
+      console.log(`✅ 기본 페이지(/schedules/club)로 이동`);
+      navigate("/schedules/club", { replace: true });
     }
   };
 
@@ -48,7 +48,7 @@ const LoginPage: React.FC = () => {
 
     // 이미 로그인되어있으면 원래 페이지 또는 메인 화면으로 이동
     if (firebaseToken && userId) {
-      console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules로 자동 이동");
+      console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules/club로 자동 이동");
       navigateAfterLogin();
     }
   }, [navigate]);
@@ -167,12 +167,12 @@ const LoginPage: React.FC = () => {
               setShowWebAuthnModal(true);
             } else {
               console.log("✅ 메인 화면으로 이동");
-              if (debugMode) alert("Step 5: /schedules로 이동");
+              if (debugMode) alert("Step 5: /schedules/club로 이동");
               navigateAfterLogin();
             }
           } catch (error) {
             console.error("WebAuthn 등록 여부 확인 실패:", error);
-            if (debugMode) alert(`WebAuthn 확인 실패 → /schedules로 이동\n${error}`);
+            if (debugMode) alert(`WebAuthn 확인 실패 → /schedules/club로 이동\n${error}`);
             // 에러가 나도 메인 화면으로 이동
             navigateAfterLogin();
           }

@@ -4,6 +4,7 @@ import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.club.service.ClubService;
 import com.example.openrunapi.domain.user.model.dto.OAuthProviderResponse;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserProfileRequest;
+import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
 import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
@@ -111,5 +112,28 @@ public class UserController {
                 upcoming
         );
         return ResponseEntity.ok(schedules);
+    }
+
+    /**
+     * 특정 클럽에서의 내 최근 전적 조회
+     *
+     * @param userDetails 현재 사용자 정보
+     * @param clubId      클럽 ID (필수)
+     * @param limit       조회할 경기 수 (기본 5)
+     * @return 최근 전적 목록
+     */
+    @GetMapping("/me/matches")
+    public ResponseEntity<java.util.List<MyRecentMatchResponse>> getMyRecentMatches(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam Long clubId,
+            @RequestParam(required = false, defaultValue = "5") Integer limit
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        java.util.List<MyRecentMatchResponse> matches = userService.getMyRecentMatches(
+                currentUserResponse.getId(),
+                clubId,
+                limit
+        );
+        return ResponseEntity.ok(matches);
     }
 }

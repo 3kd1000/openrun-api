@@ -66,8 +66,11 @@ const ScheduleListPage: React.FC = () => {
     const session = getOpenRunSession();
     return session.currentClubId ? parseInt(session.currentClubId) : null;
   });
-  // 일정 모드 (클럽일정 / 개인일정)
-  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("club");
+  // 일정 모드 (클럽일정 / 개인일정) - URL 경로에 따라 초기값 설정
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>(() => {
+    if (location.pathname === "/schedules/my") return "personal";
+    return "club";
+  });
   // UI 설정에서 뷰 모드 복원
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = getOpenRunUiSettings().scheduleViewMode;
@@ -238,7 +241,7 @@ const ScheduleListPage: React.FC = () => {
       viewMode === "list" &&
       (schedules.length > 0 || personalSchedules.length > 0) &&
       !filterDate &&
-      location.pathname === "/schedules"
+      location.pathname.startsWith("/schedules/")
     ) {
       // DOM이 렌더링될 때까지 대기 후 오늘 날짜로 스크롤
       let attemptCount = 0;
@@ -464,6 +467,7 @@ const ScheduleListPage: React.FC = () => {
             onClick={() => {
               setScheduleMode("club");
               setFilterDate(null);
+              navigate("/schedules/club", { replace: true });
             }}
           >
             클럽일정
@@ -475,6 +479,7 @@ const ScheduleListPage: React.FC = () => {
             onClick={() => {
               setScheduleMode("personal");
               setFilterDate(null);
+              navigate("/schedules/my", { replace: true });
             }}
           >
             개인일정
