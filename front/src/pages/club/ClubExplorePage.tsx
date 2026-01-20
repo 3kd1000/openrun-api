@@ -14,6 +14,7 @@ import {
   getOpenRunUiSettings,
   setOpenRunUiSettings,
 } from "../../utils/openrunUiSettings";
+import { FEATURE_FLAGS } from "../../config/featureFlags";
 import "./ClubExplorePage.css";
 
 type RecruitType = "GUEST" | "INTERCLUB";
@@ -66,7 +67,9 @@ const ClubExplorePage: React.FC = () => {
   useEffect(() => {
     // 탐색 상단 섹션: 모집 중 일정들
     void fetchRecruit("GUEST");
-    void fetchRecruit("INTERCLUB");
+    if (FEATURE_FLAGS.INTERCLUB_ENABLED) {
+      void fetchRecruit("INTERCLUB");
+    }
     void fetchRecruitClubs();
     // 접기/펼치기 상태 로드
     try {
@@ -237,60 +240,62 @@ const ClubExplorePage: React.FC = () => {
           )}
         </div>
 
-        <div className="club-explore-page__recruit-section">
-          <div className="club-explore-page__recruit-header">
-            <button
-              className="club-explore-page__recruit-title-btn"
-              type="button"
-              onClick={toggleInterclub}
-            >
-              {interclubExpanded ? (
-                <ChevronUpIcon size={18} />
-              ) : (
-                <ChevronDownIcon size={18} />
-              )}
-              <span className="club-explore-page__recruit-title">
-                교류전 모집 중
-              </span>
-            </button>
-            <button
-              className="club-explore-page__recruit-more"
-              onClick={() => navigate("/clubs/explore/recruit?type=INTERCLUB")}
-            >
-              전체보기
-            </button>
+        {FEATURE_FLAGS.INTERCLUB_ENABLED && (
+          <div className="club-explore-page__recruit-section">
+            <div className="club-explore-page__recruit-header">
+              <button
+                className="club-explore-page__recruit-title-btn"
+                type="button"
+                onClick={toggleInterclub}
+              >
+                {interclubExpanded ? (
+                  <ChevronUpIcon size={18} />
+                ) : (
+                  <ChevronDownIcon size={18} />
+                )}
+                <span className="club-explore-page__recruit-title">
+                  교류전 모집 중
+                </span>
+              </button>
+              <button
+                className="club-explore-page__recruit-more"
+                onClick={() => navigate("/clubs/explore/recruit?type=INTERCLUB")}
+              >
+                전체보기
+              </button>
+            </div>
+            {!interclubExpanded ? null : interclubRecruit.length === 0 ? (
+              <div className="club-explore-page__recruit-empty">
+                모집 중인 일정이 없습니다.
+              </div>
+            ) : (
+              <div className="club-explore-page__recruit-list">
+                {interclubRecruit.map((x) => (
+                  <button
+                    key={`I:${x.scheduleId}`}
+                    className="club-explore-page__recruit-item"
+                    onClick={() =>
+                      navigate(
+                        `/clubs/${x.clubId}/interclub-recruit/${x.scheduleId}`
+                      )
+                    }
+                  >
+                    <div className="club-explore-page__recruit-item-title">
+                      {x.clubName}
+                    </div>
+                    <div className="club-explore-page__recruit-item-meta">
+                      {new Date(x.scheduledAt).toLocaleString()} · {x.courtName}
+                    </div>
+                    <div className="club-explore-page__recruit-item-meta">
+                      {x.currentParticipants}/{x.maxCapacity} · 비용{" "}
+                      {x.cost ?? "-"}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          {!interclubExpanded ? null : interclubRecruit.length === 0 ? (
-            <div className="club-explore-page__recruit-empty">
-              모집 중인 일정이 없습니다.
-            </div>
-          ) : (
-            <div className="club-explore-page__recruit-list">
-              {interclubRecruit.map((x) => (
-                <button
-                  key={`I:${x.scheduleId}`}
-                  className="club-explore-page__recruit-item"
-                  onClick={() =>
-                    navigate(
-                      `/clubs/${x.clubId}/interclub-recruit/${x.scheduleId}`
-                    )
-                  }
-                >
-                  <div className="club-explore-page__recruit-item-title">
-                    {x.clubName}
-                  </div>
-                  <div className="club-explore-page__recruit-item-meta">
-                    {new Date(x.scheduledAt).toLocaleString()} · {x.courtName}
-                  </div>
-                  <div className="club-explore-page__recruit-item-meta">
-                    {x.currentParticipants}/{x.maxCapacity} · 비용{" "}
-                    {x.cost ?? "-"}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
 
         <div className="club-explore-page__recruit-section">
           <div className="club-explore-page__recruit-header">

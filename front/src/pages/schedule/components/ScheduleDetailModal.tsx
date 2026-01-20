@@ -24,6 +24,7 @@ import {
 import { isNotEmpty } from "../../../utils/isEmpty";
 import { ClipboardListIcon, EditIcon } from "../../../components/common/Icons";
 import { getOpenRunSession } from "../../../utils/openrunSession";
+import { FEATURE_FLAGS } from "../../../config/featureFlags";
 import "./ScheduleDetailModal.css";
 
 interface Props {
@@ -550,19 +551,21 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 </span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleToggleInterclubRecruit}
-                className={`btn-toggle-header ${
-                  schedule.interclubRecruitOpen ? "is-on" : "is-off"
-                }`}
-                disabled={loading}
-                title="교류전 모집"
-              >
-                <span className="btn-toggle-header__text">
-                  교류전 {schedule.interclubRecruitOpen ? "ON" : "OFF"}
-                </span>
-              </button>
+              {FEATURE_FLAGS.INTERCLUB_ENABLED && (
+                <button
+                  type="button"
+                  onClick={handleToggleInterclubRecruit}
+                  className={`btn-toggle-header ${
+                    schedule.interclubRecruitOpen ? "is-on" : "is-off"
+                  }`}
+                  disabled={loading}
+                  title="교류전 모집"
+                >
+                  <span className="btn-toggle-header__text">
+                    교류전 {schedule.interclubRecruitOpen ? "ON" : "OFF"}
+                  </span>
+                </button>
+              )}
             </div>
           )}
         </div>

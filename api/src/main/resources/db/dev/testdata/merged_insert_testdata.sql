@@ -1,10 +1,30 @@
 -- ============================================
--- 01. 테스트 사용자 10명 생성
+-- OpenRun 테스트 데이터 통합 스크립트
 -- ============================================
 -- 주의: 이 스크립트는 개발 환경 전용입니다.
 --       프로덕션에서는 절대 실행하지 마세요!
+-- ============================================
 
--- 사용자 10명 생성 (id는 자동 증가, uid는 NULL)
+-- ============================================
+-- 0. 환경 검증 (프로덕션 실행 방지)
+-- ============================================
+DO $$
+BEGIN
+    -- 데이터베이스 이름이 dev가 아니면 중단
+    IF current_database() NOT LIKE '%dev%' AND current_database() NOT LIKE '%test%' AND current_database() NOT LIKE '%local%' THEN
+        RAISE EXCEPTION '⛔ 이 스크립트는 개발/테스트 환경에서만 실행할 수 있습니다! 현재 DB: %', current_database();
+    END IF;
+    RAISE NOTICE '✅ 환경 검증 통과: %', current_database();
+END $$;
+
+-- 트랜잭션 시작
+BEGIN;
+
+-- ============================================
+-- 01. 테스트 사용자 10명 생성
+-- ============================================
+
+-- 사용자 10명 생성 (ON CONFLICT로 멱등성 보장)
 INSERT INTO users (email, name, image_url, phone_number, phone_visibility, email_visibility, is_guest, deleted, created_at, updated_at) VALUES
 ('testuser01@openrun.test', '김민수', NULL, NULL, 'PUBLIC', 'PUBLIC', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('testuser02@openrun.test', '이영희', NULL, NULL, 'PUBLIC', 'PUBLIC', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -15,7 +35,10 @@ INSERT INTO users (email, name, image_url, phone_number, phone_visibility, email
 ('testuser07@openrun.test', '송지효', NULL, NULL, 'PUBLIC', 'PUBLIC', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('testuser08@openrun.test', '윤도현', NULL, NULL, 'PUBLIC', 'PUBLIC', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('testuser09@openrun.test', '한예슬', NULL, NULL, 'PUBLIC', 'PUBLIC', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('testuser10@openrun.test', '임요환', NULL, NULL, 'PUBLIC', 'PUBLIC', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('testuser10@openrun.test', '임요환', NULL, NULL, 'PUBLIC', 'PUBLIC', false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (email) DO UPDATE SET
+    name = EXCLUDED.name,
+    updated_at = CURRENT_TIMESTAMP;
 
 -- 테니스 프로필 생성 (user_profile)
 INSERT INTO user_profile (user_id, tennis_started_at, backhand_type, ntrp, favorite_player, tournament_history, former_player) VALUES
@@ -28,18 +51,18 @@ INSERT INTO user_profile (user_id, tennis_started_at, backhand_type, ntrp, favor
 ((SELECT id FROM users WHERE email = 'testuser07@openrun.test'), '2021-07-12', 'TWO_HAND', '3.5', '오사카 나오미', NULL, false),
 ((SELECT id FROM users WHERE email = 'testuser08@openrun.test'), '2019-02-28', 'ONE_HAND', '4.0', '페더러', '2024 지역 리그 4강', false),
 ((SELECT id FROM users WHERE email = 'testuser09@openrun.test'), '2023-05-10', 'TWO_HAND', '2.0', '샤라포바', NULL, false),
-((SELECT id FROM users WHERE email = 'testuser10@openrun.test'), '2017-08-15', 'TWO_HAND', '5.0', '페더러', '前 주니어 선수', true);
+((SELECT id FROM users WHERE email = 'testuser10@openrun.test'), '2017-08-15', 'TWO_HAND', '5.0', '페더러', '前 주니어 선수', true)
+ON CONFLICT (user_id) DO UPDATE SET
+    ntrp = EXCLUDED.ntrp,
+    updated_at = CURRENT_TIMESTAMP;
 
--- 결과 확인
 SELECT '✅ 테스트 사용자 10명 생성 완료' AS status;
-SELECT COUNT(*) AS user_count FROM users WHERE email LIKE '%@openrun.test';
-SELECT id, email, name FROM users WHERE email LIKE '%@openrun.test' ORDER BY id;
+
+
 -- ============================================
 -- 02. 테스트 클럽 4개 생성
 -- ============================================
--- 주의: 이 스크립트는 개발 환경 전용입니다.
 
--- 클럽 4개 생성 (id는 자동 증가)
 INSERT INTO club (name, description, region, owner_user_id, member_recruitment_status, deleted, created_at, updated_at) VALUES
 ('테스트 강남 테니스 클럽',
  '서울 강남 지역에서 활동하는 테니스 동호회입니다. 주말마다 모여서 복식 경기를 즐깁니다.',
@@ -75,15 +98,17 @@ INSERT INTO club (name, description, region, owner_user_id, member_recruitment_s
  'CLOSED',
  false,
  CURRENT_TIMESTAMP,
- CURRENT_TIMESTAMP);
+ CURRENT_TIMESTAMP)
+ON CONFLICT (name) DO UPDATE SET
+    description = EXCLUDED.description,
+    updated_at = CURRENT_TIMESTAMP;
 
--- 결과 확인
 SELECT '✅ 테스트 클럽 4개 생성 완료' AS status;
-SELECT id, name, region, member_recruitment_status FROM club WHERE name LIKE '테스트%' ORDER BY id;
+
+
 -- ============================================
--- 03. 클럽 멤버십 생성
+-- 03. 클럽 멤버십 생성 (테스트 유저)
 -- ============================================
--- 주의: 이 스크립트는 개발 환경 전용입니다.
 
 -- [클럽 1: 테스트 강남 테니스 클럽] - 7명 (OWNER 1 + ADMIN 1 + REGULAR 5)
 INSERT INTO club_member (club_id, user_id, role, status, joined_at) VALUES
@@ -107,7 +132,10 @@ INSERT INTO club_member (club_id, user_id, role, status, joined_at) VALUES
 
 -- PENDING (가입 신청 중)
 ((SELECT id FROM club WHERE name = '테스트 강남 테니스 클럽'),
- (SELECT id FROM users WHERE email = 'testuser09@openrun.test'), 'REGULAR', 'PENDING', CURRENT_TIMESTAMP - INTERVAL '2 days');
+ (SELECT id FROM users WHERE email = 'testuser09@openrun.test'), 'REGULAR', 'PENDING', CURRENT_TIMESTAMP - INTERVAL '2 days')
+ON CONFLICT (club_id, user_id) DO UPDATE SET
+    role = EXCLUDED.role,
+    status = EXCLUDED.status;
 
 
 -- [클럽 2: 테스트 부산 코트 클럽] - 5명 (OWNER 1 + ADMIN 1 + REGULAR 3)
@@ -126,7 +154,10 @@ INSERT INTO club_member (club_id, user_id, role, status, joined_at) VALUES
 ((SELECT id FROM club WHERE name = '테스트 부산 코트 클럽'),
  (SELECT id FROM users WHERE email = 'testuser08@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '80 days'),
 ((SELECT id FROM club WHERE name = '테스트 부산 코트 클럽'),
- (SELECT id FROM users WHERE email = 'testuser02@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '50 days');
+ (SELECT id FROM users WHERE email = 'testuser02@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '50 days')
+ON CONFLICT (club_id, user_id) DO UPDATE SET
+    role = EXCLUDED.role,
+    status = EXCLUDED.status;
 
 
 -- [클럽 3: 테스트 인천 주말 클럽] - 4명 (OWNER 1 + REGULAR 3)
@@ -141,7 +172,10 @@ INSERT INTO club_member (club_id, user_id, role, status, joined_at) VALUES
 ((SELECT id FROM club WHERE name = '테스트 인천 주말 클럽'),
  (SELECT id FROM users WHERE email = 'testuser04@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '70 days'),
 ((SELECT id FROM club WHERE name = '테스트 인천 주말 클럽'),
- (SELECT id FROM users WHERE email = 'testuser09@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '40 days');
+ (SELECT id FROM users WHERE email = 'testuser09@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '40 days')
+ON CONFLICT (club_id, user_id) DO UPDATE SET
+    role = EXCLUDED.role,
+    status = EXCLUDED.status;
 
 
 -- [클럽 4: 테스트 경기 프로 클럽] - 3명 (OWNER 1 + REGULAR 2)
@@ -154,26 +188,58 @@ INSERT INTO club_member (club_id, user_id, role, status, joined_at) VALUES
 ((SELECT id FROM club WHERE name = '테스트 경기 프로 클럽'),
  (SELECT id FROM users WHERE email = 'testuser03@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '100 days'),
 ((SELECT id FROM club WHERE name = '테스트 경기 프로 클럽'),
- (SELECT id FROM users WHERE email = 'testuser05@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '80 days');
+ (SELECT id FROM users WHERE email = 'testuser05@openrun.test'), 'REGULAR', 'ACTIVE', CURRENT_TIMESTAMP - INTERVAL '80 days')
+ON CONFLICT (club_id, user_id) DO UPDATE SET
+    role = EXCLUDED.role,
+    status = EXCLUDED.status;
+
+SELECT '✅ 테스트 유저 클럽 멤버십 생성 완료' AS status;
 
 
--- 결과 확인
-SELECT '✅ 클럽 멤버십 생성 완료' AS status;
+-- ============================================
+-- 03-1. 실제 개발 유저를 테스트 클럽에 ADMIN으로 추가
+-- ============================================
+-- 김형준, 권종근, 장석원, 김정오, 김영준, 정주상
+-- 이미 멤버십이 있는 경우 ADMIN으로 업데이트
+
+INSERT INTO club_member (club_id, user_id, role, status, joined_at)
+SELECT
+    c.id AS club_id,
+    u.id AS user_id,
+    'ADMIN' AS role,
+    'ACTIVE' AS status,
+    CURRENT_TIMESTAMP AS joined_at
+FROM users u
+CROSS JOIN club c
+WHERE u.name IN ('김형준', '권종근', '장석원', '김정오', '김영준', '정주상')
+  AND c.name IN (
+      '테스트 강남 테니스 클럽',
+      '테스트 부산 코트 클럽',
+      '테스트 인천 주말 클럽',
+      '테스트 경기 프로 클럽'
+  )
+ON CONFLICT (club_id, user_id) DO UPDATE SET
+    role = 'ADMIN',
+    status = 'ACTIVE';
+
+-- 개발 유저 멤버십 확인
+SELECT '✅ 개발 유저 ADMIN 권한 부여 완료' AS status;
 SELECT
     c.name AS club_name,
     u.name AS user_name,
     cm.role,
-    cm.status,
-    cm.joined_at
+    cm.status
 FROM club_member cm
 JOIN club c ON cm.club_id = c.id
 JOIN users u ON cm.user_id = u.id
-WHERE c.name LIKE '테스트%'
-ORDER BY c.name, cm.role DESC, cm.joined_at;
+WHERE u.name IN ('김형준', '권종근', '장석원', '김정오', '김영준', '정주상')
+  AND c.name LIKE '테스트%'
+ORDER BY c.name, u.name;
+
+
 -- ============================================
 -- 04. 일정 및 참가자 생성
 -- ============================================
--- 주의: 이 스크립트는 개발 환경 전용입니다.
 -- 클럽 1 (테스트 강남 테니스 클럽)의 일정 생성: 과거 5개, 미래 10개
 
 -- ============================================
@@ -212,7 +278,8 @@ INSERT INTO schedule (
 ((SELECT id FROM club WHERE name = '테스트 강남 테니스 클럽'),
  '강남 D코트', DATE_TRUNC('day', CURRENT_TIMESTAMP - INTERVAL '3 days') + TIME '16:00:00',
  8, 7, 28000, NULL, false, false, false,
- NULL, false, CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '3 days');
+ NULL, false, CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '3 days')
+ON CONFLICT DO NOTHING;
 
 
 -- ============================================
@@ -281,7 +348,8 @@ INSERT INTO schedule (
 ((SELECT id FROM club WHERE name = '테스트 강남 테니스 클럽'),
  '강남 C코트', DATE_TRUNC('day', CURRENT_TIMESTAMP + INTERVAL '12 days') + TIME '15:00:00',
  10, 9, 35000, NULL, false, false, NULL,
- false, NULL, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+ false, NULL, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT DO NOTHING;
 
 
 -- ============================================
@@ -311,6 +379,12 @@ BEGIN
     FROM users
     WHERE email LIKE '%@openrun.test';
 
+    -- 배열이 비어있으면 스킵
+    IF schedule_ids IS NULL OR user_ids IS NULL THEN
+        RAISE NOTICE '⚠️ 일정 또는 사용자 데이터가 없습니다. 참가자 생성을 스킵합니다.';
+        RETURN;
+    END IF;
+
     -- 각 과거 일정에 참가자 추가
     FOR i IN 1..5 LOOP
         -- current_participants 수만큼 참가자 추가
@@ -331,7 +405,8 @@ BEGIN
                 j,
                 false,
                 CURRENT_TIMESTAMP - INTERVAL '1 day' * (8 - i) - INTERVAL '1 hour' * j
-            );
+            )
+            ON CONFLICT (schedule_id, user_id) DO NOTHING;
         END LOOP;
     END LOOP;
 END $$;
@@ -362,6 +437,12 @@ BEGIN
     INTO user_ids
     FROM users
     WHERE email LIKE '%@openrun.test';
+
+    -- 배열이 비어있으면 스킵
+    IF schedule_ids IS NULL OR user_ids IS NULL THEN
+        RAISE NOTICE '⚠️ 일정 또는 사용자 데이터가 없습니다. 참가자 생성을 스킵합니다.';
+        RETURN;
+    END IF;
 
     -- 미래 일정별 참가자 수 정의
     FOR i IN 1..10 LOOP
@@ -405,32 +486,18 @@ BEGIN
                 j,
                 false,
                 CURRENT_TIMESTAMP - INTERVAL '1 hour' * (11 - j)
-            );
+            )
+            ON CONFLICT (schedule_id, user_id) DO NOTHING;
         END LOOP;
     END LOOP;
 END $$;
 
-
--- 결과 확인
 SELECT '✅ 일정 15개 및 참가자 생성 완료' AS status;
-SELECT
-    s.id,
-    s.court_name,
-    s.scheduled_at,
-    s.max_capacity,
-    s.current_participants,
-    COUNT(sp.id) AS actual_participants,
-    s.guest_recruit_open,
-    s.pinned
-FROM schedule s
-LEFT JOIN schedule_participant sp ON s.id = sp.schedule_id
-WHERE s.club_id = (SELECT id FROM club WHERE name = '테스트 강남 테니스 클럽')
-GROUP BY s.id
-ORDER BY s.scheduled_at;
+
+
 -- ============================================
 -- 05. 외부 요청 생성 (게스트 신청, 가입 신청)
 -- ============================================
--- 주의: 이 스크립트는 개발 환경 전용입니다.
 
 -- ============================================
 -- GUEST 타입: 게스트 모집 참가 신청
@@ -466,7 +533,8 @@ VALUES
  'GUEST',
  'PENDING',
  CURRENT_TIMESTAMP - INTERVAL '5 hours',
- CURRENT_TIMESTAMP - INTERVAL '5 hours');
+ CURRENT_TIMESTAMP - INTERVAL '5 hours')
+ON CONFLICT DO NOTHING;
 
 
 -- APPROVED 상태 (승인됨)
@@ -492,7 +560,8 @@ VALUES
  CURRENT_TIMESTAMP - INTERVAL '1 day',
  '게스트 참가 승인합니다',
  CURRENT_TIMESTAMP - INTERVAL '2 days',
- CURRENT_TIMESTAMP - INTERVAL '1 day');
+ CURRENT_TIMESTAMP - INTERVAL '1 day')
+ON CONFLICT DO NOTHING;
 
 
 -- REJECTED 상태 (거절됨)
@@ -517,7 +586,8 @@ VALUES
  CURRENT_TIMESTAMP - INTERVAL '6 hours',
  '죄송합니다. 이미 정원이 거의 찼습니다.',
  CURRENT_TIMESTAMP - INTERVAL '12 hours',
- CURRENT_TIMESTAMP - INTERVAL '6 hours');
+ CURRENT_TIMESTAMP - INTERVAL '6 hours')
+ON CONFLICT DO NOTHING;
 
 
 -- ============================================
@@ -552,7 +622,8 @@ VALUES
  'JOIN',
  'PENDING',
  CURRENT_TIMESTAMP - INTERVAL '5 hours',
- CURRENT_TIMESTAMP - INTERVAL '5 hours');
+ CURRENT_TIMESTAMP - INTERVAL '5 hours')
+ON CONFLICT DO NOTHING;
 
 
 -- APPROVED 상태 (승인됨 - 이미 club_member에 ACTIVE로 추가된 케이스)
@@ -572,7 +643,8 @@ VALUES
  CURRENT_TIMESTAMP - INTERVAL '29 days',
  '가입을 환영합니다!',
  CURRENT_TIMESTAMP - INTERVAL '30 days',
- CURRENT_TIMESTAMP - INTERVAL '29 days');
+ CURRENT_TIMESTAMP - INTERVAL '29 days')
+ON CONFLICT DO NOTHING;
 
 
 -- REJECTED 상태 (거절됨)
@@ -591,23 +663,47 @@ VALUES
  CURRENT_TIMESTAMP - INTERVAL '10 days',
  '죄송합니다. NTRP 4.0 이상만 가입 가능합니다.',
  CURRENT_TIMESTAMP - INTERVAL '15 days',
- CURRENT_TIMESTAMP - INTERVAL '10 days');
+ CURRENT_TIMESTAMP - INTERVAL '10 days')
+ON CONFLICT DO NOTHING;
 
-
--- 결과 확인
 SELECT '✅ 외부 요청 (게스트/가입 신청) 생성 완료' AS status;
+
+
+-- ============================================
+-- 최종 결과 확인
+-- ============================================
+SELECT '========================================' AS separator;
+SELECT '📊 테스트 데이터 생성 결과 요약' AS title;
+SELECT '========================================' AS separator;
+
+SELECT '사용자' AS category, COUNT(*) AS count FROM users WHERE email LIKE '%@openrun.test'
+UNION ALL
+SELECT '클럽', COUNT(*) FROM club WHERE name LIKE '테스트%'
+UNION ALL
+SELECT '멤버십', COUNT(*) FROM club_member cm JOIN club c ON cm.club_id = c.id WHERE c.name LIKE '테스트%'
+UNION ALL
+SELECT '일정', COUNT(*) FROM schedule s JOIN club c ON s.club_id = c.id WHERE c.name LIKE '테스트%'
+UNION ALL
+SELECT '외부요청', COUNT(*) FROM external_request er JOIN club c ON er.club_id = c.id WHERE c.name LIKE '테스트%';
+
+-- 개발 유저 ADMIN 권한 확인
+SELECT '========================================' AS separator;
+SELECT '👥 개발 유저 ADMIN 현황' AS title;
+SELECT '========================================' AS separator;
+
 SELECT
-    er.id,
-    er.type,
-    er.status,
-    c.name AS club_name,
-    u.name AS requester_name,
-    s.court_name AS schedule_court,
-    s.scheduled_at AS schedule_time,
-    er.created_at
-FROM external_request er
-JOIN club c ON er.club_id = c.id
-JOIN users u ON er.requester_user_id = u.id
-LEFT JOIN schedule s ON er.schedule_id = s.id
+    c.name AS "클럽",
+    STRING_AGG(u.name, ', ' ORDER BY u.name) AS "ADMIN 유저"
+FROM club_member cm
+JOIN club c ON cm.club_id = c.id
+JOIN users u ON cm.user_id = u.id
 WHERE c.name LIKE '테스트%'
-ORDER BY er.type, er.status, er.created_at DESC;
+  AND cm.role = 'ADMIN'
+  AND u.name IN ('김형준', '권종근', '장석원', '김정오', '김영준', '정주상')
+GROUP BY c.name
+ORDER BY c.name;
+
+-- 트랜잭션 커밋
+COMMIT;
+
+SELECT '✅ 모든 테스트 데이터 생성 완료!' AS final_status;
