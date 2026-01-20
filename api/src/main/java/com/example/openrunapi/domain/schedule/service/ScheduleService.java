@@ -184,7 +184,8 @@ public class ScheduleService {
                 request.getCost(),
                 request.getDescription(),
                 request.getReservedByUserId(),
-                request.getParticipationStartAt()
+                request.getParticipationStartAt(),
+                request.getMatchType()
         );
 
         // 정원이 증가한 경우, 대기자를 확정으로 승격

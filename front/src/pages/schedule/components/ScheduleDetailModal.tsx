@@ -9,6 +9,7 @@ import type {
   Schedule,
   CreateScheduleRequest,
   Participant,
+  MatchType,
 } from "../../../types/schedule";
 import DrawCreateModal from "./DrawCreateModal";
 import DrawViewModal from "./DrawViewModal";
@@ -51,7 +52,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
     useState(false);
   const [guestRecruitNote, setGuestRecruitNote] = useState("");
   const [interclubRecruitNote, setInterclubRecruitNote] = useState("");
-  const [editingRecruitType, setEditingRecruitType] = useState<"guest" | "interclub" | null>(null);
+  const [editingRecruitType, setEditingRecruitType] = useState<
+    "guest" | "interclub" | null
+  >(null);
   const [tempRecruitNote, setTempRecruitNote] = useState("");
   const [schedule, setSchedule] = useState<Schedule | null>(null);
 
@@ -61,6 +64,15 @@ const ScheduleDetailModal: React.FC<Props> = ({
   // 로그인한 사용자 ID 가져오기
   const session = getOpenRunSession();
   const currentUserId = session.userId ?? null;
+
+  // MatchType을 라벨로 변환하는 함수
+  const getMatchTypeLabel = (matchType: MatchType): string => {
+    if (!matchType || matchType === "NONE") return "";
+    if (matchType === "MEN_DOUBLES") return "남복";
+    if (matchType === "WOMEN_DOUBLES") return "여복";
+    if (matchType === "MIXED_DOUBLES") return "혼복";
+    else return "단식";
+  };
 
   // 삭제 권한: API 응답의 canManageSchedule 필드 사용
   const canDelete = schedule?.canManageSchedule ?? false;
@@ -265,6 +277,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
     cost: schedule?.cost || undefined,
     description: schedule?.description || "",
     reservedByUserId: schedule?.reservedByUserId || undefined,
+    matchType: schedule?.matchType || null,
   });
 
   // 중복 호출 방지를 위한 ref
@@ -304,6 +317,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
         cost: scheduleData.cost || undefined,
         description: scheduleData.description || "",
         reservedByUserId: scheduleData.reservedByUserId || undefined,
+        matchType: scheduleData.matchType || null,
       });
     } catch (err) {
       console.error("일정 정보 로드 실패:", err);
@@ -560,7 +574,11 @@ const ScheduleDetailModal: React.FC<Props> = ({
             </label>
             <textarea
               className="recruit-note-textarea"
-              placeholder="모집 메시지를 작성하세요 (선택사항)"
+              placeholder={
+                editingRecruitType === "guest"
+                  ? "예시) NTRP 3.5 이상, 구력 2년 이상 환영\n주차 가능, 라켓 대여 불가"
+                  : "예시) 4vs4 교류전 예정 (오후 2시~6시)\n평균 구력 3년, 복식 중심\n장소: 강남테니스클럽"
+              }
               value={tempRecruitNote}
               onChange={(e) => setTempRecruitNote(e.target.value)}
               disabled={loading}
@@ -619,6 +637,13 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 )}
               </p>
             </div>
+
+            {schedule.matchType && (
+              <div className="detail-item">
+                <label>모임 타입</label>
+                <p>{getMatchTypeLabel(schedule.matchType)}</p>
+              </div>
+            )}
 
             {isNotEmpty(schedule.cost) && schedule.cost !== undefined && (
               <div className="detail-item">
@@ -933,6 +958,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
               description: formData.description,
               reservedByUserId: formData.reservedByUserId,
               participationStartAt: schedule.participationStartAt || null,
+              matchType: formData.matchType,
             }}
             onSubmit={async (data) => {
               if (!schedule) {
@@ -981,6 +1007,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   description: data.description,
                   reservedByUserId: data.reservedByUserId,
                   participationStartAt: data.participationStartAt,
+                  matchType: data.matchType,
                 };
 
                 await scheduleService.updateSchedule(schedule.id, requestData);

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
 import {
   clubService,
   type ExternalRequestResponse,
@@ -10,6 +11,8 @@ import { ArrowLeftIcon, CheckIcon, XIcon } from "../../components/common/Icons";
 import { postService } from "../../services/postService";
 import { commentService } from "../../services/commentService";
 import type { Post, Comment } from "../../types/post";
+import RequestProfileDrawer from "../../components/RequestProfileDrawer";
+import ScheduleDetailModal from "../schedule/components/ScheduleDetailModal";
 import "./ClubExternalRequestsPage.css";
 
 const typeLabel = (t: ExternalRequestType) => {
@@ -25,6 +28,20 @@ const statusLabel = (s: ExternalRequestStatus) => {
   if (s === "REJECTED") return "반려";
   if (s === "CANCELLED") return "취소";
   return s;
+};
+
+const matchTypeLabel = (mt: string | null | undefined) => {
+  if (!mt) return null;
+  if (mt === "NONE") return "선택안함";
+  if (mt === "MEN_DOUBLES") return "남복";
+  if (mt === "WOMEN_DOUBLES") return "여복";
+  if (mt === "MIXED_DOUBLES") return "혼복";
+  if (mt === "SINGLES") return "단식";
+  return mt;
+};
+
+const formatDateTime = (dateStr: string) => {
+  return format(new Date(dateStr), "yyyy. M. d. HH:mm");
 };
 
 const ClubExternalRequestsPage: React.FC = () => {
@@ -51,6 +68,12 @@ const ClubExternalRequestsPage: React.FC = () => {
   const [threadLoadingByPostId, setThreadLoadingByPostId] = useState<
     Record<number, boolean>
   >({});
+  const [profileDrawer, setProfileDrawer] = useState<{
+    userId: number;
+  } | null>(null);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
+    null
+  );
 
   const targetPostId = useMemo(() => {
     const raw = searchParams.get("postId");
@@ -186,28 +209,6 @@ const ClubExternalRequestsPage: React.FC = () => {
     }
   };
 
-  const formatScheduleSummary = (r: ExternalRequestResponse) => {
-    if (!r.scheduleAt && !r.courtName) return null;
-    const at = r.scheduleAt ? new Date(r.scheduleAt).toLocaleString() : "";
-    const court = r.courtName ?? "";
-    const cap =
-      typeof r.currentParticipants === "number" &&
-      typeof r.maxCapacity === "number"
-        ? `${r.currentParticipants}/${r.maxCapacity}`
-        : "";
-    return [at, court, cap].filter(Boolean).join(" · ");
-  };
-
-  const formatProfileSummary = (r: ExternalRequestResponse) => {
-    const ym = (iso?: string | null) => (iso ? iso.slice(0, 7) : null);
-    const parts: string[] = [];
-    if (r.ntrp) parts.push(`NTRP ${r.ntrp}`);
-    if (r.formerPlayer === true) parts.push("선수출신");
-    if (r.tennisStartedAt) parts.push(`시작시기 ${ym(r.tennisStartedAt)}`);
-    return parts.length > 0 ? parts.join(" · ") : null;
-  };
-
-
   return (
     <div className="club-external-requests-page">
       <div className="club-external-requests-page__header">
@@ -341,7 +342,7 @@ const ClubExternalRequestsPage: React.FC = () => {
         <div className="club-external-requests-page__loading">로딩 중...</div>
       ) : list.length === 0 ? (
         <div className="club-external-requests-page__empty">
-          요청이 없습니다.
+          처리할 요청이 없습니다.
         </div>
       ) : (
         <div className="club-external-requests-page__list">
@@ -358,37 +359,89 @@ const ClubExternalRequestsPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                className="club-external-requests-page__card-body"
-                type="button"
-                onClick={() => void handleToggleCard(r)}
-              >
-                <div className="club-external-requests-page__meta-row">
-                  <span className="club-external-requests-page__meta-strong">
-                    {r.requesterName}
+              <div className="club-external-requests-page__card-body">
+                <div className="club-external-requests-page__info-row">
+                  <span className="club-external-requests-page__label">
+                    작성자
                   </span>
-                  <span className="club-external-requests-page__meta">
-                    {new Date(r.createdAt).toLocaleString()}
+                  <button
+                    className="club-external-requests-page__author-btn"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProfileDrawer({ userId: r.requesterUserId });
+                    }}
+                  >
+                    {r.requesterName}
+                  </button>
+                </div>
+
+                <div className="club-external-requests-page__info-row">
+                  <span className="club-external-requests-page__label">
+                    작성일시
+                  </span>
+                  <span className="club-external-requests-page__value">
+                    {formatDateTime(r.createdAt)}
                   </span>
                 </div>
 
-                {formatProfileSummary(r) && (
-                  <div className="club-external-requests-page__meta">
-                    {formatProfileSummary(r)}
+                {r.scheduleAt && (
+                  <div className="club-external-requests-page__info-row">
+                    <span className="club-external-requests-page__label">
+                      선택된 일정
+                    </span>
+                    <button
+                      className="club-external-requests-page__schedule-btn"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (r.scheduleId) {
+                          setSelectedScheduleId(r.scheduleId);
+                        }
+                      }}
+                      disabled={!r.scheduleId}
+                    >
+                      {formatDateTime(r.scheduleAt)}
+                    </button>
                   </div>
                 )}
 
-                {formatScheduleSummary(r) && (
-                  <div className="club-external-requests-page__meta">
-                    {formatScheduleSummary(r)}
+                {(r.courtName ||
+                  (typeof r.currentParticipants === "number" &&
+                    typeof r.maxCapacity === "number")) && (
+                  <div className="club-external-requests-page__info-row">
+                    <span className="club-external-requests-page__label">
+                      코트명 · 인원
+                    </span>
+                    <span className="club-external-requests-page__value">
+                      {r.courtName || "-"} ·{" "}
+                      {typeof r.currentParticipants === "number" &&
+                      typeof r.maxCapacity === "number"
+                        ? `${r.currentParticipants}/${r.maxCapacity}`
+                        : "-"}
+                    </span>
                   </div>
                 )}
-                {!formatScheduleSummary(r) && r.scheduleId && (
-                  <div className="club-external-requests-page__meta">
-                    scheduleId: {r.scheduleId}
+
+                {matchTypeLabel(r.matchType) && (
+                  <div className="club-external-requests-page__info-row">
+                    <span className="club-external-requests-page__label">
+                      모임 타입
+                    </span>
+                    <span className="club-external-requests-page__value">
+                      {matchTypeLabel(r.matchType)}
+                    </span>
                   </div>
                 )}
-              </button>
+
+                <button
+                  className="club-external-requests-page__expand-btn"
+                  type="button"
+                  onClick={() => void handleToggleCard(r)}
+                >
+                  {expandedRequestIds.has(r.id) ? "접기" : "상세보기"}
+                </button>
+              </div>
 
               {r.status === "PENDING" && (
                 <div className="club-external-requests-page__card-actions">
@@ -433,10 +486,7 @@ const ClubExternalRequestsPage: React.FC = () => {
                             {postsById[r.postId].author?.name ??
                               postsById[r.postId].guestName ??
                               "익명"}{" "}
-                            ·{" "}
-                            {new Date(
-                              postsById[r.postId].createdAt
-                            ).toLocaleString()}
+                            · {formatDateTime(postsById[r.postId].createdAt)}
                           </div>
                         </div>
                       )}
@@ -457,7 +507,7 @@ const ClubExternalRequestsPage: React.FC = () => {
                               </div>
                               <div className="club-external-requests-page__comment-meta">
                                 {c.author?.name ?? "익명"} ·{" "}
-                                {new Date(c.createdAt).toLocaleString()}
+                                {formatDateTime(c.createdAt)}
                               </div>
                             </div>
                           ))
@@ -497,6 +547,25 @@ const ClubExternalRequestsPage: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {profileDrawer && (
+        <RequestProfileDrawer
+          clubId={cid}
+          userId={profileDrawer.userId}
+          onClose={() => setProfileDrawer(null)}
+        />
+      )}
+
+      {selectedScheduleId && (
+        <ScheduleDetailModal
+          scheduleId={selectedScheduleId}
+          onClose={() => setSelectedScheduleId(null)}
+          onSuccess={() => {
+            setSelectedScheduleId(null);
+            void load();
+          }}
+        />
       )}
     </div>
   );

@@ -106,6 +106,7 @@ public class UserService implements UserDetailsService {
 
         user.updateProfile(request.getName(), request.getImageUrl());
         user.updateContactInfo(request.getPhoneNumber(), request.getPhoneVisibility(), request.getEmailVisibility());
+        user.updateGender(request.getGender());
 
         return new UserResponse(user);
     }
@@ -157,8 +158,6 @@ public class UserService implements UserDetailsService {
                 .orElseGet(() -> userProfileRepository.save(new UserProfile(user)));
         profile.update(
                 request != null ? request.getTennisStartedAt() : null,
-                request != null ? request.getBackhandType() : null,
-                request != null ? request.getFavoritePlayer() : null,
                 request != null ? request.getNtrp() : null,
                 request != null ? request.getTournamentHistory() : null,
                 request != null ? request.getFormerPlayer() : null

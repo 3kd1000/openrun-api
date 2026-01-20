@@ -463,7 +463,7 @@ const DrawGenerationPage: React.FC = () => {
         {openFaq === "about" && (
           <div className="accordion-card" style={{ position: "relative" }}>
             {/* 페이지 소개 텍스트 */}
-            <button className="close-btn" onClick={() => setOpenFaq("")}>
+            <button className="btn-close" onClick={() => setOpenFaq("")}>
               x
             </button>
             <div style={{ paddingTop: 8, paddingRight: 14 }}>
@@ -493,7 +493,7 @@ const DrawGenerationPage: React.FC = () => {
         )}
         {openFaq === "types" && (
           <div className="accordion-card" style={{ position: "relative" }}>
-            <button className="close-btn" onClick={() => setOpenFaq("")}>
+            <button className="btn-close" onClick={() => setOpenFaq("")}>
               x
             </button>
             {/* 타입 설명 텍스트 */}

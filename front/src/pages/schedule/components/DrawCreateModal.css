@@ -125,7 +125,7 @@
 
 .draw-type-info .info-description {
   margin: 0 0 var(--space-xs) 0;
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-m);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   line-height: var(--line-height-relaxed);
@@ -133,7 +133,7 @@
 
 .draw-type-info .info-players {
   margin: 0;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-m);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
 }

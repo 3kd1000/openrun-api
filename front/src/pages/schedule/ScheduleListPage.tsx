@@ -666,6 +666,22 @@ const ScheduleListPage: React.FC = () => {
                           <StarIcon size={14} />
                         </span>
                       ) : null}
+                      {schedule.matchType && schedule.matchType !== 'NONE' && (
+                        <span
+                          className={`schedule-match-badge match-${schedule.matchType.toLowerCase()}`}
+                          title={
+                            schedule.matchType === 'MEN_DOUBLES' ? '남복' :
+                            schedule.matchType === 'WOMEN_DOUBLES' ? '여복' :
+                            schedule.matchType === 'MIXED_DOUBLES' ? '혼복' :
+                            schedule.matchType === 'SINGLES' ? '단식' : ''
+                          }
+                        >
+                          {schedule.matchType === 'MEN_DOUBLES' ? '남복' :
+                           schedule.matchType === 'WOMEN_DOUBLES' ? '여복' :
+                           schedule.matchType === 'MIXED_DOUBLES' ? '혼복' :
+                           schedule.matchType === 'SINGLES' ? '단식' : ''}
+                        </span>
+                      )}
                       코트명 : {schedule.courtName}
                       {schedule.reservedByUserName && (
                         <span className="schedule-reserved-by">

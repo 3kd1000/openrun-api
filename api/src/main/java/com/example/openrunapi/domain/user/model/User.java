@@ -50,6 +50,10 @@ public class User {
     @Column(name = "email_visibility", length = 20)
     private ContactVisibility emailVisibility = ContactVisibility.PUBLIC; // 이메일 공개 범위
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", length = 10, nullable = false)
+    private Gender gender = Gender.PRIVATE; // 성별 (MALE, FEMALE, PRIVATE)
+
     @Column(name = "is_guest", nullable = false)
     private boolean isGuest = false; // 게스트 사용자 여부 (스코어보드 집계 제외)
 
@@ -85,6 +89,12 @@ public class User {
             this.name = name;
         }
         this.imageUrl = imageUrl; // null이 들어와도 업데이트 가능
+    }
+
+    public void updateGender(Gender gender) {
+        if (gender != null) {
+            this.gender = gender;
+        }
     }
 
     public void updateContactInfo(String phoneNumber, ContactVisibility phoneVisibility, ContactVisibility emailVisibility) {

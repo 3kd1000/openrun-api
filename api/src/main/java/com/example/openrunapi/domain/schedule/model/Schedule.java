@@ -60,6 +60,10 @@ public class Schedule {
     @Column(name = "draw_type", length = 10)
     private DrawType drawType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "match_type", length = 20)
+    private MatchType matchType;
+
     @Column(name = "is_draw_valid")
     private Boolean isDrawValid = false;
 
@@ -92,7 +96,7 @@ public class Schedule {
     @Builder
     public Schedule(Long clubId, String courtName, LocalDateTime scheduledAt,
                     Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                    LocalDateTime participationStartAt) {
+                    LocalDateTime participationStartAt, MatchType matchType) {
         this.clubId = clubId;
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
@@ -101,11 +105,12 @@ public class Schedule {
         this.description = description;
         this.reservedByUserId = reservedByUserId;
         this.participationStartAt = participationStartAt;
+        this.matchType = matchType;
     }
 
     public void update(String courtName, LocalDateTime scheduledAt,
                        Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                       LocalDateTime participationStartAt) {
+                       LocalDateTime participationStartAt, MatchType matchType) {
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
         this.maxCapacity = maxCapacity;
@@ -113,6 +118,7 @@ public class Schedule {
         this.description = description;
         this.reservedByUserId = reservedByUserId;
         this.participationStartAt = participationStartAt;
+        this.matchType = matchType;
     }
 
     public void incrementParticipants() {

@@ -579,7 +579,7 @@ const DrawCreateModal: React.FC<Props> = ({
                 {drawType === "AB" && (
                   <>
                     <p className="info-description">
-                      A/B 그룹으로 나눠 그룹 간 대결 위주로 진행
+                      A/B 그룹으로 나눠 함께 파트너가 될 수 있도록 합니다.
                     </p>
                     <p className="info-players">
                       참가 인원: 8, 10, 12, 14, 16명 (그룹별 동일 인원)
@@ -589,7 +589,7 @@ const DrawCreateModal: React.FC<Props> = ({
                 {drawType === "SEED" && (
                   <>
                     <p className="info-description">
-                      실력자를 시드로 배정하여 초반 강강 대결 방지
+                      시드 플레이어 끼리는 같은 팀으로 배정되지 않습니다.
                     </p>
                     <p className="info-players">
                       참가 인원: 6~16명 (시드 개수는 총 인원에 따라 변동)

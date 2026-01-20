@@ -15,16 +15,13 @@ export interface UserProfile {
   phoneNumber?: string | null;
   phoneVisibility?: ContactVisibility;
   emailVisibility?: ContactVisibility;
+  gender?: 'MALE' | 'FEMALE' | 'PRIVATE';
   createdAt: string;
   updatedAt: string;
 }
 
-export type BackhandType = 'ONE_HAND' | 'TWO_HAND';
-
 export interface UserTennisProfile {
   tennisStartedAt: string | null; // ISO date string (YYYY-MM-DD). UI에서는 YYYY-MM로 다룸
-  backhandType: BackhandType | null;
-  favoritePlayer: string | null;
   ntrp: string | null;
   tournamentHistory: string | null;
   formerPlayer: boolean;
@@ -32,8 +29,6 @@ export interface UserTennisProfile {
 
 export interface UpdateUserTennisProfileRequest {
   tennisStartedAt: string | null; // ISO date string (YYYY-MM-DD)
-  backhandType: BackhandType | null;
-  favoritePlayer: string | null;
   ntrp: string | null;
   tournamentHistory: string | null;
   formerPlayer: boolean | null;
@@ -45,6 +40,7 @@ export interface UpdateUserRequest {
   phoneNumber?: string | null;
   phoneVisibility?: ContactVisibility;
   emailVisibility?: ContactVisibility;
+  gender?: 'MALE' | 'FEMALE' | 'PRIVATE';
 }
 
 export interface OAuthProvider {
@@ -132,12 +128,11 @@ export interface MemberProfile {
   email: string | null;         // 공개범위에 따라 null 가능
   imageUrl: string | null;
   phoneNumber: string | null;    // 공개범위에 따라 null 가능
+  gender: 'MALE' | 'FEMALE' | 'PRIVATE' | null;
 
   // Tennis Profile (user_profile)
   tennisStartedAt: string | null;
-  backhandType: BackhandType | null;
   ntrp: string | null;
-  favoritePlayer: string | null;
   tournamentHistory: string | null;
   formerPlayer: boolean;
 

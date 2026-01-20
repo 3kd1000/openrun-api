@@ -31,11 +31,10 @@ export interface ExternalRequestResponse {
   courtName?: string | null;
   currentParticipants?: number | null;
   maxCapacity?: number | null;
+  matchType?: string | null;
   tennisStartedAt?: string | null;
-  backhandType?: 'ONE_HAND' | 'TWO_HAND' | null;
   ntrp?: string | null;
   formerPlayer?: boolean | null;
-  favoritePlayer?: string | null;
   tournamentHistory?: string | null;
 }
 

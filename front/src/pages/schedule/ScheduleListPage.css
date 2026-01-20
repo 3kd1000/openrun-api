@@ -361,7 +361,8 @@
 .schedule-list {
   display: grid;
   /* 카드 내부 레이아웃이 깨지지 않는 최소 너비 기준으로 자동 컬럼 수 결정 */
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  /* 모바일(425px 이하)에서는 부모 padding을 고려하여 100% 사용 */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   gap: var(--space-l);
   margin-top: 0; /* 헤더와 리스트 사이 간격 제거 */
 }
@@ -454,6 +455,37 @@
   line-height: 1;
   vertical-align: middle;
   color: var(--color-warning-hover);
+}
+
+/* ========== 모임 타입 뱃지 ========== */
+.schedule-match-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+  color: white;
+}
+
+/* 남복: 파란색 */
+.schedule-match-badge.match-men_doubles {
+  background-color: #4a90e2;
+}
+
+/* 여복: 분홍색 */
+.schedule-match-badge.match-women_doubles {
+  background-color: #e91e63;
+}
+
+/* 혼복: 보라색 */
+.schedule-match-badge.match-mixed_doubles {
+  background-color: #9c27b0;
+}
+
+/* 단식: 초록색 */
+.schedule-match-badge.match-singles {
+  background-color: #4caf50;
 }
 
 .schedule-reserved-by {

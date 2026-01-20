@@ -1,3 +1,5 @@
+export type MatchType = 'NONE' | 'MEN_DOUBLES' | 'WOMEN_DOUBLES' | 'MIXED_DOUBLES' | 'SINGLES' | null;
+
 export interface Schedule {
   id: number;
   clubId: number;
@@ -17,6 +19,7 @@ export interface Schedule {
   reservedByUserName?: string;
   participationStartAt?: string | null; // ISO 8601 format
   drawType?: 'AA' | 'AB' | 'SEED' | null;
+  matchType?: MatchType;
   isDrawValid?: boolean | null;
   drawCreatedAt?: string | null;
   canManageSchedule?: boolean | null; // 권한 정보 (System Admin 또는 Club ADMIN 이상)
@@ -33,6 +36,7 @@ export interface CreateScheduleRequest {
   description?: string;
   reservedByUserId?: number;
   participationStartAt?: string | null; // ISO 8601 format: "2025-12-25T14:00:00"
+  matchType?: MatchType;
 }
 
 export interface Participant {

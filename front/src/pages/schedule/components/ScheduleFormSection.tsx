@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { clubService } from "../../../services/clubService";
 import type { UserResponse } from "../../../services/userService";
 import type { ScheduleTemplate } from "../../../types/scheduleTemplate";
+import type { MatchType } from "../../../types/schedule";
 import TemplateSection from "./TemplateSection";
 import {
   parseParticipationPattern,
@@ -29,6 +30,7 @@ export interface ScheduleFormData {
   description: string;
   reservedByUserId?: number;
   participationStartAt: string | null;
+  matchType?: MatchType;
 }
 
 interface ScheduleFormSectionProps {
@@ -43,6 +45,7 @@ interface ScheduleFormSectionProps {
     description?: string;
     reservedByUserId?: number;
     participationStartAt?: string | null;
+    matchType?: MatchType;
   };
   onSubmit: (data: ScheduleFormData) => Promise<void>;
   onCancel: () => void;
@@ -72,13 +75,16 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
 
   const [selectedDate, setSelectedDate] = useState(defaultDate);
   const [selectedTime, setSelectedTime] = useState(defaultTime);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ScheduleFormData>({
     clubId: initialData?.clubId || 1,
+    scheduledAt: initialData?.scheduledAt || "",
     courtName: initialData?.courtName || "",
     maxCapacity: initialData?.maxCapacity || 4,
     cost: initialData?.cost,
     description: initialData?.description || "",
     reservedByUserId: initialData?.reservedByUserId,
+    participationStartAt: initialData?.participationStartAt || null,
+    matchType: initialData?.matchType,
   });
 
   // 클럽 회원 관련 state
@@ -326,6 +332,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       description: formData.description,
       reservedByUserId: formData.reservedByUserId,
       participationStartAt,
+      matchType: formData.matchType,
     };
 
     await onSubmit(submitData);
@@ -486,7 +493,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       ) : (
         <>
           <div className="form-row">
-            <div className="form-group" style={{ flex: "1.2", minWidth: 0 }}>
+            <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
               <label>시작 날짜 *</label>
               <input
                 type="date"
@@ -568,112 +575,136 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         />
       </div>
 
-      <div className="form-group">
-        <label>최대 정원 *</label>
-        <input
-          type="number"
-          value={formData.maxCapacity}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              maxCapacity: parseInt(e.target.value),
-            })
-          }
-          min="1"
-          required
-        />
+      <div className="form-row">
+        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+          <label>최대 정원 *</label>
+          <input
+            type="number"
+            value={formData.maxCapacity}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                maxCapacity: parseInt(e.target.value),
+              })
+            }
+            min="1"
+            required
+          />
+        </div>
+
+        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+          <label>모임 타입</label>
+          <select
+            value={formData.matchType || "NONE"}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormData({
+                ...formData,
+                matchType: (value === "NONE" ? null : value) as MatchType,
+              });
+            }}
+          >
+            <option value="NONE">선택안함</option>
+            <option value="MEN_DOUBLES">남복</option>
+            <option value="WOMEN_DOUBLES">여복</option>
+            <option value="MIXED_DOUBLES">혼복</option>
+            <option value="SINGLES">단식</option>
+          </select>
+        </div>
       </div>
 
-      <div className="form-group">
-        <label>참가 비용 (선택)</label>
-        <input
-          type="number"
-          value={formData.cost || ""}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              cost: e.target.value ? parseInt(e.target.value) : undefined,
-            })
-          }
-          placeholder="25000"
-        />
-      </div>
+      <div className="form-row">
+        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+          <label>참가 비용 (선택)</label>
+          <input
+            type="number"
+            value={formData.cost || ""}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                cost: e.target.value ? parseInt(e.target.value) : undefined,
+              })
+            }
+            placeholder="25000"
+          />
+        </div>
 
-      <div className="form-group">
-        <label>예약자 (선택)</label>
-        {selectedReservedBy ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span
-              style={{
-                padding: "8px 12px",
-                background: "#f0f0f0",
-                borderRadius: "4px",
-              }}
-            >
-              {selectedReservedBy.name}
-            </span>
-            <button
-              type="button"
-              onClick={handleClearReservedBy}
-              style={{
-                padding: "4px 8px",
-                background: "#ff6b6b",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        ) : (
-          <>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault(); // 엔터키로 form submit 방지
-                }
-              }}
-              placeholder="클럽원 이름 검색"
-            />
-            {filteredMembers.length > 0 && (
-              <div
+        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+          <label>예약자 (선택)</label>
+          {selectedReservedBy ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span
                 style={{
-                  marginTop: "4px",
-                  border: "1px solid #ddd",
+                  padding: "8px 12px",
+                  background: "#f0f0f0",
                   borderRadius: "4px",
-                  maxHeight: "150px",
-                  overflowY: "auto",
-                  background: "white",
                 }}
               >
-                {filteredMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    onClick={() => handleSelectReservedBy(member)}
-                    style={{
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      borderBottom: "1px solid #eee",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#f5f5f5")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "white")
-                    }
-                  >
-                    {member.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+                {selectedReservedBy.name}
+              </span>
+              <button
+                type="button"
+                onClick={handleClearReservedBy}
+                style={{
+                  padding: "4px 8px",
+                  background: "#ff6b6b",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault(); // 엔터키로 form submit 방지
+                  }
+                }}
+                placeholder="클럽원 이름 검색"
+              />
+              {filteredMembers.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "4px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    maxHeight: "150px",
+                    overflowY: "auto",
+                    background: "white",
+                  }}
+                >
+                  {filteredMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      onClick={() => handleSelectReservedBy(member)}
+                      style={{
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #eee",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "#f5f5f5")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "white")
+                      }
+                    >
+                      {member.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="form-group">

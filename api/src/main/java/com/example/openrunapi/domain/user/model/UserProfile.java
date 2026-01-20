@@ -30,13 +30,6 @@ public class UserProfile {
     @Column(name = "tennis_started_at")
     private LocalDate tennisStartedAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "backhand_type", length = 20)
-    private BackhandType backhandType;
-
-    @Column(name = "favorite_player", length = 100)
-    private String favoritePlayer;
-
     @Column(name = "ntrp", length = 20)
     // 숫자로 강제하지 않고 문자열로 저장 (예: 3.0, 3.5, "Self-rated 4.0" 등)
     private String ntrp;
@@ -61,23 +54,14 @@ public class UserProfile {
 
     public void update(
             LocalDate tennisStartedAt,
-            BackhandType backhandType,
-            String favoritePlayer,
             String ntrp,
             String tournamentHistory,
             Boolean formerPlayer
     ) {
         this.tennisStartedAt = tennisStartedAt;
-        this.backhandType = backhandType;
-        this.favoritePlayer = favoritePlayer;
         this.ntrp = ntrp;
         this.tournamentHistory = tournamentHistory;
         if (formerPlayer != null) this.formerPlayer = formerPlayer;
-    }
-
-    public enum BackhandType {
-        ONE_HAND,
-        TWO_HAND
     }
 }
 
