@@ -13,6 +13,7 @@ import { commentService } from "../../services/commentService";
 import type { Post, Comment } from "../../types/post";
 import RequestProfileDrawer from "../../components/RequestProfileDrawer";
 import ScheduleDetailModal from "../schedule/components/ScheduleDetailModal";
+import { FEATURE_FLAGS } from "../../config/featureFlags";
 import "./ClubExternalRequestsPage.css";
 
 const typeLabel = (t: ExternalRequestType) => {
@@ -259,16 +260,18 @@ const ClubExternalRequestsPage: React.FC = () => {
               >
                 게스트
               </button>
-              <button
-                className={`club-external-requests-page__chip ${
-                  type === "INTERCLUB" ? "is-active" : ""
-                }`}
-                onClick={() => setType("INTERCLUB")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                교류전
-              </button>
+              {FEATURE_FLAGS.INTERCLUB_ENABLED && (
+                <button
+                  className={`club-external-requests-page__chip ${
+                    type === "INTERCLUB" ? "is-active" : ""
+                  }`}
+                  onClick={() => setType("INTERCLUB")}
+                  type="button"
+                  disabled={Boolean(targetPostId)}
+                >
+                  교류전
+                </button>
+              )}
             </div>
           </div>
 
