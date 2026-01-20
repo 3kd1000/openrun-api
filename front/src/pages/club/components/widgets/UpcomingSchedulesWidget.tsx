@@ -1,10 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { scheduleService } from '../../../../services/scheduleService';
-import { CalendarIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, StarIcon } from '../../../../components/common/Icons';
-import { logError } from '../../../../utils/errorHandler';
-import type { Schedule } from '../../../../types/schedule';
-import './UpcomingSchedulesWidget.css';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { scheduleService } from "../../../../services/scheduleService";
+import {
+  CalendarIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  StarIcon,
+} from "../../../../components/common/Icons";
+import { logError } from "../../../../utils/errorHandler";
+import type { Schedule } from "../../../../types/schedule";
+import "./UpcomingSchedulesWidget.css";
 
 interface UpcomingSchedulesWidgetProps {
   clubId: number;
@@ -44,17 +50,19 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
         .filter((s) => s.pinned === true)
         .sort(
           (a, b) =>
-            new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+            new Date(a.scheduledAt).getTime() -
+            new Date(b.scheduledAt).getTime()
         );
       const unpinned = upcoming
         .filter((s) => s.pinned !== true)
         .sort(
           (a, b) =>
-            new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+            new Date(a.scheduledAt).getTime() -
+            new Date(b.scheduledAt).getTime()
         );
       setSchedules([...pinned, ...unpinned].slice(0, maxItems));
     } catch (error: unknown) {
-      logError('다가오는 일정 조회', error);
+      logError("다가오는 일정 조회", error);
     } finally {
       setIsLoading(false);
     }
@@ -64,16 +72,16 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
     const date = new Date(dateString);
     const month = date.getMonth() + 1;
     const day = date.getDate();
-    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
     const weekday = weekdays[date.getDay()];
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
     return `${month}/${day}(${weekday}) ${hours}:${minutes}`;
   };
 
   const truncateText = (text: string, maxLength: number = 8) => {
     if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '..';
+    return text.substring(0, maxLength) + "..";
   };
 
   const handleScheduleClick = (scheduleId: number) => {
@@ -81,7 +89,7 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
   };
 
   const handleViewAll = () => {
-    navigate('/schedules');
+    navigate("/schedules/club");
   };
 
   const handleToggleExpand = () => {
@@ -101,8 +109,14 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
           onClick={handleToggleExpand}
         >
           <CalendarIcon size={16} />
-          <span className="upcoming-schedules-widget__title">다가오는 일정</span>
-          {isExpanded ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
+          <span className="upcoming-schedules-widget__title">
+            다가오는 일정(클럽)
+          </span>
+          {isExpanded ? (
+            <ChevronUpIcon size={14} />
+          ) : (
+            <ChevronDownIcon size={14} />
+          )}
         </button>
         <button
           className="upcoming-schedules-widget__view-all"
@@ -130,7 +144,8 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
           {!isLoading && schedules.length > 0 && (
             <div className="upcoming-schedules-widget__list">
               {schedules.map((schedule) => {
-                const isFull = schedule.currentParticipants >= schedule.maxCapacity;
+                const isFull =
+                  schedule.currentParticipants >= schedule.maxCapacity;
 
                 return (
                   <div
@@ -143,16 +158,28 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
                     </span>
                     <span className="upcoming-schedules-widget__info">
                       {schedule.pinned ? (
-                        <span className="upcoming-schedules-widget__pinned" title="강조">
+                        <span
+                          className="upcoming-schedules-widget__pinned"
+                          title="강조"
+                        >
                           <StarIcon size={14} />
                         </span>
                       ) : null}
                       코트명:{truncateText(schedule.courtName)}
                       {schedule.reservedByUserName
-                        ? `, 예약자:${truncateText(schedule.reservedByUserName, 6)}`
+                        ? `, 예약자:${truncateText(
+                            schedule.reservedByUserName,
+                            6
+                          )}`
                         : ""}
                     </span>
-                    <span className={`upcoming-schedules-widget__capacity ${isFull ? 'upcoming-schedules-widget__capacity--full' : ''}`}>
+                    <span
+                      className={`upcoming-schedules-widget__capacity ${
+                        isFull
+                          ? "upcoming-schedules-widget__capacity--full"
+                          : ""
+                      }`}
+                    >
                       {schedule.currentParticipants}/{schedule.maxCapacity}
                     </span>
                   </div>

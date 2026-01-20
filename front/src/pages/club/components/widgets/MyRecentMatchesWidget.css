@@ -1,0 +1,246 @@
+.my-recent-matches-widget {
+  background-color: var(--color-white);
+  border-radius: var(--radius-l);
+  padding: var(--space-m);
+  border: 1px solid var(--color-border);
+}
+
+.my-recent-matches-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.my-recent-matches-widget__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text);
+  background: none;
+  border: none;
+  padding: var(--space-xs) 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.my-recent-matches-widget__header-left:hover {
+  color: var(--color-primary);
+}
+
+.my-recent-matches-widget__title {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  color: inherit;
+}
+
+.my-recent-matches-widget__view-all {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.my-recent-matches-widget__view-all:hover {
+  color: var(--color-primary);
+}
+
+.my-recent-matches-widget__content {
+  margin-top: var(--space-s);
+}
+
+.my-recent-matches-widget__loading,
+.my-recent-matches-widget__empty {
+  padding: var(--space-s);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+}
+
+/* 전적 요약 */
+.my-recent-matches-widget__summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-m);
+  padding: var(--space-s);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+  margin-bottom: var(--space-s);
+}
+
+.my-recent-matches-widget__summary-item {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.my-recent-matches-widget__summary-item--win {
+  color: #15803d;
+}
+
+.my-recent-matches-widget__summary-item--draw {
+  color: var(--color-text-secondary);
+}
+
+.my-recent-matches-widget__summary-item--lose {
+  color: #dc2626;
+}
+
+/* 경기 목록 */
+.my-recent-matches-widget__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.my-recent-matches-widget__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding: var(--space-xs) var(--space-s);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-m);
+}
+
+.my-recent-matches-widget__result-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-bold);
+}
+
+.my-recent-matches-widget__result-badge--win {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.my-recent-matches-widget__result-badge--lose {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.my-recent-matches-widget__result-badge--draw {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.my-recent-matches-widget__date {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  min-width: 40px;
+}
+
+.my-recent-matches-widget__players {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-s);
+}
+
+.my-recent-matches-widget__my-team,
+.my-recent-matches-widget__opponent-team {
+  display: inline;
+}
+
+.my-recent-matches-widget__vs {
+  color: var(--color-text-tertiary, #999);
+  font-size: var(--font-size-xs);
+  margin: 0 var(--space-xxs);
+}
+
+.my-recent-matches-widget__player--me {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.my-recent-matches-widget__score {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+/* Desktop (769px+) */
+@media (min-width: 769px) {
+  .my-recent-matches-widget {
+    padding: var(--space-l);
+  }
+}
+
+/* Mobile Large (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
+  .my-recent-matches-widget {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .my-recent-matches-widget__title {
+    font-size: var(--font-size-m);
+  }
+
+  .my-recent-matches-widget__view-all {
+    font-size: var(--font-size-m);
+  }
+
+  .my-recent-matches-widget__item {
+    font-size: var(--font-size-s);
+    gap: var(--space-xs);
+  }
+
+  .my-recent-matches-widget__summary {
+    gap: var(--space-s);
+  }
+
+  .my-recent-matches-widget__summary-item {
+    font-size: var(--font-size-s);
+  }
+}
+
+/* Mobile Small (~ 359px) */
+@media (max-width: 359px) {
+  .my-recent-matches-widget {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .my-recent-matches-widget__title {
+    font-size: var(--font-size-m);
+  }
+
+  .my-recent-matches-widget__view-all {
+    font-size: var(--font-size-m);
+  }
+
+  .my-recent-matches-widget__item {
+    font-size: var(--font-size-s);
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+  }
+
+  .my-recent-matches-widget__result-badge {
+    width: 20px;
+    height: 20px;
+    font-size: var(--font-size-xs);
+  }
+
+  .my-recent-matches-widget__summary {
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+  }
+
+  .my-recent-matches-widget__summary-item {
+    font-size: var(--font-size-s);
+  }
+}

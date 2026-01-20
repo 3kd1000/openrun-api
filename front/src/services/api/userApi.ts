@@ -119,6 +119,34 @@ export const getMySchedules = async (upcoming?: boolean): Promise<import('../../
 };
 
 /**
+ * 내 최근 전적 응답 타입
+ */
+export interface MyRecentMatchResponse {
+  matchId: number;
+  scheduleId: number | null;
+  playedAt: string | null;
+  myPartnerName: string | null;
+  opponent1Name: string;
+  opponent2Name: string | null;
+  myTeamScore: number;
+  opponentTeamScore: number;
+  result: 'WIN' | 'LOSE' | 'DRAW';
+}
+
+/**
+ * 특정 클럽에서의 내 최근 전적 조회
+ *
+ * @param clubId 클럽 ID
+ * @param limit 조회할 경기 수 (기본 5)
+ */
+export const getMyRecentMatches = async (clubId: number, limit?: number): Promise<MyRecentMatchResponse[]> => {
+  const response = await axiosInstance.get<MyRecentMatchResponse[]>('/users/me/matches', {
+    params: { clubId, limit: limit ?? 5 }
+  });
+  return response.data;
+};
+
+/**
  * 클럽 멤버 프로필 (user + user_profile + membership 통합)
  */
 export interface MemberProfile {

@@ -89,6 +89,8 @@ const Navigation: React.FC = () => {
     location.pathname === "/club" ||
     location.pathname.startsWith("/club/");
 
+  const isScheduleRoute = location.pathname.startsWith("/schedules/");
+
   const navItems: Array<{
     path: string;
     label: string;
@@ -96,7 +98,7 @@ const Navigation: React.FC = () => {
     comingSoon?: boolean;
   }> = [
     { path: clubPath, label: "클럽", icon: ClubIcon },
-    { path: "/schedules", label: "일정관리", icon: CalendarIcon },
+    { path: "/schedules/club", label: "일정관리", icon: CalendarIcon },
     { path: "/scoreboard", label: "스코어보드", icon: TrophyIcon },
     { path: "/more", label: "더보기", icon: MoreIcon },
   ];
@@ -110,12 +112,16 @@ const Navigation: React.FC = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) => {
-              const forcedActive = item.label === "클럽" ? isClubRoute : isActive;
+              let forcedActive = isActive;
+              if (item.label === "클럽") forcedActive = isClubRoute;
+              if (item.label === "일정관리") forcedActive = isScheduleRoute;
               return `nav-item ${forcedActive ? "active" : ""}`;
             }}
           >
             {({ isActive }) => {
-              const forcedActive = item.label === "클럽" ? isClubRoute : isActive;
+              let forcedActive = isActive;
+              if (item.label === "클럽") forcedActive = isClubRoute;
+              if (item.label === "일정관리") forcedActive = isScheduleRoute;
               return (
               <>
                 <span className="nav-icon">

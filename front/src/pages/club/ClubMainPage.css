@@ -2,7 +2,7 @@
   padding: 0 var(--space-m);
   background-color: var(--color-background);
   min-height: calc(100vh - var(--header-height) - var(--navigation-height));
-  padding-bottom: 120px; /* QuickPostInput height + Navigation height */
+  padding-bottom: var(--space-xl);
 }
 
 .club-main-page__loading,
@@ -40,7 +40,7 @@
   background-color: var(--color-primary-dark);
 }
 
-/* 클럽 헤더 - 새로운 레이아웃 */
+/* 클럽 헤더 */
 .club-main-page__header {
   display: flex;
   flex-direction: column;
@@ -49,27 +49,26 @@
   padding: var(--space-s);
   background-color: var(--color-white);
   border-radius: var(--radius-l);
-  margin-bottom: var(--space-s);
+  margin-bottom: var(--space-m);
   border: 1px solid var(--color-border);
 }
 
 .club-main-page__header-actions {
   display: flex;
-  flex-wrap: nowrap; /* 모바일에서도 1x4 유지 */
+  flex-wrap: nowrap;
   gap: var(--space-xs);
   width: 100%;
 }
 
 .club-main-page__header-btn {
   display: flex;
-  /* 기본(현역 모바일 폭 포함): 아이콘 + 라벨을 한 줄로 */
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: var(--space-xxs);
-  flex: 1 1 0; /* 모바일: 1x4 동일 폭 */
+  flex: 1 1 0;
   min-width: 0;
-  height: 48px; /* 터치 타겟 확보 */
+  height: 48px;
   padding: var(--space-xxs) 0;
   background: none;
   border: none;
@@ -85,7 +84,6 @@
   color: var(--color-primary);
 }
 
-/* 모바일에서도 텍스트 표시 - 클럽명과 동일한 폰트 사이즈 */
 .club-main-page__header-btn-text {
   display: inline;
   font-size: var(--font-size-m);
@@ -99,11 +97,11 @@
   height: 6px;
   margin-left: 6px;
   border-radius: 50%;
-  background: #ef4444; /* red */
+  background: #ef4444;
   vertical-align: middle;
 }
 
-/* Mobile Small (~ 359px): 1x4 공간이 매우 타이트하므로 아이콘 위/라벨 아래로 전환 */
+/* Mobile Small (~ 359px) */
 @media (max-width: 359px) {
   .club-main-page__header-btn {
     flex-direction: column;
@@ -125,27 +123,19 @@
   text-align: center;
 }
 
-/* 클럽 선택기 - ClubSelector 컴포넌트 사용 */
-
 /* 위젯 영역 */
 .club-main-page__widgets {
   display: flex;
   flex-direction: column;
-  gap: var(--space-s);
-  margin-bottom: var(--space-s);
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
 }
 
 .club-main-page__widgets-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 var(--space-xxs);
-}
-
-.club-main-page__widgets-title {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
 }
 
 .club-main-page__widgets-edit-btn {
@@ -168,6 +158,18 @@
   position: relative;
 }
 
+/* 위젯 간 구분선 */
+.club-main-page__widget-item:not(:last-child)::after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: calc(-1 * var(--space-m) / 2);
+  left: var(--space-m);
+  right: var(--space-m);
+  height: 1px;
+  background: var(--color-border);
+}
+
 .club-main-page__widget-item.dragging {
   opacity: 0.85;
 }
@@ -186,7 +188,7 @@
   font-size: 18px;
   line-height: 1;
   cursor: grab;
-  touch-action: none; /* 터치 드래그 용 */
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -197,131 +199,7 @@
   transform: scale(0.98);
 }
 
-/* 게시판 섹션 */
-.club-main-page__feed-section {
-  background-color: var(--color-white);
-  border-radius: var(--radius-l);
-  padding: var(--space-m);
-  border: 1px solid var(--color-border);
-}
-
-.club-main-page__feed-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-s);
-}
-
-.club-main-page__feed-header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  color: var(--color-text);
-  background: none;
-  border: none;
-  padding: var(--space-xs) 0;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.club-main-page__feed-header-left:hover {
-  color: var(--color-primary);
-}
-
-.club-main-page__feed-title {
-  font-size: var(--font-size-m);
-  font-weight: var(--font-weight-semibold);
-  color: inherit;
-}
-
-.club-main-page__feed-view-all {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-s);
-  background: none;
-  border: none;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-m);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.club-main-page__feed-view-all:hover {
-  color: var(--color-primary);
-}
-
-/* 게시글 목록 */
-.club-main-page__posts {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-m);
-  margin-top: var(--space-m);
-}
-
-.club-main-page__posts-loading,
-.club-main-page__posts-error,
-.club-main-page__posts-empty {
-  padding: var(--space-l);
-  text-align: center;
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-l);
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-}
-
-.club-main-page__posts-empty-icon {
-  font-size: var(--font-size-2xl);
-  margin-bottom: var(--space-m);
-}
-
-.club-main-page__posts-empty-message {
-  font-size: var(--font-size-l);
-  font-weight: var(--font-weight-semibold);
-  margin-bottom: var(--space-s);
-  color: var(--color-text-primary);
-}
-
-.club-main-page__posts-empty-hint {
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-}
-
-.club-main-page__posts-error {
-  background-color: #fee;
-  color: var(--color-error);
-  border: 1px solid var(--color-error);
-}
-
-.club-main-page__posts-loading {
-  color: var(--color-primary);
-}
-
-/* 빠른 글쓰기 입력 영역 - 하단 고정 */
-.club-main-page__feed-input {
-  position: fixed;
-  bottom: 56px; /* Navigation height (모바일) */
-  left: 0;
-  right: 0;
-  z-index: 10;
-}
-
-/* Infinite Scroll 로드 더 보기 영역 */
-.club-main-page__load-more {
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.club-main-page__posts-end {
-  padding: var(--space-m);
-  text-align: center;
-  font-size: var(--font-size-s);
-  color: var(--color-text-tertiary);
-}
-
-/* Desktop (769px+) - 게시판도 전체 너비 사용 */
+/* Desktop (769px+) */
 @media (min-width: 769px) {
   .club-main-page {
     padding: 0 var(--space-l);
@@ -332,8 +210,8 @@
   }
 
   .club-main-page__header-btn {
-    flex-direction: row; /* 데스크탑: 아이콘+라벨 가로 */
-    flex: 0 0 auto; /* 데스크탑: 한 줄 배치 */
+    flex-direction: row;
+    flex: 0 0 auto;
     min-width: auto;
     height: 40px;
     padding: 0 var(--space-m);
@@ -349,28 +227,15 @@
     font-size: var(--font-size-xl);
   }
 
-  .club-main-page__feed-section {
-    padding: var(--space-l);
-  }
-}
-
-/* Desktop (769px+) - 사이드 네비(hover 가능한 환경) 기준으로만 적용 */
-@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
-  .club-main-page__feed-input {
-    left: var(--nav-width-desktop);
-    bottom: 0;
-    /* App-content-wrapper와 동일한 max-width 및 중앙정렬 */
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--space-l);
-    box-sizing: border-box;
+  .club-main-page__widgets {
+    gap: var(--space-l);
   }
 }
 
 /* Tablet (426px ~ 768px) */
 @media (min-width: 426px) and (max-width: 768px) {
   .club-main-page__header-btn {
-    flex-direction: row; /* 태블릿: 가로 배치가 더 자연스러움 */
+    flex-direction: row;
     height: 40px;
     padding: 0 var(--space-xs);
     gap: var(--space-xxs);
@@ -385,7 +250,7 @@
   }
 }
 
-/* Mobile Small (~ 360px): 버튼 라벨로 인해 깨지지 않게 여백/폰트 살짝 축소 */
+/* Mobile Small (~ 359px) */
 @media (max-width: 359px) {
   .club-main-page__header-btn {
     gap: var(--space-xxs);
@@ -418,13 +283,6 @@
   }
 }
 
-/* Tablet (426px ~ 768px) */
-@media (min-width: 426px) and (max-width: 768px) {
-  .club-main-page__feed-section {
-    padding: var(--space-s);
-  }
-}
-
 /* Mobile Small (~ 359px) */
 @media (max-width: 359px) {
   .club-main-page {
@@ -443,9 +301,5 @@
 
   .club-main-page__title {
     font-size: var(--font-size-m);
-  }
-
-  .club-main-page__feed-section {
-    padding: var(--space-xs);
   }
 }

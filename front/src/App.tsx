@@ -217,7 +217,15 @@ function App() {
               <Route path="/more/user-guide" element={<UserGuidePage />} />
               {/* Protected 페이지 (로그인 필수) */}
               <Route
-                path="/schedules"
+                path="/schedules/club"
+                element={
+                  <ProtectedRoute>
+                    <ScheduleListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/schedules/my"
                 element={
                   <ProtectedRoute>
                     <ScheduleListPage />
