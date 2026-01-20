@@ -3,8 +3,10 @@ package com.example.openrunapi.domain.club.model.dto;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubMemberStatus;
 import com.example.openrunapi.domain.club.model.ClubRole;
+import com.example.openrunapi.domain.user.model.UserProfile;
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -26,7 +28,14 @@ public class ClubMembershipResponse {
     private final String email;
     private final String imageUrl;
 
+    // UserProfile 정보
+    private final LocalDate tennisStartedAt;
+
     public ClubMembershipResponse(ClubMember clubMember) {
+        this(clubMember, null);
+    }
+
+    public ClubMembershipResponse(ClubMember clubMember, UserProfile userProfile) {
         this.memberId = clubMember.getId();
         this.role = clubMember.getRole();
         this.status = clubMember.getStatus();
@@ -36,5 +45,7 @@ public class ClubMembershipResponse {
         this.name = clubMember.getUser().getName();
         this.email = clubMember.getUser().getEmail();
         this.imageUrl = clubMember.getUser().getImageUrl();
+
+        this.tennisStartedAt = (userProfile != null) ? userProfile.getTennisStartedAt() : null;
     }
 }

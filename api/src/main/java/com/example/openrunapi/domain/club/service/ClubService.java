@@ -269,7 +269,7 @@ public class ClubService {
 
     /**
      * 클럽원 상세 정보 조회 (명단 조회용)
-     * - ClubMember 정보 + User 연락처 정보 포함
+     * - ClubMember 정보 + User 연락처 정보 + UserProfile 테니스 시작시기 포함
      * - status 파라미터로 필터링 가능 (기본: ACTIVE)
      */
     public List<ClubMembershipResponse> getClubMembership(Long clubId, ClubMemberStatus status) {
@@ -280,8 +280,16 @@ public class ClubService {
         ClubMemberStatus targetStatus = (status != null) ? status : ClubMemberStatus.ACTIVE;
         List<ClubMember> members = clubMemberRepository.findAllByClubIdAndStatus(clubId, targetStatus);
 
+        // UserProfile 정보를 한 번에 조회 (N+1 방지)
+        List<Long> userIds = members.stream()
+                .map(m -> m.getUser().getId())
+                .collect(Collectors.toList());
+        java.util.Map<Long, UserProfile> profileMap = userProfileRepository.findByUserIdIn(userIds)
+                .stream()
+                .collect(Collectors.toMap(UserProfile::getUserId, p -> p));
+
         return members.stream()
-                .map(ClubMembershipResponse::new)
+                .map(m -> new ClubMembershipResponse(m, profileMap.get(m.getUser().getId())))
                 .collect(Collectors.toList());
     }
 
