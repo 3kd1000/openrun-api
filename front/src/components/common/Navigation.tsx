@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { getOpenRunSession } from "../../utils/openrunSession";
 import "./Navigation.css";
 
@@ -79,9 +79,8 @@ const MoreIcon: React.FC<{ isActive: boolean }> = () => (
 
 const Navigation: React.FC = () => {
   const location = useLocation();
-  const session = getOpenRunSession();
-  const currentClubId = session.currentClubId;
-  const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/clubs/explore";
+  const navigate = useNavigate();
+
   const isClubRoute =
     location.pathname === "/clubs" ||
     location.pathname === "/clubs/explore" ||
@@ -91,13 +90,23 @@ const Navigation: React.FC = () => {
 
   const isScheduleRoute = location.pathname.startsWith("/schedules/");
 
+  // 클럽 탭 클릭 시 세션에서 최신 clubId를 읽어서 이동
+  const handleClubClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const session = getOpenRunSession();
+    const currentClubId = session.currentClubId;
+    const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/clubs/explore";
+    navigate(clubPath);
+  };
+
   const navItems: Array<{
     path: string;
     label: string;
     icon: React.FC<{ isActive: boolean }>;
     comingSoon?: boolean;
+    onClick?: (e: React.MouseEvent) => void;
   }> = [
-    { path: clubPath, label: "클럽", icon: ClubIcon },
+    { path: "/clubs", label: "클럽", icon: ClubIcon, onClick: handleClubClick },
     { path: "/schedules/club", label: "일정관리", icon: CalendarIcon },
     { path: "/scoreboard", label: "스코어보드", icon: TrophyIcon },
     { path: "/more", label: "더보기", icon: MoreIcon },
@@ -111,6 +120,7 @@ const Navigation: React.FC = () => {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={item.onClick}
             className={({ isActive }) => {
               let forcedActive = isActive;
               if (item.label === "클럽") forcedActive = isClubRoute;

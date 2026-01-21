@@ -686,14 +686,22 @@
   transition: var(--transition-base);
 }
 
+/* 승자 팀 - DrawGamesCommon과 통일 (green 계열) */
 .team-inline.winner {
-  background: var(--color-success-bg);
-  border: var(--border-width-thin) solid var(--color-success);
+  background: var(--color-team-a-win-bg);
+  border-left: 3px solid var(--color-success);
 }
 
+/* 승자 팀 내 선수명 강조 */
+.team-inline.winner .players-inline {
+  color: var(--color-success);
+  font-weight: var(--font-weight-bold);
+}
+
+/* 패자 팀 */
 .team-inline.loser {
   background: var(--color-bg-tertiary);
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .players-inline {
@@ -707,14 +715,17 @@
   min-width: 0;
 }
 
+/* 점수 표시 - DrawGamesCommon과 통일 (pill 스타일 배경) */
 .score-inline {
   font-size: inherit;
   font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
-  padding: 0 var(--space-xs);
+  color: var(--color-text-secondary);
+  padding: var(--space-xxs) var(--space-xs);
   min-width: 24px;
   text-align: center;
   flex-shrink: 0;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-s);
 }
 
 .vs-inline {
@@ -822,8 +833,11 @@
   }
 
   .score-inline {
-    padding: 0 var(--space-xxs);
+    padding: var(--space-xxs) var(--space-xxs);
     min-width: 20px;
+    /* pill 스타일 유지 */
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-s);
   }
 
   .vs-inline {
@@ -964,8 +978,11 @@
   }
 
   .score-inline {
-    padding: 0 var(--space-xxs);
+    padding: var(--space-xxs) var(--space-xxs);
     min-width: 20px;
+    /* pill 스타일 유지 */
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-s);
   }
 
   .vs-inline {
@@ -980,4 +997,36 @@
   .empty-state h3 {
     font-size: var(--font-size-base);
   }
+}
+
+/* ========== 인피니티 스크롤 & 경기 목록 헤더 ========== */
+.match-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-s) 0;
+  margin-bottom: var(--space-s);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.match-count {
+  font-weight: var(--font-weight-medium);
+}
+
+.load-more-trigger {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-l) 0;
+  min-height: 60px;
+}
+
+.load-more-spinner {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.load-more-end {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
 }

@@ -13,6 +13,7 @@ import {
   getSortedRounds,
 } from "../../utils/DrawFormatUtils";
 import { isNotEmpty, isScoreSet } from "../../utils/isEmpty";
+import { Trash2Icon } from "../common/Icons";
 
 export interface DrawGamesListProps {
   /** 대진표 게임 목록 */
@@ -164,43 +165,42 @@ const DrawGamesList: React.FC<DrawGamesListProps> = ({
                       >
                         {teamBNames}
                       </span>
-                      {!isEditMode &&
-                        hasExistingResult &&
-                        isNotEmpty(game.result) && (
-                          <span
-                            className={`dgc-result-badge dgc-result-badge--${
-                              game.result === "TEAM_A_WIN"
-                                ? "team-a-win"
-                                : game.result === "TEAM_B_WIN"
-                                ? "team-b-win"
-                                : "draw"
-                            }`}
-                          >
-                            {game.result === "TEAM_A_WIN"
-                              ? "A 승"
-                              : game.result === "TEAM_B_WIN"
-                              ? "B 승"
-                              : "무"}
-                          </span>
-                        )}
                     </div>
                   </div>
-                  {/* 삭제 버튼 - 오른쪽 고정 위치 (항상 렌더링, visibility로 제어) */}
-                  {isEditMode && matchId && onResetResult && (
-                    <button
-                      type="button"
-                      className={`dgc-reset-button ${
-                        hasExistingResult && isNotEmpty(game.result)
-                          ? ""
-                          : "dgc-reset-button--hidden"
-                      }`}
-                      onClick={() => onResetResult(matchId)}
-                      title="결과 삭제"
-                      disabled={!hasExistingResult || !isNotEmpty(game.result)}
-                    >
-                      🗑️
-                    </button>
-                  )}
+                  {/* 오른쪽 끝 영역: 결과 배지 또는 삭제 버튼 */}
+                  <div className="dgc-end-section">
+                    {isEditMode && matchId && onResetResult ? (
+                      <button
+                        type="button"
+                        className={`dgc-reset-button ${
+                          hasExistingResult && isNotEmpty(game.result)
+                            ? ""
+                            : "dgc-reset-button--hidden"
+                        }`}
+                        onClick={() => onResetResult(matchId)}
+                        title="결과 삭제"
+                        disabled={!hasExistingResult || !isNotEmpty(game.result)}
+                      >
+                        <Trash2Icon size={14} />
+                      </button>
+                    ) : hasExistingResult && isNotEmpty(game.result) ? (
+                      <span
+                        className={`dgc-result-badge dgc-result-badge--${
+                          game.result === "TEAM_A_WIN"
+                            ? "team-a-win"
+                            : game.result === "TEAM_B_WIN"
+                            ? "team-b-win"
+                            : "draw"
+                        }`}
+                      >
+                        {game.result === "TEAM_A_WIN"
+                          ? "A 승"
+                          : game.result === "TEAM_B_WIN"
+                          ? "B 승"
+                          : "무"}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}

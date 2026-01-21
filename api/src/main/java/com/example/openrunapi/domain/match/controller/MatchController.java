@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.match.controller;
 
 import com.example.openrunapi.domain.match.model.dto.BatchUpdateMatchRequest;
+import com.example.openrunapi.domain.match.model.dto.MatchPageResponse;
 import com.example.openrunapi.domain.match.model.dto.MatchResponse;
 import com.example.openrunapi.domain.match.model.dto.UpdateMatchRequest;
 import com.example.openrunapi.domain.match.service.MatchService;
@@ -44,6 +45,34 @@ public class MatchController {
 
         List<MatchResponse> matches = matchService.getMatches(clubId, playerName, startDate, endDate);
         return ResponseEntity.ok(matches);
+    }
+
+    /**
+     * 클럽의 대진 페이징 조회 (인피니티 스크롤용)
+     * GET /api/clubs/{clubId}/matches/paged
+     *
+     * @param clubId 클럽 ID
+     * @param playerName 선수 이름 (optional)
+     * @param startDate 시작일 (optional)
+     * @param endDate 종료일 (optional)
+     * @param page 페이지 번호 (0부터 시작, 기본값 0)
+     * @param size 페이지 크기 (기본값 20)
+     * @return 페이징된 대진 목록
+     */
+    @GetMapping("/paged")
+    public ResponseEntity<MatchPageResponse> getMatchesPaged(
+            @PathVariable Long clubId,
+            @RequestParam(required = false) String playerName,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        log.info("=== GET /api/clubs/{}/matches/paged === page: {}, size: {}", clubId, page, size);
+        log.info("playerName: {}, startDate: {}, endDate: {}", playerName, startDate, endDate);
+
+        MatchPageResponse response = matchService.getMatchesPaged(clubId, playerName, startDate, endDate, page, size);
+        return ResponseEntity.ok(response);
     }
 
     /**

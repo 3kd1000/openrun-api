@@ -16,6 +16,9 @@ import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
+import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
+import com.example.openrunapi.domain.externalrequest.model.ExternalRequestType;
+import com.example.openrunapi.domain.externalrequest.repository.ExternalRequestRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserProfile;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
@@ -41,6 +44,7 @@ public class ClubService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final ExternalRequestRepository externalRequestRepository;
     private final PermissionService permissionService;
 
     @Transactional
@@ -135,6 +139,13 @@ public class ClubService {
             throw new IllegalStateException("이미 가입 신청했거나 가입된 클럽입니다.");
         }
 
+        // 이미 가입신청(external_request)이 존재하는지 확인
+        boolean alreadyRequested = externalRequestRepository
+                .existsByClubIdAndRequesterIdAndType(clubId, userId, ExternalRequestType.JOIN);
+        if (alreadyRequested) {
+            throw new IllegalStateException("이미 가입 신청이 존재합니다.");
+        }
+
         ClubMemberStatus status =
                 club.getJoinPolicy() == ClubJoinPolicy.AUTO ? ClubMemberStatus.ACTIVE : ClubMemberStatus.PENDING;
 
@@ -145,6 +156,10 @@ public class ClubService {
                 .status(status)
                 .build();
         clubMemberRepository.save(clubMember);
+
+        // external_request에 JOIN 타입으로 INSERT (운영진 인박스에서 조회 가능)
+        ExternalRequest externalRequest = new ExternalRequest(club, null, user, ExternalRequestType.JOIN);
+        externalRequestRepository.save(externalRequest);
     }
 
     @Transactional

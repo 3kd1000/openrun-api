@@ -13,7 +13,7 @@ import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
 import { isNotEmpty } from "../../../utils/isEmpty";
-import { ClipboardListIcon, CheckIcon, CopyIcon } from "../../../components/common/Icons";
+import { ClipboardListIcon, CheckIcon, CopyIcon, RefreshCwIcon, EditIcon } from "../../../components/common/Icons";
 import "./DrawViewModal.css";
 
 interface Props {
@@ -300,26 +300,28 @@ const DrawViewModal: React.FC<Props> = ({
             </div>
           ) : null}
 
-          {/* 액션 버튼 */}
+          {/* 액션 버튼 - 모든 버튼 btn-wrapper로 균등 배치 */}
           <div className="modal-actions">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="btn-copy"
-              disabled={!drawResult || isEditMode}
-            >
-              {copied ? (
-                <>
-                  <CheckIcon size={16} />
-                  <span>복사됨</span>
-                </>
-              ) : (
-                <>
-                  <CopyIcon size={16} />
-                  <span>복사</span>
-                </>
-              )}
-            </button>
+            <div className="btn-wrapper">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="btn-copy"
+                disabled={!drawResult || isEditMode}
+              >
+                {copied ? (
+                  <>
+                    <CheckIcon size={16} />
+                    <span>복사됨</span>
+                  </>
+                ) : (
+                  <>
+                    <CopyIcon size={16} />
+                    <span>복사</span>
+                  </>
+                )}
+              </button>
+            </div>
             <div
               className="btn-wrapper"
               title={
@@ -334,34 +336,42 @@ const DrawViewModal: React.FC<Props> = ({
                 className="btn-regenerate"
                 disabled={!drawResult || isEditMode || hasAnyResult}
               >
-                🔄 재생성
+                <RefreshCwIcon size={16} /> 재생성
               </button>
             </div>
-            <button
-              type="button"
-              onClick={handleToggleEditMode}
-              className={isEditMode ? "btn-save" : "btn-edit"}
-              disabled={!drawResult || saving || isFutureSchedule}
+            <div
+              className="btn-wrapper"
               title={
                 isFutureSchedule
                   ? "경기 일정이 지난 후에만 결과를 입력할 수 있습니다"
                   : ""
               }
             >
-              {saving
-                ? "저장 중..."
-                : isEditMode
-                ? "✓ 입력완료"
-                : "✏️ 결과입력"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-primary"
-              disabled={isEditMode}
-            >
-              확인
-            </button>
+              <button
+                type="button"
+                onClick={handleToggleEditMode}
+                className={isEditMode ? "btn-save" : "btn-edit"}
+                disabled={!drawResult || saving || isFutureSchedule}
+              >
+                {saving ? (
+                  "저장 중..."
+                ) : isEditMode ? (
+                  <><CheckIcon size={16} /> 입력완료</>
+                ) : (
+                  <><EditIcon size={16} /> 결과입력</>
+                )}
+              </button>
+            </div>
+            <div className="btn-wrapper">
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-primary"
+                disabled={isEditMode}
+              >
+                확인
+              </button>
+            </div>
           </div>
         </div>
       </div>
