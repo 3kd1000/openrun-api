@@ -130,40 +130,51 @@
 /* ========== 액션 버튼 영역 ========== */
 .modal-actions {
   display: flex;
-  gap: var(--space-xs); /* s → xs로 더 줄임 */
-  justify-content: flex-end;
-  padding-top: var(--space-xs); /* s → xs로 줄임 */
+  gap: var(--space-s);
+  justify-content: stretch;
+  padding-top: var(--space-s);
   border-top: var(--border-width-thin) solid var(--color-border-secondary);
-  margin-top: var(--space-xs); /* 10px → 토큰 사용 */
-  flex-wrap: wrap; /* 필요시 줄바꿈 허용 */
-  flex-shrink: 0; /* 버튼 영역은 축소되지 않음 */
+  margin-top: var(--space-s);
+  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .btn-wrapper {
-  display: inline-block;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
 }
 
+.btn-wrapper > button {
+  flex: 1;
+  width: 100%;
+}
+
+/* 모든 버튼 공통 스타일 */
 .btn-copy,
 .btn-regenerate,
 .btn-edit,
 .btn-save,
 .draw-view-modal .btn-primary {
-  padding: 10px var(--space-m); /* xl → m로 줄임 (버튼 폭 축소) */
+  padding: 10px var(--space-m);
   border: none;
   border-radius: var(--radius-m);
   cursor: pointer;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   transition: var(--transition-all);
+  /* 균등 너비 & 아이콘 정렬 */
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
 }
 
 .btn-copy {
   background: var(--color-secondary);
   color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
 }
 
 .btn-copy:hover:not(:disabled) {
@@ -320,7 +331,7 @@
     line-height: 1;
   }
 
-  /* 미디어 대형 (426px ~ 768px) */
+  /* 미디어 대형 (426px ~ 768px) - 버튼/배지만 조정 */
   @media (min-width: 426px) and (max-width: 768px) {
     .draw-view-modal .btn-copy,
     .draw-view-modal .btn-regenerate,
@@ -333,17 +344,9 @@
     .draw-type-badge {
       font-size: var(--font-size-m);
     }
-
-    .draw-view-modal .dgc-game-number {
-      font-size: var(--font-size-m);
-    }
-
-    .draw-view-modal .dgc-game-content {
-      font-size: var(--font-size-m);
-    }
   }
 
-  /* 미디어 중형 (361px ~ 425px): 4개 한 줄 배치 */
+  /* 미디어 중형 (360px ~ 425px): 4개 한 줄 배치 */
   @media (min-width: 360px) and (max-width: 425px) {
     .draw-view-modal .modal-actions {
       gap: 2px;
@@ -374,146 +377,36 @@
     .draw-type-badge {
       font-size: var(--font-size-s);
     }
-
-    .draw-view-modal .dgc-game-number {
-      min-width: 30px;
-      font-size: var(--font-size-s);
-    }
-
-    .draw-view-modal .dgc-game-content {
-      font-size: var(--font-size-s);
-    }
-
-    /* 팀 이름 폰트 사이즈는 부모에서 상속 */
-    .draw-view-modal .dgc-game-content .dgc-team-a-names,
-    .draw-view-modal .dgc-game-content .dgc-team-b-names {
-      font-size: inherit;
-    }
   }
 
-  /* 미디어 소형 (360px 이하): 2x2 그리드 */
-  @media (max-width: 359px) {
-    .draw-view-modal .modal-actions {
-      flex-wrap: wrap;
-      justify-content: flex-start;
-      gap: var(--space-xs);
-    }
-
-    .draw-view-modal .btn-wrapper {
-      flex: 1 1 calc(50% - var(--space-xs));
-      min-width: calc(50% - var(--space-xs));
-      max-width: calc(50% - var(--space-xs));
-      display: flex;
-    }
-
-    .draw-view-modal .btn-wrapper > .btn-regenerate {
-      flex: 1 1 100%;
-      width: 100%;
-      min-width: 0;
-      max-width: 100%;
-    }
-
-    .draw-view-modal .btn-copy,
-    .draw-view-modal .btn-regenerate,
-    .draw-view-modal .btn-edit,
-    .draw-view-modal .btn-save,
-    .draw-view-modal .btn-primary {
-      flex: 1 1 calc(50% - var(--space-xs));
-      min-width: calc(50% - var(--space-xs));
-      max-width: calc(50% - var(--space-xs));
-      padding: var(--space-xs) var(--space-xxs);
-      font-size: var(--font-size-s);
-    }
-
-    .draw-type-badge {
-      font-size: var(--font-size-xs);
-    }
-
-    .draw-view-modal .dgc-game-number {
-      min-width: 28px; /* 더 작은 화면에서 더 작게 */
-      font-size: var(--font-size-s);
-    }
-
-    .draw-view-modal .dgc-game-content {
-      font-size: var(--font-size-s);
-    }
-
-    /* 팀 이름 폰트 사이즈는 부모에서 상속 */
-    .draw-view-modal .dgc-game-content .dgc-team-a-names,
-    .draw-view-modal .dgc-game-content .dgc-team-b-names {
-      font-size: inherit;
-    }
-  }
 }
 
-/* ========== 결과 삭제 버튼 (아이콘) ========== */
-.dgc-reset-button {
-  padding: 0;
-  background: transparent;
-  color: var(--color-text-tertiary);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-l);
-  line-height: 1;
-  cursor: pointer;
-  transition: all var(--transition-base);
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-
-.dgc-reset-button:hover:not(:disabled) {
-  color: var(--color-danger);
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.dgc-reset-button:active:not(:disabled) {
-  transform: scale(0.95);
-  opacity: 0.8;
-}
-
-.dgc-reset-button:disabled {
-  cursor: default;
-}
-
-.dgc-reset-button--hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* 모바일에서 삭제 버튼 크기 조정 */
-@media (max-width: 768px) {
-  .dgc-reset-button {
-    font-size: var(--font-size-base);
-    min-width: 24px;
-    width: 24px;
-    height: 24px;
-  }
-}
-
-/* 미디어쿼리: 미디어 중형 (361px ~ 425px) */
-@media (min-width: 360px) and (max-width: 425px) {
-  .dgc-reset-button {
-    min-width: 22px;
-    width: 22px;
-    height: 22px;
-    font-size: var(--font-size-s);
-  }
-}
-
-/* 미디어쿼리: 미디어 소형 (360px 이하) */
+/* ========== 소형 (359px 이하): 2x2 그리드 ========== */
 @media (max-width: 359px) {
-  .dgc-reset-button {
-    min-width: 20px;
-    width: 20px;
-    height: 20px;
+  .draw-view-modal .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xs);
+  }
+
+  .draw-view-modal .btn-wrapper {
+    flex: none;
+    width: 100%;
+  }
+
+  .draw-view-modal .btn-copy,
+  .draw-view-modal .btn-regenerate,
+  .draw-view-modal .btn-edit,
+  .draw-view-modal .btn-save,
+  .draw-view-modal .btn-primary {
+    width: 100%;
+    padding: var(--space-xs) var(--space-xxs);
     font-size: var(--font-size-s);
   }
+
+  .draw-view-modal .draw-type-badge {
+    font-size: var(--font-size-xs);
+  }
 }
+
+/* dgc-reset-button 스타일은 draw-games-common.css에서 관리 */

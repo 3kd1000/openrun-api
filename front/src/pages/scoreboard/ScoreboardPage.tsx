@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useLocation } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
-import type { Match } from "../../types/match";
+import type { Match, MatchPageResponse } from "../../types/match";
 import { format } from "date-fns";
 import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon } from "../../components/common/Icons";
 import { ClubSelector } from "../../components/ClubSelector";
@@ -27,7 +26,6 @@ interface ScoreboardResponse {
 type TabType = "ranking" | "matches";
 
 const ScoreboardPage: React.FC = () => {
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>("ranking");
 
   // Tab 1: Rankings
@@ -44,7 +42,7 @@ const ScoreboardPage: React.FC = () => {
     "points"
   );
 
-  // Tab 2: Match search
+  // Tab 2: Match search (with infinite scroll)
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [matchesError, setMatchesError] = useState<string | null>(null);
@@ -52,8 +50,13 @@ const ScoreboardPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<
     "all" | "3months" | "6months" | "1year"
   >("all");
-  const todayMatchRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalElements, setTotalElements] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const isLoadingMatchesRef = useRef(false);
+  const PAGE_SIZE = 20;
 
   // 클럽 선택 상태
   const [selectedClubId, setSelectedClubId] = useState<number | null>(() => {
@@ -107,14 +110,18 @@ const ScoreboardPage: React.FC = () => {
     }
   }, [clubId, selectedYear, sortBy]);
 
-  // Tab 2: Fetch matches
+  // Tab 2: Fetch matches (페이징 지원)
   const fetchMatches = useCallback(
-    async (searchPlayerName?: string) => {
+    async (searchPlayerName?: string, page: number = 0, append: boolean = false) => {
       if (isLoadingMatchesRef.current) return;
 
       isLoadingMatchesRef.current = true;
       try {
-        setMatchesLoading(true);
+        if (append) {
+          setIsLoadingMore(true);
+        } else {
+          setMatchesLoading(true);
+        }
         setMatchesError(null);
 
         // 기간 계산
@@ -135,39 +142,54 @@ const ScoreboardPage: React.FC = () => {
           startDate = date.toISOString();
         }
 
-        // API 호출
+        // API 호출 (페이징 지원)
         const params: {
           playerName?: string;
           startDate?: string;
           endDate?: string;
-        } = {};
+          page: number;
+          size: number;
+        } = {
+          page,
+          size: PAGE_SIZE,
+        };
         if (searchPlayerName) params.playerName = searchPlayerName;
         if (startDate) params.startDate = startDate;
         if (dateRange !== "all") params.endDate = endDate;
 
-        const response = await axiosInstance.get<Match[]>(
-          `/clubs/${clubId}/matches`,
+        const response = await axiosInstance.get<MatchPageResponse>(
+          `/clubs/${clubId}/matches/paged`,
           { params }
         );
 
-        // 과거 -> 미래 순으로 정렬 (일정관리 리스트뷰와 동일)
-        const sortedMatches = [...response.data].sort((a, b) => {
-          return (
-            new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime()
-          );
-        });
+        const { content, hasMore: more, totalElements: total, page: currentP } = response.data;
 
-        setMatches(sortedMatches);
+        if (append) {
+          setMatches((prev) => [...prev, ...content]);
+        } else {
+          setMatches(content);
+        }
+        setCurrentPage(currentP);
+        setHasMore(more);
+        setTotalElements(total);
       } catch (err) {
         console.error("Failed to fetch matches:", err);
         setMatchesError("경기 기록을 불러오는데 실패했습니다.");
       } finally {
         setMatchesLoading(false);
+        setIsLoadingMore(false);
         isLoadingMatchesRef.current = false;
       }
     },
     [clubId, dateRange]
   );
+
+  // 더 불러오기
+  const loadMore = useCallback(() => {
+    if (hasMore && !isLoadingMatchesRef.current) {
+      fetchMatches(playerName || undefined, currentPage + 1, true);
+    }
+  }, [hasMore, currentPage, playerName, fetchMatches]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,7 +201,33 @@ const ScoreboardPage: React.FC = () => {
     setDateRange("all");
     setMatches([]);
     setMatchesError(null);
+    setCurrentPage(0);
+    setHasMore(false);
+    setTotalElements(0);
   };
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const current = loadMoreRef.current;
+    if (current) {
+      observer.observe(current);
+    }
+
+    return () => {
+      if (current) {
+        observer.unobserve(current);
+      }
+    };
+  }, [hasMore, isLoadingMore, loadMore]);
 
   // 미래 경기인지 확인
   const isFutureMatch = (match: Match) => {
@@ -197,50 +245,6 @@ const ScoreboardPage: React.FC = () => {
       fetchScoreboard();
     }
   }, [activeTab, fetchScoreboard]);
-
-  // 경기 기록 검색: 검색 후 오늘 날짜로 스크롤
-  useEffect(() => {
-    if (
-      activeTab === "matches" &&
-      matches.length > 0 &&
-      location.pathname === "/scoreboard"
-    ) {
-      // DOM이 렌더링될 때까지 대기 후 오늘 날짜로 스크롤
-      let attemptCount = 0;
-      const maxAttempts = 10;
-
-      const scrollToToday = () => {
-        if (todayMatchRef.current) {
-          todayMatchRef.current.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-          return true; // 성공
-        }
-        return false; // 아직 ref가 없음
-      };
-
-      // 여러 시점에서 시도 (DOM 렌더링 보장)
-      const tryScroll = () => {
-        attemptCount++;
-        if (!scrollToToday() && attemptCount < maxAttempts) {
-          // ref가 아직 없으면 더 기다렸다가 다시 시도
-          setTimeout(tryScroll, 100);
-        }
-      };
-
-      // 즉시 시도
-      requestAnimationFrame(() => {
-        tryScroll();
-      });
-
-      // 추가 시도 (다른 페이지에서 돌아올 때를 대비)
-      setTimeout(tryScroll, 100);
-      setTimeout(tryScroll, 300);
-      setTimeout(tryScroll, 500);
-      setTimeout(tryScroll, 800);
-    }
-  }, [activeTab, matches.length, location.pathname]);
 
   return (
     <div className="scoreboard-page">
@@ -442,25 +446,20 @@ const ScoreboardPage: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="match-list">
-                {matches.map((match, index) => {
-                  const future = isFutureMatch(match);
-                  const completed = isCompletedMatch(match);
+              <>
+                {/* 총 건수 표시 */}
+                <div className="match-list-header">
+                  <span className="match-count">총 {totalElements}건</span>
+                </div>
+                <div className="match-list">
+                  {matches.map((match) => {
+                    const future = isFutureMatch(match);
+                    const completed = isCompletedMatch(match);
 
-                  // 오늘 날짜에 가까운 첫 번째 미래 경기 찾기 (일정관리와 동일한 로직)
-                  const now = new Date();
-                  const matchDate = new Date(match.playedAt);
-                  const isFirstFuture =
-                    matchDate >= now &&
-                    matches
-                      .slice(0, index)
-                      .every((m) => new Date(m.playedAt) < now);
-
-                  return (
-                    <div
-                      key={match.id}
-                      ref={isFirstFuture ? todayMatchRef : null}
-                      className={`match-card ${
+                    return (
+                      <div
+                        key={match.id}
+                        className={`match-card ${
                         future
                           ? "future-match"
                           : completed
@@ -532,7 +531,17 @@ const ScoreboardPage: React.FC = () => {
                     </div>
                   );
                 })}
-              </div>
+                </div>
+                {/* 인피니티 스크롤 로딩 표시 */}
+                <div ref={loadMoreRef} className="load-more-trigger">
+                  {isLoadingMore && (
+                    <div className="load-more-spinner">불러오는 중...</div>
+                  )}
+                  {!hasMore && matches.length > 0 && (
+                    <div className="load-more-end">모든 경기를 불러왔습니다</div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

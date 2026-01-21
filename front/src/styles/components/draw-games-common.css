@@ -2,6 +2,21 @@
  * Draw Games Common Styles
  * DrawCreateModal과 DrawViewModal에서 공통으로 사용하는 대진표 게임 리스트 스타일
  * BEM 네이밍: dgc- prefix (Draw Games Common)
+ *
+ * 레이아웃 구조:
+ * .dgc-game-row (grid: auto 1fr auto)
+ *   ├── .dgc-game-number (왼쪽 고정)
+ *   ├── .dgc-game-content (중앙 - separator가 정확히 가운데)
+ *   │     ├── .dgc-team-a-section
+ *   │     ├── .dgc-game-separator  ← 정중앙
+ *   │     └── .dgc-team-b-section
+ *   └── .dgc-end-section (오른쪽 고정: result-badge 또는 reset-button)
+ *
+ * 폰트 사이즈 체계 (progressive - 큰 화면 = 큰 폰트):
+ * - Desktop (769px+): font-size-base
+ * - Tablet (426-768px): font-size-s
+ * - Mobile (360-425px): font-size-s
+ * - Small (359px-): font-size-xs
  */
 
 /* ========== 게임 리스트 컨테이너 ========== */
@@ -61,20 +76,20 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  padding-left: 0; /* 좌우 margin 제거 */
+  padding-left: 0;
 }
 
-/* ========== 게임 행 (한 줄 형태) ========== */
+/* ========== 게임 행 (3컬럼 grid) ========== */
 .dgc-game-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: var(--space-s);
+  gap: var(--space-xs);
   padding: var(--space-xs) var(--space-s);
   border-radius: var(--radius-s);
   background: var(--color-bg-secondary);
   border-left: 3px solid transparent;
   transition: background-color var(--transition-base);
-  font-size: var(--font-size-s);
 }
 
 .dgc-game-row:hover {
@@ -101,24 +116,24 @@
   background: var(--color-warning-light);
 }
 
-/* ========== 게임 번호 ========== */
+/* ========== 게임 번호 (왼쪽 고정) ========== */
 .dgc-game-number {
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-secondary);
-  min-width: 50px;
+  min-width: 45px;
   flex-shrink: 0;
-  font-size: var(--font-size-s);
+  text-align: left;
 }
 
-/* ========== 게임 컨텐츠 (팀 A : 팀 B 레이아웃) ========== */
+/* ========== 게임 컨텐츠 (중앙 - separator 기준 대칭) ========== */
 .dgc-game-content {
   display: grid;
-  grid-template-columns: 1fr auto 1fr; /* 중앙 정렬 유지, 해상도가 늘어나도 가운데 위치 */
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: var(--space-xs);
-  flex: 1;
+  gap: var(--space-xxs);
   min-width: 0;
-  font-size: var(--font-size-s); /* 기본 폰트 사이즈 */
+  font-size: var(--font-size-base);
 }
 
 .dgc-team-a-section {
@@ -137,19 +152,15 @@
   min-width: 0;
 }
 
-.dgc-team-a-names {
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap; /* 줄바꿈 방지 */
-}
-
+.dgc-team-a-names,
 .dgc-team-b-names {
+  font-size: var(--font-size-base);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
-  white-space: nowrap; /* 줄바꿈 방지 */
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* 넘치면 ... 표시 */
-  min-width: 0; /* flex에서 텍스트 오버플로우를 위해 필요 */
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .dgc-team-a-names--winner,
@@ -162,15 +173,23 @@
   color: var(--color-text-tertiary);
   font-weight: var(--font-weight-bold);
   padding: 0 var(--space-xxs);
-  flex-shrink: 0; /* separator는 크기 고정 */
+  flex-shrink: 0;
+}
+
+/* ========== 끝 영역 (오른쪽 고정: 결과 배지 또는 삭제 버튼) ========== */
+.dgc-end-section {
+  min-width: 36px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 /* ========== 스코어 입력 (편집 모드) ========== */
 .dgc-score-input {
-  width: 32px;
+  width: 28px;
   padding: var(--space-xxs) var(--space-xs);
   text-align: center;
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
   border: 1px solid var(--color-text-primary);
   border-radius: var(--radius-s);
@@ -187,24 +206,25 @@
 
 /* ========== 스코어 표시 (읽기 모드) ========== */
 .dgc-score-display {
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-secondary);
   padding: var(--space-xxs) var(--space-xs);
   background: var(--color-bg-tertiary);
   border-radius: var(--radius-s);
-  min-width: 24px;
+  min-width: 20px;
   text-align: center;
 }
 
 /* ========== 결과 배지 ========== */
 .dgc-result-badge {
-  padding: var(--space-xxs) var(--space-s);
+  padding: 2px 6px;
   border-radius: var(--radius-round);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-s);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .dgc-result-badge--team-a-win {
@@ -222,11 +242,44 @@
   color: var(--color-warning-text);
 }
 
-/* ========== 모바일 반응형 (768px 이하) ========== */
+/* ========== 삭제 버튼 ========== */
+.dgc-reset-button {
+  padding: 4px;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border: none;
+  border-radius: var(--radius-s);
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dgc-reset-button:hover:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.dgc-reset-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.dgc-reset-button:disabled {
+  cursor: default;
+}
+
+.dgc-reset-button--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ========== 태블릿 (426px ~ 768px) ========== */
 @media (max-width: 768px) {
   .dgc-games-list {
     gap: var(--space-m);
-    max-height: 70vh; /* 60vh → 70vh로 증가 (더 많은 대진표 표시) */
+    max-height: 70vh;
   }
 
   .dgc-round-group {
@@ -239,29 +292,78 @@
   }
 
   .dgc-round-games {
-    padding-left: 0; /* 모바일에서도 좌우 margin 제거 */
     gap: var(--space-xxs);
   }
 
   .dgc-game-row {
     padding: 5px 6px;
-    font-size: var(--font-size-xs);
-    gap: var(--space-xs);
+    gap: var(--space-xxs);
   }
 
   .dgc-game-number {
-    font-size: var(--font-size-xs);
-    min-width: 45px;
+    font-size: var(--font-size-s);
+    min-width: 38px;
   }
 
   .dgc-game-content {
-    gap: var(--space-xs);
-    font-size: var(--font-size-xs);
+    gap: 2px;
+    font-size: var(--font-size-s);
   }
 
   .dgc-team-a-section,
   .dgc-team-b-section {
-    gap: var(--space-xs);
+    gap: var(--space-xxs);
+  }
+
+  .dgc-team-a-names,
+  .dgc-team-b-names {
+    font-size: var(--font-size-s);
+  }
+
+  .dgc-game-separator {
+    padding: 0 1px;
+  }
+
+  .dgc-end-section {
+    min-width: 32px;
+  }
+
+  .dgc-score-input {
+    width: 24px;
+    padding: 2px 3px;
+    font-size: var(--font-size-s);
+  }
+
+  .dgc-score-display {
+    font-size: var(--font-size-s);
+    padding: 2px 4px;
+    min-width: 18px;
+  }
+
+  .dgc-result-badge {
+    font-size: var(--font-size-xs);
+    padding: 2px 5px;
+  }
+
+  .dgc-reset-button {
+    padding: 3px;
+  }
+}
+
+/* ========== 모바일 소형 (359px 이하) ========== */
+@media (max-width: 359px) {
+  .dgc-game-row {
+    gap: 2px;
+  }
+
+  .dgc-game-number {
+    font-size: var(--font-size-xs);
+    min-width: 32px;
+  }
+
+  .dgc-game-content {
+    font-size: var(--font-size-xs);
+    gap: 1px;
   }
 
   .dgc-team-a-names,
@@ -269,24 +371,28 @@
     font-size: var(--font-size-xs);
   }
 
-  .dgc-game-separator {
-    padding: 0 1px;
+  .dgc-end-section {
+    min-width: 28px;
   }
 
   .dgc-score-input {
-    width: 28px;
-    padding: var(--space-xxs) 3px;
+    width: 22px;
     font-size: var(--font-size-xs);
+    padding: 2px;
   }
 
   .dgc-score-display {
     font-size: var(--font-size-xs);
-    padding: var(--space-xxs) var(--space-xs);
-    min-width: 20px;
+    min-width: 16px;
+    padding: 2px 3px;
   }
 
   .dgc-result-badge {
     font-size: 9px;
-    padding: var(--space-xxs) var(--space-xs);
+    padding: 2px 4px;
+  }
+
+  .dgc-reset-button {
+    padding: 2px;
   }
 }

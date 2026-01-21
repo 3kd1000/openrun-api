@@ -41,5 +41,8 @@ public interface ExternalRequestRepository extends JpaRepository<ExternalRequest
 
     // 특정 사용자가 신청한 외부 요청 목록 조회 (스케줄이 있는 것만)
     List<ExternalRequest> findByRequesterIdAndScheduleIsNotNullOrderByCreatedAtDesc(Long requesterId);
+
+    // 클럽 가입신청 중복 체크 (JOIN 타입, schedule은 null)
+    boolean existsByClubIdAndRequesterIdAndType(Long clubId, Long requesterId, ExternalRequestType type);
 }
 
