@@ -330,7 +330,7 @@ const ClubExplorePage: React.FC = () => {
                 <button
                   key={`M:${c.id}`}
                   className="club-explore-page__recruit-item"
-                  onClick={() => navigate(`/clubs/${c.id}/detail`)}
+                  onClick={() => navigate(`/clubs/${c.id}/recruiting`)}
                 >
                   <div className="club-explore-page__recruit-item-title">
                     {c.name}

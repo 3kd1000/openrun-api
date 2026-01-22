@@ -13,6 +13,7 @@ import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
+import com.example.openrunapi.domain.club.model.dto.TransferOwnershipRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
@@ -65,6 +66,9 @@ public class ClubService {
                 .build();
         clubMemberRepository.save(clubMember);
 
+        // 멤버 수 초기화 (OWNER 1명)
+        savedClub.updateMemberCount(1);
+
         return new ClubResponse(savedClub);
     }
 
@@ -111,7 +115,7 @@ public class ClubService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
 
         permissionService.requireScheduleManagePermission(currentUserId, clubId);
-        club.updatePolicies(request.getJoinPolicy(), request.getInterclubRecruitmentStatus(), request.getMemberRecruitmentStatus());
+        club.updatePolicies(request.getJoinPolicy(), request.getInterclubRecruitmentStatus(), request.getMemberRecruitmentStatus(), request.getMemberRecruitmentNote());
         return new ClubResponse(club);
     }
 
@@ -157,6 +161,11 @@ public class ClubService {
                 .build();
         clubMemberRepository.save(clubMember);
 
+        // AUTO 정책으로 바로 ACTIVE가 된 경우 멤버 수 증가
+        if (status == ClubMemberStatus.ACTIVE) {
+            club.updateMemberCount((club.getMemberCount() != null ? club.getMemberCount() : 0) + 1);
+        }
+
         // external_request에 JOIN 타입으로 INSERT (운영진 인박스에서 조회 가능)
         ExternalRequest externalRequest = new ExternalRequest(club, null, user, ExternalRequestType.JOIN);
         externalRequestRepository.save(externalRequest);
@@ -174,6 +183,11 @@ public class ClubService {
 
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 멤버를 찾을 수 없습니다."));
+
+        // PENDING → ACTIVE 변경 시 멤버 수 증가
+        if (member.getStatus() == ClubMemberStatus.PENDING) {
+            club.updateMemberCount((club.getMemberCount() != null ? club.getMemberCount() : 0) + 1);
+        }
 
         member.updateStatus(ClubMemberStatus.ACTIVE);
     }
@@ -231,13 +245,19 @@ public class ClubService {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
 
-        // 클럽 소유자는 탈퇴 불가
-        if (club.getOwnerUserId().equals(userId)) {
+        ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 클럽의 멤버가 아닙니다."));
+
+        // 클럽 소유자(OWNER 역할)는 탈퇴 불가
+        if (member.isOwner()) {
             throw new IllegalStateException("클럽 소유자는 탈퇴할 수 없습니다. 클럽을 삭제하거나 소유권을 이전하세요.");
         }
 
-        ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 클럽의 멤버가 아닙니다."));
+        // ACTIVE 멤버가 탈퇴하면 멤버 수 감소
+        if (member.getStatus() == ClubMemberStatus.ACTIVE) {
+            int currentCount = club.getMemberCount() != null ? club.getMemberCount() : 0;
+            club.updateMemberCount(Math.max(0, currentCount - 1));
+        }
 
         clubMemberRepository.delete(member);
     }
@@ -277,6 +297,12 @@ public class ClubService {
         // OWNER는 제명 불가
         if (targetMember.isOwner()) {
             throw new IllegalStateException("클럽 소유자는 제명할 수 없습니다. 소유권을 먼저 이전하세요.");
+        }
+
+        // ACTIVE 멤버가 제명되면 멤버 수 감소
+        if (targetMember.getStatus() == ClubMemberStatus.ACTIVE) {
+            int currentCount = club.getMemberCount() != null ? club.getMemberCount() : 0;
+            club.updateMemberCount(Math.max(0, currentCount - 1));
         }
 
         clubMemberRepository.delete(targetMember);
@@ -377,6 +403,40 @@ public class ClubService {
 
         // 최신 상태 반환
         return getClubMembership(clubId, ClubMemberStatus.ACTIVE);
+    }
+
+    /**
+     * 클럽장 권한 양도 - OWNER만 가능
+     * - 현재 OWNER가 ADMIN에게 클럽장 권한을 양도
+     * - 기존 OWNER → ADMIN, 새 OWNER → OWNER로 역할 변경
+     * - Club.ownerUserId도 함께 변경
+     */
+    @Transactional
+    public void transferOwnership(Long clubId, Long currentUserId, TransferOwnershipRequest request) {
+        // 1. 현재 사용자가 OWNER인지 확인
+        ClubMember currentOwner = clubMemberRepository.findByClubIdAndUserId(clubId, currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("클럽 멤버를 찾을 수 없습니다."));
+
+        if (!currentOwner.isOwner()) {
+            throw new SecurityException("클럽장만 권한을 양도할 수 있습니다.");
+        }
+
+        // 2. 대상자가 ADMIN인지 확인
+        ClubMember newOwner = clubMemberRepository.findByClubIdAndUserId(clubId, request.getNewOwnerUserId())
+                .orElseThrow(() -> new EntityNotFoundException("대상 멤버를 찾을 수 없습니다."));
+
+        if (newOwner.getRole() != ClubRole.ADMIN) {
+            throw new IllegalArgumentException("운영진(ADMIN)에게만 클럽장 권한을 양도할 수 있습니다.");
+        }
+
+        // 3. Club.ownerUserId 변경
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("클럽을 찾을 수 없습니다."));
+        club.changeOwner(request.getNewOwnerUserId());
+
+        // 4. 역할 변경: 기존 OWNER → ADMIN, 새 OWNER → OWNER
+        currentOwner.updateRole(ClubRole.ADMIN);
+        newOwner.updateRole(ClubRole.OWNER);
     }
 
     private Specification<Club> search(String keyword) {

@@ -53,7 +53,11 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 401 에러 처리 - 단, 토큰이 없는 상태(비로그인)에서는 리프레시 시도하지 않음
+    const session = getOpenRunSession();
+    const hasToken = sanitizeToken(session.firebaseToken) !== null;
+
+    if (error.response?.status === 401 && !originalRequest._retry && hasToken) {
       if (isRefreshing) {
         // 이미 토큰 리프레시 중이면 큐에 추가
         return new Promise((resolve, reject) => {

@@ -10,5 +10,6 @@ public class UpdateClubPolicyRequest {
     private ClubJoinPolicy joinPolicy;
     private InterclubRecruitmentStatus interclubRecruitmentStatus;
     private MemberRecruitmentStatus memberRecruitmentStatus;
+    private String memberRecruitmentNote;
 }
 

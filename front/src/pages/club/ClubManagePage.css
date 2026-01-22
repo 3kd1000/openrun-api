@@ -413,6 +413,20 @@
   text-align: left;
 }
 
+/* 위험 섹션 (클럽장 권한 양도 등) */
+.club-manage-page__section--danger {
+  border-color: #ffc107;
+  background-color: #fffbf0;
+}
+
+.club-manage-page__menu-item--danger {
+  color: #856404;
+}
+
+.club-manage-page__menu-item--danger .club-manage-page__menu-left {
+  color: #856404;
+}
+
 /* Desktop (769px+) */
 @media (min-width: 769px) {
   .club-manage-page {

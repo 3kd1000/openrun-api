@@ -36,42 +36,33 @@ const MorePage: React.FC = () => {
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
   const [myClubs, setMyClubs] = useState<MyClub[]>([]);
 
+  const isLoggedIn = isAuthReady && firebaseUser;
+
   useEffect(() => {
-    loadUserProfile();
-    loadOAuthProviders();
-    loadMyClubs();
+    if (!isAuthReady) return;
+
+    if (firebaseUser) {
+      loadUserProfile();
+      loadOAuthProviders();
+      loadMyClubs();
+    } else {
+      setIsLoading(false);
+    }
   }, [isAuthReady, firebaseUser]);
 
   const loadUserProfile = async () => {
-    // Firebase 인증 상태 복원이 완료될 때까지 대기
-    if (!isAuthReady) {
-      return;
-    }
-
-    // Firebase 사용자가 없으면 로그인 페이지로 리다이렉트
-    if (!firebaseUser) {
-      console.warn("⚠️ Firebase 사용자 없음 → 로그인 페이지로 리다이렉트");
-      navigate("/login");
-      return;
-    }
-
     try {
       setIsLoading(true);
 
       // API 호출하여 사용자 프로필 가져오기
-      console.log("🚀 App v2 실행"); // ← 이거!
       const userProfile = await getCurrentUser();
       setUser(userProfile);
       // 세션에도 저장 (다른 화면에서 사용)
       setOpenRunSession({ userName: userProfile.name });
     } catch (error) {
       console.error("사용자 정보 조회 실패:", error);
-      // API 호출 실패 시 로그인 페이지로 리다이렉트 (localStorage fallback 제거)
-      console.warn(
-        "⚠️ API 호출 실패 → 세션 클리어 및 로그인 페이지로 리다이렉트"
-      );
-      clearLoginSession();
-      navigate("/login");
+      // API 호출 실패해도 로그인 페이지로 리다이렉트하지 않음
+      // 서비스 섹션은 볼 수 있어야 함
     } finally {
       setIsLoading(false);
     }
@@ -112,15 +103,30 @@ const MorePage: React.FC = () => {
     navigate("/login");
   };
 
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
   const handleProfileUpdate = (updatedUser: UserProfile) => {
     setUser(updatedUser);
   };
 
+  // 인증 상태 확인 전에는 로딩 표시
+  if (!isAuthReady) {
+    return (
+      <div className="more-page">
+        <div className="more-content">
+          <div className="more-loading">로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="more-page">
       <div className="more-content">
-        {/* 프로필 카드 */}
-        {!isLoading && user && (
+        {/* 프로필 카드 - 로그인 시에만 표시 */}
+        {isLoggedIn && !isLoading && user && (
           <div
             className="profile-card"
             onClick={() => setIsEditModalOpen(true)}
@@ -150,39 +156,41 @@ const MorePage: React.FC = () => {
           </div>
         )}
 
-        {/* 내 정보 섹션 */}
-        <div className="more-section">
-          <h2>내 정보</h2>
+        {/* 내 정보 섹션 - 로그인 시에만 표시 */}
+        {isLoggedIn && (
+          <div className="more-section">
+            <h2>내 정보</h2>
 
-          <div
-            className="more-item"
-            onClick={() => navigate("/more/oauth-providers")}
-          >
-            <span className="more-icon">
-              <LinkIcon size={20} />
-            </span>
-            <div className="more-link-container">
-              <span className="more-link">연동된 계정</span>
-              {oauthProviders.length > 0 && (
-                <span className="more-badge">{oauthProviders.length}</span>
-              )}
+            <div
+              className="more-item"
+              onClick={() => navigate("/more/oauth-providers")}
+            >
+              <span className="more-icon">
+                <LinkIcon size={20} />
+              </span>
+              <div className="more-link-container">
+                <span className="more-link">연동된 계정</span>
+                {oauthProviders.length > 0 && (
+                  <span className="more-badge">{oauthProviders.length}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="more-item" onClick={() => navigate("/more/my-clubs")}>
+              <span className="more-icon">
+                <UsersIcon size={20} />
+              </span>
+              <div className="more-link-container">
+                <span className="more-link">가입한 클럽</span>
+                {myClubs.length > 0 && (
+                  <span className="more-badge">{myClubs.length}</span>
+                )}
+              </div>
             </div>
           </div>
+        )}
 
-          <div className="more-item" onClick={() => navigate("/more/my-clubs")}>
-            <span className="more-icon">
-              <UsersIcon size={20} />
-            </span>
-            <div className="more-link-container">
-              <span className="more-link">가입한 클럽</span>
-              {myClubs.length > 0 && (
-                <span className="more-badge">{myClubs.length}</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 서비스 섹션 */}
+        {/* 서비스 섹션 - 항상 표시 */}
         <div className="more-section">
           <h2>서비스</h2>
           {/* <div
@@ -226,10 +234,16 @@ const MorePage: React.FC = () => {
           </div>
         </div>
 
-        {/* 로그아웃 버튼 */}
-        <button onClick={handleLogout} className="logout-btn">
-          로그아웃
-        </button>
+        {/* 로그인/로그아웃 버튼 */}
+        {isLoggedIn ? (
+          <button onClick={handleLogout} className="logout-btn">
+            로그아웃
+          </button>
+        ) : (
+          <button onClick={handleLogin} className="login-btn">
+            로그인
+          </button>
+        )}
       </div>
 
       {/* 프로필 수정 모달 */}

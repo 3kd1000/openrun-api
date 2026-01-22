@@ -110,7 +110,7 @@ const RecruitClubsPage: React.FC = () => {
                 key={club.id}
                 className="recruit-clubs-page__item"
                 type="button"
-                onClick={() => navigate(`/clubs/${club.id}/detail`)}
+                onClick={() => navigate(`/clubs/${club.id}/recruiting`)}
               >
                 <div className="recruit-clubs-page__item-icon">🎾</div>
                 <div className="recruit-clubs-page__item-info">

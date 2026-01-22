@@ -7,6 +7,9 @@ export interface Club {
     joinPolicy?: 'APPROVAL' | 'AUTO';
     interclubRecruitmentStatus?: 'CLOSED' | 'OPEN';
     memberRecruitmentStatus?: 'CLOSED' | 'OPEN';
+    memberRecruitmentNote?: string | null;
+    activitySummary?: string | null;
+    memberCount?: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -40,6 +43,7 @@ export interface UpdateClubPolicyRequest {
     joinPolicy: 'APPROVAL' | 'AUTO';
     interclubRecruitmentStatus: 'CLOSED' | 'OPEN';
     memberRecruitmentStatus: 'CLOSED' | 'OPEN';
+    memberRecruitmentNote?: string | null;
 }
 
 export interface ClubRule {
@@ -84,4 +88,16 @@ export interface CreateClubNoticeRequest {
 export interface UpdateClubNoticeRequest {
     title: string;
     content: string;
+}
+
+export interface ClubMembership {
+    memberId: number;
+    role: 'OWNER' | 'ADMIN' | 'REGULAR';
+    status: 'PENDING' | 'ACTIVE' | 'REJECTED';
+    joinedAt: string;
+    userId: number;
+    name: string;
+    email: string | null;
+    imageUrl: string | null;
+    tennisStartedAt: string | null;
 }
