@@ -1,5 +1,8 @@
 package com.example.openrunapi.domain.schedule.service;
 
+import com.example.openrunapi.domain.club.model.Club;
+import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
+import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 일정 유지보수 배치 서비스
@@ -22,6 +27,8 @@ import java.util.List;
 public class ScheduleMaintenanceService {
 
     private final ScheduleRepository scheduleRepository;
+    private final ClubRepository clubRepository;
+    private final ClubMemberRepository clubMemberRepository;
 
     /**
      * 매일 KST 새벽 3시 (= UTC 18시) 실행
@@ -68,6 +75,66 @@ public class ScheduleMaintenanceService {
         scheduleRepository.saveAll(expiredSchedules);
         log.info("[배치 완료] 처리 완료 - 고정 해제: {}건, 게스트 종료: {}건, 교류전 종료: {}건",
                  pinnedCount, guestCount, interclubCount);
+
+        // 클럽별 활동 요약 업데이트
+        updateClubActivitySummaries();
+    }
+
+    /**
+     * 클럽별 활동 요약(일정 수, 참가자 수) 및 멤버 수를 계산하여 저장
+     */
+    private void updateClubActivitySummaries() {
+        log.info("[배치 시작] 클럽 활동 요약 및 멤버 수 업데이트 작업 시작");
+
+        // 모든 클럽의 일정 통계 조회
+        List<Object[]> stats = scheduleRepository.getActivityStatsByClub();
+
+        // clubId -> { scheduleCount, totalParticipants } 맵 생성
+        Map<Long, long[]> statsMap = stats.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> new long[]{
+                                ((Number) row[1]).longValue(),
+                                row[2] != null ? ((Number) row[2]).longValue() : 0L
+                        }
+                ));
+
+        // 클럽별 ACTIVE 멤버 수 조회
+        List<Object[]> memberCounts = clubMemberRepository.countActiveMembersByClub();
+        Map<Long, Integer> memberCountMap = memberCounts.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> ((Number) row[1]).intValue()
+                ));
+
+        // 모든 클럽 조회 및 업데이트
+        List<Club> clubs = clubRepository.findAll();
+        int updatedCount = 0;
+
+        for (Club club : clubs) {
+            // 활동 요약 업데이트
+            long[] clubStats = statsMap.get(club.getId());
+            String summary;
+
+            if (clubStats != null && clubStats[0] > 0) {
+                long scheduleCount = clubStats[0];
+                long totalParticipants = clubStats[1];
+                summary = String.format("총 %d개 일정, %d명 참가", scheduleCount, totalParticipants);
+            } else {
+                summary = null; // 일정이 없는 클럽은 null로 설정
+            }
+
+            club.updateActivitySummary(summary);
+
+            // 멤버 수 업데이트
+            Integer memberCount = memberCountMap.getOrDefault(club.getId(), 0);
+            club.updateMemberCount(memberCount);
+
+            updatedCount++;
+        }
+
+        clubRepository.saveAll(clubs);
+        log.info("[배치 완료] 클럽 활동 요약 및 멤버 수 업데이트 완료 - {}개 클럽 처리", updatedCount);
     }
 
     /**

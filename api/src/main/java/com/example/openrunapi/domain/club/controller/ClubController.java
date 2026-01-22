@@ -7,6 +7,7 @@ import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
+import com.example.openrunapi.domain.club.model.dto.TransferOwnershipRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.service.ClubService;
@@ -182,5 +183,21 @@ public class ClubController {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
         clubService.kickMember(clubId, currentUserResponse.getId(), memberId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 클럽장 권한 양도 (OWNER만 가능)
+     * - ADMIN에게만 양도 가능
+     * - 기존 OWNER → ADMIN, 새 OWNER → OWNER로 역할 변경
+     */
+    @PostMapping("/{clubId}/transfer-ownership")
+    public ResponseEntity<Void> transferOwnership(
+            @PathVariable Long clubId,
+            @Valid @RequestBody TransferOwnershipRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        clubService.transferOwnership(clubId, currentUserResponse.getId(), request);
+        return ResponseEntity.ok().build();
     }
 }

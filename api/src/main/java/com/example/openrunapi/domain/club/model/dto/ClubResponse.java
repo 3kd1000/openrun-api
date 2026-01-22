@@ -16,6 +16,9 @@ public class ClubResponse {
     private final String joinPolicy;
     private final String interclubRecruitmentStatus;
     private final String memberRecruitmentStatus;
+    private final String memberRecruitmentNote;
+    private final String activitySummary;
+    private final Integer memberCount;
     private final LocalDateTime createdAt;
 
     public ClubResponse(Club club) {
@@ -27,6 +30,9 @@ public class ClubResponse {
         this.joinPolicy = club.getJoinPolicy() != null ? club.getJoinPolicy().name() : null;
         this.interclubRecruitmentStatus = club.getInterclubRecruitmentStatus() != null ? club.getInterclubRecruitmentStatus().name() : null;
         this.memberRecruitmentStatus = club.getMemberRecruitmentStatus() != null ? club.getMemberRecruitmentStatus().name() : null;
+        this.memberRecruitmentNote = club.getMemberRecruitmentNote();
+        this.activitySummary = club.getActivitySummary();
+        this.memberCount = club.getMemberCount();
         this.createdAt = club.getCreatedAt();
     }
 }

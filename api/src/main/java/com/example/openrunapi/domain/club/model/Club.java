@@ -49,6 +49,15 @@ public class Club {
     @Column(name = "member_recruitment_status", nullable = false, length = 20)
     private MemberRecruitmentStatus memberRecruitmentStatus = MemberRecruitmentStatus.OPEN;
 
+    @Column(name = "member_recruitment_note", columnDefinition = "text")
+    private String memberRecruitmentNote;
+
+    @Column(name = "activity_summary", length = 200)
+    private String activitySummary;
+
+    @Column(name = "member_count")
+    private Integer memberCount = 0;
+
     private boolean deleted = false;
 
     @CreatedDate
@@ -73,7 +82,7 @@ public class Club {
         this.region = region;
     }
 
-    public void updatePolicies(ClubJoinPolicy joinPolicy, InterclubRecruitmentStatus interclubRecruitmentStatus, MemberRecruitmentStatus memberRecruitmentStatus) {
+    public void updatePolicies(ClubJoinPolicy joinPolicy, InterclubRecruitmentStatus interclubRecruitmentStatus, MemberRecruitmentStatus memberRecruitmentStatus, String memberRecruitmentNote) {
         if (joinPolicy != null) {
             this.joinPolicy = joinPolicy;
         }
@@ -83,9 +92,19 @@ public class Club {
         if (memberRecruitmentStatus != null) {
             this.memberRecruitmentStatus = memberRecruitmentStatus;
         }
+        // memberRecruitmentNote는 null이어도 업데이트 (빈 문자열로 초기화 가능)
+        this.memberRecruitmentNote = memberRecruitmentNote;
     }
 
     public void changeOwner(Long newOwnerUserId) {
         this.ownerUserId = newOwnerUserId;
+    }
+
+    public void updateActivitySummary(String activitySummary) {
+        this.activitySummary = activitySummary;
+    }
+
+    public void updateMemberCount(Integer memberCount) {
+        this.memberCount = memberCount != null ? memberCount : 0;
     }
 }

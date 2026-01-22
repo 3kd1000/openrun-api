@@ -38,4 +38,16 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
           AND cm.user.id IN :userIds
     """)
     List<Long> findActiveMemberUserIdsInClub(@Param("clubId") Long clubId, @Param("userIds") List<Long> userIds);
+
+    /**
+     * 클럽별 ACTIVE 멤버 수 집계 (Daily Batch용)
+     * @return List of [clubId, memberCount]
+     */
+    @Query("""
+        SELECT cm.club.id, COUNT(cm)
+        FROM ClubMember cm
+        WHERE cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
+        GROUP BY cm.club.id
+    """)
+    List<Object[]> countActiveMembersByClub();
 }

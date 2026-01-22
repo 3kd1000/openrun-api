@@ -215,6 +215,39 @@
   transform: translateY(0);
 }
 
+/* ===== 로그인 버튼 ===== */
+.login-btn {
+  width: 100%;
+  padding: var(--space-m);
+  margin-top: var(--space-l);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+  min-height: 48px;
+}
+
+.login-btn:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-s);
+}
+
+.login-btn:active {
+  transform: translateY(0);
+}
+
+/* ===== 로딩 상태 ===== */
+.more-loading {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--color-text-secondary);
+}
+
 /* ===== 미디어 쿼리: 미디어 대형 (401px ~ 768px) ===== */
 @media (min-width: 426px) and (max-width: 768px) {
   .more-page {
@@ -272,7 +305,8 @@
     font-size: var(--font-size-s);
   }
 
-  .logout-btn {
+  .logout-btn,
+  .login-btn {
     padding: var(--space-s);
     font-size: var(--font-size-s);
     min-height: 44px;
@@ -345,7 +379,8 @@
     font-size: var(--font-size-s);
   }
 
-  .logout-btn {
+  .logout-btn,
+  .login-btn {
     padding: var(--space-s);
     font-size: var(--font-size-s);
     min-height: 40px;
@@ -418,7 +453,8 @@
     font-size: var(--font-size-s);
   }
 
-  .logout-btn {
+  .logout-btn,
+  .login-btn {
     padding: var(--space-s);
     font-size: var(--font-size-s);
     min-height: 36px;

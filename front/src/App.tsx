@@ -7,7 +7,7 @@ import AuthTestPage from "./pages/auth/AuthTestPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SetupProfilePage from "./pages/auth/SetupProfilePage";
 import ClubListPage from "./pages/club/ClubListPage";
-import ClubDetailPage from "./pages/club/ClubDetailPage";
+import ClubRecruitingPage from "./pages/club/ClubRecruitingPage";
 import ClubAdminPage from "./pages/club/ClubAdminPage";
 import ClubMainPage from "./pages/club/ClubMainPage";
 import ClubExplorePage from "./pages/club/ClubExplorePage";
@@ -26,6 +26,7 @@ import InterclubRecruitPage from "./pages/club/InterclubRecruitPage";
 import ClubExternalRequestsPage from "./pages/club/ClubExternalRequestsPage";
 import ClubJoinRequestsPage from "./pages/club/ClubJoinRequestsPage";
 import ClubContentManagePage from "./pages/club/ClubContentManagePage";
+import ClubTransferOwnershipPage from "./pages/club/ClubTransferOwnershipPage";
 import RecruitSchedulesPage from "./pages/club/RecruitSchedulesPage";
 import RecruitClubsPage from "./pages/club/RecruitClubsPage";
 import TermsOfServicePage from "./pages/more/TermsOfServicePage";
@@ -80,10 +81,10 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Public: 클럽 상세(가입 신청 등) */}
+              {/* Public: 클럽 모집 페이지(가입 신청 등) */}
               <Route
-                path="/clubs/:clubId/detail"
-                element={<ClubDetailPage />}
+                path="/clubs/:clubId/recruiting"
+                element={<ClubRecruitingPage />}
               />
               <Route
                 path="/clubs/:clubId/members"
@@ -154,6 +155,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ClubContentManagePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clubs/:clubId/manage/transfer-ownership"
+                element={
+                  <ProtectedRoute>
+                    <ClubTransferOwnershipPage />
                   </ProtectedRoute>
                 }
               />

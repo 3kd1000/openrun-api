@@ -11,27 +11,15 @@ import { postService } from "../../services/postService";
 import { commentService } from "../../services/commentService";
 import type { Post, Comment } from "../../types/post";
 import { getOpenRunSession } from "../../utils/openrunSession";
-import "./ClubDetailPage.css";
+import "./ClubRecruitingPage.css";
 
-interface ClubMembershipResponse {
-  memberId: number;
-  role: "OWNER" | "ADMIN" | "MEMBER" | "REGULAR";
-  status: "PENDING" | "ACTIVE" | "REJECTED";
-  joinedAt: string;
-  userId: number;
-  name: string;
-  email: string | null;
-  imageUrl: string | null;
-}
-
-const ClubDetailPage: React.FC = () => {
+const ClubRecruitingPage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
   const [club, setClub] = useState<Club | null>(null);
   const [joinStatus, setJoinStatus] = useState<
     "NONE" | "PENDING" | "ACTIVE" | "REJECTED"
   >("NONE");
-  const [activeMemberCount, setActiveMemberCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_joinReq, setJoinReq] = useState<ExternalRequestResponse | null>(null);
@@ -55,32 +43,25 @@ const ClubDetailPage: React.FC = () => {
       setClub(response.data);
     } catch (error) {
       console.error("Failed to fetch club detail:", error);
+    } finally {
+      setLoading(false);
     }
   }, [clubId]);
 
-  const fetchActiveMembership = useCallback(async () => {
-    if (!clubId) return;
+  // 로그인한 사용자의 가입 상태 확인 (로그인 시에만 호출)
+  const fetchMyMembership = useCallback(async () => {
+    if (!clubId || !currentUserId) return;
     try {
-      const response = await axiosInstance.get<ClubMembershipResponse[]>(
+      const response = await axiosInstance.get<{ userId: number; status: string }[]>(
         `/clubs/${clubId}/membership`,
-        {
-          params: { status: "ACTIVE" },
-        }
+        { params: { status: "ACTIVE" } }
       );
-      const list = response.data ?? [];
-      setActiveMemberCount(list.length);
-      if (currentUserId) {
-        const me = list.find((m) => m.userId === currentUserId);
-        setJoinStatus((prev) =>
-          me ? "ACTIVE" : prev === "PENDING" ? "PENDING" : "NONE"
-        );
-      } else {
-        setJoinStatus("NONE");
+      const me = response.data?.find((m) => m.userId === currentUserId);
+      if (me) {
+        setJoinStatus("ACTIVE");
       }
-    } catch (error) {
-      console.error("Failed to fetch members:", error);
-    } finally {
-      setLoading(false);
+    } catch {
+      // 비로그인이거나 권한 없으면 무시
     }
   }, [clubId, currentUserId]);
 
@@ -114,10 +95,10 @@ const ClubDetailPage: React.FC = () => {
   useEffect(() => {
     if (clubId) {
       fetchClubDetail();
-      fetchActiveMembership();
+      fetchMyMembership();
       fetchJoinInquiryThread();
     }
-  }, [clubId, fetchClubDetail, fetchActiveMembership, fetchJoinInquiryThread]);
+  }, [clubId, fetchClubDetail, fetchMyMembership, fetchJoinInquiryThread]);
 
   const handleJoinRequest = async () => {
     if (!currentUserId) {
@@ -203,10 +184,10 @@ const ClubDetailPage: React.FC = () => {
   if (!club) return <div>Club not found</div>;
 
   return (
-    <div className="club-detail-page">
-      <div className="club-detail-page__header">
+    <div className="club-recruiting-page">
+      <div className="club-recruiting-page__header">
         <button
-          className="club-detail-page__back-btn"
+          className="club-recruiting-page__back-btn"
           type="button"
           onClick={() => navigate("/clubs/explore")}
           aria-label="클럽 탐색으로"
@@ -214,27 +195,71 @@ const ClubDetailPage: React.FC = () => {
         >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-detail-page__title">클럽</h1>
-        <div className="club-detail-page__header-spacer" />
+        <h1 className="club-recruiting-page__title">클럽</h1>
+        <div className="club-recruiting-page__header-spacer" />
       </div>
 
-      <div className="club-detail-page__card">
-        <h2 className="club-detail-page__name">{club.name}</h2>
-        {club.description ? (
-          <p className="club-detail-page__desc">{club.description}</p>
-        ) : null}
+      <div className="club-recruiting-page__card">
+        <div className="club-recruiting-page__info-list">
+          {/* 클럽명 */}
+          <div className="club-recruiting-page__info-item">
+            <span className="club-recruiting-page__info-label">클럽명</span>
+            <span className="club-recruiting-page__info-value club-recruiting-page__info-value--name">
+              {club.name}
+            </span>
+          </div>
 
-        <div className="club-detail-page__meta">
-          <div className="club-detail-page__meta-label">지역</div>
-          <div>{club.region ?? "-"}</div>
-          <div className="club-detail-page__meta-label">멤버 수</div>
-          <div>{activeMemberCount}</div>
+          {/* 클럽소개 */}
+          <div className="club-recruiting-page__info-item">
+            <span className="club-recruiting-page__info-label">클럽소개</span>
+            <span className={`club-recruiting-page__info-value ${!club.description ? "club-recruiting-page__info-value--muted" : ""}`}>
+              {club.description || "-"}
+            </span>
+          </div>
+
+          {/* 활동지역 · 멤버 수 (한 줄) */}
+          <div className="club-recruiting-page__info-row">
+            <div className="club-recruiting-page__info-item club-recruiting-page__info-item--half">
+              <span className="club-recruiting-page__info-label">활동지역</span>
+              <span className={`club-recruiting-page__info-value ${!club.region ? "club-recruiting-page__info-value--muted" : ""}`}>
+                {club.region || "-"}
+              </span>
+            </div>
+            <div className="club-recruiting-page__info-item club-recruiting-page__info-item--half">
+              <span className="club-recruiting-page__info-label">멤버 수</span>
+              <span className="club-recruiting-page__info-value">
+                {club.memberCount ?? 0}명
+              </span>
+            </div>
+          </div>
+
+          {/* 활동 현황 */}
+          {club.activitySummary && (
+            <div className="club-recruiting-page__info-item">
+              <span className="club-recruiting-page__info-label">활동 현황</span>
+              <span className="club-recruiting-page__info-value club-recruiting-page__info-value--highlight">
+                {club.activitySummary}
+              </span>
+            </div>
+          )}
+
+          {/* 모집 안내글 */}
+          {club.memberRecruitmentStatus === "OPEN" && club.memberRecruitmentNote && (
+            <div className="club-recruiting-page__info-item club-recruiting-page__info-item--block">
+              <span className="club-recruiting-page__info-label">모집 안내</span>
+              <div className="club-recruiting-page__recruit-content">
+                {club.memberRecruitmentNote}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="club-detail-page__actions">
+        <div className="club-recruiting-page__divider" />
+
+        <div className="club-recruiting-page__actions">
           {joinStatus === "ACTIVE" && (
             <button
-              className="club-detail-page__join-btn"
+              className="club-recruiting-page__join-btn"
               disabled
               type="button"
             >
@@ -243,7 +268,7 @@ const ClubDetailPage: React.FC = () => {
           )}
           {joinStatus === "PENDING" && (
             <button
-              className="club-detail-page__join-btn"
+              className="club-recruiting-page__join-btn"
               disabled
               type="button"
             >
@@ -252,7 +277,7 @@ const ClubDetailPage: React.FC = () => {
           )}
           {joinStatus === "NONE" && (
             <button
-              className="club-detail-page__join-btn"
+              className="club-recruiting-page__join-btn"
               onClick={handleJoinRequest}
               type="button"
             >
@@ -260,18 +285,18 @@ const ClubDetailPage: React.FC = () => {
             </button>
           )}
 
-          <div className="club-detail-page__hint">
+          <div className="club-recruiting-page__hint">
             가입 문의는 운영진이 확인 후 댓글로 답변합니다.
           </div>
         </div>
       </div>
 
-      <div className="club-detail-page__card club-detail-page__card--thread">
+      <div className="club-recruiting-page__card club-recruiting-page__card--thread">
         {!joinPost ? (
-          <div className="club-detail-page__section">
-            <div className="club-detail-page__section-title">가입 문의</div>
+          <div className="club-recruiting-page__section">
+            <div className="club-recruiting-page__section-title">가입 문의</div>
             <textarea
-              className="club-detail-page__textarea"
+              className="club-recruiting-page__textarea"
               placeholder={
                 "가입 조건/분위기/참가 방식 등 궁금한 점을 자유롭게 작성해주세요.\n\n(운영진 답변은 댓글로 달립니다)"
               }
@@ -280,7 +305,7 @@ const ClubDetailPage: React.FC = () => {
               disabled={actionLoading}
             />
             <button
-              className="club-detail-page__primary"
+              className="club-recruiting-page__primary"
               onClick={handleCreateJoinInquiry}
               disabled={actionLoading || !joinInquiryContent.trim()}
               type="button"
@@ -289,30 +314,30 @@ const ClubDetailPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="club-detail-page__section">
-            <div className="club-detail-page__section-title">대화</div>
-            <div className="club-detail-page__post">
-              <div className="club-detail-page__post-content">
+          <div className="club-recruiting-page__section">
+            <div className="club-recruiting-page__section-title">대화</div>
+            <div className="club-recruiting-page__post">
+              <div className="club-recruiting-page__post-content">
                 {sanitizeJoinInquiryText(joinPost.content)}
               </div>
-              <div className="club-detail-page__post-meta">
+              <div className="club-recruiting-page__post-meta">
                 {joinPost.author?.name ?? joinPost.guestName ?? "익명"} ·{" "}
                 {new Date(joinPost.createdAt).toLocaleString()}
               </div>
             </div>
 
-            <div className="club-detail-page__comments">
+            <div className="club-recruiting-page__comments">
               {joinComments.length === 0 ? (
-                <div className="club-detail-page__hint">
+                <div className="club-recruiting-page__hint">
                   아직 댓글이 없습니다.
                 </div>
               ) : (
                 joinComments.map((c) => (
-                  <div key={c.id} className="club-detail-page__comment">
-                    <div className="club-detail-page__comment-content">
+                  <div key={c.id} className="club-recruiting-page__comment">
+                    <div className="club-recruiting-page__comment-content">
                       {c.content}
                     </div>
-                    <div className="club-detail-page__comment-meta">
+                    <div className="club-recruiting-page__comment-meta">
                       {c.author?.name ?? "익명"} ·{" "}
                       {new Date(c.createdAt).toLocaleString()}
                     </div>
@@ -321,16 +346,16 @@ const ClubDetailPage: React.FC = () => {
               )}
             </div>
 
-            <div className="club-detail-page__comment-box">
+            <div className="club-recruiting-page__comment-box">
               <textarea
-                className="club-detail-page__textarea club-detail-page__textarea--comment"
+                className="club-recruiting-page__textarea club-recruiting-page__textarea--comment"
                 placeholder="댓글을 입력하세요"
                 value={joinCommentContent}
                 onChange={(e) => setJoinCommentContent(e.target.value)}
                 disabled={actionLoading}
               />
               <button
-                className="club-detail-page__primary"
+                className="club-recruiting-page__primary"
                 onClick={handleCreateJoinComment}
                 disabled={actionLoading || !joinCommentContent.trim()}
                 type="button"
@@ -345,4 +370,4 @@ const ClubDetailPage: React.FC = () => {
   );
 };
 
-export default ClubDetailPage;
+export default ClubRecruitingPage;

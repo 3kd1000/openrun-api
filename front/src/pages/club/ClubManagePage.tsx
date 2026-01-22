@@ -9,7 +9,10 @@ import {
   ChevronRightIcon,
   EditIcon,
   SettingsIcon,
+  CrownIcon,
 } from "../../components/common/Icons";
+import { getOpenRunSession } from "../../utils/openrunSession";
+import { normalizeClubRole } from "../../utils/role";
 import { getErrorMessage, logError } from "../../utils/errorHandler";
 import "./ClubManagePage.css";
 
@@ -21,6 +24,11 @@ const ClubManagePage: React.FC = () => {
   const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 권한 체크
+  const session = getOpenRunSession();
+  const myRole = normalizeClubRole(session.currentClubRole);
+  const isOwner = myRole === "OWNER";
 
   // NOTE: 클럽 관리 화면은 딥링크(상세 페이지) 중심으로 통일합니다.
 
@@ -131,6 +139,22 @@ const ClubManagePage: React.FC = () => {
           <ChevronRightIcon size={18} />
         </button>
       </div>
+
+      {/* 클럽장 전용 메뉴 */}
+      {isOwner && (
+        <div className="club-manage-page__section club-manage-page__section--danger">
+          <button
+            className="club-manage-page__menu-item club-manage-page__menu-item--danger"
+            onClick={() => navigate(`/clubs/${clubId}/manage/transfer-ownership`)}
+          >
+            <div className="club-manage-page__menu-left">
+              <CrownIcon size={18} />
+              <span>클럽장 권한 양도</span>
+            </div>
+            <ChevronRightIcon size={18} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

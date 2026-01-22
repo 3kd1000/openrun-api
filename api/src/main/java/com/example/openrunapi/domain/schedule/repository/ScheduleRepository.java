@@ -43,4 +43,12 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long>, JpaSp
     @Query("SELECT s FROM Schedule s WHERE s.scheduledAt < :currentTime " +
            "AND (s.pinned = true OR s.guestRecruitOpen = true OR s.interclubRecruitOpen = true)")
     List<Schedule> findExpiredSchedulesWithActiveFlags(@Param("currentTime") LocalDateTime currentTime);
+
+    /**
+     * 클럽별 일정 수와 참가자 수 집계 (활동 요약용)
+     * @return Object[] { clubId (Long), scheduleCount (Long), totalParticipants (Long) }
+     */
+    @Query("SELECT s.clubId, COUNT(s), SUM(s.currentParticipants) " +
+           "FROM Schedule s GROUP BY s.clubId")
+    List<Object[]> getActivityStatsByClub();
 }
