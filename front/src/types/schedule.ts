@@ -6,6 +6,7 @@ export interface Schedule {
   clubName?: string;
   courtName: string;
   scheduledAt: string; // ISO 8601 format
+  durationMinutes?: number; // 소요시간(분), 기본값 120
   pinned?: boolean; // 공지성 고정 일정 (없으면 false로 간주)
   guestRecruitOpen?: boolean;
   guestRecruitNote?: string | null;
@@ -31,6 +32,7 @@ export interface CreateScheduleRequest {
   clubId: number;
   courtName: string;
   scheduledAt: string; // ISO 8601 format: "2025-12-25T14:00:00"
+  durationMinutes?: number; // 소요시간(분), 기본값 120
   maxCapacity: number;
   cost?: number;
   description?: string;

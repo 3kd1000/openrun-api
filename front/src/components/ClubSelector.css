@@ -20,6 +20,8 @@
   cursor: pointer;
   min-height: 36px;
   text-align: center;
+  text-align-last: center;
+  -moz-text-align-last: center;
   color: var(--color-text-primary);
   transition: all var(--transition-base);
 }

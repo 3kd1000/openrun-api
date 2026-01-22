@@ -35,4 +35,7 @@ public class UpdateScheduleRequest {
     private LocalDateTime participationStartAt;
 
     private MatchType matchType;
+
+    @Min(value = 30, message = "기간은 최소 30분 이상이어야 합니다.")
+    private Integer durationMinutes;
 }

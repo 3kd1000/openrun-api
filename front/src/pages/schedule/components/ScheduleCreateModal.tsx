@@ -56,12 +56,14 @@ const ScheduleCreateModal: React.FC<Props> = ({
       const requestData: CreateScheduleRequest = {
         clubId: data.clubId,
         scheduledAt: data.scheduledAt,
+        durationMinutes: data.durationMinutes,
         courtName: data.courtName,
         maxCapacity: data.maxCapacity,
         cost: data.cost,
         description: data.description,
         reservedByUserId: data.reservedByUserId,
         participationStartAt: data.participationStartAt,
+        matchType: data.matchType,
       };
 
       await scheduleService.createSchedule(requestData);

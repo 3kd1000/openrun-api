@@ -58,10 +58,10 @@
 }
 
 .club-recruiting-page__info-label {
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
-  min-width: 80px;
+  min-width: 40px;
   flex-shrink: 0;
 }
 
@@ -73,10 +73,7 @@
   word-break: break-word;
 }
 
-.club-recruiting-page__info-value--name {
-  font-size: var(--font-size-l);
-  font-weight: var(--font-weight-bold);
-}
+/* 클럽명도 다른 content와 동일한 사이즈 */
 
 .club-recruiting-page__info-value--muted {
   color: var(--color-text-secondary);
@@ -135,25 +132,27 @@
 
 .club-recruiting-page__join-btn {
   width: 100%;
-  border: none;
+  border: 1.5px solid var(--color-primary);
   border-radius: 12px;
   padding: 14px;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
-  background: var(--color-success);
-  color: var(--color-white);
+  background: transparent;
+  color: var(--color-primary);
   cursor: pointer;
   transition: all var(--transition-duration) var(--transition-timing);
 }
 
 .club-recruiting-page__join-btn:hover:not(:disabled) {
-  background: var(--color-success-hover);
+  background: var(--color-primary-bg);
   transform: translateY(-1px);
 }
 
 .club-recruiting-page__join-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .club-recruiting-page__hint {
@@ -172,30 +171,32 @@
 
 .club-recruiting-page__primary {
   width: 100%;
-  border: none;
+  border: 1.5px solid var(--color-primary);
   border-radius: 12px;
   padding: 14px;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
-  background: var(--color-primary);
-  color: var(--color-white);
+  background: transparent;
+  color: var(--color-primary);
   cursor: pointer;
   transition: all var(--transition-duration) var(--transition-timing);
 }
 
 .club-recruiting-page__primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
+  background: var(--color-primary-bg);
   transform: translateY(-1px);
 }
 
 .club-recruiting-page__primary:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .club-recruiting-page__textarea {
   width: 100%;
-  border: 1px solid var(--color-border);
+  border: 1.5px solid var(--color-text-tertiary);
   background: var(--color-white);
   border-radius: 12px;
   padding: 12px;
@@ -242,14 +243,4 @@
   margin-top: var(--space-m);
 }
 
-/* ========== 모바일 반응형 ========== */
-@media (max-width: 480px) {
-  .club-recruiting-page__info-item {
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-
-  .club-recruiting-page__info-label {
-    min-width: auto;
-  }
-}
+/* 모바일에서도 가로 레이아웃 유지 (GuestRecruitPage와 동일) */

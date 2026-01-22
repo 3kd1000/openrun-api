@@ -15,11 +15,13 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@types/react-date-range": "^1.4.10",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "firebase": "^12.1.0",
     "react": "^19.1.0",
     "react-calendar": "^6.0.0",
+    "react-date-range": "^2.0.1",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
     "zustand": "^5.0.6"

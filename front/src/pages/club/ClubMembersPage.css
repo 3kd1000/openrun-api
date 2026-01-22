@@ -150,23 +150,15 @@
   border-bottom: none;
 }
 
-.club-members-page__item-avatar {
-  width: 48px;
-  height: 48px;
+.club-members-page__item-role-icon {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background-color: var(--color-bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  overflow: hidden;
-  color: var(--color-text-secondary);
-}
-
-.club-members-page__item-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .club-members-page__item-info {
@@ -267,11 +259,6 @@
   .club-members-page__title {
     font-size: var(--font-size-base);
   }
-
-  .club-members-page__item-avatar {
-    width: 44px;
-    height: 44px;
-  }
 }
 
 /* Mobile Large (361px ~ 425px) */
@@ -300,11 +287,6 @@
   .club-members-page__item {
     padding: var(--space-s);
     gap: var(--space-s);
-  }
-
-  .club-members-page__item-avatar {
-    width: 40px;
-    height: 40px;
   }
 
   .club-members-page__item-name {
@@ -349,11 +331,6 @@
   .club-members-page__item {
     padding: var(--space-xs);
     gap: var(--space-xs);
-  }
-
-  .club-members-page__item-avatar {
-    width: 36px;
-    height: 36px;
   }
 
   .club-members-page__item-name {

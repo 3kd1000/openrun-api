@@ -35,6 +35,7 @@ public class ScheduleResponse {
     private final String guestRecruitNote;
     private final Boolean interclubRecruitOpen;
     private final String interclubRecruitNote;
+    private final Integer durationMinutes;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Boolean canManageSchedule; // 권한 정보 (nullable, 요청 userId가 없으면 null)
@@ -79,6 +80,7 @@ public class ScheduleResponse {
         this.guestRecruitNote = schedule.getGuestRecruitNote();
         this.interclubRecruitOpen = Boolean.TRUE.equals(schedule.getInterclubRecruitOpen());
         this.interclubRecruitNote = schedule.getInterclubRecruitNote();
+        this.durationMinutes = schedule.getDurationMinutes() != null ? schedule.getDurationMinutes() : 120;
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
 

@@ -50,25 +50,15 @@
   min-width: 0; /* overflow 처리 */
 }
 
-.profile-image {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: var(--border-width-thin) solid var(--color-border-secondary);
-  flex-shrink: 0;
-}
-
 .profile-icon {
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: var(--color-bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-tertiary);
-  border: var(--border-width-thin) solid var(--color-border-secondary);
   flex-shrink: 0;
 }
 
@@ -264,16 +254,6 @@
     min-height: 84px;
   }
 
-  .profile-image,
-  .profile-icon {
-    width: 56px;
-    height: 56px;
-  }
-
-  .profile-icon {
-    font-size: var(--font-size-xl);
-  }
-
   .profile-name {
     font-size: var(--font-size-base);
   }
@@ -327,16 +307,6 @@
   .profile-card {
     padding: var(--space-s);
     min-height: 76px;
-  }
-
-  .profile-image,
-  .profile-icon {
-    width: 50px;
-    height: 50px;
-  }
-
-  .profile-icon {
-    font-size: var(--font-size-l);
   }
 
   .profile-name {
@@ -401,16 +371,6 @@
   .profile-card {
     padding: var(--space-s);
     min-height: 72px;
-  }
-
-  .profile-image,
-  .profile-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .profile-icon {
-    font-size: var(--font-size-base);
   }
 
   .profile-name {

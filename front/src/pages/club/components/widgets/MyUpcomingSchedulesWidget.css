@@ -109,6 +109,38 @@
   font-weight: var(--font-weight-medium);
 }
 
+.my-upcoming-schedules-widget__match-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  margin-left: var(--space-xxs);
+  color: white;
+}
+
+/* 남복: 파란색 */
+.my-upcoming-schedules-widget__match-type.match-type--men_doubles {
+  background-color: #4a90e2;
+}
+
+/* 여복: 분홍색 */
+.my-upcoming-schedules-widget__match-type.match-type--women_doubles {
+  background-color: #e91e63;
+}
+
+/* 혼복: 보라색 */
+.my-upcoming-schedules-widget__match-type.match-type--mixed_doubles {
+  background-color: #9c27b0;
+}
+
+/* 단식: 초록색 */
+.my-upcoming-schedules-widget__match-type.match-type--singles {
+  background-color: #4caf50;
+}
+
 .my-upcoming-schedules-widget__guest-badge {
   display: inline-flex;
   align-items: center;

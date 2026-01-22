@@ -3,6 +3,8 @@ export interface Club {
     name: string;
     description: string;
     region: string;
+    regionDepth1?: string | null;
+    regionDepth2?: string | null;
     ownerUserId: number;
     joinPolicy?: 'APPROVAL' | 'AUTO';
     interclubRecruitmentStatus?: 'CLOSED' | 'OPEN';
@@ -31,12 +33,16 @@ export interface CreateClubRequest {
     name: string;
     description?: string;
     region?: string;
+    regionDepth1?: string;
+    regionDepth2?: string;
 }
 
 export interface UpdateClubRequest {
     name?: string;
     description?: string;
     region?: string;
+    regionDepth1?: string;
+    regionDepth2?: string;
 }
 
 export interface UpdateClubPolicyRequest {

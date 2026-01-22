@@ -9,6 +9,7 @@ import {
   updateUser,
 } from "../services/api/userApi";
 import { setOpenRunSession } from "../utils/openrunSession";
+import RegionSelector from "./common/RegionSelector";
 import "./ProfileEditModal.css";
 
 interface ProfileEditModalProps {
@@ -36,6 +37,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [gender, setGender] = useState<"MALE" | "FEMALE" | "PRIVATE">(
     (user.gender as "MALE" | "FEMALE" | "PRIVATE") || "PRIVATE"
   );
+  const [regionDepth1, setRegionDepth1] = useState(user.regionDepth1 || "");
+  const [regionDepth2, setRegionDepth2] = useState(user.regionDepth2 || "");
   const [tennisStartedMonth, setTennisStartedMonth] = useState<string>(""); // YYYY-MM
   const [ntrp, setNtrp] = useState<string>("");
   const [formerPlayer, setFormerPlayer] = useState<boolean>(false);
@@ -141,6 +144,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           phoneVisibility,
           emailVisibility,
           gender,
+          regionDepth1: regionDepth1 || null,
+          regionDepth2: regionDepth2 || null,
         }),
         updateMyTennisProfile({
           tennisStartedAt,
@@ -310,6 +315,19 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             {phoneError && (
               <div className="field-error-message">{phoneError}</div>
             )}
+          </div>
+
+          <div className="form-group">
+            <label>지역</label>
+            <RegionSelector
+              depth1={regionDepth1}
+              depth2={regionDepth2}
+              onChangeDepth1={setRegionDepth1}
+              onChangeDepth2={setRegionDepth2}
+            />
+            <small className="form-help">
+              클럽 탐색 시 기본 필터로 사용됩니다.
+            </small>
           </div>
 
           <div className="profile-edit-modal__section-title">테니스 프로필</div>

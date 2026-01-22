@@ -1,0 +1,122 @@
+.date-range-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.date-range-picker__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-s) var(--space-m);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.date-range-picker__trigger:hover {
+  border-color: var(--color-primary);
+}
+
+.date-range-picker__trigger--active {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.date-range-picker__text {
+  flex: 1;
+  text-align: left;
+}
+
+.date-range-picker__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.date-range-picker__clear:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.date-range-picker__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1000;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+/* 모바일에서 중앙 정렬 */
+@media (max-width: 425px) {
+  .date-range-picker__dropdown {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: calc(100vw - 32px);
+  }
+}
+
+.date-range-picker__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-s) var(--space-m);
+  border-top: 1px solid var(--color-border);
+}
+
+.date-range-picker__done {
+  padding: var(--space-xs) var(--space-m);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  border: none;
+  border-radius: var(--radius-s);
+  background: var(--color-primary);
+  color: var(--color-white);
+  cursor: pointer;
+}
+
+.date-range-picker__done:hover {
+  background: var(--color-primary-dark);
+}
+
+/* react-date-range 스타일 오버라이드 */
+.date-range-picker .rdrCalendarWrapper {
+  font-size: 14px;
+}
+
+.date-range-picker .rdrMonthAndYearWrapper {
+  padding-top: 8px;
+}
+
+.date-range-picker .rdrMonth {
+  padding: 0 12px 12px 12px;
+}
+
+.date-range-picker .rdrWeekDay {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.date-range-picker .rdrDayNumber span {
+  color: var(--color-text);
+}
+
+.date-range-picker .rdrDayPassive .rdrDayNumber span {
+  color: var(--color-text-tertiary);
+}

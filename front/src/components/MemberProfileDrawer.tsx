@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { MemberProfile } from "../services/api/userApi";
 import { getClubMemberProfile } from "../services/api/userApi";
+import { getRoleLabel, normalizeClubRole } from "../utils/role";
 import "./MemberProfileDrawer.css";
 
 interface MemberProfileDrawerProps {
@@ -49,21 +50,6 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
-    }
-  };
-
-  const getRoleLabel = (role: string): string => {
-    switch (role) {
-      case "OWNER":
-        return "운영자";
-      case "ADMIN":
-        return "관리자";
-      case "MEMBER":
-        return "멤버";
-      case "REGULAR":
-        return "정회원";
-      default:
-        return role;
     }
   };
 
@@ -156,7 +142,7 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                 <div className="profile-item">
                   <span className="profile-label">역할</span>
                   <span className="profile-value">
-                    {getRoleLabel(profile.role)}
+                    {getRoleLabel(normalizeClubRole(profile.role))}
                   </span>
                 </div>
                 <div className="profile-item">

@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { format } from "date-fns";
-import { ko } from "date-fns/locale";
 import { drawService } from "../../../services/drawService";
 import type {
   DrawResponse,
@@ -13,6 +11,7 @@ import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
 import { isNotEmpty } from "../../../utils/isEmpty";
+import { formatScheduleDateTime } from "../../../utils/dateUtils";
 import { ClipboardListIcon, CheckIcon, CopyIcon, RefreshCwIcon, EditIcon } from "../../../components/common/Icons";
 import "./DrawViewModal.css";
 
@@ -275,9 +274,10 @@ const DrawViewModal: React.FC<Props> = ({
           <div className="schedule-info-section">
             <h3>{schedule.courtName}</h3>
             <p className="schedule-datetime">
-              {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 (E) HH:mm", {
-                locale: ko,
-              })}
+              {formatScheduleDateTime(
+                schedule.scheduledAt,
+                schedule.durationMinutes
+              )}
             </p>
             <div className="draw-type-badge">
               대진 타입: {schedule.drawType}
