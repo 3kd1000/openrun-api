@@ -209,7 +209,7 @@ const ClubManagePolicyPage: React.FC = () => {
 
             <div className="club-manage-policy-page__row">
               <div className="club-manage-policy-page__row-title">
-                모집 안내문
+                신규회원 모집 안내문
               </div>
               <div className="club-manage-policy-page__row-desc">
                 클럽 상세 페이지에서 가입 희망자에게 표시됩니다.

@@ -140,8 +140,40 @@
 }
 
 .club-explore-page__recruit-item-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-weight: var(--font-weight-semibold);
   margin-bottom: 4px;
+}
+
+.club-explore-page__match-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: white;
+  border-radius: 6px;
+}
+
+/* 남복: 파란색 */
+.club-explore-page__match-type-badge.match-type--men_doubles {
+  background-color: #4a90e2;
+}
+
+/* 여복: 분홍색 */
+.club-explore-page__match-type-badge.match-type--women_doubles {
+  background-color: #e91e63;
+}
+
+/* 혼복: 보라색 */
+.club-explore-page__match-type-badge.match-type--mixed_doubles {
+  background-color: #9c27b0;
+}
+
+/* 단식: 초록색 */
+.club-explore-page__match-type-badge.match-type--singles {
+  background-color: #4caf50;
 }
 
 .club-explore-page__recruit-item-meta {

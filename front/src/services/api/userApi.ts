@@ -16,6 +16,8 @@ export interface UserProfile {
   phoneVisibility?: ContactVisibility;
   emailVisibility?: ContactVisibility;
   gender?: 'MALE' | 'FEMALE' | 'PRIVATE';
+  regionDepth1?: string | null;
+  regionDepth2?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +43,8 @@ export interface UpdateUserRequest {
   phoneVisibility?: ContactVisibility;
   emailVisibility?: ContactVisibility;
   gender?: 'MALE' | 'FEMALE' | 'PRIVATE';
+  regionDepth1?: string | null;
+  regionDepth2?: string | null;
 }
 
 export interface OAuthProvider {

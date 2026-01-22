@@ -57,6 +57,11 @@ public class ClubService {
         Club newClub = request.toEntity(ownerUserId);
         Club savedClub = clubRepository.save(newClub);
 
+        // regionDepth1/2가 있으면 region 필드도 함께 업데이트
+        if (request.getRegionDepth1() != null && !request.getRegionDepth1().isEmpty()) {
+            savedClub.updateRegion(request.getRegionDepth1(), request.getRegionDepth2());
+        }
+
         // 클럽 생성자를 자동으로 멤버로 추가 (OWNER 역할, ACTIVE 상태)
         ClubMember clubMember = ClubMember.builder()
                 .club(savedClub)
@@ -95,6 +100,11 @@ public class ClubService {
         permissionService.requireScheduleManagePermission(currentUserId, clubId);
 
         club.update(request.getName(), request.getDescription(), request.getRegion());
+
+        // regionDepth1/2 업데이트
+        if (request.getRegionDepth1() != null) {
+            club.updateRegion(request.getRegionDepth1(), request.getRegionDepth2());
+        }
 
         // 소유자 변경은 별도의 권한 체크가 필요할 수 있으므로 분리
         if (request.getOwnerUserId() != null) {

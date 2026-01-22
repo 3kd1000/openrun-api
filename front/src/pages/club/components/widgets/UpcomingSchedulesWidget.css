@@ -110,6 +110,37 @@
   vertical-align: middle;
 }
 
+.upcoming-schedules-widget__match-type {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-s);
+  white-space: nowrap;
+  color: white;
+}
+
+/* 남복: 파란색 */
+.upcoming-schedules-widget__match-type.match-type--men_doubles {
+  background-color: #4a90e2;
+}
+
+/* 여복: 분홍색 */
+.upcoming-schedules-widget__match-type.match-type--women_doubles {
+  background-color: #e91e63;
+}
+
+/* 혼복: 보라색 */
+.upcoming-schedules-widget__match-type.match-type--mixed_doubles {
+  background-color: #9c27b0;
+}
+
+/* 단식: 초록색 */
+.upcoming-schedules-widget__match-type.match-type--singles {
+  background-color: #4caf50;
+}
+
 .upcoming-schedules-widget__capacity {
   font-size: var(--font-size-m);
   color: var(--color-text-secondary);

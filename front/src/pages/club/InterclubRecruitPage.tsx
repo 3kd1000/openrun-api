@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format } from "date-fns";
-import { ko } from "date-fns/locale";
 import { scheduleService } from "../../services/scheduleService";
+import { formatScheduleDateTime } from "../../utils/dateUtils";
 import { clubService, type ExternalRequestResponse } from "../../services/clubService";
 import { postService } from "../../services/postService";
 import { commentService } from "../../services/commentService";
@@ -217,7 +216,7 @@ const InterclubRecruitPage: React.FC = () => {
           <div className="interclub-recruit-page__row">
             <div className="interclub-recruit-page__label">일정</div>
             <div className="interclub-recruit-page__value">
-              {format(new Date(schedule.scheduledAt), "yyyy년 M월 d일 (E) HH:mm", { locale: ko })}
+              {formatScheduleDateTime(schedule.scheduledAt, schedule.durationMinutes)}
             </div>
           </div>
           <div className="interclub-recruit-page__row">

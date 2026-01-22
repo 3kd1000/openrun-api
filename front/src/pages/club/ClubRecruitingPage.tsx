@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Club } from "../../types/club";
 import { ArrowLeftIcon } from "../../components/common/Icons";
@@ -15,6 +15,7 @@ import "./ClubRecruitingPage.css";
 
 const ClubRecruitingPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { clubId } = useParams<{ clubId: string }>();
   const [club, setClub] = useState<Club | null>(null);
   const [joinStatus, setJoinStatus] = useState<
@@ -189,9 +190,20 @@ const ClubRecruitingPage: React.FC = () => {
         <button
           className="club-recruiting-page__back-btn"
           type="button"
-          onClick={() => navigate("/clubs/explore")}
-          aria-label="클럽 탐색으로"
-          title="클럽 탐색으로"
+          onClick={() => {
+            // location.state에서 이전 페이지 정보 확인
+            const state = location.state as { fromClubMain?: boolean; from?: string } | null;
+            if (state?.from === "guest-recruit") {
+              // GuestRecruitPage에서 왔으면 뒤로가기
+              navigate(-1);
+            } else if (state?.fromClubMain) {
+              navigate(`/clubs/${clubId}`);
+            } else {
+              navigate("/clubs/explore");
+            }
+          }}
+          aria-label="뒤로 가기"
+          title="뒤로 가기"
         >
           <ArrowLeftIcon size={20} />
         </button>
@@ -204,7 +216,7 @@ const ClubRecruitingPage: React.FC = () => {
           {/* 클럽명 */}
           <div className="club-recruiting-page__info-item">
             <span className="club-recruiting-page__info-label">클럽명</span>
-            <span className="club-recruiting-page__info-value club-recruiting-page__info-value--name">
+            <span className="club-recruiting-page__info-value">
               {club.name}
             </span>
           </div>
@@ -217,20 +229,20 @@ const ClubRecruitingPage: React.FC = () => {
             </span>
           </div>
 
-          {/* 활동지역 · 멤버 수 (한 줄) */}
-          <div className="club-recruiting-page__info-row">
-            <div className="club-recruiting-page__info-item club-recruiting-page__info-item--half">
-              <span className="club-recruiting-page__info-label">활동지역</span>
-              <span className={`club-recruiting-page__info-value ${!club.region ? "club-recruiting-page__info-value--muted" : ""}`}>
-                {club.region || "-"}
-              </span>
-            </div>
-            <div className="club-recruiting-page__info-item club-recruiting-page__info-item--half">
-              <span className="club-recruiting-page__info-label">멤버 수</span>
-              <span className="club-recruiting-page__info-value">
-                {club.memberCount ?? 0}명
-              </span>
-            </div>
+          {/* 활동지역 */}
+          <div className="club-recruiting-page__info-item">
+            <span className="club-recruiting-page__info-label">활동지역</span>
+            <span className={`club-recruiting-page__info-value ${!club.region ? "club-recruiting-page__info-value--muted" : ""}`}>
+              {club.region || "-"}
+            </span>
+          </div>
+
+          {/* 멤버 수 */}
+          <div className="club-recruiting-page__info-item">
+            <span className="club-recruiting-page__info-label">멤버 수</span>
+            <span className="club-recruiting-page__info-value">
+              {club.memberCount ?? 0}명
+            </span>
           </div>
 
           {/* 활동 현황 */}

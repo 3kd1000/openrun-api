@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { ko } from "date-fns/locale";
 import { useAuth } from "../../contexts/AuthContext";
 import { scheduleService } from "../../services/scheduleService";
 import { participantService } from "../../services/participantService";
@@ -30,6 +29,7 @@ import {
   ClipboardListIcon,
 } from "../../components/common/Icons";
 import { isNotEmpty } from "../../utils/isEmpty";
+import { formatScheduleDateTime } from "../../utils/dateUtils";
 import {
   getOpenRunSession,
   setOpenRunSession,
@@ -698,19 +698,16 @@ const ScheduleListPage: React.FC = () => {
 
                   {scheduleMode === "personal" && schedule.clubName && (
                     <div className="schedule-club-name">
-                      <span>클럽 : {schedule.clubName}</span>
+                      <span>클럽명 : {schedule.clubName}</span>
                     </div>
                   )}
 
                   {/* 2. 날짜 및 시간, 신청인원 / 총인원 */}
                   <div className="schedule-meta-row">
                     <p className="schedule-time">
-                      {format(
-                        new Date(schedule.scheduledAt),
-                        "yyyy년 M월 d일 (E) HH:mm",
-                        {
-                          locale: ko,
-                        }
+                      {formatScheduleDateTime(
+                        schedule.scheduledAt,
+                        schedule.durationMinutes
                       )}
                     </p>
                     <div className="schedule-participants">

@@ -76,6 +76,12 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt; // 마지막 로그인 시각
 
+    @Column(name = "region_depth1", length = 20)
+    private String regionDepth1; // 시/도 (예: 서울특별시, 경기도)
+
+    @Column(name = "region_depth2", length = 20)
+    private String regionDepth2; // 시/군/구 (예: 강남구, 수원시)
+
     @Builder
     public User(String email, String name, String imageUrl, Boolean isGuest) {
         this.email = email;
@@ -130,5 +136,26 @@ public class User {
                 .filter(p -> p.getProvider() == providerType)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * 지역 정보 업데이트
+     */
+    public void updateRegion(String regionDepth1, String regionDepth2) {
+        this.regionDepth1 = regionDepth1;
+        this.regionDepth2 = regionDepth2;
+    }
+
+    /**
+     * 지역 표시용 문자열 반환
+     */
+    public String getRegionDisplay() {
+        if (regionDepth1 != null && !regionDepth1.isEmpty()) {
+            if (regionDepth2 != null && !regionDepth2.isEmpty()) {
+                return regionDepth1 + " " + regionDepth2;
+            }
+            return regionDepth1;
+        }
+        return null;
     }
 }

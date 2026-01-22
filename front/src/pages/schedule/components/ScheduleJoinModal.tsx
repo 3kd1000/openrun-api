@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
 import type { Schedule } from "../../../types/schedule";
-import { format } from "date-fns";
-import { ko } from "date-fns/locale";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
+import { formatScheduleDateTime } from "../../../utils/dateUtils";
 import "./ScheduleJoinModal.css";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 
@@ -227,9 +228,10 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
                           <div className="sjm-date-row">
                             <span className="sjm-label">모임일정 -</span>
                             <span className="sjm-date">
-                              {format(new Date(schedule.scheduledAt), "M월 d일 (E) HH:mm", {
-                                locale: ko,
-                              })}
+                              {formatScheduleDateTime(
+                                schedule.scheduledAt,
+                                schedule.durationMinutes
+                              )}
                             </span>
                           </div>
                           {schedule.participationStartAt && (

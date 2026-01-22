@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { clubService } from "../../services/clubService";
 import type { CreateClubRequest } from "../../types/club";
 import { ArrowLeftIcon } from "../../components/common/Icons";
+import RegionSelector from "../../components/common/RegionSelector";
 import "./ClubCreatePage.css";
 
 const ClubCreatePage: React.FC = () => {
@@ -12,7 +13,8 @@ const ClubCreatePage: React.FC = () => {
 
   const [form, setForm] = useState<CreateClubRequest>({
     name: "",
-    region: "",
+    regionDepth1: "",
+    regionDepth2: "",
     description: "",
   });
 
@@ -30,7 +32,8 @@ const ClubCreatePage: React.FC = () => {
       setError(null);
       const created = await clubService.createClub({
         name: form.name.trim(),
-        region: form.region?.trim() || undefined,
+        regionDepth1: form.regionDepth1?.trim() || undefined,
+        regionDepth2: form.regionDepth2?.trim() || undefined,
         description: form.description?.trim() || undefined,
       });
       // 생성 직후 온보딩(CTA) 화면으로 이동
@@ -73,12 +76,11 @@ const ClubCreatePage: React.FC = () => {
 
         <label className="club-create-page__label">
           지역 (선택)
-          <input
-            className="club-create-page__input"
-            value={form.region ?? ""}
-            onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}
-            placeholder="예) 용인"
-            maxLength={255}
+          <RegionSelector
+            depth1={form.regionDepth1 ?? ""}
+            depth2={form.regionDepth2 ?? ""}
+            onChangeDepth1={(value) => setForm((p) => ({ ...p, regionDepth1: value }))}
+            onChangeDepth2={(value) => setForm((p) => ({ ...p, regionDepth2: value }))}
             disabled={loading}
           />
         </label>

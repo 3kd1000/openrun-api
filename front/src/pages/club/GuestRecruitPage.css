@@ -61,32 +61,112 @@
   border: 1px solid var(--color-border);
   border-radius: 16px;
   background: var(--color-surface);
-  padding: var(--space-m);
+  padding: var(--space-l);
   margin-bottom: var(--space-m);
 }
 
-.guest-recruit-page__row {
+/* ========== 정보 항목 (ClubRecruitingPage 스타일) ========== */
+.guest-recruit-page__info-list {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--space-m);
-  margin-bottom: var(--space-s);
+}
+
+.guest-recruit-page__info-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-m);
+}
+
+.guest-recruit-page__info-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+.guest-recruit-page__info-value {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  flex: 1;
+  word-break: break-word;
+}
+
+/* 클럽명도 다른 content와 동일한 사이즈 */
+
+.guest-recruit-page__info-value--highlight {
+  font-weight: var(--font-weight-semibold);
+}
+
+.guest-recruit-page__club-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.guest-recruit-page__club-link-indicator {
+  font-size: var(--font-size-s);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+/* 한 줄에 두 항목 배치 */
+.guest-recruit-page__info-row {
+  display: flex;
+  gap: var(--space-l);
+}
+
+.guest-recruit-page__info-item--half {
+  flex: 1;
+}
+
+/* 모집 안내글 (여러 줄) */
+.guest-recruit-page__info-item--block {
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.guest-recruit-page__info-item--block .guest-recruit-page__info-label {
+  min-width: auto;
+}
+
+.guest-recruit-page__recruit-content {
+  width: 100%;
+  padding: var(--space-m);
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-s);
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* Legacy - 기존 row/label/value 제거용 */
+.guest-recruit-page__row {
+  display: none;
 }
 
 .guest-recruit-page__label {
-  color: var(--color-text-secondary);
-  min-width: 72px;
+  display: none;
 }
 
 .guest-recruit-page__value {
-  text-align: right;
+  display: none;
 }
 
 .guest-recruit-page__note {
-  margin-top: var(--space-s);
-  padding-top: var(--space-s);
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-  white-space: pre-wrap;
+  display: none;
 }
 
 .guest-recruit-page__apply {
@@ -162,13 +242,15 @@
   width: 100%;
   min-height: 96px;
   resize: vertical;
-  border: 1px solid #111;
+  border: 1.5px solid var(--color-text-tertiary);
   border-radius: 12px;
   padding: var(--space-s);
   background: var(--color-white);
   margin-bottom: var(--space-s);
   font-size: var(--font-size-s);
   line-height: 1.45;
+  font-family: inherit;
+  transition: border-color var(--transition-duration) var(--transition-timing);
 }
 
 .guest-recruit-page__textarea::placeholder {
@@ -178,26 +260,57 @@
 
 .guest-recruit-page__textarea:focus {
   outline: none;
-  border-color: #111;
+  border-color: var(--color-primary);
+}
+
+.guest-recruit-page__textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .guest-recruit-page__primary,
 .guest-recruit-page__danger {
   width: 100%;
-  border: none;
   border-radius: 12px;
-  padding: 12px 14px;
-  font-weight: 600;
+  padding: 14px;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-duration) var(--transition-timing);
 }
 
 .guest-recruit-page__primary {
-  background: var(--color-primary);
-  color: white;
+  border: 1.5px solid var(--color-primary);
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.guest-recruit-page__primary:hover:not(:disabled) {
+  background: var(--color-primary-bg);
+  transform: translateY(-1px);
+}
+
+.guest-recruit-page__primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .guest-recruit-page__danger {
-  background: rgba(255, 0, 0, 0.12);
-  color: #b00020;
+  border: 1.5px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+}
+
+.guest-recruit-page__danger:hover:not(:disabled) {
+  background: rgba(255, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.guest-recruit-page__danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .guest-recruit-page__thread {
@@ -207,9 +320,9 @@
 }
 
 .guest-recruit-page__post {
-  padding: var(--space-s);
+  padding: var(--space-m);
   border-radius: 12px;
-  border: 1px solid #111;
+  border: 1px solid var(--color-border);
   background: var(--color-white);
 }
 
@@ -225,9 +338,9 @@
 }
 
 .guest-recruit-page__comment {
-  padding: var(--space-s);
+  padding: var(--space-m);
   border-radius: 12px;
-  border: 1px solid #111;
+  border: 1px solid var(--color-border);
   background: var(--color-white);
 }
 

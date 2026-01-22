@@ -29,11 +29,39 @@
   flex: 1;
 }
 
+.recruit-schedules-page__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.recruit-schedules-page__filter-row {
+  display: flex;
+  gap: var(--space-m);
+}
+
+.recruit-schedules-page__filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.recruit-schedules-page__filter-item--half {
+  flex: 1;
+  min-width: 0;
+}
+
+.recruit-schedules-page__filter-label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
 .recruit-schedules-page__search {
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: var(--space-m);
 }
 
 .recruit-schedules-page__search-icon {
@@ -50,6 +78,17 @@
   border-radius: var(--radius-m);
   background-color: var(--color-white);
   outline: none;
+}
+
+.recruit-schedules-page__filter-select {
+  padding: var(--space-s) var(--space-m);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  outline: none;
+  cursor: pointer;
+  width: 100%;
 }
 
 .recruit-schedules-page__loading,
@@ -81,7 +120,39 @@
 }
 
 .recruit-schedules-page__club {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-weight: 800;
+}
+
+.recruit-schedules-page__match-type {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: white;
+  border-radius: 6px;
+}
+
+/* 남복: 파란색 */
+.recruit-schedules-page__match-type.match-type--men_doubles {
+  background-color: #4a90e2;
+}
+
+/* 여복: 분홍색 */
+.recruit-schedules-page__match-type.match-type--women_doubles {
+  background-color: #e91e63;
+}
+
+/* 혼복: 보라색 */
+.recruit-schedules-page__match-type.match-type--mixed_doubles {
+  background-color: #9c27b0;
+}
+
+/* 단식: 초록색 */
+.recruit-schedules-page__match-type.match-type--singles {
+  background-color: #4caf50;
 }
 
 .recruit-schedules-page__meta {

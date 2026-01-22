@@ -8,6 +8,7 @@ import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
@@ -117,8 +118,11 @@ public class ScheduleService {
      * 탐색 화면용: 게스트/교류전 모집 중인 공개 일정 목록
      * - 로그인 없이도 조회 가능 (현재 schedules API는 permitAll)
      * - 현재 시각 이후(KST) 일정만 노출
+     * - matchType 필터 지원 (MENS_DOUBLES, WOMENS_DOUBLES, MIXED_DOUBLES)
+     * - fromDate/toDate 필터 지원 (날짜 범위 검색)
      */
-    public List<PublicRecruitScheduleResponse> getPublicRecruitSchedules(String type, Integer limit) {
+    public List<PublicRecruitScheduleResponse> getPublicRecruitSchedules(
+            String type, String matchType, java.time.LocalDate fromDate, java.time.LocalDate toDate, Integer limit) {
         LocalDateTime nowKST = TimeValidationUtils.getNowKST();
         int take = (limit == null || limit <= 0) ? 10 : Math.min(limit, 50);
 
@@ -129,6 +133,32 @@ public class ScheduleService {
             schedules = scheduleRepository.findByInterclubRecruitOpenTrueAndScheduledAtAfterOrderByScheduledAtAsc(nowKST);
         } else {
             schedules = scheduleRepository.findByGuestRecruitOpenTrueAndScheduledAtAfterOrderByScheduledAtAsc(nowKST);
+        }
+
+        // matchType 필터 적용
+        if (matchType != null && !matchType.isEmpty()) {
+            try {
+                MatchType filterType = MatchType.valueOf(matchType.toUpperCase());
+                schedules = schedules.stream()
+                        .filter(s -> s.getMatchType() == filterType)
+                        .collect(Collectors.toList());
+            } catch (IllegalArgumentException e) {
+                // 잘못된 matchType은 무시
+            }
+        }
+
+        // 날짜 범위 필터 적용
+        if (fromDate != null || toDate != null) {
+            final LocalDateTime fromDateTime = fromDate != null ? fromDate.atStartOfDay() : null;
+            final LocalDateTime toDateTime = toDate != null ? toDate.plusDays(1).atStartOfDay() : null;
+            schedules = schedules.stream()
+                    .filter(s -> {
+                        LocalDateTime scheduledAt = s.getScheduledAt();
+                        if (fromDateTime != null && scheduledAt.isBefore(fromDateTime)) return false;
+                        if (toDateTime != null && scheduledAt.isAfter(toDateTime)) return false;
+                        return true;
+                    })
+                    .collect(Collectors.toList());
         }
 
         if (schedules.size() > take) {
@@ -185,7 +215,8 @@ public class ScheduleService {
                 request.getDescription(),
                 request.getReservedByUserId(),
                 request.getParticipationStartAt(),
-                request.getMatchType()
+                request.getMatchType(),
+                request.getDurationMinutes()
         );
 
         // 정원이 증가한 경우, 대기자를 확정으로 승격

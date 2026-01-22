@@ -4,6 +4,7 @@ import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import type { Club, UpdateClubRequest } from "../../types/club";
 import { ArrowLeftIcon } from "../../components/common/Icons";
+import RegionSelector from "../../components/common/RegionSelector";
 import "./ClubManageInfoPage.css";
 
 const ClubManageInfoPage: React.FC = () => {
@@ -25,7 +26,8 @@ const ClubManageInfoPage: React.FC = () => {
         setClub(res.data);
         setForm({
           name: res.data.name ?? "",
-          region: res.data.region ?? "",
+          regionDepth1: res.data.regionDepth1 ?? "",
+          regionDepth2: res.data.regionDepth2 ?? "",
           description: res.data.description ?? "",
         });
       } catch (e) {
@@ -51,7 +53,8 @@ const ClubManageInfoPage: React.FC = () => {
       setError(null);
       const updated = await clubService.updateClub(Number(clubId), {
         name: form.name.trim(),
-        region: form.region?.trim() || undefined,
+        regionDepth1: form.regionDepth1?.trim() || undefined,
+        regionDepth2: form.regionDepth2?.trim() || undefined,
         description: form.description?.trim() || undefined,
       });
       setClub(updated);
@@ -105,11 +108,11 @@ const ClubManageInfoPage: React.FC = () => {
 
         <label className="club-manage-info-page__label">
           <span>지역</span>
-          <input
-            className="club-manage-info-page__input"
-            value={form.region ?? ""}
-            onChange={(e) => setForm((p) => ({ ...p, region: e.target.value }))}
-            maxLength={255}
+          <RegionSelector
+            depth1={form.regionDepth1 ?? ""}
+            depth2={form.regionDepth2 ?? ""}
+            onChangeDepth1={(value) => setForm((p) => ({ ...p, regionDepth1: value }))}
+            onChangeDepth2={(value) => setForm((p) => ({ ...p, regionDepth2: value }))}
             disabled={saving}
           />
         </label>

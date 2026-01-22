@@ -148,14 +148,17 @@ public class ScheduleController {
 
     /**
      * 탐색 화면용: 게스트/교류전 모집 중인 일정 목록 (공개)
-     * GET /api/schedules/recruit?type=GUEST&limit=10
+     * GET /api/schedules/recruit?type=GUEST&matchType=MENS_DOUBLES&fromDate=2026-01-22&toDate=2026-01-31&limit=10
      */
     @GetMapping("/recruit")
     public ResponseEntity<List<PublicRecruitScheduleResponse>> getPublicRecruitSchedules(
             @RequestParam(required = false, defaultValue = "GUEST") String type,
+            @RequestParam(required = false) String matchType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate toDate,
             @RequestParam(required = false) Integer limit
     ) {
-        List<PublicRecruitScheduleResponse> list = scheduleService.getPublicRecruitSchedules(type, limit);
+        List<PublicRecruitScheduleResponse> list = scheduleService.getPublicRecruitSchedules(type, matchType, fromDate, toDate, limit);
         return ResponseEntity.ok(list);
     }
 

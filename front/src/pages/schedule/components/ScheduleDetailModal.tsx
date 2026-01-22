@@ -22,6 +22,7 @@ import {
   isPastDate,
 } from "../../../utils/scheduleValidation";
 import { isNotEmpty } from "../../../utils/isEmpty";
+import { formatScheduleDateTime } from "../../../utils/dateUtils";
 import { ClipboardListIcon, EditIcon } from "../../../components/common/Icons";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { FEATURE_FLAGS } from "../../../config/featureFlags";
@@ -631,12 +632,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
             <div className="detail-item">
               <label>일정 시간</label>
               <p>
-                {format(
-                  new Date(schedule.scheduledAt),
-                  "yyyy년 M월 d일 (E) HH:mm",
-                  {
-                    locale: ko,
-                  }
+                {formatScheduleDateTime(
+                  schedule.scheduledAt,
+                  schedule.durationMinutes
                 )}
               </p>
             </div>
@@ -955,6 +953,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
             initialData={{
               clubId: schedule.clubId,
               scheduledAt: `${selectedDate}T${selectedTime}:00`,
+              durationMinutes: schedule.durationMinutes || 120,
               courtName: formData.courtName,
               maxCapacity: formData.maxCapacity,
               cost: formData.cost,
@@ -1004,6 +1003,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 const requestData: CreateScheduleRequest = {
                   clubId: data.clubId,
                   scheduledAt: data.scheduledAt,
+                  durationMinutes: data.durationMinutes,
                   courtName: data.courtName,
                   maxCapacity: data.maxCapacity,
                   cost: data.cost,

@@ -23,10 +23,12 @@
 .club-content-manage-page__title {
   margin: 0;
   font-size: var(--font-size-l);
+  flex: 1;
+  text-align: center;
 }
 
 .club-content-manage-page__header-spacer {
-  flex: 1;
+  width: 36px;
 }
 
 .club-content-manage-page__loading {

@@ -151,14 +151,14 @@ const ClubMembersPage: React.FC = () => {
     }
   };
 
-  const getRoleIcon = (role: string) => {
+  const getRoleIcon = (role: string, size: number = 16) => {
     if (role === 'OWNER') {
-      return <CrownIcon size={16} color="#FFD700" />;
+      return <CrownIcon size={size} color="#FFD700" />;
     }
     if (role === 'ADMIN') {
-      return <StarIcon size={16} color="#4A90D9" />;
+      return <StarIcon size={size} color="#4A90D9" />;
     }
-    return null;
+    return <UserIcon size={size} color="var(--color-text-tertiary)" />;
   };
 
   const getRoleName = (role: string) => {
@@ -247,17 +247,12 @@ const ClubMembersPage: React.FC = () => {
                 onClick={() => !isEditMode && setSelectedUserId(member.userId)}
                 style={{ cursor: isEditMode ? 'default' : 'pointer' }}
               >
-                <div className="club-members-page__item-avatar">
-                  {member.imageUrl ? (
-                    <img src={member.imageUrl} alt={member.name} />
-                  ) : (
-                    <UserIcon size={24} />
-                  )}
+                <div className="club-members-page__item-role-icon">
+                  {getRoleIcon(member.role, 24)}
                 </div>
                 <div className="club-members-page__item-info">
                   <div className="club-members-page__item-name">
                     {member.name}
-                    {getRoleIcon(member.role)}
                   </div>
                   <div className="club-members-page__item-role">
                     {isEditMode && member.role !== "OWNER" ? (

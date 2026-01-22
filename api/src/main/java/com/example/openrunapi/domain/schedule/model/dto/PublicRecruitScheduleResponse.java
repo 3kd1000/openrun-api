@@ -14,8 +14,10 @@ public class PublicRecruitScheduleResponse {
     private final String clubName;
     private final String clubRegion;
     private final String recruitType; // GUEST / INTERCLUB
+    private final String matchType; // MENS_DOUBLES, WOMENS_DOUBLES, MIXED_DOUBLES, NONE
 
     private final LocalDateTime scheduledAt;
+    private final Integer durationMinutes;
     private final String courtName;
     private final Integer currentParticipants;
     private final Integer maxCapacity;
@@ -28,7 +30,9 @@ public class PublicRecruitScheduleResponse {
         this.clubName = c.getName();
         this.clubRegion = c.getRegion();
         this.recruitType = recruitType;
+        this.matchType = s.getMatchType() != null ? s.getMatchType().name() : null;
         this.scheduledAt = s.getScheduledAt();
+        this.durationMinutes = s.getDurationMinutes() != null ? s.getDurationMinutes() : 120;
         this.courtName = s.getCourtName();
         this.currentParticipants = s.getCurrentParticipants();
         this.maxCapacity = s.getMaxCapacity();

@@ -9,8 +9,19 @@ import {
   StarIcon,
 } from "../../../../components/common/Icons";
 import { logError } from "../../../../utils/errorHandler";
-import type { Schedule } from "../../../../types/schedule";
+import { formatScheduleDateTime } from "../../../../utils/dateUtils";
+import type { Schedule, MatchType } from "../../../../types/schedule";
 import "./UpcomingSchedulesWidget.css";
+
+const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
+  switch (matchType) {
+    case "MEN_DOUBLES": return "남복";
+    case "WOMEN_DOUBLES": return "여복";
+    case "MIXED_DOUBLES": return "혼복";
+    case "SINGLES": return "단식";
+    default: return "";
+  }
+};
 
 interface UpcomingSchedulesWidgetProps {
   clubId: number;
@@ -68,24 +79,13 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
     }
   };
 
-  const formatDateTimeInline = (dateString: string) => {
-    const date = new Date(dateString);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-    const weekday = weekdays[date.getDay()];
-    const hours = date.getHours().toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    return `${month}/${day}(${weekday}) ${hours}:${minutes}`;
-  };
-
   const truncateText = (text: string, maxLength: number = 8) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "..";
   };
 
   const handleScheduleClick = (scheduleId: number) => {
-    navigate(`/schedules`, { state: { openScheduleId: scheduleId } });
+    navigate(`/schedules/club`, { state: { openScheduleId: scheduleId } });
   };
 
   const handleViewAll = () => {
@@ -154,7 +154,10 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
                     onClick={() => handleScheduleClick(schedule.id)}
                   >
                     <span className="upcoming-schedules-widget__datetime">
-                      {formatDateTimeInline(schedule.scheduledAt)}
+                      {formatScheduleDateTime(
+                        schedule.scheduledAt,
+                        schedule.durationMinutes
+                      )}
                     </span>
                     <span className="upcoming-schedules-widget__info">
                       {schedule.pinned ? (
@@ -166,6 +169,11 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
                         </span>
                       ) : null}
                       코트명:{truncateText(schedule.courtName)}
+                      {getMatchTypeLabel(schedule.matchType) && (
+                        <span className={`upcoming-schedules-widget__match-type match-type--${schedule.matchType?.toLowerCase()}`}>
+                          {getMatchTypeLabel(schedule.matchType)}
+                        </span>
+                      )}
                       {schedule.reservedByUserName
                         ? `, 예약자:${truncateText(
                             schedule.reservedByUserName,

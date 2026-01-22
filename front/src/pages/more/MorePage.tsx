@@ -132,17 +132,9 @@ const MorePage: React.FC = () => {
             onClick={() => setIsEditModalOpen(true)}
           >
             <div className="profile-info">
-              {user.imageUrl ? (
-                <img
-                  src={user.imageUrl}
-                  alt="프로필"
-                  className="profile-image"
-                />
-              ) : (
-                <div className="profile-icon">
-                  <UserIcon size={28} />
-                </div>
-              )}
+              <div className="profile-icon">
+                <UserIcon size={28} />
+              </div>
               <div className="profile-text">
                 <div className="profile-name">{user.name}</div>
                 {user.email && (

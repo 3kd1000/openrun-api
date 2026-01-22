@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Club } from "../../types/club";
 import { isNotEmpty } from "../../utils/isEmpty";
+import { formatScheduleDateTime } from "../../utils/dateUtils";
 import {
   ArrowLeftIcon,
   PlusIcon,
@@ -24,13 +25,24 @@ interface PublicRecruitSchedule {
   clubName: string;
   clubRegion?: string | null;
   recruitType: RecruitType;
+  matchType?: string | null;
   scheduledAt: string;
+  durationMinutes?: number;
   courtName: string;
   currentParticipants: number;
   maxCapacity: number;
   cost?: number | null;
   note?: string | null;
 }
+
+const getMatchTypeLabel = (matchType: string | null | undefined): string => {
+  switch (matchType) {
+    case "MEN_DOUBLES": return "남복";
+    case "WOMEN_DOUBLES": return "여복";
+    case "MIXED_DOUBLES": return "혼복";
+    default: return "";
+  }
+};
 
 interface ClubListResponse {
   content: Club[];
@@ -226,9 +238,14 @@ const ClubExplorePage: React.FC = () => {
                 >
                   <div className="club-explore-page__recruit-item-title">
                     {x.clubName}
+                    {getMatchTypeLabel(x.matchType) && (
+                      <span className={`club-explore-page__match-type-badge match-type--${x.matchType?.toLowerCase()}`}>
+                        {getMatchTypeLabel(x.matchType)}
+                      </span>
+                    )}
                   </div>
                   <div className="club-explore-page__recruit-item-meta">
-                    {new Date(x.scheduledAt).toLocaleString()} · {x.courtName}
+                    {formatScheduleDateTime(x.scheduledAt, x.durationMinutes)} · {x.courtName}
                   </div>
                   <div className="club-explore-page__recruit-item-meta">
                     {x.currentParticipants}/{x.maxCapacity} · 비용{" "}
@@ -284,7 +301,7 @@ const ClubExplorePage: React.FC = () => {
                       {x.clubName}
                     </div>
                     <div className="club-explore-page__recruit-item-meta">
-                      {new Date(x.scheduledAt).toLocaleString()} · {x.courtName}
+                      {formatScheduleDateTime(x.scheduledAt, x.durationMinutes)} · {x.courtName}
                     </div>
                     <div className="club-explore-page__recruit-item-meta">
                       {x.currentParticipants}/{x.maxCapacity} · 비용{" "}

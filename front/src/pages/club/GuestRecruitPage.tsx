@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format } from "date-fns";
-import { ko } from "date-fns/locale";
+import { formatScheduleDateTime } from "../../utils/dateUtils";
 import { scheduleService } from "../../services/scheduleService";
 import {
   clubService,
@@ -9,10 +8,23 @@ import {
 } from "../../services/clubService";
 import { postService } from "../../services/postService";
 import { commentService } from "../../services/commentService";
-import type { Schedule } from "../../types/schedule";
+import type { Schedule, MatchType } from "../../types/schedule";
 import type { Post, Comment } from "../../types/post";
 import { ArrowLeftIcon, CopyIcon } from "../../components/common/Icons";
 import "./GuestRecruitPage.css";
+
+const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
+  switch (matchType) {
+    case "MEN_DOUBLES":
+      return "남복";
+    case "WOMEN_DOUBLES":
+      return "여복";
+    case "MIXED_DOUBLES":
+      return "혼복";
+    default:
+      return "-";
+  }
+};
 
 const GuestRecruitPage: React.FC = () => {
   const navigate = useNavigate();
@@ -224,39 +236,72 @@ const GuestRecruitPage: React.FC = () => {
 
       {schedule && (
         <div className="guest-recruit-page__card">
-          <div className="guest-recruit-page__row">
-            <div className="guest-recruit-page__label">일정</div>
-            <div className="guest-recruit-page__value">
-              {format(
-                new Date(schedule.scheduledAt),
-                "yyyy년 M월 d일 (E) HH:mm",
-                { locale: ko }
-              )}
+          <div className="guest-recruit-page__info-list">
+            {/* 클럽명 */}
+            <div className="guest-recruit-page__info-item">
+              <span className="guest-recruit-page__info-label">클럽명</span>
+              <button
+                type="button"
+                className="guest-recruit-page__info-value guest-recruit-page__club-link"
+                onClick={() => navigate(`/clubs/${cid}/recruiting`, { state: { from: "guest-recruit" } })}
+              >
+                <span>{schedule.clubName ?? "-"}</span>
+                <span className="guest-recruit-page__club-link-indicator">클럽 보기 &gt;</span>
+              </button>
             </div>
+
+            {/* 일정 */}
+            <div className="guest-recruit-page__info-item">
+              <span className="guest-recruit-page__info-label">일정</span>
+              <span className="guest-recruit-page__info-value">
+                {formatScheduleDateTime(schedule.scheduledAt, schedule.durationMinutes)}
+              </span>
+            </div>
+
+            {/* 장소 */}
+            <div className="guest-recruit-page__info-item">
+              <span className="guest-recruit-page__info-label">장소</span>
+              <span className="guest-recruit-page__info-value">
+                {schedule.courtName}
+              </span>
+            </div>
+
+            {/* 비용 · 현재/정원 (한 줄) */}
+            <div className="guest-recruit-page__info-row">
+              <div className="guest-recruit-page__info-item guest-recruit-page__info-item--half">
+                <span className="guest-recruit-page__info-label">비용</span>
+                <span className="guest-recruit-page__info-value">
+                  {schedule.cost != null ? `${schedule.cost.toLocaleString()}원` : "-"}
+                </span>
+              </div>
+              <div className="guest-recruit-page__info-item guest-recruit-page__info-item--half">
+                <span className="guest-recruit-page__info-label">현재/정원</span>
+                <span className="guest-recruit-page__info-value guest-recruit-page__info-value--highlight">
+                  {schedule.currentParticipants}/{schedule.maxCapacity}명
+                </span>
+              </div>
+            </div>
+
+            {/* 모임타입 (선택안함/NONE이면 숨김) */}
+            {schedule.matchType && schedule.matchType !== "NONE" && (
+              <div className="guest-recruit-page__info-item">
+                <span className="guest-recruit-page__info-label">모임타입</span>
+                <span className="guest-recruit-page__info-value">
+                  {getMatchTypeLabel(schedule.matchType)}
+                </span>
+              </div>
+            )}
+
+            {/* 모집 안내 */}
+            {schedule.guestRecruitNote && (
+              <div className="guest-recruit-page__info-item guest-recruit-page__info-item--block">
+                <span className="guest-recruit-page__info-label">모집 안내</span>
+                <div className="guest-recruit-page__recruit-content">
+                  {schedule.guestRecruitNote}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="guest-recruit-page__row">
-            <div className="guest-recruit-page__label">장소</div>
-            <div className="guest-recruit-page__value">
-              {schedule.courtName}
-            </div>
-          </div>
-          <div className="guest-recruit-page__row">
-            <div className="guest-recruit-page__label">비용</div>
-            <div className="guest-recruit-page__value">
-              {schedule.cost ?? "-"}{" "}
-            </div>
-          </div>
-          <div className="guest-recruit-page__row">
-            <div className="guest-recruit-page__label">현재/정원</div>
-            <div className="guest-recruit-page__value">
-              {schedule.currentParticipants}/{schedule.maxCapacity}
-            </div>
-          </div>
-          {schedule.guestRecruitNote && (
-            <div className="guest-recruit-page__note">
-              {schedule.guestRecruitNote}
-            </div>
-          )}
         </div>
       )}
 

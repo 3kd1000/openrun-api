@@ -85,6 +85,9 @@ public class Schedule {
     @Column(name = "interclub_recruit_note", columnDefinition = "TEXT")
     private String interclubRecruitNote;
 
+    @Column(name = "duration_minutes")
+    private Integer durationMinutes = 120;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -96,7 +99,7 @@ public class Schedule {
     @Builder
     public Schedule(Long clubId, String courtName, LocalDateTime scheduledAt,
                     Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                    LocalDateTime participationStartAt, MatchType matchType) {
+                    LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes) {
         this.clubId = clubId;
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
@@ -106,11 +109,12 @@ public class Schedule {
         this.reservedByUserId = reservedByUserId;
         this.participationStartAt = participationStartAt;
         this.matchType = matchType;
+        this.durationMinutes = durationMinutes != null ? durationMinutes : 120;
     }
 
     public void update(String courtName, LocalDateTime scheduledAt,
                        Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                       LocalDateTime participationStartAt, MatchType matchType) {
+                       LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes) {
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
         this.maxCapacity = maxCapacity;
@@ -119,6 +123,7 @@ public class Schedule {
         this.reservedByUserId = reservedByUserId;
         this.participationStartAt = participationStartAt;
         this.matchType = matchType;
+        this.durationMinutes = durationMinutes != null ? durationMinutes : 120;
     }
 
     public void incrementParticipants() {

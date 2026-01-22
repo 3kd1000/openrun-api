@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMySchedules } from "../../../../services/api/userApi";
-import type { MyScheduleResponse } from "../../../../types/schedule";
+import type { MyScheduleResponse, MatchType } from "../../../../types/schedule";
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -9,7 +9,18 @@ import {
   UserIcon,
 } from "../../../../components/common/Icons";
 import { logError } from "../../../../utils/errorHandler";
+import { formatScheduleDateTime } from "../../../../utils/dateUtils";
 import "./MyUpcomingSchedulesWidget.css";
+
+const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
+  switch (matchType) {
+    case "MEN_DOUBLES": return "남복";
+    case "WOMEN_DOUBLES": return "여복";
+    case "MIXED_DOUBLES": return "혼복";
+    case "SINGLES": return "단식";
+    default: return "";
+  }
+};
 
 interface MyUpcomingSchedulesWidgetProps {
   maxItems?: number;
@@ -56,24 +67,13 @@ const MyUpcomingSchedulesWidget: React.FC<MyUpcomingSchedulesWidgetProps> = ({
     }
   };
 
-  const formatDateTimeInline = (dateString: string) => {
-    const date = new Date(dateString);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-    const weekday = weekdays[date.getDay()];
-    const hours = date.getHours().toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    return `${month}/${day}(${weekday}) ${hours}:${minutes}`;
-  };
-
   const truncateText = (text: string, maxLength: number = 8) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "..";
   };
 
   const handleScheduleClick = (scheduleId: number) => {
-    navigate(`/schedules`, { state: { openScheduleId: scheduleId } });
+    navigate(`/schedules/my`, { state: { openScheduleId: scheduleId } });
   };
 
   const handleViewAll = () => {
@@ -142,7 +142,10 @@ const MyUpcomingSchedulesWidget: React.FC<MyUpcomingSchedulesWidgetProps> = ({
                     onClick={() => handleScheduleClick(schedule.id)}
                   >
                     <span className="my-upcoming-schedules-widget__datetime">
-                      {formatDateTimeInline(schedule.scheduledAt)}
+                      {formatScheduleDateTime(
+                        schedule.scheduledAt,
+                        schedule.durationMinutes
+                      )}
                     </span>
                     <span className="my-upcoming-schedules-widget__info">
                       {schedule.clubName && (
@@ -151,6 +154,11 @@ const MyUpcomingSchedulesWidget: React.FC<MyUpcomingSchedulesWidgetProps> = ({
                         </span>
                       )}
                       {truncateText(schedule.courtName)}
+                      {getMatchTypeLabel(schedule.matchType) && (
+                        <span className={`my-upcoming-schedules-widget__match-type match-type--${schedule.matchType?.toLowerCase()}`}>
+                          {getMatchTypeLabel(schedule.matchType)}
+                        </span>
+                      )}
                       {isGuest && (
                         <span className="my-upcoming-schedules-widget__guest-badge">
                           게스트

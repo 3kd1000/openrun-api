@@ -24,6 +24,7 @@ const generateTimeOptions = () => {
 export interface ScheduleFormData {
   clubId: number;
   scheduledAt: string;
+  durationMinutes: number;
   courtName: string;
   maxCapacity: number;
   cost?: number;
@@ -39,6 +40,7 @@ interface ScheduleFormSectionProps {
   initialData?: {
     clubId?: number;
     scheduledAt?: string;
+    durationMinutes?: number;
     courtName?: string;
     maxCapacity?: number;
     cost?: number;
@@ -75,9 +77,13 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
 
   const [selectedDate, setSelectedDate] = useState(defaultDate);
   const [selectedTime, setSelectedTime] = useState(defaultTime);
+  const [selectedDuration, setSelectedDuration] = useState(
+    initialData?.durationMinutes || 120
+  );
   const [formData, setFormData] = useState<ScheduleFormData>({
     clubId: initialData?.clubId || 1,
     scheduledAt: initialData?.scheduledAt || "",
+    durationMinutes: initialData?.durationMinutes || 120,
     courtName: initialData?.courtName || "",
     maxCapacity: initialData?.maxCapacity || 4,
     cost: initialData?.cost,
@@ -326,6 +332,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
     const submitData: ScheduleFormData = {
       clubId: formData.clubId,
       scheduledAt,
+      durationMinutes: selectedDuration,
       courtName: formData.courtName,
       maxCapacity: formData.maxCapacity,
       cost: formData.cost,
@@ -414,7 +421,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             required
           />
         </div>
-        <div className="form-group" style={{ flex: "1 1 0%", minWidth: 0 }}>
+        <div className="form-group" style={{ flex: "0.8 1 0%", minWidth: 0 }}>
           <label>시간 *</label>
           <select
             value={selectedTime}
@@ -427,6 +434,23 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
                 {time}
               </option>
             ))}
+          </select>
+        </div>
+        <div className="form-group" style={{ flex: "0.8 1 0%", minWidth: 0 }}>
+          <label>기간</label>
+          <select
+            value={selectedDuration}
+            onChange={(e) => setSelectedDuration(parseInt(e.target.value))}
+            className="duration-select"
+          >
+            <option value={30}>30분</option>
+            <option value={60}>1시간</option>
+            <option value={90}>1시간 30분</option>
+            <option value={120}>2시간</option>
+            <option value={150}>2시간 30분</option>
+            <option value={180}>3시간</option>
+            <option value={240}>4시간</option>
+            <option value={300}>5시간</option>
           </select>
         </div>
       </div>

@@ -494,9 +494,16 @@
   color: inherit;
 }
 
-/* meta-row와 bottom-row에 공통 폰트 사이즈 적용 */
+/* 개인일정 모드에서 클럽명 표시 */
+.schedule-club-name {
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+/* meta-row, bottom-row, club-name에 공통 폰트 사이즈 적용 */
 .schedule-meta-row,
-.schedule-bottom-row {
+.schedule-bottom-row,
+.schedule-club-name {
   font-size: var(--font-size-s);
 }
 
@@ -750,7 +757,8 @@
   }
 
   .schedule-meta-row,
-  .schedule-bottom-row {
+  .schedule-bottom-row,
+  .schedule-club-name {
     font-size: var(--font-size-base);
   }
 
@@ -854,6 +862,7 @@
 
   .schedule-meta-row,
   .schedule-bottom-row,
+  .schedule-club-name,
   .schedule-page .schedule-info p {
     font-size: var(--font-size-s);
   }
