@@ -17,7 +17,9 @@ import com.example.openrunapi.domain.club.model.dto.TransferOwnershipRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
+import com.example.openrunapi.domain.club.model.dto.JoinRequestResponse;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
+import com.example.openrunapi.domain.externalrequest.model.ExternalRequestStatus;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequestType;
 import com.example.openrunapi.domain.externalrequest.repository.ExternalRequestRepository;
 import com.example.openrunapi.domain.user.model.User;
@@ -143,7 +145,7 @@ public class ClubService {
     }
 
     @Transactional
-    public void joinRequest(Long clubId, Long userId) {
+    public JoinRequestResponse joinRequest(Long clubId, Long userId) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
         User user = userRepository.findById(userId)
@@ -153,15 +155,25 @@ public class ClubService {
             throw new IllegalStateException("이미 가입 신청했거나 가입된 클럽입니다.");
         }
 
-        // 이미 가입신청(external_request)이 존재하는지 확인
-        boolean alreadyRequested = externalRequestRepository
-                .existsByClubIdAndRequesterIdAndType(clubId, userId, ExternalRequestType.JOIN);
-        if (alreadyRequested) {
+        // 이미 PENDING 상태의 가입신청(external_request)이 존재하는지 확인
+        // (APPROVED/REJECTED/CANCELLED 상태는 재가입 허용)
+        boolean pendingExists = externalRequestRepository
+                .existsByClubIdAndRequesterIdAndTypeAndStatus(
+                        clubId, userId, ExternalRequestType.JOIN, ExternalRequestStatus.PENDING);
+        if (pendingExists) {
             throw new IllegalStateException("이미 가입 신청이 존재합니다.");
         }
 
-        ClubMemberStatus status =
-                club.getJoinPolicy() == ClubJoinPolicy.AUTO ? ClubMemberStatus.ACTIVE : ClubMemberStatus.PENDING;
+        // 기존 external_request 삭제 (재가입 시 unique constraint 해결)
+        externalRequestRepository.findByClubIdAndRequesterIdAndTypeAndScheduleIsNull(
+                clubId, userId, ExternalRequestType.JOIN
+        ).ifPresent(existing -> {
+            externalRequestRepository.delete(existing);
+            externalRequestRepository.flush();  // delete를 먼저 DB에 반영
+        });
+
+        boolean isAutoApprove = club.getJoinPolicy() == ClubJoinPolicy.AUTO;
+        ClubMemberStatus status = isAutoApprove ? ClubMemberStatus.ACTIVE : ClubMemberStatus.PENDING;
 
         ClubMember clubMember = ClubMember.builder()
                 .club(club)
@@ -172,13 +184,21 @@ public class ClubService {
         clubMemberRepository.save(clubMember);
 
         // AUTO 정책으로 바로 ACTIVE가 된 경우 멤버 수 증가
-        if (status == ClubMemberStatus.ACTIVE) {
+        if (isAutoApprove) {
             club.updateMemberCount((club.getMemberCount() != null ? club.getMemberCount() : 0) + 1);
         }
 
         // external_request에 JOIN 타입으로 INSERT (운영진 인박스에서 조회 가능)
         ExternalRequest externalRequest = new ExternalRequest(club, null, user, ExternalRequestType.JOIN);
+
+        // 자동승인인 경우 APPROVED 상태로 설정
+        if (isAutoApprove) {
+            externalRequest.approve(null, "자동 승인");
+        }
+
         externalRequestRepository.save(externalRequest);
+
+        return isAutoApprove ? JoinRequestResponse.autoApproved() : JoinRequestResponse.pending();
     }
 
     @Transactional

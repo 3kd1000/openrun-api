@@ -15,6 +15,7 @@ import DrawCreateModal from "./DrawCreateModal";
 import DrawViewModal from "./DrawViewModal";
 import ParticipantManagementModal from "./ParticipantManagementModal";
 import ScheduleFormSection from "./ScheduleFormSection";
+import ScheduleBallUsageSection from "../../../components/ball/ScheduleBallUsageSection";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import {
   validateParticipation,
@@ -660,59 +661,30 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </div>
             )}
 
-            <div className="detail-item">
-              <label>참가 현황</label>
-              <div className="participant-stats">
-                <span className="stat-item stat-total">
-                  총원: {schedule.maxCapacity}명
-                </span>
-                <span className="stat-divider">|</span>
-                <span className="stat-item stat-confirmed">
-                  신청: {confirmedParticipants.length}명
-                </span>
-                <span className="stat-divider">|</span>
-                <span className="stat-item stat-waiting">
-                  대기: {waitingParticipants.length}명
-                </span>
-              </div>
-            </div>
-
-            {/* 대진표 상태 + 액션 버튼 */}
-            <div className="draw-section">
-              <div className="draw-section__header">
-                <label>대진표</label>
-                {schedule.drawType && (
+            {/* 대진표 섹션 - 한 줄로 통합 */}
+            <div className="draw-section draw-section--inline">
+              <label>대진표</label>
+              {schedule.drawType ? (
+                // 대진이 있는 경우: 유효/무효 + 보기 + 삭제
+                <>
                   <span
-                    className={`draw-section__status ${
-                      schedule.isDrawValid ? "valid" : "invalid"
+                    className={`btn-draw-inline ${
+                      schedule.isDrawValid ? "btn-draw-inline--valid" : "btn-draw-inline--invalid"
                     }`}
                   >
-                    {schedule.isDrawValid ? (
-                      <>✓ 유효 ({schedule.drawType})</>
-                    ) : (
-                      <>대진 재생성 필요(참가자 변동)</>
-                    )}
+                    {schedule.isDrawValid ? "유효" : "무효"}
                   </span>
-                )}
-              </div>
-
-              {/* 대진 관련 액션 버튼 */}
-              {schedule.drawType ? (
-                // 대진이 있는 경우: 보기 버튼과 삭제 버튼
-                // 과거 일정이어도 대진이 있으면 보기 가능 (경기 결과 입력/수정을 위해)
-                <div className="draw-view-action">
                   <button
                     type="button"
                     onClick={() => setShowDrawViewModal(true)}
-                    className="btn-view-draw"
+                    className="btn-draw-inline"
                   >
-                    <ClipboardListIcon size={16} />
-                    <span>대진표 보기</span>
+                    보기
                   </button>
                   <button
                     type="button"
                     onClick={handleDeleteDraw}
-                    className="btn-delete-draw"
+                    className="btn-draw-inline btn-draw-inline--danger"
                     disabled={loading || isPastDate(schedule.scheduledAt)}
                     title={
                       isPastDate(schedule.scheduledAt)
@@ -720,16 +692,16 @@ const ScheduleDetailModal: React.FC<Props> = ({
                         : undefined
                     }
                   >
-                    🗑️ 대진표 삭제
+                    삭제
                   </button>
-                </div>
+                </>
               ) : (
-                // 대진이 없는 경우: 생성 버튼
-                <div className="draw-create-action">
+                // 대진이 없는 경우: 생성 버튼 + 안내문구
+                <>
                   <button
                     type="button"
                     onClick={() => setShowDrawCreateModal(true)}
-                    className="btn-create-draw"
+                    className="btn-draw-inline btn-draw-inline--primary"
                     disabled={
                       !!(
                         (schedule.scheduledAt &&
@@ -746,22 +718,21 @@ const ScheduleDetailModal: React.FC<Props> = ({
                         : undefined
                     }
                   >
-                    🎯 대진 생성
+                    생성
                   </button>
                   {schedule.maxCapacity < 6 && (
-                    <p className="draw-min-notice">
-                      대진 생성은 6인 이상의 모임일 때 가능합니다.
-                      <br /> (현재 모임 총원: {schedule.maxCapacity}명)
-                    </p>
+                    <span className="draw-inline-notice">
+                      6인 이상 모임에서 가능 (현재 {schedule.maxCapacity}명)
+                    </span>
                   )}
-                </div>
+                </>
               )}
             </div>
 
             {/* 참가자 목록 */}
             <div className="participants-section">
               <div className="section-header-with-button">
-                <label>참가자 목록</label>
+                <label>참가자 목록 - 총원 {schedule.maxCapacity}명</label>
                 {schedule?.canManageSchedule && !isEditMode && (
                   <button
                     className="manage-participants-button"
@@ -827,28 +798,16 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* 내 참가 상태 */}
-            {myParticipation && (
-              <div className="my-status">
-                {myParticipation.status === "CONFIRMED" && (
-                  <p className="status-confirmed">✓ 참가 확정</p>
-                )}
-                {myParticipation.status === "WAITING" && (
-                  <p className="status-waiting">
-                    ⏱ 대기 중 (
-                    {waitingParticipants.findIndex(
-                      (p) => p.userId === currentUserId
-                    ) + 1}
-                    번째)
-                  </p>
-                )}
-              </div>
-            )}
+            {/* 공용구 섹션 */}
+            <ScheduleBallUsageSection
+              clubId={schedule.clubId}
+              scheduleId={schedule.id}
+            />
 
             {error && <div className="error-message">{error}</div>}
 
-            {/* 참가신청 시작 시간 안내 */}
-            {schedule?.participationStartAt ? (
+            {/* 참가신청 시작 시간 안내 - 지정된 경우에만 표시 */}
+            {schedule?.participationStartAt && (
               (() => {
                 const now = new Date();
                 const startAt = new Date(schedule.participationStartAt);
@@ -869,10 +828,6 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   </div>
                 );
               })()
-            ) : (
-              <div className="participation-start-info started">
-                <p>참가신청 시작 시간: 즉시 신청 가능</p>
-              </div>
             )}
 
             <div className="modal-actions">

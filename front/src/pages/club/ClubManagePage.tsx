@@ -10,6 +10,7 @@ import {
   EditIcon,
   SettingsIcon,
   CrownIcon,
+  ScaleIcon,
 } from "../../components/common/Icons";
 import { getOpenRunSession } from "../../utils/openrunSession";
 import { normalizeClubRole } from "../../utils/role";
@@ -135,6 +136,16 @@ const ClubManagePage: React.FC = () => {
           <div className="club-manage-page__menu-left">
             <InboxIcon size={18} />
             <span>외부 요청 관리</span>
+          </div>
+          <ChevronRightIcon size={18} />
+        </button>
+        <button
+          className="club-manage-page__menu-item"
+          onClick={() => navigate(`/clubs/${clubId}/manage/balls`)}
+        >
+          <div className="club-manage-page__menu-left">
+            <ScaleIcon size={18} />
+            <span>공용구 관리</span>
           </div>
           <ChevronRightIcon size={18} />
         </button>

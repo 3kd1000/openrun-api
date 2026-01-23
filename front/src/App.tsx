@@ -27,6 +27,7 @@ import ClubExternalRequestsPage from "./pages/club/ClubExternalRequestsPage";
 import ClubJoinRequestsPage from "./pages/club/ClubJoinRequestsPage";
 import ClubContentManagePage from "./pages/club/ClubContentManagePage";
 import ClubTransferOwnershipPage from "./pages/club/ClubTransferOwnershipPage";
+import ClubBallManagePage from "./pages/club/ClubBallManagePage";
 import TermsOfServicePage from "./pages/more/TermsOfServicePage";
 import LicensePage from "./pages/more/LicensePage";
 import OAuthProvidersPage from "./pages/more/OAuthProvidersPage";
@@ -159,6 +160,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ClubTransferOwnershipPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clubs/:clubId/manage/balls"
+                element={
+                  <ProtectedRoute>
+                    <ClubBallManagePage />
                   </ProtectedRoute>
                 }
               />

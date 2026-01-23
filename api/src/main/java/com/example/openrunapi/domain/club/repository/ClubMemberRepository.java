@@ -50,4 +50,29 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
         GROUP BY cm.club.id
     """)
     List<Object[]> countActiveMembersByClub();
+
+    /**
+     * 클럽의 공용구 보유자 목록 조회 (이름순 정렬)
+     */
+    @Query("""
+        SELECT cm FROM ClubMember cm
+        JOIN FETCH cm.user u
+        WHERE cm.club.id = :clubId
+          AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
+          AND cm.isBallKeeper = true
+        ORDER BY u.name ASC
+    """)
+    List<ClubMember> findBallKeepersByClubId(@Param("clubId") Long clubId);
+
+    /**
+     * 클럽의 총 공용구 보유량 조회
+     */
+    @Query("""
+        SELECT COALESCE(SUM(cm.ballQuantity), 0)
+        FROM ClubMember cm
+        WHERE cm.club.id = :clubId
+          AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
+          AND cm.isBallKeeper = true
+    """)
+    Integer sumBallQuantityByClubId(@Param("clubId") Long clubId);
 }

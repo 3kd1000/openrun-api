@@ -7,6 +7,7 @@ import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
+import com.example.openrunapi.domain.club.model.dto.JoinRequestResponse;
 import com.example.openrunapi.domain.club.model.dto.TransferOwnershipRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
@@ -91,11 +92,11 @@ public class ClubController {
     }
 
     @PostMapping("/{clubId}/join")
-    public ResponseEntity<Void> joinRequest(@PathVariable Long clubId,
+    public ResponseEntity<JoinRequestResponse> joinRequest(@PathVariable Long clubId,
             @AuthenticationPrincipal UserDetails userDetails) {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
-        clubService.joinRequest(clubId, currentUserResponse.getId());
-        return ResponseEntity.ok().build();
+        JoinRequestResponse response = clubService.joinRequest(clubId, currentUserResponse.getId());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{clubId}/members/{userId}/approve")

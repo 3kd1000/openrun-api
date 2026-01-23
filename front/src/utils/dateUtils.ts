@@ -46,3 +46,25 @@ export const formatScheduleDateTime = (
   return `${year}년 ${monthDay} ${startHour}-${endHour}시`;
 };
 
+/**
+ * 일정 날짜만 포맷팅 (시간 제외)
+ * @param dateStr - ISO 8601 형식의 날짜/시간
+ * @returns 포맷팅된 문자열 (예: "26년 1월 24일 (금)")
+ */
+export const formatScheduleDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const year = format(date, "yy");
+  const monthDay = format(date, "M월 d일 (E)", { locale: ko });
+  return `${year}년 ${monthDay}`;
+};
+
+/**
+ * 짧은 날짜 포맷팅
+ * @param dateStr - ISO 8601 형식의 날짜/시간
+ * @returns 포맷팅된 문자열 (예: "26-01-24")
+ */
+export const formatShortDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return format(date, "yy-MM-dd");
+};
+

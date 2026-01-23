@@ -546,11 +546,90 @@
   font-size: var(--font-size-m);
 }
 
-/* ========== 대진표 섹션 ========== */
+/* ========== 대진표 섹션 (한 줄 통합) ========== */
 .draw-section {
   display: flex;
   flex-direction: column;
   gap: var(--space-s);
+}
+
+.draw-section--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-m);
+  flex-wrap: wrap;
+}
+
+.draw-section--inline > label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 60px;
+}
+
+/* 대진 버튼들 - 기본 상태에서도 버튼처럼 보이게 */
+.btn-draw-inline {
+  padding: var(--space-xs) var(--space-m);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-s);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.btn-draw-inline:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* 대진유효 */
+.btn-draw-inline--valid {
+  color: var(--color-success);
+  background: rgba(40, 167, 69, 0.08);
+  border-color: rgba(40, 167, 69, 0.3);
+  cursor: default;
+}
+
+/* 대진무효 */
+.btn-draw-inline--invalid {
+  color: var(--color-danger);
+  background: rgba(220, 53, 69, 0.08);
+  border-color: rgba(220, 53, 69, 0.3);
+  cursor: default;
+}
+
+/* 대진생성 */
+.btn-draw-inline--primary {
+  color: var(--color-primary);
+  background: rgba(0, 123, 255, 0.08);
+  border-color: rgba(0, 123, 255, 0.3);
+}
+
+.btn-draw-inline--primary:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* 대진삭제 */
+.btn-draw-inline--danger:hover:not(:disabled) {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.btn-draw-inline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 대진생성 불가 안내 문구 */
+.draw-inline-notice {
+  font-size: var(--font-size-s);
+  color: var(--color-text-muted);
 }
 
 .draw-section__header {
