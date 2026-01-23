@@ -698,10 +698,11 @@
   font-weight: var(--font-weight-bold);
 }
 
-/* 패자 팀 */
+/* 패자 팀 - 패배 색상과 동일하게 */
 .team-inline.loser {
-  background: var(--color-bg-tertiary);
-  opacity: 0.8;
+  background: var(--color-danger-bg);
+  border-left: 3px solid var(--color-danger);
+  opacity: 0.9;
 }
 
 .players-inline {
@@ -1029,4 +1030,198 @@
 .load-more-end {
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
+}
+
+/* ========== 초소형 화면 (320px 이하) 검색 필터 최적화 ========== */
+@media (max-width: 359px) {
+  .filter-section {
+    padding: var(--space-s);
+  }
+
+  .player-name-input-row {
+    margin-bottom: var(--space-s);
+  }
+
+  .search-input {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+  }
+
+  .filter-actions-row {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .date-range-filter {
+    flex: 1 1 100%;
+    order: 1;
+  }
+
+  .date-range-filter label {
+    font-size: var(--font-size-xs);
+    min-width: 28px;
+  }
+
+  .date-range-filter select {
+    flex: 1;
+    padding: var(--space-xs);
+    font-size: var(--font-size-s);
+    min-width: 80px;
+  }
+
+  .search-button,
+  .reset-button {
+    flex: 1;
+    order: 2;
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+  }
+}
+
+/* ========== 개인기록 탭 ========== */
+.personal-stats-container {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  padding: var(--space-l);
+  margin-bottom: var(--space-l);
+  text-align: center;
+}
+
+.personal-stats-box {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-m) var(--space-xl);
+  border-radius: var(--radius-m);
+  min-width: 80px;
+}
+
+.stat-item.win {
+  background: var(--color-success-bg);
+  border: var(--border-width-thin) solid var(--color-success);
+}
+
+.stat-item.draw {
+  background: var(--color-bg-tertiary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+}
+
+.stat-item.loss {
+  background: var(--color-danger-bg);
+  border: var(--border-width-thin) solid var(--color-danger);
+}
+
+.stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.stat-item.win .stat-value {
+  color: var(--color-success);
+}
+
+.stat-item.draw .stat-value {
+  color: var(--color-text-secondary);
+}
+
+.stat-item.loss .stat-value {
+  color: var(--color-danger);
+}
+
+.stat-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.personal-stats-total {
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 클럽명 뱃지 */
+.match-club-badge {
+  padding: var(--space-xxs) var(--space-s);
+  border-radius: var(--radius-s);
+  font-size: inherit;
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+/* ========== 개인기록 탭 모바일 대응 ========== */
+@media (max-width: 768px) {
+  .personal-stats-container {
+    padding: var(--space-m);
+    margin-bottom: var(--space-m);
+  }
+
+  .personal-stats-box {
+    gap: var(--space-s);
+  }
+
+  .stat-item {
+    padding: var(--space-s) var(--space-m);
+    min-width: 60px;
+    flex: 1;
+  }
+
+  .stat-value {
+    font-size: var(--font-size-xl);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-s);
+  }
+
+  .personal-stats-total {
+    font-size: var(--font-size-s);
+  }
+
+  .match-club-badge {
+    font-size: var(--font-size-xs);
+    padding: var(--space-xxs) var(--space-xs);
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 359px) {
+  .stat-item {
+    padding: var(--space-xs) var(--space-s);
+    min-width: 50px;
+  }
+
+  .stat-value {
+    font-size: var(--font-size-l);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .match-club-badge {
+    max-width: 100px;
+  }
+}
+
+/* ========== 내 이름 하이라이팅 ========== */
+.my-name {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
 }

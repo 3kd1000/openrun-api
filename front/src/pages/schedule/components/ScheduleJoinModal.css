@@ -122,6 +122,36 @@
   min-width: 0;
 }
 
+/* Match Type Badge */
+.sjm-match-type-badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sjm-match-type--men_doubles {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.sjm-match-type--women_doubles {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.sjm-match-type--mixed_doubles {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.sjm-match-type--singles {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
 /* Capacity Badge */
 .sjm-capacity {
   font-size: var(--font-size-s);

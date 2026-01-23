@@ -32,6 +32,32 @@
   width: 36px;
 }
 
+.club-recruiting-page__link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xxs);
+  padding: 0 var(--space-s);
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-s);
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.club-recruiting-page__link-btn:hover {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.club-recruiting-page__link-btn:active {
+  transform: translateY(1px);
+}
+
 /* ========== 클럽 정보 카드 ========== */
 .club-recruiting-page__card {
   border: 1px solid var(--color-border);
@@ -109,7 +135,7 @@
   background: #f0f9ff;
   border: 1px solid #bae6fd;
   border-radius: var(--radius-m);
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-base);
   color: var(--color-text-primary);
   white-space: pre-wrap;
   line-height: 1.5;

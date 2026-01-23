@@ -7,10 +7,54 @@ export interface UserResponse {
   imageUrl: string | null;
 }
 
+export interface UserTotalStats {
+  wins: number;
+  draws: number;
+  losses: number;
+  totalMatches: number;
+}
+
+export interface MyAllMatch {
+  matchId: number;
+  clubId: number;
+  clubName: string;
+  playedAt: string;
+  teamAPlayer1Name: string;
+  teamAPlayer2Name: string | null;
+  teamAScore: number;
+  teamBPlayer1Name: string;
+  teamBPlayer2Name: string | null;
+  teamBScore: number;
+  result: string;
+}
+
+export interface MyAllMatchPageResponse {
+  content: MyAllMatch[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 export const userService = {
   // 게스트 사용자 목록 조회 (게스트1~16)
   getGuestUsers: async (): Promise<UserResponse[]> => {
     const response = await axiosInstance.get('/users/guests');
+    return response.data;
+  },
+
+  // 개인 전체 통계 조회 (모든 클럽 합산)
+  getMyTotalStats: async (): Promise<UserTotalStats> => {
+    const response = await axiosInstance.get<UserTotalStats>('/users/me/stats/total');
+    return response.data;
+  },
+
+  // 개인 전체 경기 기록 조회 (모든 클럽, 페이징)
+  getMyAllMatches: async (page: number, size: number): Promise<MyAllMatchPageResponse> => {
+    const response = await axiosInstance.get<MyAllMatchPageResponse>('/users/me/matches/all', {
+      params: { page, size }
+    });
     return response.data;
   }
 };

@@ -950,3 +950,61 @@ export const Share2Icon: React.FC<IconProps> = ({
     <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
   </svg>
 );
+
+// 확성기 아이콘 (공지/알림)
+export const MegaphoneIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = 'currentColor',
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    {/* 확성기 본체 (콘 모양) */}
+    <path d="M2 8h3l12-5v18l-12-5H2V8z"></path>
+    {/* 확성기 끝 부분 (원형) */}
+    <path d="M17 8a4 4 0 0 1 0 8"></path>
+    {/* 손잡이 */}
+    <path d="M5 16v5l4-1.5"></path>
+  </svg>
+);
+
+// 방송/홍보 아이콘 (전파 송출)
+export const BroadcastIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = 'currentColor',
+  className = ''
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    {/* 중앙 원 */}
+    <circle cx="12" cy="10" r="2.5"></circle>
+    {/* 안테나 기둥 */}
+    <line x1="12" y1="12.5" x2="12" y2="22"></line>
+    {/* 내부 전파 (좌) */}
+    <path d="M7.5 6a4.5 4.5 0 0 0 0 8"></path>
+    {/* 내부 전파 (우) */}
+    <path d="M16.5 6a4.5 4.5 0 0 1 0 8"></path>
+    {/* 외부 전파 (좌) - clipping 방지 */}
+    <path d="M5.5 3a8 8 0 0 0 0 14"></path>
+    {/* 외부 전파 (우) - clipping 방지 */}
+    <path d="M18.5 3a8 8 0 0 1 0 14"></path>
+  </svg>
+);

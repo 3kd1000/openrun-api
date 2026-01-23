@@ -15,7 +15,21 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   white-space: nowrap;
-  min-width: 120px;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 379px) {
+  .date-range-picker__trigger {
+    font-size: var(--font-size-s);
+  }
+}
+
+@media (max-width: 339px) {
+  .date-range-picker__trigger {
+    font-size: var(--font-size-xs);
+  }
 }
 
 .date-range-picker__trigger:hover {
@@ -30,6 +44,8 @@
 .date-range-picker__text {
   flex: 1;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .date-range-picker__clear {
@@ -51,25 +67,21 @@
 }
 
 .date-range-picker__dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 1000;
   background: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-l);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
 }
 
-/* 모바일에서 중앙 정렬 */
-@media (max-width: 425px) {
+/* 모바일에서 캘린더 크기 조정 */
+@media (max-width: 360px) {
   .date-range-picker__dropdown {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: calc(100vw - 32px);
+    transform: translate(-50%, -50%) scale(0.9);
   }
 }
 
@@ -86,13 +98,13 @@
   font-weight: var(--font-weight-medium);
   border: none;
   border-radius: var(--radius-s);
-  background: var(--color-primary);
+  background: #4caf50;
   color: var(--color-white);
   cursor: pointer;
 }
 
 .date-range-picker__done:hover {
-  background: var(--color-primary-dark);
+  background: #43a047;
 }
 
 /* react-date-range 스타일 오버라이드 */

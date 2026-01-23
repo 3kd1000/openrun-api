@@ -27,8 +27,6 @@ import ClubExternalRequestsPage from "./pages/club/ClubExternalRequestsPage";
 import ClubJoinRequestsPage from "./pages/club/ClubJoinRequestsPage";
 import ClubContentManagePage from "./pages/club/ClubContentManagePage";
 import ClubTransferOwnershipPage from "./pages/club/ClubTransferOwnershipPage";
-import RecruitSchedulesPage from "./pages/club/RecruitSchedulesPage";
-import RecruitClubsPage from "./pages/club/RecruitClubsPage";
 import TermsOfServicePage from "./pages/more/TermsOfServicePage";
 import LicensePage from "./pages/more/LicensePage";
 import OAuthProvidersPage from "./pages/more/OAuthProvidersPage";
@@ -71,8 +69,6 @@ function App() {
               <Route path="/more/license" element={<LicensePage />} />
               <Route path="/clubs" element={<ClubListPage />} />
               <Route path="/clubs/explore" element={<ClubExplorePage />} />
-              <Route path="/clubs/explore/recruit" element={<RecruitSchedulesPage />} />
-              <Route path="/clubs/explore/recruit-clubs" element={<RecruitClubsPage />} />
               <Route
                 path="/clubs/new"
                 element={

@@ -518,7 +518,7 @@ const ScheduleListPage: React.FC = () => {
                 className="header-action-btn btn-join"
                 onClick={() => setShowJoinModal(true)}
               >
-                ✓ 일정 참여
+                ✓ 빠른 신청
               </button>
               <button
                 className="header-action-btn btn-create"

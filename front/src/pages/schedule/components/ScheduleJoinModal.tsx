@@ -10,6 +10,16 @@ import { formatScheduleDateTime } from "../../../utils/dateUtils";
 import "./ScheduleJoinModal.css";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 
+const getMatchTypeLabel = (matchType: string | null | undefined): string => {
+  switch (matchType) {
+    case "MEN_DOUBLES": return "남복";
+    case "WOMEN_DOUBLES": return "여복";
+    case "MIXED_DOUBLES": return "혼복";
+    case "SINGLES": return "단식";
+    default: return "";
+  }
+};
+
 interface Props {
   onClose: () => void;
   onSuccess: () => void;
@@ -174,7 +184,7 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h2>일정 참여</h2>
+          <h2>빠른 신청</h2>
           <button className="btn-close" onClick={onClose}>
             &times;
           </button>
@@ -214,6 +224,11 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
                           <div className="sjm-court-name-row">
                             <span className="sjm-label">코트명 -</span>
                             <span className="sjm-court-name">{schedule.courtName}</span>
+                            {getMatchTypeLabel(schedule.matchType) && (
+                              <span className={`sjm-match-type-badge sjm-match-type--${schedule.matchType?.toLowerCase()}`}>
+                                {getMatchTypeLabel(schedule.matchType)}
+                              </span>
+                            )}
                           </div>
                           <span
                             className={`sjm-capacity ${
