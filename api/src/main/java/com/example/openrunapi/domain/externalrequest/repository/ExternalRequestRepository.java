@@ -44,5 +44,20 @@ public interface ExternalRequestRepository extends JpaRepository<ExternalRequest
 
     // 클럽 가입신청 중복 체크 (JOIN 타입, schedule은 null)
     boolean existsByClubIdAndRequesterIdAndType(Long clubId, Long requesterId, ExternalRequestType type);
+
+    // 클럽 가입신청 중복 체크 - PENDING 상태만 (재가입 허용을 위해)
+    boolean existsByClubIdAndRequesterIdAndTypeAndStatus(
+            Long clubId,
+            Long requesterId,
+            ExternalRequestType type,
+            ExternalRequestStatus status
+    );
+
+    // 재가입 시 기존 요청 삭제를 위한 조회 (schedule이 null인 JOIN 요청)
+    Optional<ExternalRequest> findByClubIdAndRequesterIdAndTypeAndScheduleIsNull(
+            Long clubId,
+            Long requesterId,
+            ExternalRequestType type
+    );
 }
 

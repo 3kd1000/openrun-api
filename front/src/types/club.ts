@@ -106,4 +106,6 @@ export interface ClubMembership {
     email: string | null;
     imageUrl: string | null;
     tennisStartedAt: string | null;
+    isBallKeeper?: boolean;
+    ballQuantity?: number;
 }

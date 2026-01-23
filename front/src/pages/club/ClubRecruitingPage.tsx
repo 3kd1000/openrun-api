@@ -110,9 +110,20 @@ const ClubRecruitingPage: React.FC = () => {
     }
     if (!confirm("가입 신청하시겠습니까?")) return;
     try {
-      await axiosInstance.post(`/clubs/${clubId}/join`);
-      alert("가입 신청이 완료되었습니다.");
-      setJoinStatus("PENDING"); // Optimistic update
+      const response = await axiosInstance.post<{ autoApproved: boolean; message: string }>(
+        `/clubs/${clubId}/join`
+      );
+      const { autoApproved, message } = response.data;
+
+      if (autoApproved) {
+        // 자동승인인 경우 클럽 메인페이지로 이동
+        alert(message);
+        navigate(`/clubs/${clubId}`);
+      } else {
+        // 수동승인인 경우 대기 상태로 업데이트
+        alert(message);
+        setJoinStatus("PENDING");
+      }
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error && "response" in error
