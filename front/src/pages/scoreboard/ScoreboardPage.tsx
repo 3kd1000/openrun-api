@@ -2,9 +2,10 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
 import { format } from "date-fns";
-import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon } from "../../components/common/Icons";
+import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon } from "../../components/common/Icons";
 import { ClubSelector } from "../../components/ClubSelector";
 import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
+import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
 import "./ScoreboardPage.css";
 
 interface RankingEntry {
@@ -23,7 +24,7 @@ interface ScoreboardResponse {
   rankings: RankingEntry[];
 }
 
-type TabType = "ranking" | "matches";
+type TabType = "ranking" | "matches" | "personal";
 
 const ScoreboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("ranking");
@@ -58,11 +59,34 @@ const ScoreboardPage: React.FC = () => {
   const isLoadingMatchesRef = useRef(false);
   const PAGE_SIZE = 20;
 
+  // Tab 3: Personal record (개인기록)
+  const [personalStats, setPersonalStats] = useState<UserTotalStats | null>(null);
+  const [personalMatches, setPersonalMatches] = useState<MyAllMatch[]>([]);
+  const [personalLoading, setPersonalLoading] = useState(false);
+  const [personalError, setPersonalError] = useState<string | null>(null);
+  const [personalPage, setPersonalPage] = useState(0);
+  const [personalHasMore, setPersonalHasMore] = useState(false);
+  const [personalTotalElements, setPersonalTotalElements] = useState(0);
+  const [isLoadingPersonalMore, setIsLoadingPersonalMore] = useState(false);
+  const personalLoadMoreRef = useRef<HTMLDivElement>(null);
+  const isLoadingPersonalRef = useRef(false);
+
   // 클럽 선택 상태
   const [selectedClubId, setSelectedClubId] = useState<number | null>(() => {
     const session = getOpenRunSession();
     return session.currentClubId ? parseInt(session.currentClubId) : null;
   });
+
+  // 현재 사용자 이름 (개인기록 탭에서 하이라이팅용)
+  const currentUserName = getOpenRunSession().userName;
+
+  // 선수 이름 렌더링 (본인 이름은 Bold 처리)
+  const renderPlayerName = (name: string) => {
+    if (currentUserName && name === currentUserName) {
+      return <strong className="my-name">{name}</strong>;
+    }
+    return name;
+  };
 
   const clubId = selectedClubId || 1; // selectedClubId가 없으면 1 사용
   const isLoadingRef = useRef(false);
@@ -191,6 +215,53 @@ const ScoreboardPage: React.FC = () => {
     }
   }, [hasMore, currentPage, playerName, fetchMatches]);
 
+  // Tab 3: 개인기록 데이터 로드
+  const fetchPersonalData = useCallback(async (page: number = 0, append: boolean = false) => {
+    if (isLoadingPersonalRef.current) return;
+
+    isLoadingPersonalRef.current = true;
+    try {
+      if (append) {
+        setIsLoadingPersonalMore(true);
+      } else {
+        setPersonalLoading(true);
+      }
+      setPersonalError(null);
+
+      // 첫 페이지일 때만 통계도 함께 조회
+      if (page === 0 && !append) {
+        const statsResponse = await userService.getMyTotalStats();
+        setPersonalStats(statsResponse);
+      }
+
+      const matchResponse = await userService.getMyAllMatches(page, PAGE_SIZE);
+      const { content, hasMore: more, totalElements: total, page: currentP } = matchResponse;
+
+      if (append) {
+        setPersonalMatches((prev) => [...prev, ...content]);
+      } else {
+        setPersonalMatches(content);
+      }
+      setPersonalPage(currentP);
+      setPersonalHasMore(more);
+      setPersonalTotalElements(total);
+    } catch (err) {
+      console.error("Failed to fetch personal data:", err);
+      setPersonalError("개인 기록을 불러오는데 실패했습니다.");
+    } finally {
+      setPersonalLoading(false);
+      setIsLoadingPersonalMore(false);
+      isLoadingPersonalRef.current = false;
+    }
+  }, []);
+
+  // 개인기록 더 불러오기
+  const loadMorePersonal = useCallback(() => {
+    if (personalHasMore && !isLoadingPersonalRef.current) {
+      fetchPersonalData(personalPage + 1, true);
+    }
+  }, [personalHasMore, personalPage, fetchPersonalData]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchMatches(playerName || undefined);
@@ -206,7 +277,7 @@ const ScoreboardPage: React.FC = () => {
     setTotalElements(0);
   };
 
-  // IntersectionObserver for infinite scroll
+  // IntersectionObserver for infinite scroll (matches tab)
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -229,6 +300,29 @@ const ScoreboardPage: React.FC = () => {
     };
   }, [hasMore, isLoadingMore, loadMore]);
 
+  // IntersectionObserver for infinite scroll (personal tab)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && personalHasMore && !isLoadingPersonalMore) {
+          loadMorePersonal();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const current = personalLoadMoreRef.current;
+    if (current) {
+      observer.observe(current);
+    }
+
+    return () => {
+      if (current) {
+        observer.unobserve(current);
+      }
+    };
+  }, [personalHasMore, isLoadingPersonalMore, loadMorePersonal]);
+
   // 미래 경기인지 확인
   const isFutureMatch = (match: Match) => {
     return new Date(match.playedAt) > new Date();
@@ -245,6 +339,13 @@ const ScoreboardPage: React.FC = () => {
       fetchScoreboard();
     }
   }, [activeTab, fetchScoreboard]);
+
+  // 개인기록 탭 진입 시에만 데이터 로드
+  useEffect(() => {
+    if (activeTab === "personal" && personalStats === null) {
+      fetchPersonalData();
+    }
+  }, [activeTab, personalStats, fetchPersonalData]);
 
   return (
     <div className="scoreboard-page">
@@ -271,6 +372,13 @@ const ScoreboardPage: React.FC = () => {
         >
           <ClipboardListIcon size={20} />
           <span>경기 기록</span>
+        </button>
+        <button
+          className={`tab-button ${activeTab === "personal" ? "active" : ""}`}
+          onClick={() => setActiveTab("personal")}
+        >
+          <UserIcon size={20} />
+          <span>개인기록</span>
         </button>
       </div>
 
@@ -544,6 +652,123 @@ const ScoreboardPage: React.FC = () => {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Tab 3: Personal Record */}
+      {activeTab === "personal" && (
+        <div className="tab-content">
+          {personalLoading ? (
+            <div className="empty-state">
+              <p>로딩 중...</p>
+            </div>
+          ) : personalError ? (
+            <div className="empty-state">
+              <p>{personalError}</p>
+            </div>
+          ) : (
+            <>
+              {/* 통계 박스 */}
+              {personalStats && (
+                <div className="personal-stats-container">
+                  <div className="personal-stats-box">
+                    <div className="stat-item win">
+                      <span className="stat-value">{personalStats.wins}</span>
+                      <span className="stat-label">승</span>
+                    </div>
+                    <div className="stat-item draw">
+                      <span className="stat-value">{personalStats.draws}</span>
+                      <span className="stat-label">무</span>
+                    </div>
+                    <div className="stat-item loss">
+                      <span className="stat-value">{personalStats.losses}</span>
+                      <span className="stat-label">패</span>
+                    </div>
+                  </div>
+                  <div className="personal-stats-total">
+                    총 {personalStats.totalMatches}경기
+                  </div>
+                </div>
+              )}
+
+              {/* 경기 목록 */}
+              <div className="match-list-container">
+                {personalMatches.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-icon">
+                      <UserIcon size={64} color="var(--color-text-secondary)" />
+                    </div>
+                    <h3>아직 경기 기록이 없습니다</h3>
+                    <p>경기에 참여하면 여기에 기록이 표시됩니다</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="match-list-header">
+                      <span className="match-count">총 {personalTotalElements}건</span>
+                    </div>
+                    <div className="match-list">
+                      {personalMatches.map((match) => (
+                        <div
+                          key={match.matchId}
+                          className="match-card completed-match"
+                        >
+                          <div className="match-header-row">
+                            <div className="match-date">
+                              <CalendarIcon size={16} />
+                              <span>{format(new Date(match.playedAt), "yyyy-MM-dd HH:mm")}</span>
+                            </div>
+                            <div className="match-club-badge">{match.clubName}</div>
+                          </div>
+                          <div className="match-teams-inline">
+                            <div
+                              className={`team-inline team-a ${
+                                match.result === "TEAM_A_WIN"
+                                  ? "winner"
+                                  : match.result === "TEAM_B_WIN"
+                                  ? "loser"
+                                  : ""
+                              }`}
+                            >
+                              <span className="players-inline">
+                                {renderPlayerName(match.teamAPlayer1Name)}
+                                {match.teamAPlayer2Name && <> {renderPlayerName(match.teamAPlayer2Name)}</>}
+                              </span>
+                              <span className="score-inline">{match.teamAScore}</span>
+                            </div>
+                            <div className="vs-inline">VS</div>
+                            <div
+                              className={`team-inline team-b ${
+                                match.result === "TEAM_B_WIN"
+                                  ? "winner"
+                                  : match.result === "TEAM_A_WIN"
+                                  ? "loser"
+                                  : ""
+                              }`}
+                            >
+                              <span className="score-inline">{match.teamBScore}</span>
+                              <span className="players-inline">
+                                {renderPlayerName(match.teamBPlayer1Name)}
+                                {match.teamBPlayer2Name && <> {renderPlayerName(match.teamBPlayer2Name)}</>}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* 인피니티 스크롤 로딩 표시 */}
+                    <div ref={personalLoadMoreRef} className="load-more-trigger">
+                      {isLoadingPersonalMore && (
+                        <div className="load-more-spinner">불러오는 중...</div>
+                      )}
+                      {!personalHasMore && personalMatches.length > 0 && (
+                        <div className="load-more-end">모든 경기를 불러왔습니다</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

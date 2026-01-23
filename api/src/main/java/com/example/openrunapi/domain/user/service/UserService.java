@@ -26,6 +26,13 @@ import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
+import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
+import com.example.openrunapi.domain.user.model.dto.MyAllMatchResponse;
+import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
+import com.example.openrunapi.domain.user.repository.UserStatisticsRepository;
+import com.example.openrunapi.domain.club.model.Club;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
@@ -51,6 +58,7 @@ public class UserService implements UserDetailsService {
     private final ScheduleRepository scheduleRepository;
     private final ClubRepository clubRepository;
     private final MatchRepository matchRepository;
+    private final UserStatisticsRepository userStatisticsRepository;
 
     @Override
     @Transactional
@@ -359,6 +367,60 @@ public class UserService implements UserDetailsService {
                 .myTeamScore(myTeamScore)
                 .opponentTeamScore(opponentTeamScore)
                 .result(myResult)
+                .build();
+    }
+
+    /**
+     * 사용자의 전체 클럽 통계 합산 조회
+     */
+    public UserTotalStatsResponse getMyTotalStats(Long userId) {
+        UserTotalStatsResponse stats = userStatisticsRepository.findTotalStatsByUserId(userId);
+        return stats != null ? stats : UserTotalStatsResponse.empty();
+    }
+
+    /**
+     * 사용자의 모든 경기 기록 조회 (클럽 무관, 페이징)
+     */
+    public MyAllMatchPageResponse getMyAllMatches(Long userId, int page, int size) {
+        Page<Match> matchPage = matchRepository.findAllByPlayerIdWithResult(
+                userId,
+                PageRequest.of(page, size)
+        );
+
+        java.util.List<MyAllMatchResponse> content = matchPage.getContent().stream()
+                .map(this::toMyAllMatchResponse)
+                .collect(java.util.stream.Collectors.toList());
+
+        return MyAllMatchPageResponse.builder()
+                .content(content)
+                .page(matchPage.getNumber())
+                .size(matchPage.getSize())
+                .totalElements(matchPage.getTotalElements())
+                .totalPages(matchPage.getTotalPages())
+                .hasMore(matchPage.hasNext())
+                .build();
+    }
+
+    /**
+     * Match -> MyAllMatchResponse 변환 (클럽명 포함)
+     */
+    private MyAllMatchResponse toMyAllMatchResponse(Match match) {
+        String clubName = clubRepository.findById(match.getClubId())
+                .map(Club::getName)
+                .orElse("알 수 없음");
+
+        return MyAllMatchResponse.builder()
+                .matchId(match.getId())
+                .clubId(match.getClubId())
+                .clubName(clubName)
+                .playedAt(match.getPlayedAt())
+                .teamAPlayer1Name(getUserName(match.getTeamAPlayer1Id()))
+                .teamAPlayer2Name(match.getTeamAPlayer2Id() != null ? getUserName(match.getTeamAPlayer2Id()) : null)
+                .teamAScore(match.getTeamAScore())
+                .teamBPlayer1Name(getUserName(match.getTeamBPlayer1Id()))
+                .teamBPlayer2Name(match.getTeamBPlayer2Id() != null ? getUserName(match.getTeamBPlayer2Id()) : null)
+                .teamBScore(match.getTeamBScore())
+                .result(match.getResult() != null ? match.getResult().name() : null)
                 .build();
     }
 

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Club } from "../../types/club";
-import { ArrowLeftIcon } from "../../components/common/Icons";
+import { ArrowLeftIcon, LinkIcon } from "../../components/common/Icons";
 import {
   clubService,
   type ExternalRequestResponse,
@@ -192,14 +192,18 @@ const ClubRecruitingPage: React.FC = () => {
           type="button"
           onClick={() => {
             // location.state에서 이전 페이지 정보 확인
-            const state = location.state as { fromClubMain?: boolean; from?: string } | null;
-            if (state?.from === "guest-recruit") {
+            const state = location.state as { fromClubMain?: boolean; from?: string; returnUrl?: string } | null;
+            if (state?.returnUrl) {
+              // returnUrl이 있으면 해당 URL로 이동 (검색조건 유지)
+              navigate(state.returnUrl);
+            } else if (state?.from === "guest-recruit") {
               // GuestRecruitPage에서 왔으면 뒤로가기
               navigate(-1);
             } else if (state?.fromClubMain) {
               navigate(`/clubs/${clubId}`);
             } else {
-              navigate("/clubs/explore");
+              // 기본: 브라우저 히스토리 뒤로가기 (URL 파라미터 유지)
+              navigate(-1);
             }
           }}
           aria-label="뒤로 가기"
@@ -208,7 +212,24 @@ const ClubRecruitingPage: React.FC = () => {
           <ArrowLeftIcon size={20} />
         </button>
         <h1 className="club-recruiting-page__title">클럽</h1>
-        <div className="club-recruiting-page__header-spacer" />
+        <button
+          className="club-recruiting-page__link-btn"
+          type="button"
+          onClick={async () => {
+            const url = `${window.location.origin}/clubs/${clubId}/recruiting`;
+            try {
+              await navigator.clipboard.writeText(url);
+              alert("초대링크가 복사되었습니다.\n\n" + url);
+            } catch {
+              prompt("아래 링크를 복사하세요:", url);
+            }
+          }}
+          aria-label="초대링크 복사"
+          title="초대링크 복사"
+        >
+          <LinkIcon size={18} />
+          <span>링크복사</span>
+        </button>
       </div>
 
       <div className="club-recruiting-page__card">

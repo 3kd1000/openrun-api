@@ -290,7 +290,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-s);
+  gap: var(--space-xs);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
 }
@@ -299,6 +299,7 @@
   padding: var(--space-xs) var(--space-s);
   border-radius: var(--radius-s);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 }
 
 .stat-total {
@@ -319,7 +320,7 @@
 .stat-divider {
   color: var(--color-border-tertiary);
   font-weight: var(--font-weight-light);
-  margin: 0 2px;
+  margin: 0;
 }
 
 .badge-full {
@@ -741,8 +742,7 @@
 
   /* 참가 현황 컴팩트하게 */
   .participant-stats {
-    gap: var(--space-xs);
-    font-size: var(--font-size-xs);
+    gap: 2px;
   }
 
   .stat-item {
@@ -750,8 +750,7 @@
   }
 
   .stat-divider {
-    margin: 0 1px;
-    font-size: var(--font-size-xs);
+    margin: 0;
   }
 
   /* 대진표 상태 통일 */

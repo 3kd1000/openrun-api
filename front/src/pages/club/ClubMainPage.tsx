@@ -7,11 +7,10 @@ import type { Club } from "../../types/club";
 import { getErrorMessage, logError } from "../../utils/errorHandler";
 import {
   CompassIcon,
-  BookOpenIcon,
-  ClipboardListIcon,
+  MegaphoneIcon,
+  UsersIcon,
   SettingsIcon,
-  EyeIcon,
-  Share2Icon,
+  BroadcastIcon,
   ChevronDownIcon,
   ChevronUpIcon,
 } from "../../components/common/Icons";
@@ -501,28 +500,33 @@ const ClubMainPage: React.FC = () => {
         <div className="club-main-page__header-actions">
           <button
             className="club-main-page__header-btn"
-            onClick={() => navigate(`/clubs/${clubId}/recruiting`, { state: { fromClubMain: true } })}
-            title="홍보 페이지 미리보기"
+            onClick={handleViewRules}
+            title="공지/회칙"
           >
-            <EyeIcon size={20} />
-            <span className="club-main-page__header-btn-text">홍보페이지</span>
+            <MegaphoneIcon size={20} />
+            <span className="club-main-page__header-btn-text">공지/회칙</span>
+            {noticeUnreadCount > 0 && (
+              <span
+                className="club-main-page__notice-dot"
+                aria-label="읽지 않은 공지 있음"
+              />
+            )}
           </button>
           <button
             className="club-main-page__header-btn"
-            onClick={async () => {
-              const url = `${window.location.origin}/clubs/${clubId}/recruiting`;
-              try {
-                await navigator.clipboard.writeText(url);
-                alert("초대링크가 복사되었습니다.\n\n" + url);
-              } catch {
-                // fallback for older browsers
-                prompt("아래 링크를 복사하세요:", url);
-              }
-            }}
-            title="초대링크 복사"
+            onClick={() => navigate(`/clubs/${clubId}/recruiting`, { state: { fromClubMain: true } })}
+            title="클럽 홍보 페이지"
           >
-            <Share2Icon size={20} />
-            <span className="club-main-page__header-btn-text">클럽초대</span>
+            <BroadcastIcon size={20} />
+            <span className="club-main-page__header-btn-text">클럽홍보</span>
+          </button>
+          <button
+            className="club-main-page__header-btn"
+            onClick={handleViewMembers}
+            title="클럽원"
+          >
+            <UsersIcon size={20} />
+            <span className="club-main-page__header-btn-text">클럽원</span>
           </button>
           <button
             className="club-main-page__header-btn"
@@ -531,20 +535,6 @@ const ClubMainPage: React.FC = () => {
           >
             <CompassIcon size={20} />
             <span className="club-main-page__header-btn-text">클럽탐색</span>
-          </button>
-          <button
-            className="club-main-page__header-btn"
-            onClick={handleViewRules}
-            title="공지/회칙"
-          >
-            <BookOpenIcon size={20} />
-            <span className="club-main-page__header-btn-text">공지/회칙</span>
-            {noticeUnreadCount > 0 && (
-              <span
-                className="club-main-page__notice-dot"
-                aria-label="읽지 않은 공지 있음"
-              />
-            )}
           </button>
           {canManage && (
             <button
@@ -556,14 +546,6 @@ const ClubMainPage: React.FC = () => {
               <span className="club-main-page__header-btn-text">클럽관리</span>
             </button>
           )}
-          <button
-            className="club-main-page__header-btn"
-            onClick={handleViewMembers}
-            title="클럽원"
-          >
-            <ClipboardListIcon size={20} />
-            <span className="club-main-page__header-btn-text">클럽원</span>
-          </button>
         </div>
         <button
           className="club-main-page__header-toggle"

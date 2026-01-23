@@ -8,6 +8,8 @@ import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
 import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
+import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
 import com.example.openrunapi.domain.user.service.UserService;
 import com.example.openrunapi.domain.schedule.model.dto.MyScheduleResponse;
 import jakarta.validation.Valid;
@@ -133,6 +135,44 @@ public class UserController {
                 currentUserResponse.getId(),
                 clubId,
                 limit
+        );
+        return ResponseEntity.ok(matches);
+    }
+
+    /**
+     * 개인 전체 통계 조회 (모든 클럽 합산)
+     *
+     * @param userDetails 현재 사용자 정보
+     * @return 전체 통계 (승/무/패/총경기수)
+     */
+    @GetMapping("/me/stats/total")
+    public ResponseEntity<UserTotalStatsResponse> getMyTotalStats(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        UserTotalStatsResponse stats = userService.getMyTotalStats(currentUserResponse.getId());
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * 개인 전체 경기 기록 조회 (모든 클럽, 페이징)
+     *
+     * @param userDetails 현재 사용자 정보
+     * @param page        페이지 번호 (0부터 시작)
+     * @param size        페이지 크기
+     * @return 페이징된 경기 목록
+     */
+    @GetMapping("/me/matches/all")
+    public ResponseEntity<MyAllMatchPageResponse> getMyAllMatches(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer size
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        MyAllMatchPageResponse matches = userService.getMyAllMatches(
+                currentUserResponse.getId(),
+                page,
+                size
         );
         return ResponseEntity.ok(matches);
     }

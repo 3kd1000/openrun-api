@@ -98,15 +98,25 @@
   align-items: center;
   gap: var(--space-xxs);
   color: var(--color-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0; /* flex item이 shrink 할 수 있도록 */
   font-size: var(--font-size-m);
 }
 
 .my-upcoming-schedules-widget__club-name {
   color: var(--color-primary);
   font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 1 auto; /* 공간 부족하면 shrink */
+  min-width: 50px; /* 최소 너비 보장 */
+}
+
+.my-upcoming-schedules-widget__court-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 0 auto; /* 코트명은 shrink 안함 */
 }
 
 .my-upcoming-schedules-widget__match-type {
@@ -119,6 +129,7 @@
   font-weight: var(--font-weight-semibold);
   margin-left: var(--space-xxs);
   color: white;
+  flex-shrink: 0; /* 모임타입 뱃지는 shrink 안함 */
 }
 
 /* 남복: 파란색 */

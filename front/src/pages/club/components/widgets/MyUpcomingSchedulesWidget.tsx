@@ -67,11 +67,6 @@ const MyUpcomingSchedulesWidget: React.FC<MyUpcomingSchedulesWidgetProps> = ({
     }
   };
 
-  const truncateText = (text: string, maxLength: number = 8) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "..";
-  };
-
   const handleScheduleClick = (scheduleId: number) => {
     navigate(`/schedules/my`, { state: { openScheduleId: scheduleId } });
   };
@@ -149,11 +144,13 @@ const MyUpcomingSchedulesWidget: React.FC<MyUpcomingSchedulesWidgetProps> = ({
                     </span>
                     <span className="my-upcoming-schedules-widget__info">
                       {schedule.clubName && (
-                        <span className="my-upcoming-schedules-widget__club-name">
-                          [{truncateText(schedule.clubName, 6)}]
+                        <span className="my-upcoming-schedules-widget__club-name" title={schedule.clubName}>
+                          [{schedule.clubName}]
                         </span>
                       )}
-                      {truncateText(schedule.courtName)}
+                      <span className="my-upcoming-schedules-widget__court-name" title={schedule.courtName}>
+                        {schedule.courtName}
+                      </span>
                       {getMatchTypeLabel(schedule.matchType) && (
                         <span className={`my-upcoming-schedules-widget__match-type match-type--${schedule.matchType?.toLowerCase()}`}>
                           {getMatchTypeLabel(schedule.matchType)}

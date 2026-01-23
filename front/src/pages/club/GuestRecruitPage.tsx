@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { formatScheduleDateTime } from "../../utils/dateUtils";
 import { scheduleService } from "../../services/scheduleService";
 import {
@@ -10,7 +10,7 @@ import { postService } from "../../services/postService";
 import { commentService } from "../../services/commentService";
 import type { Schedule, MatchType } from "../../types/schedule";
 import type { Post, Comment } from "../../types/post";
-import { ArrowLeftIcon, CopyIcon } from "../../components/common/Icons";
+import { ArrowLeftIcon, LinkIcon } from "../../components/common/Icons";
 import "./GuestRecruitPage.css";
 
 const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
@@ -28,6 +28,7 @@ const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
 
 const GuestRecruitPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { clubId, scheduleId } = useParams<{
     clubId: string;
     scheduleId: string;
@@ -133,7 +134,14 @@ const GuestRecruitPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cid, sid]);
 
-  const handleBack = () => navigate(-1);
+  const handleBack = () => {
+    const state = location.state as { returnUrl?: string } | null;
+    if (state?.returnUrl) {
+      navigate(state.returnUrl);
+    } else {
+      navigate(-1);
+    }
+  };
 
   const handleApply = async () => {
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) return;
@@ -222,13 +230,14 @@ const GuestRecruitPage: React.FC = () => {
         </button>
         <h1 className="guest-recruit-page__title">게스트 모집</h1>
         <button
-          className="guest-recruit-page__copy-btn"
+          className="guest-recruit-page__link-btn"
           onClick={handleCopyLink}
           type="button"
           aria-label="링크 복사"
           title="링크 복사"
         >
-          <CopyIcon size={18} />
+          <LinkIcon size={18} />
+          <span>링크복사</span>
         </button>
       </div>
 
