@@ -178,6 +178,7 @@
 .club-explore-page__filter-select {
   padding: var(--space-s) var(--space-m);
   font-size: var(--font-size-base);
+  line-height: 1.4;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-m);
   background-color: var(--color-white);
@@ -510,7 +511,7 @@
   .club-explore-page__filter-select,
   .club-explore-page__region-select {
     font-size: var(--font-size-s);
-    height: 32px;
+    height: 36px;
   }
 
   .club-explore-page__filter-item--date .date-range-picker__trigger {
@@ -525,7 +526,7 @@
 
   .club-explore-page__filter-item--region .region-selector__select {
     font-size: var(--font-size-s);
-    height: 32px;
+    height: 36px;
   }
 
   .club-explore-page__club-item {
@@ -599,7 +600,7 @@
 
   .club-explore-page__filter-select {
     font-size: var(--font-size-xs);
-    height: 28px;
+    height: 32px;
   }
 
   .club-explore-page__filter-item--date .date-range-picker__trigger {
@@ -614,7 +615,7 @@
 
   .club-explore-page__filter-item--region .region-selector__select {
     font-size: var(--font-size-xs);
-    height: 28px;
+    height: 32px;
     padding-right: 24px;
     background-position: right 6px center;
   }
