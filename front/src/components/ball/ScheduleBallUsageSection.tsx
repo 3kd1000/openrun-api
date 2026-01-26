@@ -8,6 +8,7 @@ import type {
 import { getOpenRunSession } from '../../utils/openrunSession';
 import { normalizeClubRole } from '../../utils/role';
 import { getErrorMessage, logError } from '../../utils/errorHandler';
+import { useToast } from '../../contexts/ToastContext';
 import './ScheduleBallUsageSection.css';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
+  const { showToast } = useToast();
   const [usages, setUsages] = useState<BallTransactionResponse[]>([]);
   const [keepers, setKeepers] = useState<BallKeeper[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,7 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
       setDescription('');
       await loadData();
     } catch (err) {
-      alert(getErrorMessage(err));
+      showToast(getErrorMessage(err), "error");
     } finally {
       setSubmitting(false);
     }
@@ -100,7 +102,7 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
       await ballService.deleteTransaction(clubId, transactionId);
       await loadData();
     } catch (err) {
-      alert(getErrorMessage(err));
+      showToast(getErrorMessage(err), "error");
     }
   };
 
