@@ -1,33 +1,28 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import DrawGenerationPage from "./pages/draw/DrawGenerationPage";
-import ScheduleListPage from "./pages/schedule/ScheduleListPage";
+import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
 import MorePage from "./pages/more/MorePage";
 import ScoreboardPage from "./pages/scoreboard/ScoreboardPage";
 import AuthTestPage from "./pages/auth/AuthTestPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SetupProfilePage from "./pages/auth/SetupProfilePage";
-import ClubListPage from "./pages/club/ClubListPage";
-import ClubRecruitingPage from "./pages/club/ClubRecruitingPage";
-import ClubAdminPage from "./pages/club/ClubAdminPage";
-import ClubMainPage from "./pages/club/ClubMainPage";
-import ClubExplorePage from "./pages/club/ClubExplorePage";
-import ClubMembersPage from "./pages/club/ClubMembersPage";
-import ClubManagePage from "./pages/club/ClubManagePage";
-import ClubCreatePage from "./pages/club/ClubCreatePage";
-import ClubManageInfoPage from "./pages/club/ClubManageInfoPage";
-import ClubManagePolicyPage from "./pages/club/ClubManagePolicyPage";
-import ClubCreateOnboardingPage from "./pages/club/ClubCreateOnboardingPage";
-import ClubRulesPage from "./pages/club/ClubRulesPage";
-import ClubNoticesManagePage from "./pages/club/ClubNoticesManagePage";
-import ClubEntryRedirectPage from "./pages/club/ClubEntryRedirectPage";
-import PostListPage from "./pages/club/PostListPage";
-import GuestRecruitPage from "./pages/club/GuestRecruitPage";
-import InterclubRecruitPage from "./pages/club/InterclubRecruitPage";
-import ClubExternalRequestsPage from "./pages/club/ClubExternalRequestsPage";
-import ClubJoinRequestsPage from "./pages/club/ClubJoinRequestsPage";
-import ClubContentManagePage from "./pages/club/ClubContentManagePage";
-import ClubTransferOwnershipPage from "./pages/club/ClubTransferOwnershipPage";
-import ClubBallManagePage from "./pages/club/ClubBallManagePage";
+import ClubRecruitingPage from "./pages/club/recruit/ClubRecruitingPage";
+import ClubMainPage from "./pages/club/home/ClubMainPage";
+import ClubExplorePage from "./pages/club/list/ClubExplorePage";
+import ClubMembersPage from "./pages/club/home/ClubMembersPage";
+import ClubManagePage from "./pages/club/manage/ClubManagePage";
+import ClubCreatePage from "./pages/club/create/ClubCreatePage";
+import ClubManageInfoPage from "./pages/club/manage/ClubManageInfoPage";
+import ClubManagePolicyPage from "./pages/club/manage/ClubManagePolicyPage";
+import ClubCreateOnboardingPage from "./pages/club/create/ClubCreateOnboardingPage";
+import ClubNoticesManagePage from "./pages/club/manage/ClubNoticeManagePage";
+import ClubEntryRedirectPage from "./pages/club/home/ClubEntryRedirectPage";
+import GuestRecruitPage from "./pages/club/recruit/GuestRecruitPage";
+import InterclubRecruitPage from "./pages/club/recruit/InterclubRecruitPage";
+import ClubRecruitManagePage from "./pages/club/manage/ClubRecruitManagePage";
+import ClubNoticeManagePage from "./pages/club/manage/ClubNoticeManagePage";
+import ClubTransferOwnershipPage from "./pages/club/manage/ClubTransferOwnershipPage";
+import ClubBallManagePage from "./pages/club/manage/ClubBallManagePage";
 import TermsOfServicePage from "./pages/more/TermsOfServicePage";
 import LicensePage from "./pages/more/LicensePage";
 import OAuthProvidersPage from "./pages/more/OAuthProvidersPage";
@@ -39,6 +34,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 
 function App() {
@@ -52,8 +49,10 @@ function App() {
     location.pathname !== "/setup-profile";
 
   return (
-    <AuthProvider>
-      <div className="App">
+    <ToastProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <div className="App">
         {/* <DevUserSwitcher /> */}
         {shouldShowNavigation && <Navigation />}
         <main
@@ -68,7 +67,6 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/more/terms" element={<TermsOfServicePage />} />
               <Route path="/more/license" element={<LicensePage />} />
-              <Route path="/clubs" element={<ClubListPage />} />
               <Route path="/clubs/explore" element={<ClubExplorePage />} />
               <Route
                 path="/clubs/new"
@@ -88,14 +86,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ClubMembersPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/clubs/:clubId/rules"
-                element={
-                  <ProtectedRoute>
-                    <ClubRulesPage />
                   </ProtectedRoute>
                 }
               />
@@ -135,23 +125,16 @@ function App() {
                 path="/clubs/:clubId/manage/external-requests"
                 element={
                   <ProtectedRoute>
-                    <ClubExternalRequestsPage />
+                    <ClubRecruitManagePage />
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/clubs/:clubId/manage/join-requests"
-                element={
-                  <ProtectedRoute>
-                    <ClubJoinRequestsPage />
-                  </ProtectedRoute>
-                }
-              />
+            
               <Route
                 path="/clubs/:clubId/manage/content"
                 element={
                   <ProtectedRoute>
-                    <ClubContentManagePage />
+                    <ClubNoticeManagePage />
                   </ProtectedRoute>
                 }
               />
@@ -204,23 +187,11 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/clubs/:clubId/posts"
-                element={
-                  <ProtectedRoute>
-                    <PostListPage />
-                  </ProtectedRoute>
-                }
-              />
 
               {/* legacy: /club* -> /clubs/{clubId}* */}
               <Route
                 path="/club"
-                element={<ClubEntryRedirectPage to="home" />}
-              />
-              <Route
-                path="/club/posts"
-                element={<ClubEntryRedirectPage to="posts" />}
+                element={<ClubEntryRedirectPage />}
               />
               <Route path="/more" element={<MorePage />} />
               <Route
@@ -262,14 +233,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/clubs/:clubId/admin"
-                element={
-                  <ProtectedRoute>
-                    <ClubAdminPage />
-                  </ProtectedRoute>
-                }
-              />
 
               {/* 개발용 페이지 */}
               <Route path="/auth-test" element={<AuthTestPage />} />
@@ -282,9 +245,11 @@ function App() {
         {/* PWA 주석 테스트*/}
 
         {/* PWA 업데이트 프롬프트 주석 */}
-        {needRefresh && <PWAUpdatePrompt onUpdate={updateServiceWorker} />}
-      </div>
-    </AuthProvider>
+          {needRefresh && <PWAUpdatePrompt onUpdate={updateServiceWorker} />}
+          </div>
+        </AuthProvider>
+      </ErrorBoundary>
+    </ToastProvider>
   );
 }
 

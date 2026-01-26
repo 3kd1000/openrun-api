@@ -11,7 +11,7 @@ describe('drawService', () => {
   });
 
   describe('createDraw', () => {
-    it('should call POST /api/draw with request data', async () => {
+    it('should call POST /draw with request data', async () => {
       const mockResponse: DrawResponse = {
         games: [
           {
@@ -33,7 +33,7 @@ describe('drawService', () => {
 
       const result = await drawService.createDraw(request);
 
-      expect(axios.post).toHaveBeenCalledWith('/api/draw', request);
+      expect(axios.post).toHaveBeenCalledWith('/draw', request);
       expect(result).toEqual(mockResponse);
     });
 
@@ -62,7 +62,7 @@ describe('drawService', () => {
 
       await drawService.createDraw(request);
 
-      expect(axios.post).toHaveBeenCalledWith('/api/draw', request);
+      expect(axios.post).toHaveBeenCalledWith('/draw', request);
     });
 
     it('should handle AB type draw request', async () => {
@@ -90,7 +90,7 @@ describe('drawService', () => {
 
       await drawService.createDraw(request);
 
-      expect(axios.post).toHaveBeenCalledWith('/api/draw', request);
+      expect(axios.post).toHaveBeenCalledWith('/draw', request);
     });
 
     it('should handle SEED type draw request', async () => {
@@ -118,12 +118,12 @@ describe('drawService', () => {
 
       await drawService.createDraw(request);
 
-      expect(axios.post).toHaveBeenCalledWith('/api/draw', request);
+      expect(axios.post).toHaveBeenCalledWith('/draw', request);
     });
   });
 
   describe('createDrawWithSchedule', () => {
-    it('should call POST /api/schedules/:scheduleId/draw with schedule ID', async () => {
+    it('should call POST /schedules/:scheduleId/draw with schedule ID', async () => {
       const mockResponse: DrawResponse = {
         games: [
           {
@@ -147,7 +147,7 @@ describe('drawService', () => {
       const result = await drawService.createDrawWithSchedule(scheduleId, request);
 
       expect(axios.post).toHaveBeenCalledWith(
-        `/api/schedules/${scheduleId}/draw`,
+        `/schedules/${scheduleId}/draw`,
         request
       );
       expect(result).toEqual(mockResponse);

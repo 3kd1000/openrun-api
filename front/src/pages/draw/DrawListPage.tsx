@@ -6,7 +6,7 @@ import type { Match } from "../../types/match";
 import type { Schedule, Participant } from "../../types/schedule";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import DrawViewModal from "../schedule/components/DrawViewModal";
+import DrawViewModal from "../schedule/draw/DrawViewModal";
 import { isNotEmpty } from "../../utils/isEmpty";
 import "./DrawListPage.css";
 

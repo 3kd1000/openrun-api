@@ -1,0 +1,119 @@
+/**
+ * WidgetSettingsModal Styles
+ */
+
+.widget-settings-modal {
+  max-width: 420px;
+  width: 90%;
+}
+
+.widget-settings-modal__body {
+  padding: var(--space-l);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+}
+
+.widget-settings-modal__hint {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin: 0;
+  text-align: center;
+}
+
+.widget-settings-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.widget-settings-modal__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-m);
+  padding: var(--space-m);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--color-bg-primary);
+}
+
+.widget-settings-modal__item:hover:not(.disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+.widget-settings-modal__item.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+.widget-settings-modal__item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.widget-settings-modal__item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  cursor: inherit;
+}
+
+.widget-settings-modal__item-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.widget-settings-modal__item-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.widget-settings-modal__admin-badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-warning);
+  background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));
+  padding: 2px 6px;
+  border-radius: var(--radius-s);
+}
+
+.widget-settings-modal__item-desc {
+  font-size: var(--font-size-s);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-normal);
+}
+
+.widget-settings-modal__count {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+/* 모바일 최적화 */
+@media (max-width: 480px) {
+  .widget-settings-modal {
+    width: 95%;
+  }
+
+  .widget-settings-modal__body {
+    padding: var(--space-m);
+  }
+
+  .widget-settings-modal__item {
+    padding: var(--space-s) var(--space-m);
+  }
+}

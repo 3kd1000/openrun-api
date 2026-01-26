@@ -1,0 +1,384 @@
+.club-main-page {
+  padding: 0 var(--space-m);
+  background-color: var(--color-background);
+  min-height: calc(100vh - var(--header-height) - var(--navigation-height));
+  padding-bottom: 100px;
+}
+
+.club-main-page__loading,
+.club-main-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  color: var(--color-text-secondary);
+}
+
+.club-main-page__empty-icon {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-m);
+}
+
+.club-main-page__empty-message {
+  font-size: var(--font-size-l);
+  margin-bottom: var(--space-xl);
+}
+
+.club-main-page__empty-button {
+  padding: var(--space-m) var(--space-xl);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.club-main-page__empty-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* 클럽 헤더 */
+.club-main-page__header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-s);
+  padding: var(--space-s);
+  background-color: var(--color-white);
+  border-radius: var(--radius-l);
+  margin-bottom: var(--space-m);
+  border: 1px solid var(--color-border);
+}
+
+.club-main-page__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.club-main-page__header-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xxs);
+  /* 모바일: 3개씩 한 줄 (33% - gap 고려) */
+  flex: 0 0 calc(33.333% - var(--space-xs) * 2 / 3);
+  min-width: 0;
+  height: 56px;
+  padding: var(--space-xs) 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-m);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.club-main-page__header-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* 768px 이상: 한 줄에 모두 배치 */
+@media (min-width: 768px) {
+  .club-main-page__header-actions {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: var(--space-m);
+  }
+
+  .club-main-page__header-btn {
+    flex: 0 0 auto;
+    min-width: 72px;
+    height: 64px;
+  }
+
+  .club-main-page__header-btn svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.club-main-page__header-btn:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.club-main-page__header-btn-text {
+  display: inline;
+  font-size: var(--font-size-m);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.club-main-page__notice-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+/* 메뉴 접기/펼치기 토글 버튼 */
+.club-main-page__header-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 24px;
+  margin-top: var(--space-xs);
+  background: none;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.club-main-page__header-toggle:hover {
+  color: var(--color-primary);
+}
+
+/* 메뉴 접힘 상태 */
+.club-main-page__header.collapsed .club-main-page__header-btn-text {
+  display: none;
+}
+
+.club-main-page__header.collapsed .club-main-page__header-actions {
+  justify-content: center;
+  gap: 2px;
+}
+
+.club-main-page__header.collapsed .club-main-page__header-btn {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+}
+
+/* 데스크탑: 접힘 상태 */
+@media (min-width: 768px) {
+  .club-main-page__header.collapsed .club-main-page__header-btn {
+    width: 64px;
+    min-width: auto;
+  }
+}
+
+/* Mobile Small (~ 359px) - 기본 스타일과 동일하게 세로 배치 유지 */
+
+.club-main-page__title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  text-align: center;
+}
+
+/* 위젯 영역 */
+.club-main-page__widgets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-l); /* 위젯 간 간격 확대 */
+  margin-bottom: var(--space-m);
+}
+
+.club-main-page__widgets-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-s);
+  padding: 0 var(--space-xxs);
+}
+
+.club-main-page__widgets-settings-btn {
+  padding: var(--space-xxs) var(--space-s);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.club-main-page__widgets-settings-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+.club-main-page__widgets-edit-btn {
+  padding: var(--space-xxs) var(--space-s);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.club-main-page__widgets-edit-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.club-main-page__widgets-edit-btn.active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+.club-main-page__widget-item {
+  position: relative;
+  /* 위젯 자체가 border를 가지고 있으므로 여기서는 border 미적용 */
+}
+
+.club-main-page__widget-item.dragging {
+  opacity: 0.85;
+}
+
+.club-main-page__widget-drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.club-main-page__widget-drag-handle:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+/* Desktop (769px+) */
+@media (min-width: 769px) {
+  .club-main-page {
+    padding: 0 var(--space-l);
+    padding-bottom: 100px;
+  }
+
+  .club-main-page__header {
+    padding: var(--space-m) var(--space-l);
+  }
+
+  .club-main-page__header-btn {
+    min-width: 80px;
+    height: 72px;
+  }
+
+  .club-main-page__header-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .club-main-page__header-btn-text {
+    font-size: var(--font-size-base);
+  }
+
+  .club-main-page__title {
+    font-size: var(--font-size-xl);
+  }
+
+  .club-main-page__widgets {
+    gap: var(--space-l);
+  }
+}
+
+/* Tablet (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
+  .club-main-page__header-btn {
+    height: 60px;
+  }
+
+  .club-main-page__header-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .club-main-page__header-btn-text {
+    font-size: var(--font-size-m);
+  }
+
+  .club-main-page__title {
+    font-size: var(--font-size-base);
+  }
+}
+
+/* Mobile Large (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
+  .club-main-page {
+    padding: 0 var(--space-s);
+    padding-bottom: 100px;
+  }
+
+  .club-main-page__header {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .club-main-page__header-btn {
+    height: 52px;
+  }
+
+  .club-main-page__header-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .club-main-page__header-btn-text {
+    font-size: var(--font-size-s);
+  }
+
+  .club-main-page__title {
+    font-size: var(--font-size-m);
+  }
+}
+
+/* Mobile Small (~ 359px) */
+@media (max-width: 359px) {
+  .club-main-page {
+    padding: 0 var(--space-xs);
+    padding-bottom: 100px;
+  }
+
+  .club-main-page__header {
+    padding: var(--space-xs);
+  }
+
+  .club-main-page__header-btn {
+    height: 48px;
+  }
+
+  .club-main-page__header-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .club-main-page__header-btn-text {
+    font-size: var(--font-size-xs);
+  }
+
+  .club-main-page__title {
+    font-size: var(--font-size-m);
+  }
+}

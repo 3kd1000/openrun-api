@@ -6,10 +6,12 @@ import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import { isNotEmpty } from "../../utils/isEmpty";
 import { UsersIcon } from "../../components/common/Icons";
+import { useToast } from "../../contexts/ToastContext";
 import "./MyClubsPage.css";
 
 const MyClubsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [clubs, setClubs] = useState<MyClub[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [leavingClubId, setLeavingClubId] = useState<number | null>(null);
@@ -55,7 +57,7 @@ const MyClubsPage: React.FC = () => {
     setLeavingClubId(clubId);
     try {
       await axiosInstance.delete(`/clubs/${clubId}/members/me`);
-      alert("클럽 탈퇴가 완료되었습니다.");
+      showToast("클럽 탈퇴가 완료되었습니다", "success");
       loadClubs(); // 목록 새로고침
     } catch (error: unknown) {
       console.error("클럽 탈퇴 실패:", error);
@@ -63,11 +65,7 @@ const MyClubsPage: React.FC = () => {
         error instanceof Error && 'response' in error
           ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
           : undefined;
-      if (errorMessage) {
-        alert(errorMessage);
-      } else {
-        alert("클럽 탈퇴에 실패했습니다.");
-      }
+      showToast(errorMessage || "클럽 탈퇴에 실패했습니다", "error");
     } finally {
       setLeavingClubId(null);
     }

@@ -16,6 +16,7 @@ export type ClubSettingsV1 = {
       widgets?: {
         order?: string[];
         expanded?: Record<string, boolean>;
+        selected?: string[]; // 선택된 위젯 목록
       };
       rulesPage?: {
         noticesExpanded?: boolean;
@@ -67,6 +68,8 @@ export function setClubSettings(
         ...((current.widgets ?? {}).expanded ?? {}),
         ...((patch.widgets ?? {}).expanded ?? {}),
       },
+      // selected는 배열이므로 덮어쓰기 (patch에 있으면 교체)
+      selected: patch.widgets?.selected ?? (current.widgets ?? {}).selected,
     },
     rulesPage: {
       ...(current.rulesPage ?? {}),
