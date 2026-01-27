@@ -352,7 +352,7 @@ const GuestRecruitPage: React.FC = () => {
           <textarea
             className="guest-recruit-page__textarea"
             placeholder={
-              "연락 방법/질문/요청사항 등을 자유롭게 작성해주세요.\n문의글은 신청 여부와 무관하게 남길 수 있어요. \n운영진 답변은 댓글로 달립니다"
+              "연락 방법/질문/요청사항 등을 자유롭게 작성해주세요.\n문의글은 신청 여부와 무관하게 남길 수 있어요."
             }
             value={inquiryContent}
             onChange={(e) => setInquiryContent(e.target.value)}

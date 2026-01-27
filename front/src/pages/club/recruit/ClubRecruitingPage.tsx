@@ -310,7 +310,7 @@ const ClubRecruitingPage: React.FC = () => {
               disabled
               type="button"
             >
-              이미 멤버입니다
+              이미 가입된 클럽입니다.
             </button>
           )}
           {joinStatus === "PENDING" && (
@@ -345,7 +345,7 @@ const ClubRecruitingPage: React.FC = () => {
             <textarea
               className="club-recruiting-page__textarea"
               placeholder={
-                "가입 조건/분위기/참가 방식 등 궁금한 점을 자유롭게 작성해주세요.\n\n(운영진 답변은 댓글로 달립니다)"
+                "가입 조건/분위기/참가 방식 등 궁금한 점을 자유롭게 작성해주세요."
               }
               value={joinInquiryContent}
               onChange={(e) => setJoinInquiryContent(e.target.value)}
