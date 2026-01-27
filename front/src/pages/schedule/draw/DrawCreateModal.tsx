@@ -461,6 +461,7 @@ const DrawCreateModal: React.FC<Props> = ({
       const text = formatDrawAsText(drawResult, {
         title: "🎯 대진표",
         drawType: drawType,
+        playerCount: totalSelected,
       });
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -961,7 +962,7 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* 대진 생성 결과 */}
           {drawResult && (
             <div className="draw-result-section">
-              <DrawGamesList games={drawResult.games} />
+              <DrawGamesList games={drawResult.games} playerCount={totalSelected} />
             </div>
           )}
 

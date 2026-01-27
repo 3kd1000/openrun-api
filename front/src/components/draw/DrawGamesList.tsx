@@ -18,6 +18,8 @@ import { Trash2Icon } from "../common/Icons";
 export interface DrawGamesListProps {
   /** 대진표 게임 목록 */
   games: DrawGame[];
+  /** 참가 인원수 (라운드당 게임 수 계산용) */
+  playerCount?: number;
   /** 편집 모드 활성화 여부 (DrawViewModal에서 결과 입력 시 사용) */
   isEditMode?: boolean;
   /** 스코어 변경 핸들러 (편집 모드에서 사용) */
@@ -34,13 +36,14 @@ export interface DrawGamesListProps {
  */
 const DrawGamesList: React.FC<DrawGamesListProps> = ({
   games,
+  playerCount,
   isEditMode = false,
   onScoreChange,
   matchScores,
   onResetResult,
 }) => {
-  // 라운드별로 그룹화
-  const gamesByRound = groupGamesByRound(games);
+  // 라운드별로 그룹화 (인원수 기반으로 라운드당 게임 수 계산)
+  const gamesByRound = groupGamesByRound(games, playerCount);
   const sortedRounds = getSortedRounds(gamesByRound);
 
   return (

@@ -70,6 +70,11 @@ const DrawViewModal: React.FC<Props> = ({
     loadDraw();
   }, [loadDraw]);
 
+  // 대진 참가 인원수 (확정된 참가자 수 기준)
+  const confirmedParticipantCount = participants.filter(
+    (p) => p.status === "CONFIRMED"
+  ).length;
+
   // 클립보드 복사
   const handleCopy = async () => {
     try {
@@ -77,6 +82,7 @@ const DrawViewModal: React.FC<Props> = ({
         title: `🎯 ${schedule.courtName} 대진표`,
         scheduledAt: schedule.scheduledAt,
         drawType: schedule.drawType || "",
+        playerCount: confirmedParticipantCount,
       });
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -292,6 +298,7 @@ const DrawViewModal: React.FC<Props> = ({
             <div className="draw-result-section">
               <DrawGamesList
                 games={drawResult.games}
+                playerCount={confirmedParticipantCount}
                 isEditMode={isEditMode}
                 onScoreChange={handleScoreChange}
                 matchScores={matchScores}
