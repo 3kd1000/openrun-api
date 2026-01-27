@@ -72,12 +72,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-s);
-  padding: var(--space-xs) var(--space-s);
+  padding: var(--space-s) var(--space-m);
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-s);
   cursor: pointer;
   transition: background-color 0.2s;
   font-size: var(--font-size-m);
+  min-height: 44px;
 }
 
 .my-upcoming-schedules-widget__item:hover {
@@ -205,6 +206,8 @@
   .my-upcoming-schedules-widget__item {
     font-size: var(--font-size-s);
     gap: var(--space-xs);
+    padding: var(--space-s);
+    min-height: 40px;
   }
 
   .my-upcoming-schedules-widget__datetime {
@@ -238,7 +241,8 @@
   .my-upcoming-schedules-widget__item {
     font-size: var(--font-size-s);
     gap: var(--space-xs);
-    padding: var(--space-xs);
+    padding: var(--space-s);
+    min-height: 40px;
   }
 
   .my-upcoming-schedules-widget__datetime {

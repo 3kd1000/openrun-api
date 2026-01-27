@@ -467,15 +467,14 @@ const ScheduleListPage: React.FC = () => {
 
   return (
     <div className="schedule-page">
-      {/* ClubSelector */}
-      <div className="page-club-selector-container">
-        <ClubSelector
-          selectedClubId={selectedClubId}
-          onClubChange={handleClubChange}
-        />
-      </div>
-
       <div className="schedule-header">
+        {/* ClubSelector */}
+        <div className="page-club-selector-container">
+          <ClubSelector
+            selectedClubId={selectedClubId}
+            onClubChange={handleClubChange}
+          />
+        </div>
         {/* 일정 모드 탭 (클럽일정 / 개인일정) */}
         <div className="schedule-mode-tabs">
           <button
