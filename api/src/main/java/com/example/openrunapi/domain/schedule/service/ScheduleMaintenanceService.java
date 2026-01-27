@@ -34,7 +34,6 @@ public class ScheduleMaintenanceService {
      * 매일 KST 새벽 3시 (= UTC 18시) 실행
      * 과거 일정의 고정/게스트모집/교류전모집 플래그를 자동으로 OFF
      */
-    @Scheduled(cron = "0 0 18 * * *", zone = "UTC")
     @Transactional
     public void disableExpiredScheduleFeatures() {
         log.info("[배치 시작] 과거 일정 플래그 자동 OFF 작업 시작");
@@ -76,8 +75,6 @@ public class ScheduleMaintenanceService {
         log.info("[배치 완료] 처리 완료 - 고정 해제: {}건, 게스트 종료: {}건, 교류전 종료: {}건",
                  pinnedCount, guestCount, interclubCount);
 
-        // 클럽별 활동 요약 업데이트
-        updateClubActivitySummaries();
     }
 
     /**
@@ -137,6 +134,14 @@ public class ScheduleMaintenanceService {
         log.info("[배치 완료] 클럽 활동 요약 및 멤버 수 업데이트 완료 - {}개 클럽 처리", updatedCount);
     }
 
+    @Scheduled(cron = "0 0 18 * * *", zone = "UTC")
+    @Transactional
+    public String executeBatch() {
+        disableExpiredScheduleFeatures();
+        updateClubActivitySummaries();
+        return "배치 작업이 실행되었습니다.";
+    }
+
     /**
      * 테스트용 수동 실행 메서드
      * Controller에서 호출 가능
@@ -144,7 +149,6 @@ public class ScheduleMaintenanceService {
     @Transactional
     public String executeNow() {
         log.info("[수동 실행] 과거 일정 플래그 자동 OFF 작업 수동 실행");
-        disableExpiredScheduleFeatures();
-        return "배치 작업이 수동으로 실행되었습니다.";
+        return executeBatch();
     }
 }
