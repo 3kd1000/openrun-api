@@ -742,23 +742,23 @@ const ScheduleDetailModal: React.FC<Props> = ({
                       !!(
                         (schedule.scheduledAt &&
                           new Date() >= new Date(schedule.scheduledAt)) ||
-                        schedule.maxCapacity < 6
+                        schedule.maxCapacity < 4
                       )
                     }
                     title={
                       schedule.scheduledAt &&
                       new Date() >= new Date(schedule.scheduledAt)
                         ? "이미 지난 일정에는 대진을 생성할 수 없습니다."
-                        : schedule.maxCapacity < 6
-                        ? `대진 생성은 6인 이상의 모임일 때 가능합니다. (현재 모임 총원: ${schedule.maxCapacity}명)`
+                        : schedule.maxCapacity < 4
+                        ? `대진 생성은 4인 이상의 모임일 때 가능합니다. (현재 모임 총원: ${schedule.maxCapacity}명)`
                         : undefined
                     }
                   >
                     생성
                   </button>
-                  {schedule.maxCapacity < 6 && (
+                  {schedule.maxCapacity < 4 && (
                     <span className="draw-inline-notice">
-                      6인 이상 모임에서 가능 (현재 {schedule.maxCapacity}명)
+                      4인 이상 모임에서 가능 (현재 {schedule.maxCapacity}명)
                     </span>
                   )}
                 </>

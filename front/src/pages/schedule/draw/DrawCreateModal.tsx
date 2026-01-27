@@ -177,9 +177,9 @@ const DrawCreateModal: React.FC<Props> = ({
   // SEED 타입의 시드 수 계산
   const getSeedCount = (total: number): number => {
     if (total >= 6 && total <= 8) return 2;
-    if (total > 8 && total <= 10) return 3;
-    if (total > 10 && total <= 14) return 4;
-    if (total === 15) return 5;
+    if (total >= 9 && total <= 10) return 3;
+    if (total >= 11 && total <= 13) return 4;
+    if (total === 14 || total === 15) return 5;
     if (total === 16) return 6;
     return 0;
   };
@@ -484,8 +484,8 @@ const DrawCreateModal: React.FC<Props> = ({
     if (totalSelected > 16) return false;
 
     if (drawType === "AA") {
-      // AA: 최소 6명, 최대 16명, 홀짝 무관
-      return totalSelected >= 6 && confirmedGroup.length >= 6;
+      // AA: 최소 4명, 최대 16명, 홀짝 무관
+      return totalSelected >= 4 && confirmedGroup.length >= 4;
     } else if (drawType === "AB") {
       // AB: 최소 8명, 최대 16명, 짝수만, A/B 그룹 비어있지 않아야 함
       return (
@@ -551,6 +551,8 @@ const DrawCreateModal: React.FC<Props> = ({
                 type="button"
                 className={`draw-type-btn ${drawType === "AB" ? "active" : ""}`}
                 onClick={() => setDrawType("AB")}
+                disabled={localParticipants.length < 8}
+                title={localParticipants.length < 8 ? "8인 이상일 때 사용 가능" : undefined}
               >
                 AB (그룹별)
               </button>
@@ -560,6 +562,8 @@ const DrawCreateModal: React.FC<Props> = ({
                   drawType === "SEED" ? "active" : ""
                 }`}
                 onClick={() => setDrawType("SEED")}
+                disabled={localParticipants.length < 6}
+                title={localParticipants.length < 6 ? "6인 이상일 때 사용 가능" : undefined}
               >
                 SEED (시드)
               </button>
@@ -573,7 +577,7 @@ const DrawCreateModal: React.FC<Props> = ({
                     <p className="info-description">
                       매 라운드마다 파트너가 바뀌며 다양한 조합으로 경기
                     </p>
-                    <p className="info-players">참가 인원: 6~16명</p>
+                    <p className="info-players">참가 인원: 4~16명</p>
                   </>
                 )}
                 {drawType === "AB" && (
