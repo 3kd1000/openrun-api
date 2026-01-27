@@ -1,0 +1,261 @@
+.my-upcoming-schedules-widget {
+  background-color: var(--color-white);
+  border-radius: var(--radius-l);
+  padding: var(--space-m);
+  border: 1px solid var(--color-border);
+}
+
+.my-upcoming-schedules-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.my-upcoming-schedules-widget__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text);
+  background: none;
+  border: none;
+  padding: var(--space-xs) 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.my-upcoming-schedules-widget__header-left:hover {
+  color: var(--color-primary);
+}
+
+.my-upcoming-schedules-widget__title {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  color: inherit;
+}
+
+.my-upcoming-schedules-widget__view-all {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.my-upcoming-schedules-widget__view-all:hover {
+  color: var(--color-primary);
+}
+
+.my-upcoming-schedules-widget__content {
+  margin-top: var(--space-s);
+}
+
+.my-upcoming-schedules-widget__loading,
+.my-upcoming-schedules-widget__empty {
+  padding: var(--space-s);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+}
+
+.my-upcoming-schedules-widget__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.my-upcoming-schedules-widget__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding: var(--space-s) var(--space-m);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: var(--font-size-m);
+  min-height: 44px;
+}
+
+.my-upcoming-schedules-widget__item:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.my-upcoming-schedules-widget__datetime {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  min-width: 105px;
+  font-size: var(--font-size-m);
+}
+
+.my-upcoming-schedules-widget__info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  color: var(--color-text-secondary);
+  min-width: 0; /* flex item이 shrink 할 수 있도록 */
+  font-size: var(--font-size-m);
+}
+
+.my-upcoming-schedules-widget__club-name {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 1 auto; /* 공간 부족하면 shrink */
+  min-width: 50px; /* 최소 너비 보장 */
+}
+
+.my-upcoming-schedules-widget__court-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 0 auto; /* 코트명은 shrink 안함 */
+}
+
+.my-upcoming-schedules-widget__match-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  margin-left: var(--space-xxs);
+  color: white;
+  flex-shrink: 0; /* 모임타입 뱃지는 shrink 안함 */
+}
+
+/* 남복: 파란색 */
+.my-upcoming-schedules-widget__match-type.match-type--men_doubles {
+  background-color: #4a90e2;
+}
+
+/* 여복: 분홍색 */
+.my-upcoming-schedules-widget__match-type.match-type--women_doubles {
+  background-color: #e91e63;
+}
+
+/* 혼복: 보라색 */
+.my-upcoming-schedules-widget__match-type.match-type--mixed_doubles {
+  background-color: #9c27b0;
+}
+
+/* 단식: 초록색 */
+.my-upcoming-schedules-widget__match-type.match-type--singles {
+  background-color: #4caf50;
+}
+
+.my-upcoming-schedules-widget__guest-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  background-color: #dcfce7;
+  color: #15803d;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  margin-left: var(--space-xxs);
+}
+
+.my-upcoming-schedules-widget__capacity {
+  font-size: var(--font-size-m);
+  color: var(--color-text-secondary);
+  background-color: var(--color-white);
+  padding: 2px var(--space-xs);
+  border-radius: var(--radius-s);
+  white-space: nowrap;
+}
+
+/* Desktop (769px+) */
+@media (min-width: 769px) {
+  .my-upcoming-schedules-widget {
+    padding: var(--space-l);
+  }
+}
+
+/* Tablet (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
+  .my-upcoming-schedules-widget__datetime {
+    min-width: 100px;
+  }
+}
+
+/* Mobile Large (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
+  .my-upcoming-schedules-widget {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .my-upcoming-schedules-widget__title {
+    font-size: var(--font-size-m);
+  }
+
+  .my-upcoming-schedules-widget__view-all {
+    font-size: var(--font-size-m);
+  }
+
+  .my-upcoming-schedules-widget__item {
+    font-size: var(--font-size-s);
+    gap: var(--space-xs);
+    padding: var(--space-s);
+    min-height: 40px;
+  }
+
+  .my-upcoming-schedules-widget__datetime {
+    min-width: 90px;
+    font-size: var(--font-size-s);
+  }
+
+  .my-upcoming-schedules-widget__info {
+    font-size: var(--font-size-s);
+  }
+
+  .my-upcoming-schedules-widget__capacity {
+    font-size: var(--font-size-s);
+  }
+}
+
+/* Mobile Small (~ 359px) */
+@media (max-width: 359px) {
+  .my-upcoming-schedules-widget {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .my-upcoming-schedules-widget__title {
+    font-size: var(--font-size-m);
+  }
+
+  .my-upcoming-schedules-widget__view-all {
+    font-size: var(--font-size-m);
+  }
+
+  .my-upcoming-schedules-widget__item {
+    font-size: var(--font-size-s);
+    gap: var(--space-xs);
+    padding: var(--space-s);
+    min-height: 40px;
+  }
+
+  .my-upcoming-schedules-widget__datetime {
+    min-width: 85px;
+    font-size: var(--font-size-s);
+  }
+
+  .my-upcoming-schedules-widget__info {
+    font-size: var(--font-size-s);
+  }
+
+  .my-upcoming-schedules-widget__capacity {
+    font-size: var(--font-size-s);
+    padding: 1px 4px;
+  }
+}

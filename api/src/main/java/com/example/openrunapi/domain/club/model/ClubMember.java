@@ -38,18 +38,24 @@ public class ClubMember {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ClubRole role = ClubRole.MEMBER;
+    private ClubRole role = ClubRole.REGULAR;
+
+    @Column(nullable = false)
+    private Boolean isBallKeeper = false;
+
+    @Column(nullable = false)
+    private Integer ballQuantity = 0;
 
     @CreatedDate
     @Column(updatable = false, nullable = false)
     private LocalDateTime joinedAt;
 
     @Builder
-    public ClubMember(Club club, User user, ClubMemberStatus status) {
+    public ClubMember(Club club, User user, ClubMemberStatus status, ClubRole role) {
         this.club = club;
         this.user = user;
         this.status = status;
-        this.role = ClubRole.MEMBER; // 기본값
+        this.role = role; // 기본값
     }
 
     public void updateStatus(ClubMemberStatus status) {
@@ -79,5 +85,48 @@ public class ClubMember {
      */
     public boolean canManageMembers() {
         return this.role.canManageMembers();
+    }
+
+    /**
+     * 공용구 보유자 지정
+     */
+    public void updateBallKeeper(boolean isBallKeeper) {
+        this.isBallKeeper = isBallKeeper;
+        if (!isBallKeeper) {
+            this.ballQuantity = 0;
+        }
+    }
+
+    /**
+     * 공용구 수량 증가
+     */
+    public void addBalls(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("수량은 0보다 커야 합니다");
+        }
+        this.ballQuantity += quantity;
+    }
+
+    /**
+     * 공용구 수량 감소
+     */
+    public void useBalls(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("수량은 0보다 커야 합니다");
+        }
+        if (this.ballQuantity < quantity) {
+            throw new IllegalStateException("보유 수량이 부족합니다");
+        }
+        this.ballQuantity -= quantity;
+    }
+
+    /**
+     * 공용구 수량 직접 설정 (조정용)
+     */
+    public void setBallQuantity(int quantity) {
+        if (quantity < 0) {
+            throw new IllegalArgumentException("수량은 0 이상이어야 합니다");
+        }
+        this.ballQuantity = quantity;
     }
 }

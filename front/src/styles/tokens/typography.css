@@ -32,8 +32,8 @@
   --letter-spacing-wide: 0.02em;
 }
 
-/* Desktop font sizes (768px 이상 - 약간 증가) */
-@media (min-width: 768px) {
+/* Desktop font sizes (769px 이상 - breakpoints.css 기준) */
+@media (min-width: 769px) {
   :root {
     --font-size-xs: 10px;
     --font-size-s: 12px;

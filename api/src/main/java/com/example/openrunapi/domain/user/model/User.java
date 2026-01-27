@@ -44,11 +44,15 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "phone_visibility", length = 20)
-    private ContactVisibility phoneVisibility = ContactVisibility.PRIVATE; // 연락처 공개 범위
+    private ContactVisibility phoneVisibility = ContactVisibility.PUBLIC; // 연락처 공개 범위
 
     @Enumerated(EnumType.STRING)
     @Column(name = "email_visibility", length = 20)
-    private ContactVisibility emailVisibility = ContactVisibility.CLUB_ONLY; // 이메일 공개 범위
+    private ContactVisibility emailVisibility = ContactVisibility.PUBLIC; // 이메일 공개 범위
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", length = 10, nullable = false)
+    private Gender gender = Gender.PRIVATE; // 성별 (MALE, FEMALE, PRIVATE)
 
     @Column(name = "is_guest", nullable = false)
     private boolean isGuest = false; // 게스트 사용자 여부 (스코어보드 집계 제외)
@@ -72,6 +76,12 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt; // 마지막 로그인 시각
 
+    @Column(name = "region_depth1", length = 20)
+    private String regionDepth1; // 시/도 (예: 서울특별시, 경기도)
+
+    @Column(name = "region_depth2", length = 20)
+    private String regionDepth2; // 시/군/구 (예: 강남구, 수원시)
+
     @Builder
     public User(String email, String name, String imageUrl, Boolean isGuest) {
         this.email = email;
@@ -85,6 +95,12 @@ public class User {
             this.name = name;
         }
         this.imageUrl = imageUrl; // null이 들어와도 업데이트 가능
+    }
+
+    public void updateGender(Gender gender) {
+        if (gender != null) {
+            this.gender = gender;
+        }
     }
 
     public void updateContactInfo(String phoneNumber, ContactVisibility phoneVisibility, ContactVisibility emailVisibility) {
@@ -120,5 +136,26 @@ public class User {
                 .filter(p -> p.getProvider() == providerType)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * 지역 정보 업데이트
+     */
+    public void updateRegion(String regionDepth1, String regionDepth2) {
+        this.regionDepth1 = regionDepth1;
+        this.regionDepth2 = regionDepth2;
+    }
+
+    /**
+     * 지역 표시용 문자열 반환
+     */
+    public String getRegionDisplay() {
+        if (regionDepth1 != null && !regionDepth1.isEmpty()) {
+            if (regionDepth2 != null && !regionDepth2.isEmpty()) {
+                return regionDepth1 + " " + regionDepth2;
+            }
+            return regionDepth1;
+        }
+        return null;
     }
 }

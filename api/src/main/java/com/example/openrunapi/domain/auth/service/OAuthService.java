@@ -1,11 +1,6 @@
 package com.example.openrunapi.domain.auth.service;
 
 import com.example.openrunapi.domain.auth.model.dto.UserCreationResult;
-import com.example.openrunapi.domain.club.model.Club;
-import com.example.openrunapi.domain.club.model.ClubMember;
-import com.example.openrunapi.domain.club.model.ClubMemberStatus;
-import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
-import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserOAuthProvider;
 import com.example.openrunapi.domain.user.repository.UserOAuthProviderRepository;
@@ -25,8 +20,6 @@ public class OAuthService {
 
     private final UserRepository userRepository;
     private final UserOAuthProviderRepository oauthProviderRepository;
-    private final ClubRepository clubRepository;
-    private final ClubMemberRepository clubMemberRepository;
 
     /**
      * OAuth 로그인 처리 (email 기반 통합 계정)
@@ -105,23 +98,8 @@ public class OAuthService {
 
         log.info("✅ 신규 유저 생성: {} (provider={})", savedUser.getName(), providerType);
 
-        // 4. 기본 클럽(오픈런)에 자동 가입 (MEMBER 역할, ACTIVE 상태)
-        try {
-            Club defaultClub = clubRepository.findById(1L)
-                    .orElseThrow(() -> new RuntimeException("기본 클럽을 찾을 수 없습니다."));
-
-            ClubMember clubMember = ClubMember.builder()
-                    .club(defaultClub)
-                    .user(savedUser)
-                    .status(ClubMemberStatus.ACTIVE)
-                    .build();
-            clubMemberRepository.save(clubMember);
-
-            log.info("✅ 신규 유저 기본 클럽 자동 가입: {} -> {}", savedUser.getName(), defaultClub.getName());
-        } catch (Exception e) {
-            log.error("❌ 기본 클럽 자동 가입 실패: {}", savedUser.getName(), e);
-            // 클럽 가입 실패는 사용자 생성을 막지 않음 (선택적 기능)
-        }
+        // 4. (변경) OAuth 로그인 = 서비스 가입/로그인만 수행.
+        // 클럽 가입은 이후 사용자가 별도로 진행합니다.
 
         return new UserCreationResult(savedUser, true); // 신규 사용자
     }

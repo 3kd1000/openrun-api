@@ -1,0 +1,349 @@
+/* ScheduleJoinModal - 일정 참여 모달 */
+
+.schedule-join-modal {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Content */
+.sjm-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-l);
+  overflow: hidden;
+}
+
+/* Loading & Empty States */
+.sjm-loading,
+.sjm-empty {
+  padding: var(--space-3xl) var(--space-l);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+}
+
+/* Schedule List */
+.sjm-schedule-list {
+  max-height: 60vh;
+  min-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  padding: var(--space-xxs);
+}
+
+/* Schedule Item */
+.sjm-schedule-item {
+  border: 1px solid var(--color-border-primary);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.sjm-schedule-item:hover:not(.sjm-schedule-item--disabled) {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.sjm-schedule-item--disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: var(--color-bg-disabled);
+  border-color: var(--color-border-secondary);
+}
+
+/* Checkbox Wrapper */
+.sjm-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  padding: var(--space-m);
+  cursor: pointer;
+  width: 100%;
+}
+
+.sjm-schedule-item--disabled .sjm-checkbox-wrapper {
+  cursor: not-allowed;
+}
+
+/* Checkbox */
+.sjm-checkbox {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.sjm-checkbox:disabled {
+  cursor: not-allowed;
+}
+
+/* Schedule Info */
+.sjm-schedule-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+/* Schedule Header */
+.sjm-schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-s);
+  width: 100%;
+}
+
+.sjm-court-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.sjm-label {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+}
+
+.sjm-court-name {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-snug);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Match Type Badge */
+.sjm-match-type-badge {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-xxs) var(--space-s);
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: var(--line-height-snug);
+}
+
+.sjm-match-type--men_doubles {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.sjm-match-type--women_doubles {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.sjm-match-type--mixed_doubles {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.sjm-match-type--singles {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Capacity Badge */
+.sjm-capacity {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-xxs) var(--space-s);
+  border-radius: 12px;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: var(--line-height-snug);
+}
+
+.sjm-capacity--full {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.sjm-capacity--joined {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+/* Schedule Meta */
+.sjm-schedule-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  width: 100%;
+}
+
+.sjm-date-row,
+.sjm-participation-start-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.sjm-date {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-snug);
+}
+
+.sjm-participation-start {
+  font-size: var(--font-size-base);
+  color: var(--color-success);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sjm-participation-start--pending {
+  color: #f57c00;
+  font-weight: var(--font-weight-bold);
+}
+
+/* Responsive - Desktop */
+@media (min-width: 769px) {
+  .sjm-schedule-list {
+    max-height: 65vh;
+  }
+
+  .sjm-checkbox {
+    width: 22px;
+    height: 22px;
+  }
+
+  .sjm-label {
+    font-size: var(--font-size-m);
+  }
+
+  .sjm-court-name {
+    font-size: var(--font-size-l);
+  }
+
+  .sjm-match-type-badge {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-capacity {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-date {
+    font-size: var(--font-size-m);
+  }
+
+  .sjm-participation-start {
+    font-size: var(--font-size-m);
+  }
+
+  .sjm-schedule-meta {
+    flex-direction: column;
+    gap: var(--space-xxs);
+  }
+}
+
+/* Modal Actions */
+.schedule-join-modal .modal-actions {
+  display: flex;
+  gap: var(--space-m);
+  margin-top: var(--space-l);
+  padding-top: var(--space-l);
+  border-top: var(--border-width-thin) solid var(--color-border-secondary);
+}
+
+.schedule-join-modal .modal-actions .btn-primary,
+.schedule-join-modal .modal-actions .btn-secondary {
+  flex: 1;
+  padding: var(--space-m) var(--space-l);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Tablet (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
+  .sjm-label {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-court-name {
+    font-size: var(--font-size-m);
+  }
+
+  .sjm-match-type-badge {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-capacity {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-date {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-participation-start {
+    font-size: var(--font-size-base);
+  }
+}
+
+/* Mobile (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
+  .sjm-label {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-court-name {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-match-type-badge {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-capacity {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-date {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-participation-start {
+    font-size: var(--font-size-s);
+  }
+}
+
+/* Small Mobile (359px 이하) */
+@media (max-width: 359px) {
+  .sjm-label {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-court-name {
+    font-size: var(--font-size-base);
+  }
+
+  .sjm-match-type-badge {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-capacity {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-date {
+    font-size: var(--font-size-s);
+  }
+
+  .sjm-participation-start {
+    font-size: var(--font-size-s);
+  }
+}

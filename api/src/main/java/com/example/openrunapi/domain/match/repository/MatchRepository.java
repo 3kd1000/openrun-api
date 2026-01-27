@@ -1,6 +1,8 @@
 package com.example.openrunapi.domain.match.repository;
 
 import com.example.openrunapi.domain.match.model.Match;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -35,4 +37,11 @@ public interface MatchRepository extends JpaRepository<Match, Long>, JpaSpecific
            "m.teamBPlayer1Id = :playerId OR m.teamBPlayer2Id = :playerId) " +
            "ORDER BY m.playedAt DESC")
     List<Match> findByClubIdAndPlayerId(@Param("clubId") Long clubId, @Param("playerId") Long playerId);
+
+    // 사용자가 참여한 모든 경기 조회 (클럽 무관, 페이징, 결과가 있는 경기만)
+    @Query("SELECT m FROM Match m WHERE m.result IS NOT NULL AND (" +
+           "m.teamAPlayer1Id = :userId OR m.teamAPlayer2Id = :userId OR " +
+           "m.teamBPlayer1Id = :userId OR m.teamBPlayer2Id = :userId) " +
+           "ORDER BY m.playedAt DESC")
+    Page<Match> findAllByPlayerIdWithResult(@Param("userId") Long userId, Pageable pageable);
 }

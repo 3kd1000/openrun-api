@@ -1,0 +1,658 @@
+/* ===== ClubExplorePage 전용 스타일 ===== */
+/* 컴포넌트별 고유 prefix: club-explore-page */
+
+.club-explore-page {
+  padding: var(--space-m);
+  background-color: var(--color-background);
+  min-height: calc(100vh - var(--header-height) - var(--navigation-height));
+  padding-bottom: 100px;
+}
+
+/* 헤더 */
+.club-explore-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-s) 0;
+  margin-bottom: var(--space-m);
+}
+
+.club-explore-page__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--radius-m);
+  transition: background-color 0.2s;
+}
+
+.club-explore-page__back-btn:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-explore-page__title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.club-explore-page__header-spacer {
+  width: 36px;
+}
+
+.club-explore-page__create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.club-explore-page__create-btn:hover {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ===== 탭 네비게이션 ===== */
+.club-explore-page__tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--space-m);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.club-explore-page__tab {
+  flex: 1;
+  padding: var(--space-s) var(--space-m);
+  background: none;
+  border: none;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.club-explore-page__tab:hover {
+  color: var(--color-text);
+}
+
+.club-explore-page__tab--active {
+  color: var(--color-primary);
+}
+
+.club-explore-page__tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+/* ===== 탭 콘텐츠 ===== */
+.club-explore-page__tab-content {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===== 필터 섹션 (게스트 모집 탭) ===== */
+.club-explore-page__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.club-explore-page__filter-row {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.club-explore-page__filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.club-explore-page__filter-item--search {
+  flex: 1;
+  min-width: 0;
+}
+
+.club-explore-page__filter-item--date {
+  flex: 1;
+  min-width: 0;
+}
+
+.club-explore-page__filter-item--type {
+  flex: 1;
+  min-width: 0;
+}
+
+.club-explore-page__filter-item--region {
+  flex: 2;
+  min-width: 0;
+}
+
+/* RegionSelector 내부 select 스타일 오버라이드 */
+.club-explore-page__filter-item--region .region-selector {
+  gap: var(--space-s);
+}
+
+.club-explore-page__filter-item--region .region-selector__select {
+  font-size: var(--font-size-base);
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.club-explore-page__filter-label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.club-explore-page__filter-select {
+  padding: var(--space-s) var(--space-m);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+/* DateRangePicker 스타일 오버라이드 - 다른 필터와 높이 통일 */
+.club-explore-page__filter-item--date .date-range-picker {
+  width: 100%;
+}
+
+.club-explore-page__filter-item--date .date-range-picker__trigger {
+  height: 42px;
+  box-sizing: border-box;
+}
+
+/* ===== 검색 ===== */
+.club-explore-page__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.club-explore-page__search--full {
+  flex: 1;
+}
+
+.club-explore-page__search-icon {
+  position: absolute;
+  left: var(--space-m);
+  color: var(--color-text-secondary);
+}
+
+.club-explore-page__search-input {
+  width: 100%;
+  padding: var(--space-s) var(--space-m) var(--space-s) 44px;
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: var(--color-white);
+  outline: none;
+  transition: border-color 0.2s;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.club-explore-page__search-input:focus {
+  border-color: var(--color-primary);
+}
+
+/* ===== 로딩, 에러, 빈 상태 ===== */
+.club-explore-page__loading,
+.club-explore-page__error,
+.club-explore-page__empty {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.club-explore-page__error {
+  color: var(--color-error);
+}
+
+/* ===== 게스트 모집 리스트 ===== */
+.club-explore-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.club-explore-page__list-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  padding: var(--space-m);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.club-explore-page__list-item:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-explore-page__list-item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-m);
+  margin-bottom: 6px;
+}
+
+.club-explore-page__list-item-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.club-explore-page__list-item-meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
+
+.club-explore-page__list-item-note {
+  margin-top: var(--space-s);
+  padding-top: var(--space-s);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  white-space: pre-wrap;
+}
+
+/* 매치 타입 뱃지 */
+.club-explore-page__match-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: white;
+  border-radius: 6px;
+}
+
+.club-explore-page__match-type-badge.match-type--men_doubles {
+  background-color: #4a90e2;
+}
+
+.club-explore-page__match-type-badge.match-type--women_doubles {
+  background-color: #e91e63;
+}
+
+.club-explore-page__match-type-badge.match-type--mixed_doubles {
+  background-color: #9c27b0;
+}
+
+.club-explore-page__match-type-badge.match-type--singles {
+  background-color: #4caf50;
+}
+
+/* ===== 신규회원 모집 클럽 리스트 ===== */
+.club-explore-page__club-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.club-explore-page__club-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  padding: var(--space-m);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.club-explore-page__club-item:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-explore-page__club-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.club-explore-page__club-item-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
+.club-explore-page__club-item-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.club-explore-page__club-item-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border-radius: 999px;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+
+.club-explore-page__club-item-badge--auto {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.club-explore-page__club-item-details {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.club-explore-page__club-item-details span:not(:last-child)::after {
+  content: "·";
+  margin-left: var(--space-s);
+  color: var(--color-text-tertiary);
+}
+
+.club-explore-page__club-item-desc {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.club-explore-page__club-item-cta {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ===== Desktop (769px+) ===== */
+@media (min-width: 769px) {
+  .club-explore-page {
+    padding: var(--space-l);
+  }
+
+  .club-explore-page__title {
+    font-size: var(--font-size-xl);
+  }
+
+  .club-explore-page__filters {
+    flex-direction: column;
+  }
+
+  .club-explore-page__club-item {
+    padding: var(--space-m) var(--space-l);
+  }
+}
+
+/* ===== Tablet (426px ~ 768px) ===== */
+@media (min-width: 426px) and (max-width: 768px) {
+  .club-explore-page__title {
+    font-size: var(--font-size-base);
+  }
+
+  .club-explore-page__filter-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .club-explore-page__search-input {
+    font-size: var(--font-size-m);
+    height: 36px;
+  }
+
+  .club-explore-page__filter-select {
+    font-size: var(--font-size-m);
+    height: 36px;
+  }
+
+  .club-explore-page__filter-item--date .date-range-picker__trigger {
+    font-size: var(--font-size-m);
+    height: 36px;
+  }
+
+  .club-explore-page__filter-item--region .region-selector__select {
+    font-size: var(--font-size-m);
+    height: 36px;
+  }
+}
+
+/* ===== Mobile Large (361px ~ 425px) ===== */
+@media (min-width: 360px) and (max-width: 425px) {
+  .club-explore-page {
+    padding: var(--space-s);
+  }
+
+  .club-explore-page__title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__back-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .club-explore-page__header-spacer {
+    width: 32px;
+  }
+
+  .club-explore-page__tab {
+    font-size: var(--font-size-m);
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .club-explore-page__filter-row {
+    gap: var(--space-xs);
+  }
+
+  .club-explore-page__filter-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .club-explore-page__search-input {
+    font-size: var(--font-size-s);
+    padding: var(--space-xs) var(--space-s) var(--space-xs) 32px;
+    height: 32px;
+  }
+
+  .club-explore-page__search-icon {
+    left: var(--space-s);
+  }
+
+  .club-explore-page__filter-select,
+  .club-explore-page__region-select {
+    font-size: var(--font-size-s);
+    height: 36px;
+  }
+
+  .club-explore-page__filter-item--date .date-range-picker__trigger {
+    font-size: var(--font-size-s);
+    height: 32px;
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .club-explore-page__filter-item--region .region-selector {
+    gap: var(--space-xs);
+  }
+
+  .club-explore-page__filter-item--region .region-selector__select {
+    font-size: var(--font-size-s);
+    height: 36px;
+  }
+
+  .club-explore-page__club-item {
+    padding: var(--space-s);
+    gap: var(--space-s);
+  }
+
+  .club-explore-page__club-item-name {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__club-item-badge {
+    font-size: 10px;
+  }
+
+  .club-explore-page__club-item-details {
+    font-size: var(--font-size-xs);
+  }
+
+  .club-explore-page__club-item-desc {
+    font-size: var(--font-size-xs);
+  }
+
+  .club-explore-page__club-item-cta {
+    font-size: var(--font-size-s);
+    padding: 4px 8px;
+  }
+}
+
+/* ===== Mobile Small (~ 360px) ===== */
+@media (max-width: 359px) {
+  .club-explore-page {
+    padding: var(--space-xs);
+  }
+
+  .club-explore-page__title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-explore-page__back-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .club-explore-page__header-spacer {
+    width: 28px;
+  }
+
+  .club-explore-page__tab {
+    font-size: var(--font-size-s);
+    padding: var(--space-xs) var(--space-xs);
+  }
+
+  .club-explore-page__filter-row {
+    gap: var(--space-xxs);
+  }
+
+  .club-explore-page__filter-label {
+    font-size: 10px;
+  }
+
+  .club-explore-page__search-input {
+    font-size: var(--font-size-xs);
+    padding: var(--space-xs) var(--space-xs) var(--space-xs) 28px;
+    height: 28px;
+  }
+
+  .club-explore-page__search-icon {
+    left: var(--space-xs);
+  }
+
+  .club-explore-page__filter-select {
+    font-size: var(--font-size-xs);
+    height: 32px;
+  }
+
+  .club-explore-page__filter-item--date .date-range-picker__trigger {
+    font-size: var(--font-size-xs);
+    height: 28px;
+    padding: var(--space-xs) var(--space-xs);
+  }
+
+  .club-explore-page__filter-item--region .region-selector {
+    gap: var(--space-xxs);
+  }
+
+  .club-explore-page__filter-item--region .region-selector__select {
+    font-size: var(--font-size-xs);
+    height: 32px;
+    padding-right: 24px;
+    background-position: right 6px center;
+  }
+
+  .club-explore-page__club-item {
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+  }
+
+  .club-explore-page__club-item-name {
+    font-size: var(--font-size-s);
+  }
+
+  .club-explore-page__club-item-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .club-explore-page__club-item-details {
+    font-size: var(--font-size-xs);
+    gap: var(--space-xs);
+  }
+
+  .club-explore-page__club-item-desc {
+    font-size: var(--font-size-xs);
+  }
+
+  .club-explore-page__club-item-cta {
+    font-size: var(--font-size-xs);
+    padding: 2px var(--space-xs);
+  }
+
+  .club-explore-page__list-item {
+    padding: var(--space-s);
+  }
+
+  .club-explore-page__list-item-title {
+    font-size: var(--font-size-m);
+  }
+}

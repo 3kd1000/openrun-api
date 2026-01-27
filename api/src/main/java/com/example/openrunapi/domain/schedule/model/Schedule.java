@@ -60,11 +60,33 @@ public class Schedule {
     @Column(name = "draw_type", length = 10)
     private DrawType drawType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "match_type", length = 20)
+    private MatchType matchType;
+
     @Column(name = "is_draw_valid")
     private Boolean isDrawValid = false;
 
     @Column(name = "draw_created_at")
     private LocalDateTime drawCreatedAt;
+
+    @Column(name = "pinned", nullable = false)
+    private Boolean pinned = false;
+
+    @Column(name = "guest_recruit_open", nullable = false)
+    private Boolean guestRecruitOpen = false;
+
+    @Column(name = "guest_recruit_note", columnDefinition = "TEXT")
+    private String guestRecruitNote;
+
+    @Column(name = "interclub_recruit_open", nullable = false)
+    private Boolean interclubRecruitOpen = false;
+
+    @Column(name = "interclub_recruit_note", columnDefinition = "TEXT")
+    private String interclubRecruitNote;
+
+    @Column(name = "duration_minutes")
+    private Integer durationMinutes = 120;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
@@ -77,7 +99,7 @@ public class Schedule {
     @Builder
     public Schedule(Long clubId, String courtName, LocalDateTime scheduledAt,
                     Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                    LocalDateTime participationStartAt) {
+                    LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes) {
         this.clubId = clubId;
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
@@ -86,11 +108,13 @@ public class Schedule {
         this.description = description;
         this.reservedByUserId = reservedByUserId;
         this.participationStartAt = participationStartAt;
+        this.matchType = matchType;
+        this.durationMinutes = durationMinutes != null ? durationMinutes : 120;
     }
 
     public void update(String courtName, LocalDateTime scheduledAt,
                        Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                       LocalDateTime participationStartAt) {
+                       LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes) {
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
         this.maxCapacity = maxCapacity;
@@ -98,6 +122,8 @@ public class Schedule {
         this.description = description;
         this.reservedByUserId = reservedByUserId;
         this.participationStartAt = participationStartAt;
+        this.matchType = matchType;
+        this.durationMinutes = durationMinutes != null ? durationMinutes : 120;
     }
 
     public void incrementParticipants() {
@@ -159,5 +185,19 @@ public class Schedule {
         this.drawType = null;
         this.isDrawValid = false;
         this.drawCreatedAt = null;
+    }
+
+    public void updatePinned(boolean pinned) {
+        this.pinned = pinned;
+    }
+
+    public void updateGuestRecruit(Boolean open, String note) {
+        if (open != null) this.guestRecruitOpen = open;
+        if (note != null) this.guestRecruitNote = note;
+    }
+
+    public void updateInterclubRecruit(Boolean open, String note) {
+        if (open != null) this.interclubRecruitOpen = open;
+        if (note != null) this.interclubRecruitNote = note;
     }
 }

@@ -5,15 +5,15 @@ package com.example.openrunapi.domain.club.model;
  */
 public enum ClubRole {
     /**
-     * 일반 회원
+     * 정회원
      * - 참가신청/취소
      * - 본인 정보 조회
      */
-    MEMBER,
+    REGULAR,
 
     /**
      * 운영진
-     * - MEMBER 권한 포함
+     * - 정회원 권한 포함
      * - 일정 CRUD
      * - 참가자 관리 (추가/삭제)
      * - 대진 생성/수정/삭제
@@ -47,9 +47,11 @@ public enum ClubRole {
     }
 
     /**
-     * 회원 관리 권한이 있는지 확인 (ADMIN 임명 등)
+     * 회원 관리 권한이 있는지 확인 (역할 변경 등)
+     * - ADMIN: REGULAR ↔ ADMIN 변경 가능
+     * - OWNER: 모든 역할 변경 가능 (OWNER 변경은 별도 소유권 이전 기능)
      */
     public boolean canManageMembers() {
-        return this == OWNER;
+        return this == ADMIN || this == OWNER;
     }
 }

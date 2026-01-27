@@ -49,7 +49,7 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     // 특정 일정의 취소되지 않은 참가자 + userName JOIN 조회
     @Query("""
         SELECT new com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse(
-            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt
+            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
         )
         FROM ScheduleParticipant sp
         JOIN User u ON sp.userId = u.id
@@ -61,11 +61,18 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     // 특정 사용자의 특정 일정 참가 신청 내역 + userName JOIN 조회
     @Query("""
         SELECT new com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse(
-            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt
+            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
         )
         FROM ScheduleParticipant sp
         JOIN User u ON sp.userId = u.id
         WHERE sp.scheduleId = :scheduleId AND sp.userId = :userId AND sp.status != :status
     """)
     Optional<ParticipantResponse> findActiveParticipationWithUserName(@Param("scheduleId") Long scheduleId, @Param("userId") Long userId, @Param("status") ParticipantStatus status);
+
+    // 대기 순번 계산 (특정 일정의 WAITING 상태에서 나보다 먼저 신청한 사람 수 + 1)
+    @Query("SELECT COUNT(sp) + 1 FROM ScheduleParticipant sp " +
+           "WHERE sp.scheduleId = :scheduleId " +
+           "AND sp.status = 'WAITING' " +
+           "AND sp.joinedAt < :joinedAt")
+    Long calculateWaitingNumber(@Param("scheduleId") Long scheduleId, @Param("joinedAt") java.time.LocalDateTime joinedAt);
 }

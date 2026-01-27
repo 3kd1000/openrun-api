@@ -11,9 +11,8 @@
 
 .App-content {
   flex: 1;
-  /* 모바일 웹브라우저 하단 safe area 추가 고려 */
-  /* 네비게이션 바(68px) + Footer 링크(약 32px) + 여백 */
-  padding-bottom: var(--content-padding-bottom);
+  /* 각 페이지에서 개별적으로 padding-bottom 관리 */
+  padding-bottom: 0;
 }
 
 .App-content-wrapper {
@@ -21,8 +20,8 @@
   box-sizing: border-box;
 }
 
-/* PC: 좌측 네비게이션 여백 */
-@media (min-width: 768px) {
+/* PC: 좌측 네비게이션 여백 (hover 가능한 환경에서만) */
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
   .App {
     padding-top: 0;
     padding-bottom: 0;
@@ -31,7 +30,6 @@
   }
 
   .App-content {
-    padding-bottom: 0;
     min-height: 100vh;
   }
 

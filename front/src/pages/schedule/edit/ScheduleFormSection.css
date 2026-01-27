@@ -1,0 +1,274 @@
+/**
+ * ScheduleFormSection Styles
+ * 일정 생성/수정 폼 공통 스타일
+ * CSS 토큰 적용, 반응형 디자인
+ */
+
+/* ========== 에러 메시지 ========== */
+.error-message {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-text);
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  margin-bottom: var(--space-l);
+  font-size: var(--font-size-base);
+}
+
+/* ========== 폼 레이아웃 ========== */
+.form-row {
+  display: flex;
+  gap: var(--space-s);
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.form-group {
+  margin-bottom: var(--space-m);
+  min-width: 0;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px var(--space-m);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-m);
+  font-size: 16px; /* 모바일 자동 줌 방지: 최소 16px 필요 */
+  font-family: var(--font-family-base);
+  transition: border-color var(--transition-base);
+  box-sizing: border-box;
+  max-width: 100%;
+  line-height: 1.5;
+}
+
+/* Date Picker와 select의 높이와 폰트 크기를 명시적으로 통일 */
+/* modal-base.css의 min-height를 unset으로 무효화 */
+.form-group input[type="date"],
+.form-group select,
+.form-row .form-group input[type="date"],
+.form-row .form-group select {
+  min-height: unset; /* modal-base.css의 min-height: 42px 무효화 */
+  height: 42px;
+  max-height: 42px; /* iOS Safari에서 높이 강제 제한 */
+  font-size: var(--font-size-s); /* 날짜와 시간 폰트 크기 통일 */
+  line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+  box-sizing: border-box; /* padding 포함 높이 계산 */
+  -webkit-appearance: none; /* iOS Safari 기본 스타일 제거 */
+  appearance: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+/* Placeholder 스타일 통일 - var(--font-size-s) 적용 */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  font-size: var(--font-size-s);
+  color: var(--color-text-tertiary);
+  opacity: 1; /* Firefox에서 opacity 기본값이 다를 수 있음 */
+}
+
+/* time-select 클래스 (시간 선택 셀렉트) */
+.time-select {
+  /* 기본 select 스타일 적용 */
+}
+
+/* ========== 모달 액션 버튼 ========== */
+.modal-actions {
+  display: flex;
+  gap: var(--space-m);
+  margin-top: var(--space-xl);
+}
+
+.btn-secondary,
+.btn-primary {
+  flex: 1;
+  padding: var(--space-m) var(--space-l);
+  border: none;
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btn-secondary {
+  background-color: var(--color-bg-disabled);
+  color: var(--color-text-tertiary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-bg-tertiary);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-secondary:disabled,
+.btn-primary:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+/* ========== 다크테마 대응 ========== */
+@media (prefers-color-scheme: dark) {
+  .form-group label {
+    color: var(--color-text-secondary);
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
+  }
+}
+
+/* ========== 모바일 반응형 ========== */
+
+/* Tablet: 426px ~ 768px */
+@media (min-width: 426px) and (max-width: 768px) {
+  .form-group input[type="date"],
+  .form-group select,
+  .form-row .form-group input[type="date"],
+  .form-row .form-group select {
+    min-height: unset; /* modal-base.css의 min-height 무효화 */
+    height: 40px;
+    max-height: 40px;
+    padding: 8px var(--space-m);
+    font-size: var(--font-size-s); /* 날짜와 시간 폰트 크기 통일 */
+    line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    height: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Mobile Medium: 361px ~ 425px */
+@media (min-width: 360px) and (max-width: 425px) {
+  .form-row {
+    gap: var(--space-xs);
+  }
+
+  .form-group {
+    margin-bottom: var(--space-s);
+  }
+
+  .form-group label {
+    font-size: var(--font-size-s);
+    margin-bottom: 4px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 8px var(--space-s);
+  }
+
+  .form-group input[type="date"],
+  .form-group select,
+  .form-row .form-group input[type="date"],
+  .form-row .form-group select {
+    min-height: unset; /* modal-base.css의 min-height 무효화 */
+    height: 38px;
+    max-height: 38px;
+    padding: 7px var(--space-s);
+    font-size: var(--font-size-s); /* 날짜와 시간 폰트 크기 통일 */
+    line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    height: 38px;
+    min-height: 38px;
+    font-size: var(--font-size-s);
+    padding: var(--space-s) var(--space-m);
+  }
+}
+
+/* Mobile Small: 360px 이하 */
+@media (max-width: 359px) {
+  .form-row {
+    gap: var(--space-xs);
+  }
+
+  .form-group {
+    margin-bottom: var(--space-s);
+  }
+
+  .form-group label {
+    font-size: var(--font-size-s);
+    margin-bottom: 4px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 6px var(--space-xs);
+  }
+
+  .form-group input[type="date"],
+  .form-group select,
+  .form-row .form-group input[type="date"],
+  .form-row .form-group select {
+    min-height: unset; /* modal-base.css의 min-height 무효화 */
+    height: 36px;
+    max-height: 36px;
+    padding: 6px var(--space-xs);
+    font-size: var(--font-size-s);
+    line-height: 1.2; /* iOS date input 텍스트 중앙 정렬 */
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    height: 36px;
+    min-height: 36px;
+    font-size: var(--font-size-s);
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .modal-actions {
+    gap: var(--space-s);
+    margin-top: var(--space-l);
+  }
+}

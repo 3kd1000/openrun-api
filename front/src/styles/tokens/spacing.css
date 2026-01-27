@@ -35,8 +35,8 @@
   --grid-gap-l: var(--space-l);
 }
 
-/* Desktop spacing (768px 이상 - 1.5배 적용) */
-@media (min-width: 768px) {
+/* Desktop spacing (769px 이상 - breakpoints.css 기준) */
+@media (min-width: 769px) {
   :root {
     --space-xxs: 3px;
     --space-xs: 6px;

@@ -1,0 +1,82 @@
+/**
+ * ClubSelector Styles
+ * ClubMainPage 스타일과 완전히 동일하게 적용
+ */
+
+.club-selector {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.club-selector__select {
+  padding: var(--space-xs) var(--space-s);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  border: none;
+  border-bottom: 1px solid var(--color-border-primary);
+  border-radius: 0;
+  background-color: var(--color-white);
+  cursor: pointer;
+  min-height: 36px;
+  text-align: center;
+  text-align-last: center;
+  -moz-text-align-last: center;
+  color: var(--color-text-primary);
+  transition: all var(--transition-base);
+}
+
+.club-selector__select:hover:not(:disabled) {
+  border-bottom-color: var(--color-primary);
+}
+
+.club-selector__select:focus {
+  outline: none;
+  border-bottom-color: var(--color-primary);
+  box-shadow: none;
+}
+
+.club-selector__select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: var(--color-bg-disabled);
+}
+
+.club-selector__select option {
+  padding: var(--space-xs);
+  text-align: center;
+}
+
+/* Desktop (769px+) */
+@media (min-width: 769px) {
+  .club-selector__select {
+    font-size: var(--font-size-l);
+    min-height: 40px;
+    padding: var(--space-s) var(--space-m);
+  }
+}
+
+/* Tablet (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
+  .club-selector__select {
+    font-size: var(--font-size-m);
+    min-height: 34px;
+  }
+}
+
+/* Mobile Large (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
+  .club-selector__select {
+    font-size: var(--font-size-m);
+    min-height: 32px;
+  }
+}
+
+/* Mobile Small (~ 359px) */
+@media (max-width: 359px) {
+  .club-selector__select {
+    font-size: var(--font-size-s);
+    padding: var(--space-xs);
+    min-height: 28px;
+  }
+}

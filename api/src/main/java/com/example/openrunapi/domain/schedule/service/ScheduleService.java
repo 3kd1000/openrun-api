@@ -8,12 +8,18 @@ import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
-import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateSchedulePinnedRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleGuestRecruitRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubRecruitRequest;
+import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepository;
+import com.example.openrunapi.domain.club.model.Club;
+import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,6 +45,7 @@ public class ScheduleService {
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
     private final PermissionService permissionService;
+    private final ClubRepository clubRepository;
 
     /**
      * 일정 생성
@@ -50,9 +57,17 @@ public class ScheduleService {
             throw new IllegalStateException("과거 날짜에는 일정을 생성할 수 없습니다.");
         }
 
+        // 참가신청 시작시간 검증
+        if (request.getParticipationStartAt() != null) {
+            if (request.getParticipationStartAt().isAfter(request.getScheduledAt()) ||
+                request.getParticipationStartAt().isEqual(request.getScheduledAt())) {
+                throw new IllegalArgumentException("참가신청 시작시간은 일정 시간보다 이전이어야 합니다.");
+            }
+        }
+
         Schedule schedule = request.toEntity();
         Schedule savedSchedule = scheduleRepository.save(schedule);
-        return new ScheduleResponse(savedSchedule, userRepository);
+        return new ScheduleResponse(savedSchedule, clubRepository, userRepository);
     }
 
     /**
@@ -60,7 +75,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getAllSchedules() {
         return scheduleRepository.findAll().stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -77,7 +92,7 @@ public class ScheduleService {
     public ScheduleResponse getScheduleById(Long scheduleId, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
-        return new ScheduleResponse(schedule, userRepository, permissionService, userId);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
     /**
@@ -85,7 +100,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getSchedulesByClubId(Long clubId) {
         return scheduleRepository.findByClubId(clubId).stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -95,8 +110,68 @@ public class ScheduleService {
     public List<ScheduleResponse> getUpcomingSchedules(Long clubId) {
         LocalDateTime nowKST = TimeValidationUtils.getNowKST();
         return scheduleRepository.findByClubIdAndScheduledAtAfterOrderByScheduledAtAsc(clubId, nowKST).stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 탐색 화면용: 게스트/교류전 모집 중인 공개 일정 목록
+     * - 로그인 없이도 조회 가능 (현재 schedules API는 permitAll)
+     * - 현재 시각 이후(KST) 일정만 노출
+     * - matchType 필터 지원 (MENS_DOUBLES, WOMENS_DOUBLES, MIXED_DOUBLES)
+     * - fromDate/toDate 필터 지원 (날짜 범위 검색)
+     */
+    public List<PublicRecruitScheduleResponse> getPublicRecruitSchedules(
+            String type, String matchType, java.time.LocalDate fromDate, java.time.LocalDate toDate, Integer limit) {
+        LocalDateTime nowKST = TimeValidationUtils.getNowKST();
+        int take = (limit == null || limit <= 0) ? 10 : Math.min(limit, 50);
+
+        List<Schedule> schedules;
+        final String recruitType = (type == null ? "GUEST" : type.toUpperCase());
+        final boolean isInterclub = "INTERCLUB".equals(recruitType);
+        if (isInterclub) {
+            schedules = scheduleRepository.findByInterclubRecruitOpenTrueAndScheduledAtAfterOrderByScheduledAtAsc(nowKST);
+        } else {
+            schedules = scheduleRepository.findByGuestRecruitOpenTrueAndScheduledAtAfterOrderByScheduledAtAsc(nowKST);
+        }
+
+        // matchType 필터 적용
+        if (matchType != null && !matchType.isEmpty()) {
+            try {
+                MatchType filterType = MatchType.valueOf(matchType.toUpperCase());
+                schedules = schedules.stream()
+                        .filter(s -> s.getMatchType() == filterType)
+                        .collect(Collectors.toList());
+            } catch (IllegalArgumentException e) {
+                // 잘못된 matchType은 무시
+            }
+        }
+
+        // 날짜 범위 필터 적용
+        if (fromDate != null || toDate != null) {
+            final LocalDateTime fromDateTime = fromDate != null ? fromDate.atStartOfDay() : null;
+            final LocalDateTime toDateTime = toDate != null ? toDate.plusDays(1).atStartOfDay() : null;
+            schedules = schedules.stream()
+                    .filter(s -> {
+                        LocalDateTime scheduledAt = s.getScheduledAt();
+                        if (fromDateTime != null && scheduledAt.isBefore(fromDateTime)) return false;
+                        if (toDateTime != null && scheduledAt.isAfter(toDateTime)) return false;
+                        return true;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        if (schedules.size() > take) {
+            schedules = schedules.subList(0, take);
+        }
+
+        // club 정보 붙이기 (N+1이지만 현재는 리스트 소수 + MVP라서 허용)
+        return schedules.stream().map(s -> {
+            Club c = clubRepository.findById(s.getClubId())
+                    .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + s.getClubId()));
+            String note = isInterclub ? s.getInterclubRecruitNote() : s.getGuestRecruitNote();
+            return new PublicRecruitScheduleResponse(s, c, isInterclub ? "INTERCLUB" : "GUEST", note);
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -104,7 +179,7 @@ public class ScheduleService {
      */
     public List<ScheduleResponse> getSchedulesByDateRange(Long clubId, LocalDateTime start, LocalDateTime end) {
         return scheduleRepository.findByClubIdAndScheduledAtBetween(clubId, start, end).stream()
-                .map(schedule -> new ScheduleResponse(schedule, userRepository))
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
     }
 
@@ -121,6 +196,14 @@ public class ScheduleService {
             throw new IllegalStateException("과거 날짜에는 일정을 수정할 수 없습니다.");
         }
 
+        // 참가신청 시작시간 검증
+        if (request.getParticipationStartAt() != null) {
+            if (request.getParticipationStartAt().isAfter(request.getScheduledAt()) ||
+                request.getParticipationStartAt().isEqual(request.getScheduledAt())) {
+                throw new IllegalArgumentException("참가신청 시작시간은 일정 시간보다 이전이어야 합니다.");
+            }
+        }
+
         // 기존 정원 저장
         Integer oldMaxCapacity = schedule.getMaxCapacity();
 
@@ -131,7 +214,9 @@ public class ScheduleService {
                 request.getCost(),
                 request.getDescription(),
                 request.getReservedByUserId(),
-                request.getParticipationStartAt()
+                request.getParticipationStartAt(),
+                request.getMatchType(),
+                request.getDurationMinutes()
         );
 
         // 정원이 증가한 경우, 대기자를 확정으로 승격
@@ -139,7 +224,69 @@ public class ScheduleService {
             promoteWaitingParticipants(scheduleId, request.getMaxCapacity());
         }
 
-        return new ScheduleResponse(schedule, userRepository);
+        return new ScheduleResponse(schedule, clubRepository, userRepository);
+    }
+
+    /**
+     * 일정 pinned 업데이트 (운영진 이상)
+     */
+    @Transactional
+    public ScheduleResponse updatePinned(Long scheduleId, UpdateSchedulePinnedRequest request, Long userId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        if (userId == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+        if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
+            throw new SecurityException("일정 고정(PIN) 권한이 없습니다. 운영진 이상만 가능합니다.");
+        }
+
+        boolean pinned = request != null && Boolean.TRUE.equals(request.getPinned());
+        schedule.updatePinned(pinned);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
+    }
+
+    /**
+     * 게스트 모집 설정 업데이트 (운영진 이상)
+     */
+    @Transactional
+    public ScheduleResponse updateGuestRecruit(Long scheduleId, UpdateScheduleGuestRecruitRequest request, Long userId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        if (userId == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+        if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
+            throw new SecurityException("게스트 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
+        }
+
+        Boolean open = request != null ? request.getOpen() : null;
+        String note = request != null ? request.getNote() : null;
+        schedule.updateGuestRecruit(open, note);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
+    }
+
+    /**
+     * 교류전 모집 설정 업데이트 (운영진 이상)
+     */
+    @Transactional
+    public ScheduleResponse updateInterclubRecruit(Long scheduleId, UpdateScheduleInterclubRecruitRequest request, Long userId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        if (userId == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+        if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
+            throw new SecurityException("교류전 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
+        }
+
+        Boolean open = request != null ? request.getOpen() : null;
+        String note = request != null ? request.getNote() : null;
+        schedule.updateInterclubRecruit(open, note);
+        return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
     /**

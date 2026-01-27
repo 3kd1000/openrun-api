@@ -1,0 +1,607 @@
+/* ===== ClubManagePage 전용 스타일 ===== */
+/* 컴포넌트별 고유 prefix: club-manage-page */
+
+.club-manage-page {
+  padding: var(--space-m);
+  background-color: var(--color-background);
+  min-height: calc(100vh - var(--header-height) - var(--navigation-height));
+  padding-bottom: 100px;
+}
+
+/* 헤더 */
+.club-manage-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-s) 0;
+  margin-bottom: var(--space-m);
+}
+
+.club-manage-page__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--radius-m);
+  transition: background-color 0.2s;
+}
+
+.club-manage-page__back-btn:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-manage-page__title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+
+.club-manage-page__header-spacer {
+  width: 36px;
+}
+
+/* 로딩/에러 */
+.club-manage-page__loading,
+.club-manage-page__error {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.club-manage-page__error {
+  color: var(--color-error);
+}
+
+/* 섹션 */
+.club-manage-page__section {
+  background-color: var(--color-white);
+  border-radius: var(--radius-l);
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--space-m);
+  overflow: hidden;
+}
+
+.club-manage-page__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-m);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.club-manage-page__section-header:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-manage-page__section-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  color: var(--color-text);
+}
+
+.club-manage-page__section-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.club-manage-page__badge {
+  background-color: var(--color-error);
+  color: var(--color-white);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-bold);
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.club-manage-page__count {
+  font-size: var(--font-size-m);
+  color: var(--color-text-secondary);
+}
+
+.club-manage-page__section-content {
+  padding: 0 var(--space-m) var(--space-m);
+  border-top: 1px solid var(--color-border);
+}
+
+.club-manage-page__empty {
+  padding: var(--space-l);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+}
+
+/* 가입 신청 목록 */
+.club-manage-page__pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  margin-top: var(--space-m);
+}
+
+.club-manage-page__pending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-s) var(--space-m);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-m);
+}
+
+.club-manage-page__pending-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.club-manage-page__pending-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.club-manage-page__pending-email {
+  font-size: var(--font-size-m);
+  color: var(--color-text-secondary);
+}
+
+.club-manage-page__pending-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.club-manage-page__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.club-manage-page__action-btn--approve {
+  background-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.club-manage-page__action-btn--approve:hover {
+  background-color: #218838;
+}
+
+.club-manage-page__action-btn--reject {
+  background-color: var(--color-error);
+  color: var(--color-white);
+}
+
+.club-manage-page__action-btn--reject:hover {
+  background-color: #c82333;
+}
+
+/* 회칙 추가 버튼 */
+.club-manage-page__add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  width: 100%;
+  padding: var(--space-s);
+  margin-top: var(--space-m);
+  background-color: var(--color-bg-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-m);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.club-manage-page__add-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* 회칙 입력 폼 */
+.club-manage-page__rule-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  padding: var(--space-m);
+  margin-top: var(--space-m);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-m);
+}
+
+.club-manage-page__rule-input {
+  padding: var(--space-s);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-s);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.club-manage-page__rule-input:focus {
+  border-color: var(--color-primary);
+}
+
+.club-manage-page__rule-textarea {
+  padding: var(--space-s);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-s);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.club-manage-page__rule-textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.club-manage-page__rule-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-s);
+}
+
+.club-manage-page__form-btn {
+  padding: var(--space-xs) var(--space-m);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-medium);
+  border: none;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.club-manage-page__form-btn--cancel {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.club-manage-page__form-btn--cancel:hover {
+  background-color: var(--color-border);
+}
+
+.club-manage-page__form-btn--save {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.club-manage-page__form-btn--save:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* 회칙 목록 */
+.club-manage-page__rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  margin-top: var(--space-m);
+}
+
+.club-manage-page__rule-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-m);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-m);
+}
+
+.club-manage-page__rule-content {
+  display: flex;
+  gap: var(--space-s);
+  flex: 1;
+}
+
+.club-manage-page__rule-number {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  min-width: 24px;
+}
+
+.club-manage-page__rule-text {
+  flex: 1;
+}
+
+.club-manage-page__rule-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.club-manage-page__rule-body {
+  font-size: var(--font-size-m);
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+
+.club-manage-page__rule-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.club-manage-page__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-s);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.club-manage-page__icon-btn:hover {
+  background-color: var(--color-white);
+  color: var(--color-primary);
+}
+
+.club-manage-page__icon-btn--danger:hover {
+  color: var(--color-error);
+}
+
+/* 추가 메뉴 */
+.club-manage-page__menu {
+  background-color: var(--color-white);
+  border-radius: var(--radius-l);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.club-manage-page__menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  width: 100%;
+  /* 메뉴 간격/터치 타겟 개선: '다다닥' 붙는 느낌 완화 */
+  padding: var(--space-l);
+  min-height: 56px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--font-size-l);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.club-manage-page__menu-item:last-child {
+  border-bottom: none;
+}
+
+.club-manage-page__menu-item:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.club-manage-page__menu-item span {
+  flex: 1;
+  text-align: left;
+}
+
+.club-manage-page__menu-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-s);
+  flex: 1;
+  text-align: left;
+}
+
+/* 위험 섹션 (클럽장 권한 양도 등) */
+.club-manage-page__section--danger {
+  border-color: #ffc107;
+  background-color: #fffbf0;
+}
+
+.club-manage-page__menu-item--danger {
+  color: #856404;
+}
+
+.club-manage-page__menu-item--danger .club-manage-page__menu-left {
+  color: #856404;
+}
+
+/* Desktop (769px+) */
+@media (min-width: 769px) {
+  .club-manage-page {
+    padding: var(--space-l);
+  }
+
+  .club-manage-page__title {
+    font-size: var(--font-size-xl);
+  }
+
+  .club-manage-page__section-header,
+  .club-manage-page__menu-item {
+    padding: var(--space-m) var(--space-l);
+  }
+
+  .club-manage-page__section-content {
+    padding: 0 var(--space-l) var(--space-l);
+  }
+}
+
+/* Tablet (426px ~ 768px) */
+@media (min-width: 426px) and (max-width: 768px) {
+  .club-manage-page__title {
+    font-size: var(--font-size-base);
+  }
+}
+
+/* Mobile Large (361px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
+  .club-manage-page {
+    padding: var(--space-s);
+  }
+
+  .club-manage-page__title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-manage-page__back-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .club-manage-page__header-spacer {
+    width: 32px;
+  }
+
+  .club-manage-page__section-header {
+    padding: var(--space-s);
+  }
+
+  .club-manage-page__section-content {
+    padding: 0 var(--space-s) var(--space-s);
+  }
+
+  .club-manage-page__section-title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-manage-page__pending-item {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .club-manage-page__pending-name {
+    font-size: var(--font-size-m);
+  }
+
+  .club-manage-page__pending-email {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .club-manage-page__rule-input,
+  .club-manage-page__rule-textarea {
+    font-size: var(--font-size-m);
+  }
+
+  .club-manage-page__rule-title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-manage-page__rule-body {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__menu-item {
+    padding: var(--space-s);
+    font-size: var(--font-size-m);
+    min-height: 52px;
+  }
+}
+
+/* Mobile Small (~ 360px) */
+@media (max-width: 359px) {
+  .club-manage-page {
+    padding: var(--space-xs);
+  }
+
+  .club-manage-page__title {
+    font-size: var(--font-size-m);
+  }
+
+  .club-manage-page__back-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .club-manage-page__header-spacer {
+    width: 28px;
+  }
+
+  .club-manage-page__section-header {
+    padding: var(--space-xs);
+  }
+
+  .club-manage-page__section-content {
+    padding: 0 var(--space-xs) var(--space-xs);
+  }
+
+  .club-manage-page__section-title {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__pending-item {
+    padding: var(--space-xs);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-s);
+  }
+
+  .club-manage-page__pending-actions {
+    align-self: flex-end;
+  }
+
+  .club-manage-page__pending-name {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__pending-email {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__action-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .club-manage-page__rule-input,
+  .club-manage-page__rule-textarea {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__rule-number {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__rule-title {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__rule-body {
+    font-size: var(--font-size-s);
+  }
+
+  .club-manage-page__icon-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .club-manage-page__menu-item {
+    padding: var(--space-xs);
+    font-size: var(--font-size-s);
+    min-height: 48px;
+  }
+}

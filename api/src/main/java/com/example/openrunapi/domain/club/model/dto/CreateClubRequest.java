@@ -18,6 +18,12 @@ public class CreateClubRequest {
     @Size(max = 255, message = "지역 이름은 255자를 초과할 수 없습니다.")
     private String region;
 
+    @Size(max = 20, message = "시/도는 20자를 초과할 수 없습니다.")
+    private String regionDepth1;
+
+    @Size(max = 20, message = "시/군/구는 20자를 초과할 수 없습니다.")
+    private String regionDepth2;
+
     /**
      * Club 엔티티로 변환하는 메소드.
      * @param ownerUserId 클럽 생성자의 ID (인증된 사용자 정보로부터 얻어옴)

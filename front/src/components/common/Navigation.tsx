@@ -1,5 +1,6 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { getOpenRunSession } from "../../utils/openrunSession";
 import "./Navigation.css";
 
 // 선 스타일 SVG 아이콘 컴포넌트
@@ -75,16 +76,37 @@ const MoreIcon: React.FC<{ isActive: boolean }> = () => (
 );
 
 const Navigation: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isClubRoute =
+    location.pathname === "/clubs" ||
+    location.pathname === "/clubs/explore" ||
+    location.pathname.startsWith("/clubs/") ||
+    location.pathname === "/club" ||
+    location.pathname.startsWith("/club/");
+
+  const isScheduleRoute = location.pathname.startsWith("/schedules/");
+
+  // 클럽 탭 클릭 시 세션에서 최신 clubId를 읽어서 이동
+  const handleClubClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const session = getOpenRunSession();
+    const currentClubId = session.currentClubId;
+    const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/clubs/explore";
+    navigate(clubPath);
+  };
 
   const navItems: Array<{
     path: string;
     label: string;
     icon: React.FC<{ isActive: boolean }>;
     comingSoon?: boolean;
+    onClick?: (e: React.MouseEvent) => void;
   }> = [
-    { path: "/home", label: "홈", icon: HomeIcon, comingSoon: true },
-    { path: "/schedules", label: "일정관리", icon: CalendarIcon },
-    { path: "/scoreboard", label: "스코어보드", icon: TrophyIcon },
+    { path: "/clubs", label: "홈", icon: HomeIcon, onClick: handleClubClick },
+    { path: "/schedules/club", label: "일정관리", icon: CalendarIcon },
+    { path: "/scoreboard", label: "기록", icon: TrophyIcon },
     { path: "/more", label: "더보기", icon: MoreIcon },
   ];
 
@@ -96,18 +118,29 @@ const Navigation: React.FC = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+            onClick={item.onClick}
+            className={({ isActive }) => {
+              let forcedActive = isActive;
+              if (item.label === "클럽") forcedActive = isClubRoute;
+              if (item.label === "일정관리") forcedActive = isScheduleRoute;
+              return `nav-item ${forcedActive ? "active" : ""}`;
+            }}
           >
-            {({ isActive }) => (
+            {({ isActive }) => {
+              let forcedActive = isActive;
+              if (item.label === "클럽") forcedActive = isClubRoute;
+              if (item.label === "일정관리") forcedActive = isScheduleRoute;
+              return (
               <>
                 <span className="nav-icon">
-                  <IconComponent isActive={isActive} />
+                  <IconComponent isActive={forcedActive} />
                 </span>
                 <span className="nav-label">
                   {item.label}
                 </span>
               </>
-            )}
+              );
+            }}
           </NavLink>
         );
       })}

@@ -2,6 +2,7 @@ package com.example.openrunapi.domain.match.service;
 
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.model.dto.BatchUpdateMatchRequest;
+import com.example.openrunapi.domain.match.model.dto.MatchPageResponse;
 import com.example.openrunapi.domain.match.model.dto.MatchResponse;
 import com.example.openrunapi.domain.match.model.dto.UpdateMatchRequest;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
@@ -12,6 +13,10 @@ import com.example.openrunapi.domain.user.repository.UserRepository;
 import com.example.openrunapi.domain.user.repository.UserStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,6 +81,65 @@ public class MatchService {
         return matches.stream()
                 .map(this::toMatchResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 클럽의 대진 페이징 조회 (인피니티 스크롤용)
+     *
+     * @param clubId 클럽 ID
+     * @param playerName 선수 이름 (optional)
+     * @param startDate 시작일 (optional)
+     * @param endDate 종료일 (optional)
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @return 페이징된 대진 목록
+     */
+    public MatchPageResponse getMatchesPaged(
+            Long clubId,
+            String playerName,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            int page,
+            int size
+    ) {
+        log.info("=== 대진 페이징 조회 === page: {}, size: {}", page, size);
+
+        // 선수 이름 -> 선수 ID 변환
+        List<Long> playerIds = null;
+        if (playerName != null && !playerName.isBlank()) {
+            String[] names = playerName.split(",");
+            playerIds = new ArrayList<>();
+            for (String name : names) {
+                String trimmedName = name.trim();
+                if (!trimmedName.isEmpty()) {
+                    User player = userRepository.findByName(trimmedName)
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 선수입니다: " + trimmedName));
+                    playerIds.add(player.getId());
+                }
+            }
+            if (playerIds.isEmpty()) {
+                playerIds = null;
+            }
+        }
+
+        // Specification (정렬은 Pageable에서 처리)
+        Specification<Match> spec = MatchSpecification.searchWithoutSort(clubId, playerIds, startDate, endDate);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "playedAt"));
+
+        Page<Match> matchPage = matchRepository.findAll(spec, pageable);
+
+        List<MatchResponse> content = matchPage.getContent().stream()
+                .map(this::toMatchResponse)
+                .collect(Collectors.toList());
+
+        return MatchPageResponse.builder()
+                .content(content)
+                .page(matchPage.getNumber())
+                .size(matchPage.getSize())
+                .totalElements(matchPage.getTotalElements())
+                .totalPages(matchPage.getTotalPages())
+                .hasMore(matchPage.hasNext())
+                .build();
     }
 
     /**

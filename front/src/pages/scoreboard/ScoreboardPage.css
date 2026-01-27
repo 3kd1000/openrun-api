@@ -6,9 +6,9 @@
 
 /* ========== 페이지 컨테이너 ========== */
 .scoreboard-page {
-  padding: var(--space-l);
+  padding: 0 var(--space-m);
   width: 100%;
-  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
+  padding-bottom: 80px;
   box-sizing: border-box;
 }
 
@@ -16,6 +16,7 @@
 .scoreboard-header {
   margin-bottom: var(--space-xl);
 }
+
 
 /* ========== Tab Navigation ========== */
 .tab-navigation {
@@ -75,6 +76,10 @@
   transition: var(--transition-all);
   margin-bottom: calc(-1 * var(--border-width-base));
   min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
 }
 
 .tab-button:hover {
@@ -299,7 +304,7 @@
 /* ========== 모바일 대응 (362px 이상 768px 이하) ========== */
 @media (min-width: 362px) and (max-width: 768px) {
   .scoreboard-page {
-    padding: var(--space-l);
+    padding: 0 var(--space-l);
   }
 
   .scoreboard-page .scoreboard-table {
@@ -385,10 +390,10 @@
   }
 }
 
-/* ========== 360px 이하 최적화 (360px과 동일한 스타일, 좌우 스크롤 허용) ========== */
-@media (max-width: 361px) {
+/* ========== 359px 이하 최적화 (초소형, 좌우 스크롤 허용) ========== */
+@media (max-width: 359px) {
   .scoreboard-page {
-    padding: var(--space-m);
+    padding: 0 var(--space-m);
   }
 
   .scoreboard-page .scoreboard-table {
@@ -634,6 +639,9 @@
   font-weight: var(--font-weight-semibold);
   margin: 0;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .match-status-badge {
@@ -678,14 +686,23 @@
   transition: var(--transition-base);
 }
 
+/* 승자 팀 - DrawGamesCommon과 통일 (green 계열) */
 .team-inline.winner {
-  background: var(--color-success-bg);
-  border: var(--border-width-thin) solid var(--color-success);
+  background: var(--color-team-a-win-bg);
+  border-left: 3px solid var(--color-success);
 }
 
+/* 승자 팀 내 선수명 강조 */
+.team-inline.winner .players-inline {
+  color: var(--color-success);
+  font-weight: var(--font-weight-bold);
+}
+
+/* 패자 팀 - 패배 색상과 동일하게 */
 .team-inline.loser {
-  background: var(--color-bg-tertiary);
-  opacity: 0.7;
+  background: var(--color-danger-bg);
+  border-left: 3px solid var(--color-danger);
+  opacity: 0.9;
 }
 
 .players-inline {
@@ -699,14 +716,17 @@
   min-width: 0;
 }
 
+/* 점수 표시 - DrawGamesCommon과 통일 (pill 스타일 배경) */
 .score-inline {
   font-size: inherit;
   font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
-  padding: 0 var(--space-xs);
+  color: var(--color-text-secondary);
+  padding: var(--space-xxs) var(--space-xs);
   min-width: 24px;
   text-align: center;
   flex-shrink: 0;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-s);
 }
 
 .vs-inline {
@@ -759,8 +779,8 @@
   }
 }
 
-/* 미디어 중형 (361px ~ 400px) */
-@media (min-width: 361px) and (max-width: 425px) {
+/* 미디어 중형 (360px ~ 425px) */
+@media (min-width: 360px) and (max-width: 425px) {
   .match-card {
     font-size: var(--font-size-m);
   }
@@ -774,8 +794,8 @@
   }
 }
 
-/* 미디어 소형 (360px 이하) */
-@media (max-width: 360px) {
+/* 미디어 소형 (359px 이하) */
+@media (max-width: 359px) {
   .match-card {
     font-size: var(--font-size-s);
   }
@@ -814,8 +834,11 @@
   }
 
   .score-inline {
-    padding: 0 var(--space-xxs);
+    padding: var(--space-xxs) var(--space-xxs);
     min-width: 20px;
+    /* pill 스타일 유지 */
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-s);
   }
 
   .vs-inline {
@@ -825,7 +848,7 @@
 }
 
 /* ========== 데스크톱: 모바일 패딩 제거 ========== */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .scoreboard-page {
     padding-bottom: var(--space-l);
   }
@@ -956,8 +979,11 @@
   }
 
   .score-inline {
-    padding: 0 var(--space-xxs);
+    padding: var(--space-xxs) var(--space-xxs);
     min-width: 20px;
+    /* pill 스타일 유지 */
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-s);
   }
 
   .vs-inline {
@@ -972,4 +998,230 @@
   .empty-state h3 {
     font-size: var(--font-size-base);
   }
+}
+
+/* ========== 인피니티 스크롤 & 경기 목록 헤더 ========== */
+.match-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-s) 0;
+  margin-bottom: var(--space-s);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.match-count {
+  font-weight: var(--font-weight-medium);
+}
+
+.load-more-trigger {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-l) 0;
+  min-height: 60px;
+}
+
+.load-more-spinner {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.load-more-end {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+/* ========== 초소형 화면 (320px 이하) 검색 필터 최적화 ========== */
+@media (max-width: 359px) {
+  .filter-section {
+    padding: var(--space-s);
+  }
+
+  .player-name-input-row {
+    margin-bottom: var(--space-s);
+  }
+
+  .search-input {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+  }
+
+  .filter-actions-row {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .date-range-filter {
+    flex: 1 1 100%;
+    order: 1;
+  }
+
+  .date-range-filter label {
+    font-size: var(--font-size-xs);
+    min-width: 28px;
+  }
+
+  .date-range-filter select {
+    flex: 1;
+    padding: var(--space-xs);
+    font-size: var(--font-size-s);
+    min-width: 80px;
+  }
+
+  .search-button,
+  .reset-button {
+    flex: 1;
+    order: 2;
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-s);
+  }
+}
+
+/* ========== 개인기록 탭 ========== */
+.personal-stats-container {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  padding: var(--space-l);
+  margin-bottom: var(--space-l);
+  text-align: center;
+}
+
+.personal-stats-box {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-m) var(--space-xl);
+  border-radius: var(--radius-m);
+  min-width: 80px;
+}
+
+.stat-item.win {
+  background: var(--color-success-bg);
+  border: var(--border-width-thin) solid var(--color-success);
+}
+
+.stat-item.draw {
+  background: var(--color-bg-tertiary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+}
+
+.stat-item.loss {
+  background: var(--color-danger-bg);
+  border: var(--border-width-thin) solid var(--color-danger);
+}
+
+.stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.stat-item.win .stat-value {
+  color: var(--color-success);
+}
+
+.stat-item.draw .stat-value {
+  color: var(--color-text-secondary);
+}
+
+.stat-item.loss .stat-value {
+  color: var(--color-danger);
+}
+
+.stat-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.personal-stats-total {
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 클럽명 뱃지 */
+.match-club-badge {
+  padding: var(--space-xxs) var(--space-s);
+  border-radius: var(--radius-s);
+  font-size: inherit;
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+/* ========== 개인기록 탭 모바일 대응 ========== */
+@media (max-width: 768px) {
+  .personal-stats-container {
+    padding: var(--space-m);
+    margin-bottom: var(--space-m);
+  }
+
+  .personal-stats-box {
+    gap: var(--space-s);
+  }
+
+  .stat-item {
+    padding: var(--space-s) var(--space-m);
+    min-width: 60px;
+    flex: 1;
+  }
+
+  .stat-value {
+    font-size: var(--font-size-xl);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-s);
+  }
+
+  .personal-stats-total {
+    font-size: var(--font-size-s);
+  }
+
+  .match-club-badge {
+    font-size: var(--font-size-xs);
+    padding: var(--space-xxs) var(--space-xs);
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 359px) {
+  .stat-item {
+    padding: var(--space-xs) var(--space-s);
+    min-width: 50px;
+  }
+
+  .stat-value {
+    font-size: var(--font-size-l);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .match-club-badge {
+    max-width: 100px;
+  }
+}
+
+/* ========== 내 이름 하이라이팅 ========== */
+.my-name {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
 }

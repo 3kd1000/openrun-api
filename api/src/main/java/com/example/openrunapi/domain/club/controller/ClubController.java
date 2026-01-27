@@ -1,11 +1,17 @@
 package com.example.openrunapi.domain.club.controller;
 
 import com.example.openrunapi.domain.club.model.ClubMemberStatus;
+import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
+import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
+import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
+import com.example.openrunapi.domain.club.model.dto.JoinRequestResponse;
+import com.example.openrunapi.domain.club.model.dto.TransferOwnershipRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.service.ClubService;
-import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.service.UserService;
 import jakarta.validation.Valid;
@@ -47,8 +53,10 @@ public class ClubController {
     @GetMapping
     public ResponseEntity<Page<ClubResponse>> findClubs(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) MemberRecruitmentStatus memberRecruitmentStatus,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ClubResponse> responses = clubService.findClubs(keyword, pageable);
+        Page<ClubResponse> responses = clubService.findClubs(keyword, region, memberRecruitmentStatus, pageable);
         return ResponseEntity.ok(responses);
     }
 
@@ -61,6 +69,20 @@ public class ClubController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 클럽 운영 정책 수정 (가입 승인 방식/교류전 모집 상태) - 운영진 이상
+     */
+    @PatchMapping("/{clubId}/policy")
+    public ResponseEntity<ClubResponse> updateClubPolicy(
+            @PathVariable Long clubId,
+            @RequestBody UpdateClubPolicyRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        ClubResponse response = clubService.updateClubPolicy(clubId, request, currentUserResponse.getId());
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{clubId}")
     public ResponseEntity<Void> deleteClub(@PathVariable Long clubId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -70,11 +92,11 @@ public class ClubController {
     }
 
     @PostMapping("/{clubId}/join")
-    public ResponseEntity<Void> joinRequest(@PathVariable Long clubId,
+    public ResponseEntity<JoinRequestResponse> joinRequest(@PathVariable Long clubId,
             @AuthenticationPrincipal UserDetails userDetails) {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
-        clubService.joinRequest(clubId, currentUserResponse.getId());
-        return ResponseEntity.ok().build();
+        JoinRequestResponse response = clubService.joinRequest(clubId, currentUserResponse.getId());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{clubId}/members/{userId}/approve")
@@ -103,6 +125,45 @@ public class ClubController {
     }
 
     /**
+     * 클럽 멤버 프로필 조회 (User + UserProfile + ClubMember 통합)
+     * - 연락처 정보는 ContactVisibility에 따라 필터링됨
+     */
+    @GetMapping("/{clubId}/members/{userId}")
+    public ResponseEntity<MemberProfileResponse> getMemberProfile(
+            @PathVariable Long clubId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        MemberProfileResponse profile = clubService.getMemberProfile(clubId, userId, currentUserResponse.getId());
+        return ResponseEntity.ok(profile);
+    }
+
+    /**
+     * 클럽원 상세 정보 조회 (명단 조회용)
+     * - ClubMember 정보 (role, status, joinedAt) + User 연락처 정보 포함
+     */
+    @GetMapping("/{clubId}/membership")
+    public ResponseEntity<List<ClubMembershipResponse>> getClubMembership(@PathVariable Long clubId,
+            @RequestParam(required = false) ClubMemberStatus status) {
+        List<ClubMembershipResponse> membership = clubService.getClubMembership(clubId, status);
+        return ResponseEntity.ok(membership);
+    }
+
+    /**
+     * 클럽원 역할 배치 변경 - OWNER(또는 System Admin)
+     */
+    @PatchMapping("/{clubId}/members/roles")
+    public ResponseEntity<List<ClubMembershipResponse>> updateMemberRoles(
+            @PathVariable Long clubId,
+            @Valid @RequestBody UpdateClubMemberRolesRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        List<ClubMembershipResponse> res = clubService.updateMemberRoles(clubId, currentUserResponse.getId(), request);
+        return ResponseEntity.ok(res);
+    }
+
+    /**
      * 클럽 탈퇴 (사용자가 자신이 가입한 클럽에서 탈퇴)
      */
     @DeleteMapping("/{clubId}/members/me")
@@ -111,5 +172,33 @@ public class ClubController {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
         clubService.leaveClub(clubId, currentUserResponse.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 클럽원 제명 (ADMIN 이상이 다른 회원을 제명)
+     */
+    @DeleteMapping("/{clubId}/members/{memberId}")
+    public ResponseEntity<Void> kickMember(@PathVariable Long clubId,
+            @PathVariable Long memberId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        clubService.kickMember(clubId, currentUserResponse.getId(), memberId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 클럽장 권한 양도 (OWNER만 가능)
+     * - ADMIN에게만 양도 가능
+     * - 기존 OWNER → ADMIN, 새 OWNER → OWNER로 역할 변경
+     */
+    @PostMapping("/{clubId}/transfer-ownership")
+    public ResponseEntity<Void> transferOwnership(
+            @PathVariable Long clubId,
+            @Valid @RequestBody TransferOwnershipRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        clubService.transferOwnership(clubId, currentUserResponse.getId(), request);
+        return ResponseEntity.ok().build();
     }
 }

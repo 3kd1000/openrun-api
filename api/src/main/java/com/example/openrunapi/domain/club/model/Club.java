@@ -34,8 +34,35 @@ public class Club {
 
     private String region;
 
+    @Column(name = "region_depth1", length = 20)
+    private String regionDepth1;  // 시/도
+
+    @Column(name = "region_depth2", length = 20)
+    private String regionDepth2;  // 시/군/구
+
     @Column(nullable = false)
     private Long ownerUserId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "join_policy", nullable = false, length = 20)
+    private ClubJoinPolicy joinPolicy = ClubJoinPolicy.APPROVAL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "interclub_recruitment_status", nullable = false, length = 20)
+    private InterclubRecruitmentStatus interclubRecruitmentStatus = InterclubRecruitmentStatus.CLOSED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "member_recruitment_status", nullable = false, length = 20)
+    private MemberRecruitmentStatus memberRecruitmentStatus = MemberRecruitmentStatus.OPEN;
+
+    @Column(name = "member_recruitment_note", columnDefinition = "text")
+    private String memberRecruitmentNote;
+
+    @Column(name = "activity_summary", length = 200)
+    private String activitySummary;
+
+    @Column(name = "member_count")
+    private Integer memberCount = 0;
 
     private boolean deleted = false;
 
@@ -61,7 +88,54 @@ public class Club {
         this.region = region;
     }
 
+    public void updateRegion(String regionDepth1, String regionDepth2) {
+        this.regionDepth1 = regionDepth1;
+        this.regionDepth2 = regionDepth2;
+        // region 필드도 함께 업데이트 (하위 호환성)
+        if (regionDepth1 != null && !regionDepth1.isEmpty()) {
+            this.region = regionDepth2 != null && !regionDepth2.isEmpty()
+                    ? regionDepth1 + " " + regionDepth2
+                    : regionDepth1;
+        }
+    }
+
+    /**
+     * 화면 표시용 지역 문자열 반환
+     * regionDepth1/2가 있으면 조합, 없으면 기존 region 반환
+     */
+    public String getRegionDisplay() {
+        if (regionDepth1 != null && !regionDepth1.isEmpty()) {
+            if (regionDepth2 != null && !regionDepth2.isEmpty()) {
+                return regionDepth1 + " " + regionDepth2;
+            }
+            return regionDepth1;
+        }
+        return region;
+    }
+
+    public void updatePolicies(ClubJoinPolicy joinPolicy, InterclubRecruitmentStatus interclubRecruitmentStatus, MemberRecruitmentStatus memberRecruitmentStatus, String memberRecruitmentNote) {
+        if (joinPolicy != null) {
+            this.joinPolicy = joinPolicy;
+        }
+        if (interclubRecruitmentStatus != null) {
+            this.interclubRecruitmentStatus = interclubRecruitmentStatus;
+        }
+        if (memberRecruitmentStatus != null) {
+            this.memberRecruitmentStatus = memberRecruitmentStatus;
+        }
+        // memberRecruitmentNote는 null이어도 업데이트 (빈 문자열로 초기화 가능)
+        this.memberRecruitmentNote = memberRecruitmentNote;
+    }
+
     public void changeOwner(Long newOwnerUserId) {
         this.ownerUserId = newOwnerUserId;
+    }
+
+    public void updateActivitySummary(String activitySummary) {
+        this.activitySummary = activitySummary;
+    }
+
+    public void updateMemberCount(Integer memberCount) {
+        this.memberCount = memberCount != null ? memberCount : 0;
     }
 }

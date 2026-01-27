@@ -206,8 +206,8 @@ public class DrawService {
         if (userNames == null)
             return ValidationResult.fail("참가자 명단이 입력되지 않았습니다.");
         int total = userNames.size();
-        if (total < 6 || total > 16)
-            return ValidationResult.fail("AA 방식은 6~16명만 가능합니다.");
+        if (total < 4 || total > 16)
+            return ValidationResult.fail("AA 방식은 4~16명만 가능합니다.");
         return ValidationResult.success();
     }
     

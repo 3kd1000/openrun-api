@@ -74,5 +74,43 @@ export const scheduleService = {
   // 대진표 삭제
   deleteDraw: async (scheduleId: number): Promise<void> => {
     await axiosInstance.delete(`/schedules/${scheduleId}/draw`);
-  }
+  },
+
+  // 일정 PIN 설정/해제 (운영진 이상)
+  updateSchedulePinned: async (
+    scheduleId: number,
+    pinned: boolean,
+    userId: number
+  ): Promise<Schedule> => {
+    const response = await axiosInstance.patch(`/schedules/${scheduleId}/pinned`, { pinned }, {
+      params: { userId },
+    });
+    return response.data;
+  },
+
+  // 게스트 모집 설정 (운영진 이상)
+  updateGuestRecruit: async (
+    scheduleId: number,
+    open: boolean,
+    userId: number,
+    note?: string | null
+  ): Promise<Schedule> => {
+    const response = await axiosInstance.patch(`/schedules/${scheduleId}/guest-recruit`, { open, note: note ?? null }, {
+      params: { userId },
+    });
+    return response.data;
+  },
+
+  // 교류전 모집 설정 (운영진 이상)
+  updateInterclubRecruit: async (
+    scheduleId: number,
+    open: boolean,
+    userId: number,
+    note?: string | null
+  ): Promise<Schedule> => {
+    const response = await axiosInstance.patch(`/schedules/${scheduleId}/interclub-recruit`, { open, note: note ?? null }, {
+      params: { userId },
+    });
+    return response.data;
+  },
 };

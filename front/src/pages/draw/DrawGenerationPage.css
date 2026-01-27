@@ -432,30 +432,11 @@ h1 {
   }
 }
 
-.close-btn {
+/* accordion-card 내부의 닫기 버튼 위치 조정 */
+.accordion-card .btn-close {
   position: absolute;
   top: 10px;
   right: var(--space-m);
-  background: var(--color-bg-tertiary);
-  border: none;
-  border-radius: var(--radius-round);
-  width: 34px;
-  height: 34px;
-  font-size: var(--font-size-xl);
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-black);
-  box-shadow: 0 2px 8px rgba(60, 60, 100, 0.08);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: var(--z-tooltip);
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.close-btn:hover {
-  background: var(--color-primary);
-  color: white;
 }
 
 /* ========== 반응형 (모바일) ========== */

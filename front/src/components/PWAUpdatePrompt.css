@@ -89,7 +89,7 @@
 }
 
 /* PC: 네비게이션이 좌측이므로 하단에 표시 */
-@media (min-width: 768px) {
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
   .pwa-update-prompt {
     bottom: 0;
     transform: translateY(100%);

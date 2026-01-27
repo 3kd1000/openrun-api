@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.model.dto;
 
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -32,4 +33,9 @@ public class UpdateScheduleRequest {
     private Long reservedByUserId;
 
     private LocalDateTime participationStartAt;
+
+    private MatchType matchType;
+
+    @Min(value = 30, message = "기간은 최소 30분 이상이어야 합니다.")
+    private Integer durationMinutes;
 }

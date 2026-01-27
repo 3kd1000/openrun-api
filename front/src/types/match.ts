@@ -25,3 +25,12 @@ export interface Match {
   playedAt: string; // ISO 8601 format
   isMigrated: boolean;
 }
+
+export interface MatchPageResponse {
+  content: Match[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasMore: boolean;
+}

@@ -1,0 +1,264 @@
+/* ===== MemberProfileDrawer 전용 스타일 ===== */
+
+/* 드로어 배경 */
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 드로어 컨테이너 - 데스크탑 (우측 슬라이드) */
+.member-profile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-bg-primary);
+  box-shadow: var(--shadow-l);
+  overflow-y: auto;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* 드로어 헤더 */
+.member-profile-drawer .drawer-header {
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-primary);
+  padding: var(--space-l);
+  border-bottom: var(--border-width-thin) solid var(--color-border-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.member-profile-drawer .drawer-header h2 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+/* 드로어 바디 */
+.member-profile-drawer .drawer-body {
+  padding: var(--space-l);
+}
+
+/* 로딩/에러 상태 */
+.member-profile-drawer .drawer-loading {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.member-profile-drawer .drawer-error {
+  padding: var(--space-m);
+  margin-bottom: var(--space-l);
+  background-color: #fee;
+  border: var(--border-width-thin) solid #fcc;
+  border-radius: var(--radius-s);
+  color: #c33;
+  font-size: var(--font-size-s);
+}
+
+/* 프로필 섹션 */
+.member-profile-drawer .profile-section {
+  margin-bottom: var(--space-xl);
+}
+
+.member-profile-drawer .profile-section:last-child {
+  margin-bottom: 0;
+}
+
+.member-profile-drawer .section-title {
+  margin: 0 0 var(--space-m) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+/* 첫 번째 섹션이 아닌 경우 상단 여백 추가 */
+.member-profile-drawer .profile-section:not(:first-child) .section-title {
+  padding-top: var(--space-l);
+}
+
+/* 프로필 아이템 */
+.member-profile-drawer .profile-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--space-m);
+  padding: var(--space-s) 0;
+  border-bottom: var(--border-width-thin) solid var(--color-border-tertiary);
+}
+
+.member-profile-drawer .profile-item:last-child {
+  border-bottom: none;
+}
+
+.member-profile-drawer .profile-item--full {
+  grid-template-columns: 1fr;
+}
+
+.member-profile-drawer .profile-label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.member-profile-drawer .profile-value {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.member-profile-drawer .profile-value--multiline {
+  white-space: pre-wrap;
+  margin-top: var(--space-xs);
+}
+
+/* ===== 미디어 쿼리: 태블릿 (426px ~ 768px) ===== */
+@media (min-width: 426px) and (max-width: 768px) {
+  .member-profile-drawer {
+    max-width: 380px;
+  }
+
+  .member-profile-drawer .drawer-header {
+    padding: var(--space-m);
+  }
+
+  .member-profile-drawer .drawer-header h2 {
+    font-size: var(--font-size-l);
+  }
+
+  .member-profile-drawer .drawer-body {
+    padding: var(--space-m);
+  }
+
+  .member-profile-drawer .profile-item {
+    grid-template-columns: 100px 1fr;
+    gap: var(--space-s);
+  }
+}
+
+/* ===== 미디어 쿼리: 모바일 (425px 이하) - 하단 시트 ===== */
+@media (max-width: 425px) {
+  .drawer-backdrop {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .member-profile-drawer {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: var(--radius-m) var(--radius-m) 0 0;
+    animation: slideInUp 0.3s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .member-profile-drawer .drawer-header {
+    padding: var(--space-m);
+  }
+
+  .member-profile-drawer .drawer-header h2 {
+    font-size: var(--font-size-base);
+  }
+
+  .member-profile-drawer .drawer-body {
+    padding: var(--space-m);
+  }
+
+  .member-profile-drawer .section-title {
+    font-size: var(--font-size-s);
+  }
+
+  .member-profile-drawer .profile-item {
+    grid-template-columns: 80px 1fr;
+    gap: var(--space-s);
+    padding: var(--space-xs) 0;
+  }
+
+  .member-profile-drawer .profile-label {
+    font-size: var(--font-size-s);
+  }
+
+  .member-profile-drawer .profile-value {
+    font-size: var(--font-size-s);
+  }
+}
+
+/* ===== 미디어 쿼리: 모바일 소형 (359px 이하) ===== */
+@media (max-width: 359px) {
+  .member-profile-drawer {
+    max-height: 90vh;
+  }
+
+  .member-profile-drawer .drawer-header {
+    padding: var(--space-s);
+  }
+
+  .member-profile-drawer .drawer-header h2 {
+    font-size: var(--font-size-s);
+  }
+
+  .member-profile-drawer .drawer-body {
+    padding: var(--space-s);
+  }
+
+  .member-profile-drawer .profile-section {
+    margin-bottom: var(--space-l);
+  }
+
+  .member-profile-drawer .profile-item {
+    grid-template-columns: 1fr;
+    gap: var(--space-xxs);
+  }
+
+  .member-profile-drawer .profile-label {
+    font-size: var(--font-size-s);
+    margin-bottom: var(--space-xxs);
+  }
+
+  .member-profile-drawer .profile-value {
+    font-size: var(--font-size-s);
+  }
+}

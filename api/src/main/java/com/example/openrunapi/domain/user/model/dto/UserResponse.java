@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.user.model.dto;
 
 import com.example.openrunapi.domain.user.model.ContactVisibility;
+import com.example.openrunapi.domain.user.model.Gender;
 import com.example.openrunapi.domain.user.model.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
@@ -19,12 +20,16 @@ public class UserResponse {
     private final String phoneNumber;
     private final ContactVisibility phoneVisibility;
     private final ContactVisibility emailVisibility;
+    private final Gender gender;
+    private final String regionDepth1;
+    private final String regionDepth2;
     private final LocalDateTime createdAt;
     private final String lastLoginProvider;
     private final LocalDateTime lastLoginAt;
 
     public UserResponse(Long id, String email, String name, String imageUrl, String phoneNumber,
-                       ContactVisibility phoneVisibility, ContactVisibility emailVisibility,
+                       ContactVisibility phoneVisibility, ContactVisibility emailVisibility, Gender gender,
+                       String regionDepth1, String regionDepth2,
                        LocalDateTime createdAt, String lastLoginProvider, LocalDateTime lastLoginAt) {
         this.id = id;
         this.email = email;
@@ -33,6 +38,9 @@ public class UserResponse {
         this.phoneNumber = phoneNumber;
         this.phoneVisibility = phoneVisibility;
         this.emailVisibility = emailVisibility;
+        this.gender = gender;
+        this.regionDepth1 = regionDepth1;
+        this.regionDepth2 = regionDepth2;
         this.createdAt = createdAt;
         this.lastLoginProvider = lastLoginProvider;
         this.lastLoginAt = lastLoginAt;
@@ -43,7 +51,8 @@ public class UserResponse {
      */
     public UserResponse(User user) {
         this(user.getId(), user.getEmail(), user.getName(), user.getImageUrl(),
-             user.getPhoneNumber(), user.getPhoneVisibility(), user.getEmailVisibility(),
+             user.getPhoneNumber(), user.getPhoneVisibility(), user.getEmailVisibility(), user.getGender(),
+             user.getRegionDepth1(), user.getRegionDepth2(),
              user.getCreatedAt(), user.getLastLoginProvider(), user.getLastLoginAt());
     }
 
@@ -71,6 +80,9 @@ public class UserResponse {
                 .phoneNumber(filteredPhone)
                 .phoneVisibility(user.getPhoneVisibility())
                 .emailVisibility(user.getEmailVisibility())
+                .gender(user.getGender())
+                .regionDepth1(user.getRegionDepth1())
+                .regionDepth2(user.getRegionDepth2())
                 .createdAt(user.getCreatedAt())
                 .lastLoginProvider(user.getLastLoginProvider())
                 .lastLoginAt(user.getLastLoginAt())
@@ -78,14 +90,14 @@ public class UserResponse {
     }
 
     private static boolean shouldShowEmail(ContactVisibility visibility, boolean isSameClub) {
-        if (visibility == null || visibility == ContactVisibility.PUBLIC) return true;
-        if (visibility == ContactVisibility.CLUB_ONLY) return isSameClub;
+        // PUBLIC: 클럽원 및 게스트 참여 시 공유
+        if (visibility == null || visibility == ContactVisibility.PUBLIC) return isSameClub;
         return false; // PRIVATE
     }
 
     private static boolean shouldShowPhone(ContactVisibility visibility, boolean isSameClub) {
-        if (visibility == null || visibility == ContactVisibility.PUBLIC) return true;
-        if (visibility == ContactVisibility.CLUB_ONLY) return isSameClub;
+        // PUBLIC: 클럽원 및 게스트 참여 시 공유
+        if (visibility == null || visibility == ContactVisibility.PUBLIC) return isSameClub;
         return false; // PRIVATE
     }
 }

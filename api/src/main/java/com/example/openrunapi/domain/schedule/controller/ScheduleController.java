@@ -9,6 +9,10 @@ import com.example.openrunapi.domain.schedule.model.dto.BatchParticipationRespon
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateSchedulePinnedRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleGuestRecruitRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubRecruitRequest;
+import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
 import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
 import jakarta.validation.Valid;
@@ -100,6 +104,62 @@ public class ScheduleController {
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long scheduleId) {
         scheduleService.deleteSchedule(scheduleId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 일정 PIN(공지성 고정) 설정/해제 - 운영진 이상
+     * - schedules API는 현재 개발 단계로 인증이 완전히 강제되지 않아 userId를 파라미터로 받습니다.
+     */
+    @PatchMapping("/{scheduleId}/pinned")
+    public ResponseEntity<ScheduleResponse> updatePinned(
+            @PathVariable Long scheduleId,
+            @RequestParam Long userId,
+            @RequestBody(required = false) UpdateSchedulePinnedRequest request
+    ) {
+        ScheduleResponse response = scheduleService.updatePinned(scheduleId, request, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 일정 게스트 모집 ON/OFF 및 안내문 설정 - 운영진 이상
+     */
+    @PatchMapping("/{scheduleId}/guest-recruit")
+    public ResponseEntity<ScheduleResponse> updateGuestRecruit(
+            @PathVariable Long scheduleId,
+            @RequestParam Long userId,
+            @RequestBody(required = false) UpdateScheduleGuestRecruitRequest request
+    ) {
+        ScheduleResponse response = scheduleService.updateGuestRecruit(scheduleId, request, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 일정 교류전 모집 ON/OFF 및 안내문 설정 - 운영진 이상
+     */
+    @PatchMapping("/{scheduleId}/interclub-recruit")
+    public ResponseEntity<ScheduleResponse> updateInterclubRecruit(
+            @PathVariable Long scheduleId,
+            @RequestParam Long userId,
+            @RequestBody(required = false) UpdateScheduleInterclubRecruitRequest request
+    ) {
+        ScheduleResponse response = scheduleService.updateInterclubRecruit(scheduleId, request, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 탐색 화면용: 게스트/교류전 모집 중인 일정 목록 (공개)
+     * GET /api/schedules/recruit?type=GUEST&matchType=MENS_DOUBLES&fromDate=2026-01-22&toDate=2026-01-31&limit=10
+     */
+    @GetMapping("/recruit")
+    public ResponseEntity<List<PublicRecruitScheduleResponse>> getPublicRecruitSchedules(
+            @RequestParam(required = false, defaultValue = "GUEST") String type,
+            @RequestParam(required = false) String matchType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate toDate,
+            @RequestParam(required = false) Integer limit
+    ) {
+        List<PublicRecruitScheduleResponse> list = scheduleService.getPublicRecruitSchedules(type, matchType, fromDate, toDate, limit);
+        return ResponseEntity.ok(list);
     }
 
     /**

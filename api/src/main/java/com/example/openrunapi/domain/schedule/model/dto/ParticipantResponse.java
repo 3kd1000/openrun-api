@@ -16,8 +16,9 @@ public class ParticipantResponse {
     private final String status;
     private final Integer position;
     private final LocalDateTime joinedAt;
+    private final boolean asGuest;
 
-    public ParticipantResponse(Long id, Long scheduleId, Long userId, String userName, String status, Integer position, LocalDateTime joinedAt) {
+    public ParticipantResponse(Long id, Long scheduleId, Long userId, String userName, String status, Integer position, LocalDateTime joinedAt, boolean asGuest) {
         this.id = id;
         this.scheduleId = scheduleId;
         this.userId = userId;
@@ -25,6 +26,7 @@ public class ParticipantResponse {
         this.status = status;
         this.position = position;
         this.joinedAt = joinedAt;
+        this.asGuest = asGuest;
     }
 
     public ParticipantResponse(ScheduleParticipant participant, String userName) {
@@ -35,5 +37,6 @@ public class ParticipantResponse {
         this.status = participant.getStatus().name();
         this.position = participant.getPosition();
         this.joinedAt = participant.getJoinedAt();
+        this.asGuest = participant.isAsGuest();
     }
 }

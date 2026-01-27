@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.model.dto;
 
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -40,6 +41,11 @@ public class CreateScheduleRequest {
 
     private LocalDateTime participationStartAt;
 
+    private MatchType matchType;
+
+    @Min(value = 30, message = "기간은 최소 30분 이상이어야 합니다.")
+    private Integer durationMinutes;
+
     /**
      * Schedule 엔티티로 변환하는 메소드
      */
@@ -53,6 +59,8 @@ public class CreateScheduleRequest {
                 .description(this.description)
                 .reservedByUserId(this.reservedByUserId)
                 .participationStartAt(this.participationStartAt)
+                .matchType(this.matchType)
+                .durationMinutes(this.durationMinutes)
                 .build();
     }
 }
