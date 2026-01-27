@@ -26,6 +26,7 @@
 /* Schedule List */
 .sjm-schedule-list {
   max-height: 60vh;
+  min-height: 200px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

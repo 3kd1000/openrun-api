@@ -100,10 +100,11 @@
   display: flex;
   align-items: center;
   gap: var(--space-s);
-  padding: var(--space-xs) var(--space-s);
+  padding: var(--space-s) var(--space-m);
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-s);
   font-size: var(--font-size-m);
+  min-height: 44px;
 }
 
 .top-players-widget__rank {
