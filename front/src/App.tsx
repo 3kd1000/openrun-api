@@ -10,6 +10,7 @@ import ClubRecruitingPage from "./pages/club/recruit/ClubRecruitingPage";
 import ClubMainPage from "./pages/club/home/ClubMainPage";
 import ClubExplorePage from "./pages/club/list/ClubExplorePage";
 import ClubMembersPage from "./pages/club/home/ClubMembersPage";
+import ClubRulesPage from "./pages/club/home/ClubRulesPage";
 import ClubManagePage from "./pages/club/manage/ClubManagePage";
 import ClubCreatePage from "./pages/club/create/ClubCreatePage";
 import ClubManageInfoPage from "./pages/club/manage/ClubManageInfoPage";
@@ -86,6 +87,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ClubMembersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clubs/:clubId/rules"
+                element={
+                  <ProtectedRoute>
+                    <ClubRulesPage />
                   </ProtectedRoute>
                 }
               />
