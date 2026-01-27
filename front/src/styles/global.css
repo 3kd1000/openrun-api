@@ -1,5 +1,10 @@
 /* Global Reset & Base Styles */
 
+/* 다크모드 강제 차단 - 라이트 모드만 지원 */
+:root {
+  color-scheme: light only;
+}
+
 * {
   box-sizing: border-box;
 }
