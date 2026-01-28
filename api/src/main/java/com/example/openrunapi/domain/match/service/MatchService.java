@@ -1,5 +1,7 @@
 package com.example.openrunapi.domain.match.service;
 
+import com.example.openrunapi.domain.audit.dto.MatchAuditSnapshot;
+import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.model.dto.BatchUpdateMatchRequest;
 import com.example.openrunapi.domain.match.model.dto.MatchPageResponse;
@@ -38,6 +40,7 @@ public class MatchService {
     private final UserRepository userRepository;
     private final UserStatisticsRepository userStatisticsRepository;
     private final ScheduleRepository scheduleRepository;
+    private final AuditLogService auditLogService;
 
     /**
      * 클럽의 모든 대진 조회 (선수 이름 검색, 기간 필터링 지원)
@@ -159,16 +162,20 @@ public class MatchService {
      *
      * @param matchId 경기 ID
      * @param request 업데이트 요청
+     * @param userId  요청한 사용자 ID (Audit용, nullable)
      * @return 업데이트된 경기 정보
      */
     @Transactional
-    public MatchResponse updateMatchResult(Long matchId, UpdateMatchRequest request) {
+    public MatchResponse updateMatchResult(Long matchId, UpdateMatchRequest request, Long userId) {
         log.info("=== 경기 결과 업데이트 ===");
         log.info("matchId: {}, teamAScore: {}, teamBScore: {}, result: {}",
                 matchId, request.getTeamAScore(), request.getTeamBScore(), request.getResult());
 
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 경기입니다: " + matchId));
+
+        // Audit용 스냅샷 (수정 전)
+        MatchAuditSnapshot beforeSnapshot = userId != null ? MatchAuditSnapshot.from(match) : null;
 
         // 경기 시간(playedAt)이 지난 이후에만 결과 입력 가능 (KST 기준)
         LocalDateTime playedAt = match.getPlayedAt();
@@ -178,11 +185,11 @@ public class MatchService {
                     .map(schedule -> schedule.getScheduledAt())
                     .orElse(null);
         }
-        
+
         if (playedAt == null) {
             throw new IllegalStateException("경기 시간을 확인할 수 없습니다.");
         }
-        
+
         if (!TimeValidationUtils.isAfter(playedAt)) {
             throw new IllegalStateException(
                     String.format("경기 시간이 지난 이후에만 결과를 입력할 수 있습니다. 경기 시간: %s", playedAt)
@@ -208,6 +215,12 @@ public class MatchService {
         addStatistics(match);
 
         Match savedMatch = matchRepository.save(match);
+
+        // Audit 로깅
+        if (userId != null && beforeSnapshot != null) {
+            auditLogService.logMatchUpdate(userId, beforeSnapshot, savedMatch);
+        }
+
         log.info("경기 결과 업데이트 완료: matchId={}", savedMatch.getId());
 
         return toMatchResponse(savedMatch);
@@ -218,10 +231,11 @@ public class MatchService {
      *
      * @param clubId 클럽 ID
      * @param request 배치 업데이트 요청
+     * @param userId 요청한 사용자 ID (Audit용, nullable)
      * @return 업데이트된 경기 정보 목록
      */
     @Transactional
-    public List<MatchResponse> updateMatchResultsBatch(Long clubId, BatchUpdateMatchRequest request) {
+    public List<MatchResponse> updateMatchResultsBatch(Long clubId, BatchUpdateMatchRequest request, Long userId) {
         log.info("=== 경기 결과 배치 업데이트 ===");
         log.info("clubId: {}, 업데이트할 경기 수: {}", clubId, request.getMatches().size());
 
@@ -230,12 +244,12 @@ public class MatchService {
                     // 클럽 ID 검증 (보안을 위해)
                     Match match = matchRepository.findById(item.getMatchId())
                             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 경기입니다: " + item.getMatchId()));
-                    
+
                     if (!match.getClubId().equals(clubId)) {
                         throw new IllegalArgumentException("클럽 ID가 일치하지 않습니다.");
                     }
-                    
-                    return updateMatchResult(item.getMatchId(), item.getRequest());
+
+                    return updateMatchResult(item.getMatchId(), item.getRequest(), userId);
                 })
                 .collect(Collectors.toList());
     }

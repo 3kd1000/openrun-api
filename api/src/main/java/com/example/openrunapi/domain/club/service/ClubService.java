@@ -1,6 +1,9 @@
 package com.example.openrunapi.domain.club.service;
 
 import com.example.openrunapi.common.service.PermissionService;
+import com.example.openrunapi.domain.audit.dto.ClubAuditSnapshot;
+import com.example.openrunapi.domain.audit.dto.ClubMemberAuditSnapshot;
+import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubMemberStatus;
@@ -49,6 +52,7 @@ public class ClubService {
     private final ClubMemberRepository clubMemberRepository;
     private final ExternalRequestRepository externalRequestRepository;
     private final PermissionService permissionService;
+    private final AuditLogService auditLogService;
 
     @Transactional
     public ClubResponse createClub(CreateClubRequest request, Long ownerUserId) {
@@ -101,6 +105,9 @@ public class ClubService {
         // 운영진 이상만 수정 가능
         permissionService.requireScheduleManagePermission(currentUserId, clubId);
 
+        // Audit: 변경 전 스냅샷
+        ClubAuditSnapshot beforeSnapshot = ClubAuditSnapshot.from(club);
+
         club.update(request.getName(), request.getDescription(), request.getRegion());
 
         // regionDepth1/2 업데이트
@@ -114,6 +121,9 @@ public class ClubService {
             // TODO: 새로운 ownerUserId가 실제 존재하는 사용자인지 확인 필요
             club.changeOwner(request.getOwnerUserId());
         }
+
+        // Audit: 클럽 정보 수정 로그
+        auditLogService.logClubUpdate(currentUserId, beforeSnapshot, club);
 
         return new ClubResponse(club);
     }
@@ -335,6 +345,9 @@ public class ClubService {
             club.updateMemberCount(Math.max(0, currentCount - 1));
         }
 
+        // Audit: 멤버 강퇴 로그 (삭제 전에 기록)
+        auditLogService.logClubMemberDelete(adminUserId, targetMember);
+
         clubMemberRepository.delete(targetMember);
     }
 
@@ -426,8 +439,14 @@ public class ClubService {
                 throw new IllegalArgumentException("OWNER 역할로 변경할 수 없습니다. (소유권 이전 기능으로 처리)");
             }
 
-            if (item.getRole() != null) {
+            if (item.getRole() != null && !item.getRole().equals(member.getRole())) {
+                // Audit: 변경 전 스냅샷
+                ClubMemberAuditSnapshot beforeSnapshot = ClubMemberAuditSnapshot.from(member);
+
                 member.updateRole(item.getRole());
+
+                // Audit: 역할 변경 로그
+                auditLogService.logClubMemberUpdate(currentUserId, beforeSnapshot, member);
             }
         }
 
@@ -462,11 +481,22 @@ public class ClubService {
         // 3. Club.ownerUserId 변경
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new EntityNotFoundException("클럽을 찾을 수 없습니다."));
+
+        // Audit: 변경 전 스냅샷들
+        ClubAuditSnapshot clubBeforeSnapshot = ClubAuditSnapshot.from(club);
+        ClubMemberAuditSnapshot currentOwnerBefore = ClubMemberAuditSnapshot.from(currentOwner);
+        ClubMemberAuditSnapshot newOwnerBefore = ClubMemberAuditSnapshot.from(newOwner);
+
         club.changeOwner(request.getNewOwnerUserId());
 
         // 4. 역할 변경: 기존 OWNER → ADMIN, 새 OWNER → OWNER
         currentOwner.updateRole(ClubRole.ADMIN);
         newOwner.updateRole(ClubRole.OWNER);
+
+        // Audit: 소유권 이전 로그 (Club + 두 멤버 역할 변경)
+        auditLogService.logClubUpdate(currentUserId, clubBeforeSnapshot, club);
+        auditLogService.logClubMemberUpdate(currentUserId, currentOwnerBefore, currentOwner);
+        auditLogService.logClubMemberUpdate(currentUserId, newOwnerBefore, newOwner);
     }
 
     private Specification<Club> search(String keyword) {

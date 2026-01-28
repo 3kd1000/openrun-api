@@ -82,19 +82,21 @@ public class MatchController {
      * @param clubId 클럽 ID (경로 파라미터, 현재는 검증용)
      * @param matchId 경기 ID
      * @param request 경기 결과 업데이트 요청
+     * @param userId 요청한 사용자 ID (Audit용)
      * @return 업데이트된 경기 정보
      */
     @PutMapping("/{matchId}")
     public ResponseEntity<MatchResponse> updateMatchResult(
             @PathVariable Long clubId,
             @PathVariable Long matchId,
-            @Valid @RequestBody UpdateMatchRequest request
+            @Valid @RequestBody UpdateMatchRequest request,
+            @RequestParam(required = false) Long userId
     ) {
         log.info("=== PUT /api/clubs/{}/matches/{} ===", clubId, matchId);
         log.info("request: teamAScore={}, teamBScore={}, result={}",
                 request.getTeamAScore(), request.getTeamBScore(), request.getResult());
 
-        MatchResponse response = matchService.updateMatchResult(matchId, request);
+        MatchResponse response = matchService.updateMatchResult(matchId, request, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -104,17 +106,19 @@ public class MatchController {
      *
      * @param clubId 클럽 ID (경로 파라미터, 현재는 검증용)
      * @param request 배치 업데이트 요청
+     * @param userId 요청한 사용자 ID (Audit용)
      * @return 업데이트된 경기 정보 목록
      */
     @PutMapping("/batch")
     public ResponseEntity<List<MatchResponse>> updateMatchResultsBatch(
             @PathVariable Long clubId,
-            @Valid @RequestBody BatchUpdateMatchRequest request
+            @Valid @RequestBody BatchUpdateMatchRequest request,
+            @RequestParam(required = false) Long userId
     ) {
         log.info("=== PUT /api/clubs/{}/matches/batch ===", clubId);
         log.info("업데이트할 경기 수: {}", request.getMatches().size());
 
-        List<MatchResponse> responses = matchService.updateMatchResultsBatch(clubId, request);
+        List<MatchResponse> responses = matchService.updateMatchResultsBatch(clubId, request, userId);
         return ResponseEntity.ok(responses);
     }
 

@@ -3,8 +3,10 @@ import type { Schedule, CreateScheduleRequest } from '../types/schedule';
 
 export const scheduleService = {
   // 일정 생성
-  createSchedule: async (data: CreateScheduleRequest): Promise<Schedule> => {
-    const response = await axiosInstance.post('/schedules', data);
+  createSchedule: async (data: CreateScheduleRequest, userId?: number): Promise<Schedule> => {
+    const response = await axiosInstance.post('/schedules', data, {
+      params: userId ? { userId } : undefined
+    });
     return response.data;
   },
 
@@ -53,14 +55,18 @@ export const scheduleService = {
   },
 
   // 일정 수정
-  updateSchedule: async (scheduleId: number, data: CreateScheduleRequest): Promise<Schedule> => {
-    const response = await axiosInstance.put(`/schedules/${scheduleId}`, data);
+  updateSchedule: async (scheduleId: number, data: CreateScheduleRequest, userId?: number): Promise<Schedule> => {
+    const response = await axiosInstance.put(`/schedules/${scheduleId}`, data, {
+      params: userId ? { userId } : undefined
+    });
     return response.data;
   },
 
   // 일정 삭제
-  deleteSchedule: async (scheduleId: number): Promise<void> => {
-    await axiosInstance.delete(`/schedules/${scheduleId}`);
+  deleteSchedule: async (scheduleId: number, userId?: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}`, {
+      params: userId ? { userId } : undefined
+    });
   },
 
   // 내가 참여한 일정 ID 목록 조회
