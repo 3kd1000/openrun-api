@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.schedule.service;
 
 import com.example.openrunapi.common.service.PermissionService;
+import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
@@ -31,6 +32,7 @@ public class ScheduleParticipantService {
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
     private final PermissionService permissionService;
+    private final AuditLogService auditLogService;
 
     /**
      * 일정 참가 신청
@@ -86,7 +88,10 @@ public class ScheduleParticipantService {
         // 8. Schedule의 currentParticipants 업데이트 (상태 무관, 신청한 모든 사람 카운트)
         schedule.incrementParticipants();
 
-        // 9. User 조회하여 userName 포함된 Response 반환
+        // 9. Audit 로깅
+        auditLogService.logParticipantCreate(userId, savedParticipant, schedule.getClubId());
+
+        // 10. User 조회하여 userName 포함된 Response 반환
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
 
@@ -187,17 +192,20 @@ public class ScheduleParticipantService {
                 .findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED)
                 .orElseThrow(() -> new EntityNotFoundException("참가 신청 내역을 찾을 수 없습니다."));
 
-        // 3. 참가 신청 취소 처리 (레코드 삭제 - 재신청 가능하도록)
+        // 3. Audit 로깅 (삭제 전)
+        auditLogService.logParticipantDelete(userId, participant, schedule.getClubId());
+
+        // 4. 참가 신청 취소 처리 (레코드 삭제 - 재신청 가능하도록)
         boolean wasConfirmed = participant.isConfirmed();
         participantRepository.delete(participant);
 
-        // 4. Schedule의 currentParticipants 감소
+        // 5. Schedule의 currentParticipants 감소
         schedule.decrementParticipants();
 
-        // 5. 대진 무효화 (참가자 변동으로 기존 대진은 더 이상 유효하지 않음)
+        // 6. 대진 무효화 (참가자 변동으로 기존 대진은 더 이상 유효하지 않음)
         schedule.invalidateDraw();
 
-        // 6. CONFIRMED 상태였다면 대기 중인 사람을 CONFIRMED로 변경
+        // 7. CONFIRMED 상태였다면 대기 중인 사람을 CONFIRMED로 변경
         if (wasConfirmed) {
             List<ScheduleParticipant> waitingList = participantRepository
                     .findActiveParticipantsByScheduleId(scheduleId, ParticipantStatus.CANCELLED)
@@ -274,6 +282,9 @@ public class ScheduleParticipantService {
         if (!toRemove.isEmpty()) {
             int removedConfirmedCount = 0;
             for (ScheduleParticipant participant : toRemove) {
+                // Audit 로깅 (삭제 전)
+                auditLogService.logParticipantDelete(requestUserId, participant, schedule.getClubId());
+
                 boolean wasConfirmed = participant.isConfirmed();
                 participantRepository.delete(participant);
                 schedule.decrementParticipants();
@@ -351,10 +362,13 @@ public class ScheduleParticipantService {
                         .position(nextPosition++)
                         .build();
 
-                participantRepository.save(participant);
+                ScheduleParticipant savedParticipant = participantRepository.save(participant);
                 schedule.incrementParticipants();
+
+                // Audit 로깅
+                auditLogService.logParticipantCreate(requestUserId, savedParticipant, schedule.getClubId());
             }
-            log.info("추가된 참가자: {} 명 (확정: {}명, 대기: {}명)", 
+            log.info("추가된 참가자: {} 명 (확정: {}명, 대기: {}명)",
                     toAdd.size(), confirmedCount, waitingCount);
 
             // 대진 무효화 (참가자가 추가되었으므로 기존 대진은 더 이상 유효하지 않음)

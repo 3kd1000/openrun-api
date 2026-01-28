@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.schedule.service;
 
 import com.example.openrunapi.common.service.PermissionService;
+import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
@@ -47,6 +48,9 @@ class ScheduleParticipantServiceTest {
 
     @Mock
     private PermissionService permissionService;
+
+    @Mock
+    private AuditLogService auditLogService;
 
     @InjectMocks
     private ScheduleParticipantService participantService;

@@ -1,6 +1,8 @@
 package com.example.openrunapi.domain.schedule.service;
 
 import com.example.openrunapi.common.service.PermissionService;
+import com.example.openrunapi.domain.audit.dto.ScheduleAuditSnapshot;
+import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequestWithIds;
 import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
@@ -46,12 +48,13 @@ public class ScheduleService {
     private final UserRepository userRepository;
     private final PermissionService permissionService;
     private final ClubRepository clubRepository;
+    private final AuditLogService auditLogService;
 
     /**
      * 일정 생성
      */
     @Transactional
-    public ScheduleResponse createSchedule(CreateScheduleRequest request) {
+    public ScheduleResponse createSchedule(CreateScheduleRequest request, Long userId) {
         // 과거 날짜 체크 (KST 기준)
         if (TimeValidationUtils.isPast(request.getScheduledAt())) {
             throw new IllegalStateException("과거 날짜에는 일정을 생성할 수 없습니다.");
@@ -67,6 +70,12 @@ public class ScheduleService {
 
         Schedule schedule = request.toEntity();
         Schedule savedSchedule = scheduleRepository.save(schedule);
+
+        // Audit 로깅
+        if (userId != null) {
+            auditLogService.logScheduleCreate(userId, savedSchedule);
+        }
+
         return new ScheduleResponse(savedSchedule, clubRepository, userRepository);
     }
 
@@ -187,9 +196,12 @@ public class ScheduleService {
      * 일정 수정
      */
     @Transactional
-    public ScheduleResponse updateSchedule(Long scheduleId, UpdateScheduleRequest request) {
+    public ScheduleResponse updateSchedule(Long scheduleId, UpdateScheduleRequest request, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // Audit용 스냅샷 (수정 전)
+        ScheduleAuditSnapshot beforeSnapshot = userId != null ? ScheduleAuditSnapshot.from(schedule) : null;
 
         // 과거 날짜 체크 (KST 기준)
         if (TimeValidationUtils.isPast(request.getScheduledAt())) {
@@ -222,6 +234,11 @@ public class ScheduleService {
         // 정원이 증가한 경우, 대기자를 확정으로 승격
         if (request.getMaxCapacity() > oldMaxCapacity) {
             promoteWaitingParticipants(scheduleId, request.getMaxCapacity());
+        }
+
+        // Audit 로깅
+        if (userId != null && beforeSnapshot != null) {
+            auditLogService.logScheduleUpdate(userId, beforeSnapshot, schedule);
         }
 
         return new ScheduleResponse(schedule, clubRepository, userRepository);
@@ -337,9 +354,14 @@ public class ScheduleService {
      * 일정 삭제
      */
     @Transactional
-    public void deleteSchedule(Long scheduleId) {
+    public void deleteSchedule(Long scheduleId, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // Audit 로깅 (삭제 전)
+        if (userId != null) {
+            auditLogService.logScheduleDelete(userId, schedule);
+        }
 
         scheduleRepository.delete(schedule);
     }
