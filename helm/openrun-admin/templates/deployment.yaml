@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openrun-admin-{{ .Values.environment }}
+  namespace: openrun
+  labels:
+    app: openrun-admin
+    env: {{ .Values.environment }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: openrun-admin
+      env: {{ .Values.environment }}
+  template:
+    metadata:
+      labels:
+        app: openrun-admin
+        env: {{ .Values.environment }}
+    spec:
+      containers:
+      - name: admin
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.port }}
+          name: http
+
+        # 리소스 제한
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+
+      # ImagePullSecrets (GHCR 인증)
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret.name }}

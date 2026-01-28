@@ -1,0 +1,111 @@
+name: Deploy Admin to Dev
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - "admin/**"
+      - "Dockerfile.admin"
+      - "helm/openrun-admin/**"
+      - ".github/workflows/ci-cd-admin-dev.yml"
+
+jobs:
+  # ========== 빌드 Job ==========
+  build-and-push-admin:
+    runs-on: ubuntu-latest
+
+    steps:
+      # --- 1. 소스코드 체크아웃 ---
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # --- 2. 환경 변수 파일 생성 (develop용) ---
+      - name: Create .env.develop with secrets
+        run: |
+          cat > admin/.env.develop << EOF
+          VITE_API_BASE_URL=https://dev-api.openrun.app/api
+          VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+          EOF
+
+      # --- 3. GitHub Container Registry(GHCR)에 로그인 ---
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- 4. Docker 이미지 빌드 및 푸시 (Admin 전용) ---
+      - name: Build and push Admin Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.admin
+          push: true
+          no-cache: true
+          platforms: linux/amd64, linux/arm64
+          build-args: |
+            BUILD_COMMAND=npm run build:develop
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-admin:develop
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-admin:develop-${{ github.sha }}
+
+  # ========== 배포 Job ==========
+  deploy-admin:
+    needs: build-and-push-admin
+    runs-on: ubuntu-latest
+    steps:
+      # --- 1. 코드 체크아웃 ---
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- 2. Admin Helm Chart를 서버로 전송 (SCP) ---
+      - name: Copy Admin Helm Chart to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "helm/openrun-admin/*"
+          target: "/home/ubuntu/openrun/helm/openrun-admin"
+          strip_components: 2
+          overwrite: true
+
+      # --- 3. Helm으로 Admin 배포 실행 (SSH) ---
+      - name: Deploy Admin with Helm
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /home/ubuntu/openrun
+
+            # Admin Helm 배포
+            helm upgrade --install openrun-admin-dev helm/openrun-admin \
+              -f helm/openrun-admin/values-dev.yaml \
+              --set image.repository=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-admin \
+              --set image.tag=develop-${{ github.sha }} \
+              -n openrun \
+              --wait \
+              --timeout 5m
+
+            # 배포 상태 확인
+            echo "=== Admin Deployment Status ==="
+            kubectl get pods -n openrun -l app=openrun-admin,env=dev
+
+            echo "=== Helm Releases ==="
+            helm list -n openrun

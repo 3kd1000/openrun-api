@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +21,54 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
      * 클럽별 Audit 로그 조회 (최신순)
      */
     List<AuditLog> findByClubIdOrderByCreatedAtDesc(Long clubId);
+
+    /**
+     * 전체 Audit 로그 조회 (페이징, 최신순)
+     */
+    Page<AuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    /**
+     * 클럽별 Audit 로그 조회 (페이징, 최신순)
+     */
+    Page<AuditLog> findByClubIdOrderByCreatedAtDesc(Long clubId, Pageable pageable);
+
+    /**
+     * Entity Type으로 필터링 (페이징)
+     */
+    Page<AuditLog> findByEntityTypeOrderByCreatedAtDesc(AuditEntityType entityType, Pageable pageable);
+
+    /**
+     * Action Type으로 필터링 (페이징)
+     */
+    Page<AuditLog> findByActionTypeOrderByCreatedAtDesc(
+            com.example.openrunapi.domain.audit.model.AuditActionType actionType, Pageable pageable);
+
+    /**
+     * Entity Type + Action Type 필터링 (페이징)
+     */
+    Page<AuditLog> findByEntityTypeAndActionTypeOrderByCreatedAtDesc(
+            AuditEntityType entityType,
+            com.example.openrunapi.domain.audit.model.AuditActionType actionType,
+            Pageable pageable);
+
+    /**
+     * 클럽 + Entity Type 필터링 (페이징)
+     */
+    Page<AuditLog> findByClubIdAndEntityTypeOrderByCreatedAtDesc(
+            Long clubId, AuditEntityType entityType, Pageable pageable);
+
+    /**
+     * 클럽 + Action Type 필터링 (페이징)
+     */
+    Page<AuditLog> findByClubIdAndActionTypeOrderByCreatedAtDesc(
+            Long clubId, com.example.openrunapi.domain.audit.model.AuditActionType actionType, Pageable pageable);
+
+    /**
+     * 클럽 + Entity Type + Action Type 필터링 (페이징)
+     */
+    Page<AuditLog> findByClubIdAndEntityTypeAndActionTypeOrderByCreatedAtDesc(
+            Long clubId, AuditEntityType entityType,
+            com.example.openrunapi.domain.audit.model.AuditActionType actionType, Pageable pageable);
 
     /**
      * 특정 엔티티의 변경 이력 조회
