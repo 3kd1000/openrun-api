@@ -1,0 +1,33 @@
+import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import HomePage from "./pages/HomePage";
+import AuditLogPage from "./pages/AuditLogPage";
+import LoginPage from "./pages/LoginPage";
+
+function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        {/* 로그인 페이지 (인증 불필요) */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* 보호된 라우트 (인증 필요) */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePage />} />
+          <Route path="audit-logs" element={<AuditLogPage />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
+  );
+}
+
+export default App;

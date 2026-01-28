@@ -1,0 +1,9 @@
+apiVersion: v2
+name: openrun-admin
+description: OpenRun Admin (Backoffice) Service
+type: application
+version: 0.1.0
+appVersion: "1.0"
+maintainers:
+  - name: Jusang Jung
+    email: dev.openrun@gmail.com

@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/webauthn/login").permitAll() // WebAuthn 로그인 API
                         .requestMatchers("/api/draw/**").permitAll() // 대진 생성 API
                         .requestMatchers("/api/batch/**").permitAll() // 배치 작업 API (테스트/관리용)
+                        .requestMatchers("/api/admin/**").authenticated() // Admin 백오피스 API (Firebase 인증 필요)
                         // 클럽 조회 API (미로그인 유저 포함) - 목록/상세만 허용
                         .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/*").permitAll()
                         .requestMatchers("/api/schedules/**").permitAll() // 일정 관리 API (개발 단계)

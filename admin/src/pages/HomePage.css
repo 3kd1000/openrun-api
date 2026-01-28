@@ -1,0 +1,32 @@
+.home-page h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-s);
+}
+
+.home-page__description {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-l);
+}
+
+.home-page__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-m);
+}
+
+.dashboard-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  padding: var(--space-l);
+}
+
+.dashboard-card h3 {
+  font-size: var(--font-size-l);
+  margin-bottom: var(--space-s);
+}
+
+.dashboard-card p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+}
