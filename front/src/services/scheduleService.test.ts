@@ -37,7 +37,28 @@ describe("scheduleService", () => {
 
       const result = await scheduleService.createSchedule(request);
 
-      expect(axios.post).toHaveBeenCalledWith("/schedules", request);
+      expect(axios.post).toHaveBeenCalledWith("/schedules", request, {
+        params: undefined,
+      });
+      expect(result).toEqual(mockSchedule);
+    });
+
+    it("userId 포함하여 일정 생성", async () => {
+      vi.mocked(axios.post).mockResolvedValueOnce({ data: mockSchedule });
+
+      const request: CreateScheduleRequest = {
+        clubId: 1,
+        courtName: "테스트 코트",
+        scheduledAt: "2025-01-15T10:00:00",
+        durationMinutes: 120,
+        maxCapacity: 8,
+      };
+
+      const result = await scheduleService.createSchedule(request, 100);
+
+      expect(axios.post).toHaveBeenCalledWith("/schedules", request, {
+        params: { userId: 100 },
+      });
       expect(result).toEqual(mockSchedule);
     });
   });
@@ -135,7 +156,29 @@ describe("scheduleService", () => {
 
       const result = await scheduleService.updateSchedule(1, request);
 
-      expect(axios.put).toHaveBeenCalledWith("/schedules/1", request);
+      expect(axios.put).toHaveBeenCalledWith("/schedules/1", request, {
+        params: undefined,
+      });
+      expect(result.courtName).toBe("수정된 코트");
+    });
+
+    it("userId 포함하여 일정 수정", async () => {
+      const updatedSchedule = { ...mockSchedule, courtName: "수정된 코트" };
+      vi.mocked(axios.put).mockResolvedValueOnce({ data: updatedSchedule });
+
+      const request: CreateScheduleRequest = {
+        clubId: 1,
+        courtName: "수정된 코트",
+        scheduledAt: "2025-01-15T10:00:00",
+        durationMinutes: 120,
+        maxCapacity: 8,
+      };
+
+      const result = await scheduleService.updateSchedule(1, request, 100);
+
+      expect(axios.put).toHaveBeenCalledWith("/schedules/1", request, {
+        params: { userId: 100 },
+      });
       expect(result.courtName).toBe("수정된 코트");
     });
   });
@@ -146,7 +189,19 @@ describe("scheduleService", () => {
 
       await scheduleService.deleteSchedule(1);
 
-      expect(axios.delete).toHaveBeenCalledWith("/schedules/1");
+      expect(axios.delete).toHaveBeenCalledWith("/schedules/1", {
+        params: undefined,
+      });
+    });
+
+    it("userId 포함하여 일정 삭제", async () => {
+      vi.mocked(axios.delete).mockResolvedValueOnce({});
+
+      await scheduleService.deleteSchedule(1, 100);
+
+      expect(axios.delete).toHaveBeenCalledWith("/schedules/1", {
+        params: { userId: 100 },
+      });
     });
   });
 

@@ -370,7 +370,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
     try {
       setLoading(true);
       setError("");
-      await scheduleService.deleteSchedule(schedule.id);
+      await scheduleService.deleteSchedule(schedule.id, currentUserId ?? undefined);
       onSuccess();
       onClose();
     } catch (err) {
@@ -1004,7 +1004,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   matchType: data.matchType,
                 };
 
-                await scheduleService.updateSchedule(schedule.id, requestData);
+                await scheduleService.updateSchedule(schedule.id, requestData, currentUserId ?? undefined);
                 setIsEditMode(false); // 편집 모드 종료
                 await loadScheduleAndParticipants(); // 데이터 새로고침
                 onSuccess(); // 부모 컴포넌트 알림
