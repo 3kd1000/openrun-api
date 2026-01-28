@@ -1,0 +1,107 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: 240px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar__header {
+  padding: var(--space-l);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-sidebar__header h1 {
+  font-size: var(--font-size-l);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.admin-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-m);
+  gap: var(--space-xs);
+}
+
+.admin-sidebar__nav a {
+  display: block;
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: var(--font-size-s);
+  transition: background-color 0.2s;
+}
+
+.admin-sidebar__nav a:hover {
+  background-color: var(--color-background);
+  text-decoration: none;
+}
+
+.admin-sidebar__nav a.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.admin-sidebar__footer {
+  margin-top: auto;
+  padding: var(--space-m);
+  border-top: 1px solid var(--color-border);
+}
+
+.admin-user-info {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-s);
+}
+
+.admin-user-name {
+  font-weight: 600;
+  font-size: var(--font-size-s);
+  color: var(--color-text);
+}
+
+.admin-user-email {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-logout-btn {
+  width: 100%;
+  padding: var(--space-s);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.admin-logout-btn:hover {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.admin-main {
+  flex: 1;
+  padding: var(--space-l);
+  overflow-y: auto;
+}
+
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+}
