@@ -31,33 +31,34 @@ export function buildFrontendRoute(
   switch (entityType) {
     case "SCHEDULE":
       // 일정 상세 모달 열기
-      return `${baseUrl}/clubs/${clubId}?schedule=${entityId}`;
+      return `${baseUrl}/schedules/club?scheduleId=${entityId}`;
 
     case "SCHEDULE_PARTICIPANT": {
       // changes에서 scheduleId 추출
       const scheduleId = extractScheduleIdFromChanges(changes);
       if (scheduleId) {
-        return `${baseUrl}/clubs/${clubId}?schedule=${scheduleId}`;
+        return `${baseUrl}/schedules/club?scheduleId=${scheduleId}`;
       }
-      // scheduleId를 찾지 못하면 클럽 메인으로
-      return `${baseUrl}/clubs/${clubId}`;
+      // scheduleId를 찾지 못하면 일정 목록으로
+      return `${baseUrl}/schedules/club`;
     }
 
     case "MATCH": {
       // changes에서 scheduleId 추출
       const scheduleId = extractScheduleIdFromChanges(changes);
       if (scheduleId) {
-        return `${baseUrl}/clubs/${clubId}?schedule=${scheduleId}`;
+        return `${baseUrl}/schedules/club?scheduleId=${scheduleId}`;
       }
-      return `${baseUrl}/clubs/${clubId}`;
+      return `${baseUrl}/schedules/club`;
     }
 
     case "CLUB":
+      // 클럽 홈 페이지 (entityId가 clubId)
       return `${baseUrl}/clubs/${entityId}`;
 
     case "CLUB_MEMBER":
-      // 클럽 설정 > 멤버 관리
-      return `${baseUrl}/clubs/${clubId}/settings`;
+      // 클럽 멤버 목록
+      return `${baseUrl}/clubs/${clubId}/members`;
 
     default:
       return null;
