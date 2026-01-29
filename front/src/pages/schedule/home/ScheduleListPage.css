@@ -8,7 +8,6 @@
 .schedule-page {
   padding: 0 var(--space-m);
   width: 100%;
-  padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
   box-sizing: border-box;
   /* overflow-x: hidden 제거 - sticky가 작동하려면 필요 */
   max-width: 100vw; /* 가로 스크롤 방지 */

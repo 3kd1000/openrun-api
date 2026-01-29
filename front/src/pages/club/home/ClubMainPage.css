@@ -2,7 +2,6 @@
   padding: 0 var(--space-m);
   background-color: var(--color-background);
   min-height: calc(100vh - var(--header-height) - var(--navigation-height));
-  padding-bottom: 100px;
 }
 
 .club-main-page__loading,
@@ -275,7 +274,6 @@
 @media (min-width: 769px) {
   .club-main-page {
     padding: 0 var(--space-l);
-    padding-bottom: 100px;
   }
 
   .club-main-page__header {
@@ -329,7 +327,6 @@
 @media (min-width: 360px) and (max-width: 425px) {
   .club-main-page {
     padding: 0 var(--space-s);
-    padding-bottom: 100px;
   }
 
   .club-main-page__header {
@@ -358,7 +355,6 @@
 @media (max-width: 359px) {
   .club-main-page {
     padding: 0 var(--space-xs);
-    padding-bottom: 100px;
   }
 
   .club-main-page__header {

@@ -5,7 +5,6 @@
   padding: var(--space-l);
   min-height: calc(100vh - 140px);
   box-sizing: border-box;
-  padding-bottom: 80px;
 }
 
 .oauth-providers-content {

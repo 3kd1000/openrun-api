@@ -11,7 +11,12 @@
 
 .App-content {
   flex: 1;
-  /* 각 페이지에서 개별적으로 padding-bottom 관리 */
+  /* 모바일: 하단 네비게이션 영역 확보 (글로벌 설정) */
+  padding-bottom: var(--content-padding-bottom);
+}
+
+/* 네비게이션이 없는 페이지는 padding-bottom 불필요 */
+.App-content.no-navigation {
   padding-bottom: 0;
 }
 
@@ -31,6 +36,8 @@
 
   .App-content {
     min-height: 100vh;
+    /* 데스크탑: 네비게이션이 좌측에 있으므로 하단 padding 불필요 */
+    padding-bottom: 0;
   }
 
   /* Navigation이 있을 때만 좌측 여백 추가 */
