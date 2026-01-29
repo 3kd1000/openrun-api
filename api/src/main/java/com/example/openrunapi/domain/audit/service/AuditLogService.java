@@ -2,11 +2,15 @@ package com.example.openrunapi.domain.audit.service;
 
 import com.example.openrunapi.domain.audit.dto.ClubAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ClubMemberAuditSnapshot;
+import com.example.openrunapi.domain.audit.dto.ClubNoticeAuditSnapshot;
+import com.example.openrunapi.domain.audit.dto.ClubRuleAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.MatchAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ScheduleAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ScheduleParticipantAuditSnapshot;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.model.ClubMember;
+import com.example.openrunapi.domain.club.model.ClubNotice;
+import com.example.openrunapi.domain.club.model.ClubRule;
 import com.example.openrunapi.domain.audit.model.AuditActionType;
 import com.example.openrunapi.domain.audit.model.AuditEntityType;
 import com.example.openrunapi.domain.audit.model.AuditLog;
@@ -189,6 +193,82 @@ public class AuditLogService {
 
         saveAuditLog(userId, AuditEntityType.CLUB_MEMBER, member.getId(),
                 AuditActionType.DELETE, changes, member.getClub().getId());
+    }
+
+    // === ClubRule Audit ===
+
+    /**
+     * ClubRule 생성 로그
+     */
+    @Transactional
+    public void logClubRuleCreate(Long userId, ClubRule rule) {
+        ClubRuleAuditSnapshot after = ClubRuleAuditSnapshot.from(rule);
+        String changes = buildChangesJson(null, after);
+
+        saveAuditLog(userId, AuditEntityType.CLUB_RULE, rule.getId(),
+                AuditActionType.CREATE, changes, rule.getClub().getId());
+    }
+
+    /**
+     * ClubRule 수정 로그
+     */
+    @Transactional
+    public void logClubRuleUpdate(Long userId, ClubRuleAuditSnapshot before, ClubRule afterRule) {
+        ClubRuleAuditSnapshot after = ClubRuleAuditSnapshot.from(afterRule);
+        String changes = buildChangesJson(before, after);
+
+        saveAuditLog(userId, AuditEntityType.CLUB_RULE, afterRule.getId(),
+                AuditActionType.UPDATE, changes, afterRule.getClub().getId());
+    }
+
+    /**
+     * ClubRule 삭제 로그
+     */
+    @Transactional
+    public void logClubRuleDelete(Long userId, ClubRule rule) {
+        ClubRuleAuditSnapshot before = ClubRuleAuditSnapshot.from(rule);
+        String changes = buildChangesJson(before, null);
+
+        saveAuditLog(userId, AuditEntityType.CLUB_RULE, rule.getId(),
+                AuditActionType.DELETE, changes, rule.getClub().getId());
+    }
+
+    // === ClubNotice Audit ===
+
+    /**
+     * ClubNotice 생성 로그
+     */
+    @Transactional
+    public void logClubNoticeCreate(Long userId, ClubNotice notice) {
+        ClubNoticeAuditSnapshot after = ClubNoticeAuditSnapshot.from(notice);
+        String changes = buildChangesJson(null, after);
+
+        saveAuditLog(userId, AuditEntityType.CLUB_NOTICE, notice.getId(),
+                AuditActionType.CREATE, changes, notice.getClub().getId());
+    }
+
+    /**
+     * ClubNotice 수정 로그
+     */
+    @Transactional
+    public void logClubNoticeUpdate(Long userId, ClubNoticeAuditSnapshot before, ClubNotice afterNotice) {
+        ClubNoticeAuditSnapshot after = ClubNoticeAuditSnapshot.from(afterNotice);
+        String changes = buildChangesJson(before, after);
+
+        saveAuditLog(userId, AuditEntityType.CLUB_NOTICE, afterNotice.getId(),
+                AuditActionType.UPDATE, changes, afterNotice.getClub().getId());
+    }
+
+    /**
+     * ClubNotice 삭제 로그
+     */
+    @Transactional
+    public void logClubNoticeDelete(Long userId, ClubNotice notice) {
+        ClubNoticeAuditSnapshot before = ClubNoticeAuditSnapshot.from(notice);
+        String changes = buildChangesJson(before, null);
+
+        saveAuditLog(userId, AuditEntityType.CLUB_NOTICE, notice.getId(),
+                AuditActionType.DELETE, changes, notice.getClub().getId());
     }
 
     // === Private Helper Methods ===

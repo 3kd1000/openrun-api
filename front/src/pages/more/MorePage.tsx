@@ -14,7 +14,6 @@ import {
   getMyClubs,
 } from "../../services/api/userApi";
 import {
-  BookOpenIcon,
   EditIcon,
   FileTextIcon,
   LinkIcon,

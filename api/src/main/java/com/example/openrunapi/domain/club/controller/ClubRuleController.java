@@ -2,6 +2,7 @@ package com.example.openrunapi.domain.club.controller;
 
 import com.example.openrunapi.domain.club.model.dto.ClubRuleResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRuleRequest;
+import com.example.openrunapi.domain.club.model.dto.MarkClubRulesReadRequest;
 import com.example.openrunapi.domain.club.model.dto.ReorderClubRulesRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRuleRequest;
 import com.example.openrunapi.domain.club.service.ClubRuleService;
@@ -75,6 +76,32 @@ public class ClubRuleController {
         UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
         clubRuleService.deleteClubRule(ruleId, currentUser.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 회칙 unread 개수 조회 (클럽 멤버)
+     */
+    @GetMapping("/unread-count")
+    public ResponseEntity<Long> getUnreadCount(
+            @PathVariable Long clubId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        long count = clubRuleService.getUnreadCount(clubId, currentUser.getId());
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * 회칙 읽음 처리 (클럽 멤버)
+     * - upToRuleId 이하 회칙을 읽음 처리 (null이면 최신 회칙까지)
+     */
+    @PostMapping("/mark-read")
+    public ResponseEntity<Void> markRead(
+            @PathVariable Long clubId,
+            @RequestBody(required = false) MarkClubRulesReadRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        clubRuleService.markRead(clubId, request, currentUser.getId());
+        return ResponseEntity.ok().build();
     }
 
     /**

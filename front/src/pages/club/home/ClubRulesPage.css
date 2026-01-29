@@ -129,6 +129,11 @@
   border-radius: var(--radius-m);
 }
 
+/* 넘버링 없는 아이템 (회칙 - 사용자가 제목에 직접 번호를 넣음) */
+.club-rules-page__item--no-number {
+  gap: 0;
+}
+
 .club-rules-page__item-number {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);

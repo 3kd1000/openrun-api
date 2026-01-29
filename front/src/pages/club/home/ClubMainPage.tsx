@@ -58,7 +58,7 @@ const ClubMainPage: React.FC = () => {
   const [club, setClub] = useState<Club | null>(null);
   const [myClubs, setMyClubs] = useState<MyClub[]>([]);
   const [isLoadingClub, setIsLoadingClub] = useState(true);
-  const [noticeUnreadCount, setNoticeUnreadCount] = useState<number>(0);
+  const [contentUnreadCount, setContentUnreadCount] = useState<number>(0);
 
   const session = getOpenRunSession();
   const clubId = clubIdParam ?? session.currentClubId;
@@ -410,12 +410,12 @@ const ClubMainPage: React.FC = () => {
     loadClubData();
   }, [loadClubData]);
 
-  // 공지 unread count 로드 (dot 표시용)
+  // 공지/회칙 통합 unread count 로드 (dot 표시용)
   useEffect(() => {
     if (!clubId) return;
     clubService
-      .getClubNoticeUnreadCount(Number(clubId))
-      .then((res) => setNoticeUnreadCount(res.unreadCount))
+      .getClubContentUnreadCount(Number(clubId))
+      .then((res) => setContentUnreadCount(res.totalUnreadCount))
       .catch(() => {});
   }, [clubId]);
 
@@ -435,9 +435,12 @@ const ClubMainPage: React.FC = () => {
 
   const handleViewRules = () => {
     if (clubId) {
-      void clubService
-        .markClubNoticesRead(Number(clubId))
-        .then(() => setNoticeUnreadCount(0))
+      // 공지/회칙 모두 읽음 처리
+      Promise.all([
+        clubService.markClubNoticesRead(Number(clubId)),
+        clubService.markClubRulesRead(Number(clubId)),
+      ])
+        .then(() => setContentUnreadCount(0))
         .catch(() => {});
     }
     navigate(`/clubs/${clubId}/rules`);
@@ -557,10 +560,10 @@ const ClubMainPage: React.FC = () => {
           >
             <MegaphoneIcon size={20} />
             <span className="club-main-page__header-btn-text">공지/회칙</span>
-            {noticeUnreadCount > 0 && (
+            {contentUnreadCount > 0 && (
               <span
                 className="club-main-page__notice-dot"
-                aria-label="읽지 않은 공지 있음"
+                aria-label="읽지 않은 공지/회칙 있음"
               />
             )}
           </button>

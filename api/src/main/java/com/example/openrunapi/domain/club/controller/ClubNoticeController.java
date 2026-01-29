@@ -1,11 +1,13 @@
 package com.example.openrunapi.domain.club.controller;
 
+import com.example.openrunapi.domain.club.model.dto.ClubContentUnreadCountResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubNoticeResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubNoticeUnreadCountResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubNoticeRequest;
 import com.example.openrunapi.domain.club.model.dto.MarkClubNoticesReadRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubNoticeRequest;
 import com.example.openrunapi.domain.club.service.ClubNoticeService;
+import com.example.openrunapi.domain.club.service.ClubRuleService;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.service.UserService;
 import jakarta.validation.Valid;
@@ -24,6 +26,7 @@ import java.util.List;
 public class ClubNoticeController {
 
     private final ClubNoticeService clubNoticeService;
+    private final ClubRuleService clubRuleService;
     private final UserService userService;
 
     /**
@@ -40,7 +43,7 @@ public class ClubNoticeController {
     }
 
     /**
-     * unread 개수 조회 (클럽 멤버)
+     * unread 개수 조회 (클럽 멤버) - 공지사항만
      */
     @GetMapping("/unread-count")
     public ResponseEntity<ClubNoticeUnreadCountResponse> getUnreadCount(
@@ -49,6 +52,21 @@ public class ClubNoticeController {
     ) {
         UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(clubNoticeService.getUnreadCount(clubId, currentUser.getId()));
+    }
+
+    /**
+     * 공지사항 + 회칙 통합 unread 개수 조회 (클럽 멤버)
+     */
+    @GetMapping("/content-unread-count")
+    public ResponseEntity<ClubContentUnreadCountResponse> getContentUnreadCount(
+            @PathVariable Long clubId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        Long userId = currentUser.getId();
+        long noticeUnread = clubNoticeService.getUnreadCount(clubId, userId).getUnreadCount();
+        long ruleUnread = clubRuleService.getUnreadCount(clubId, userId);
+        return ResponseEntity.ok(new ClubContentUnreadCountResponse(noticeUnread, ruleUnread));
     }
 
     /**
