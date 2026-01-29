@@ -29,6 +29,8 @@ import LicensePage from "./pages/more/LicensePage";
 import OAuthProvidersPage from "./pages/more/OAuthProvidersPage";
 import MyClubsPage from "./pages/more/MyClubsPage";
 import UserGuidePage from "./pages/more/UserGuidePage";
+import UserGuideDetailPage from "./pages/more/UserGuideDetailPage";
+import GuideEditorPage from "./pages/more/GuideEditorPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -209,6 +211,11 @@ function App() {
               />
               <Route path="/more/my-clubs" element={<MyClubsPage />} />
               <Route path="/more/user-guide" element={<UserGuidePage />} />
+              <Route path="/more/user-guide/:category" element={<UserGuideDetailPage />} />
+              {/* 가이드 에디터: 개발 환경에서만 접근 가능 */}
+              {import.meta.env.DEV && (
+                <Route path="/more/guide-editor" element={<GuideEditorPage />} />
+              )}
               {/* Protected 페이지 (로그인 필수) */}
               <Route
                 path="/schedules/club"

@@ -21,6 +21,8 @@ public class UserResponse {
     private final ContactVisibility phoneVisibility;
     private final ContactVisibility emailVisibility;
     private final Gender gender;
+    private final String birthDate;
+    private final ContactVisibility birthDateVisibility;
     private final String regionDepth1;
     private final String regionDepth2;
     private final LocalDateTime createdAt;
@@ -29,6 +31,7 @@ public class UserResponse {
 
     public UserResponse(Long id, String email, String name, String imageUrl, String phoneNumber,
                        ContactVisibility phoneVisibility, ContactVisibility emailVisibility, Gender gender,
+                       String birthDate, ContactVisibility birthDateVisibility,
                        String regionDepth1, String regionDepth2,
                        LocalDateTime createdAt, String lastLoginProvider, LocalDateTime lastLoginAt) {
         this.id = id;
@@ -39,6 +42,8 @@ public class UserResponse {
         this.phoneVisibility = phoneVisibility;
         this.emailVisibility = emailVisibility;
         this.gender = gender;
+        this.birthDate = birthDate;
+        this.birthDateVisibility = birthDateVisibility;
         this.regionDepth1 = regionDepth1;
         this.regionDepth2 = regionDepth2;
         this.createdAt = createdAt;
@@ -52,6 +57,7 @@ public class UserResponse {
     public UserResponse(User user) {
         this(user.getId(), user.getEmail(), user.getName(), user.getImageUrl(),
              user.getPhoneNumber(), user.getPhoneVisibility(), user.getEmailVisibility(), user.getGender(),
+             user.getBirthDate(), user.getBirthDateVisibility(),
              user.getRegionDepth1(), user.getRegionDepth2(),
              user.getCreatedAt(), user.getLastLoginProvider(), user.getLastLoginAt());
     }
@@ -69,8 +75,9 @@ public class UserResponse {
         }
 
         // 공개범위에 따라 필터링
-        String filteredEmail = shouldShowEmail(user.getEmailVisibility(), isSameClub) ? user.getEmail() : null;
-        String filteredPhone = shouldShowPhone(user.getPhoneVisibility(), isSameClub) ? user.getPhoneNumber() : null;
+        String filteredEmail = shouldShow(user.getEmailVisibility(), isSameClub) ? user.getEmail() : null;
+        String filteredPhone = shouldShow(user.getPhoneVisibility(), isSameClub) ? user.getPhoneNumber() : null;
+        String filteredBirthDate = shouldShow(user.getBirthDateVisibility(), isSameClub) ? user.getBirthDate() : null;
 
         return UserResponse.builder()
                 .id(user.getId())
@@ -81,6 +88,8 @@ public class UserResponse {
                 .phoneVisibility(user.getPhoneVisibility())
                 .emailVisibility(user.getEmailVisibility())
                 .gender(user.getGender())
+                .birthDate(filteredBirthDate)
+                .birthDateVisibility(user.getBirthDateVisibility())
                 .regionDepth1(user.getRegionDepth1())
                 .regionDepth2(user.getRegionDepth2())
                 .createdAt(user.getCreatedAt())
@@ -89,13 +98,7 @@ public class UserResponse {
                 .build();
     }
 
-    private static boolean shouldShowEmail(ContactVisibility visibility, boolean isSameClub) {
-        // PUBLIC: 클럽원 및 게스트 참여 시 공유
-        if (visibility == null || visibility == ContactVisibility.PUBLIC) return isSameClub;
-        return false; // PRIVATE
-    }
-
-    private static boolean shouldShowPhone(ContactVisibility visibility, boolean isSameClub) {
+    private static boolean shouldShow(ContactVisibility visibility, boolean isSameClub) {
         // PUBLIC: 클럽원 및 게스트 참여 시 공유
         if (visibility == null || visibility == ContactVisibility.PUBLIC) return isSameClub;
         return false; // PRIVATE

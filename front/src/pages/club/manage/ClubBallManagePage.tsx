@@ -166,13 +166,44 @@ const AddBallModal: React.FC<AddBallModalProps> = ({
   onSubmit,
 }) => {
   const [toMemberId, setToMemberId] = useState<number | ''>('');
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<string>('');
   const [description, setDescription] = useState('');
+  const [quantityError, setQuantityError] = useState<string | null>(null);
+
+  const validateQuantity = (value: string): boolean => {
+    if (!value.trim()) {
+      setQuantityError('수량을 입력해주세요.');
+      return false;
+    }
+    const num = Number(value);
+    if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+      setQuantityError('1 이상의 정수만 입력 가능합니다.');
+      return false;
+    }
+    setQuantityError(null);
+    return true;
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // 숫자만 허용
+    if (value === '' || /^\d+$/.test(value)) {
+      setQuantity(value);
+      if (value) {
+        validateQuantity(value);
+      } else {
+        setQuantityError(null);
+      }
+    }
+  };
 
   const handleSubmit = () => {
     if (toMemberId === '') return;
-    onSubmit({ toMemberId, quantity, description: description || undefined });
+    if (!validateQuantity(quantity)) return;
+    onSubmit({ toMemberId, quantity: Number(quantity), description: description || undefined });
   };
+
+  const isValidQuantity = quantity !== '' && !isNaN(Number(quantity)) && Number(quantity) >= 1;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -202,11 +233,16 @@ const AddBallModal: React.FC<AddBallModalProps> = ({
           <div className="form-group">
             <label>수량 (캔)</label>
             <input
-              type="number"
-              min={1}
+              type="text"
+              inputMode="numeric"
               value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
+              onChange={handleQuantityChange}
+              placeholder="숫자 입력"
+              className={quantityError ? 'input-error' : ''}
             />
+            {quantityError && (
+              <div className="field-error-message">{quantityError}</div>
+            )}
           </div>
           <div className="form-group">
             <label>메모 (선택)</label>
@@ -225,7 +261,7 @@ const AddBallModal: React.FC<AddBallModalProps> = ({
           <button
             className="btn-success"
             onClick={handleSubmit}
-            disabled={toMemberId === '' || quantity < 1}
+            disabled={toMemberId === '' || !isValidQuantity}
           >
             입고
           </button>
@@ -248,21 +284,57 @@ const DistributeModal: React.FC<DistributeModalProps> = ({
 }) => {
   const [fromMemberId, setFromMemberId] = useState<number | ''>('');
   const [toMemberId, setToMemberId] = useState<number | ''>('');
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<string>('');
   const [description, setDescription] = useState('');
+  const [quantityError, setQuantityError] = useState<string | null>(null);
 
   const fromKeeper = keepers.find((k) => k.memberId === fromMemberId);
   const maxQuantity = fromKeeper?.quantity ?? 0;
 
+  const validateQuantity = (value: string): boolean => {
+    if (!value.trim()) {
+      setQuantityError('수량을 입력해주세요.');
+      return false;
+    }
+    const num = Number(value);
+    if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+      setQuantityError('1 이상의 정수만 입력 가능합니다.');
+      return false;
+    }
+    if (num > maxQuantity) {
+      setQuantityError(`최대 ${maxQuantity}캔까지 배분 가능합니다.`);
+      return false;
+    }
+    setQuantityError(null);
+    return true;
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // 숫자만 허용
+    if (value === '' || /^\d+$/.test(value)) {
+      setQuantity(value);
+      if (value) {
+        validateQuantity(value);
+      } else {
+        setQuantityError(null);
+      }
+    }
+  };
+
   const handleSubmit = () => {
     if (fromMemberId === '' || toMemberId === '') return;
+    if (!validateQuantity(quantity)) return;
     onSubmit({
       fromMemberId,
       toMemberId,
-      quantity,
+      quantity: Number(quantity),
       description: description || undefined,
     });
   };
+
+  const quantityNum = Number(quantity);
+  const isValidQuantity = quantity !== '' && !isNaN(quantityNum) && quantityNum >= 1 && quantityNum <= maxQuantity;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -308,12 +380,16 @@ const DistributeModal: React.FC<DistributeModalProps> = ({
           <div className="form-group">
             <label>수량 (캔) - 최대 {maxQuantity}캔</label>
             <input
-              type="number"
-              min={1}
-              max={maxQuantity}
+              type="text"
+              inputMode="numeric"
               value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
+              onChange={handleQuantityChange}
+              placeholder="숫자 입력"
+              className={quantityError ? 'input-error' : ''}
             />
+            {quantityError && (
+              <div className="field-error-message">{quantityError}</div>
+            )}
           </div>
           <div className="form-group">
             <label>메모 (선택)</label>
@@ -334,8 +410,7 @@ const DistributeModal: React.FC<DistributeModalProps> = ({
             disabled={
               fromMemberId === '' ||
               toMemberId === '' ||
-              quantity < 1 ||
-              quantity > maxQuantity
+              !isValidQuantity
             }
           >
             배분

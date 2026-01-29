@@ -119,6 +119,7 @@ public class UserService implements UserDetailsService {
         user.updateProfile(request.getName(), request.getImageUrl());
         user.updateContactInfo(request.getPhoneNumber(), request.getPhoneVisibility(), request.getEmailVisibility());
         user.updateGender(request.getGender());
+        user.updateBirthDateInfo(request.getBirthDate(), request.getBirthDateVisibility());
         user.updateRegion(request.getRegionDepth1(), request.getRegionDepth2());
 
         return new UserResponse(user);

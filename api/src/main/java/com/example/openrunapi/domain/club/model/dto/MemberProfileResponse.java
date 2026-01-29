@@ -26,6 +26,7 @@ public class MemberProfileResponse {
     private final String imageUrl;
     private final String phoneNumber;     // 공개범위에 따라 null 가능
     private final Gender gender;
+    private final String birthDate;       // 공개범위에 따라 null 가능 (YYMMDD)
 
     // Tennis Profile (user_profile)
     private final LocalDate tennisStartedAt;
@@ -53,6 +54,7 @@ public class MemberProfileResponse {
         // 연락처 공개 범위에 따라 필터링
         this.email = shouldShowEmail(user.getEmailVisibility(), isSameClub) ? user.getEmail() : null;
         this.phoneNumber = shouldShowPhone(user.getPhoneVisibility(), isSameClub) ? user.getPhoneNumber() : null;
+        this.birthDate = shouldShowBirthDate(user.getBirthDateVisibility(), isSameClub) ? user.getBirthDate() : null;
 
         // Tennis Profile (없으면 기본값)
         if (userProfile != null) {
@@ -90,6 +92,18 @@ public class MemberProfileResponse {
      * - PRIVATE: 비공개
      */
     private static boolean shouldShowPhone(ContactVisibility visibility, boolean isSameClub) {
+        if (visibility == null || visibility == ContactVisibility.PUBLIC) {
+            return isSameClub;
+        }
+        return false; // PRIVATE
+    }
+
+    /**
+     * 생년월일 공개 여부 판단
+     * - PUBLIC: 같은 클럽 멤버에게 공개
+     * - PRIVATE: 비공개
+     */
+    private static boolean shouldShowBirthDate(ContactVisibility visibility, boolean isSameClub) {
         if (visibility == null || visibility == ContactVisibility.PUBLIC) {
             return isSameClub;
         }

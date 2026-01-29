@@ -90,6 +90,20 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
     }
   };
 
+  const formatBirthDate = (birthDate: string | null): string => {
+    if (!birthDate) return "비공개";
+    // YYMMDD 형식 -> YY년 MM월 DD일
+    if (birthDate.length === 6) {
+      const yy = birthDate.slice(0, 2);
+      const mm = birthDate.slice(2, 4);
+      const dd = birthDate.slice(4, 6);
+      // 50 이상이면 1900년대, 미만이면 2000년대
+      const year = parseInt(yy) >= 50 ? `19${yy}` : `20${yy}`;
+      return `${year}년 ${parseInt(mm)}월 ${parseInt(dd)}일`;
+    }
+    return birthDate;
+  };
+
   return (
     <div className="drawer-backdrop" onClick={handleBackdropClick}>
       <div className="member-profile-drawer">
@@ -132,6 +146,12 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                   <span className="profile-label">성별</span>
                   <span className="profile-value">
                     {getGenderLabel(profile.gender)}
+                  </span>
+                </div>
+                <div className="profile-item">
+                  <span className="profile-label">생년월일</span>
+                  <span className="profile-value">
+                    {formatBirthDate(profile.birthDate)}
                   </span>
                 </div>
               </div>

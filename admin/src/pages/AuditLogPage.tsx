@@ -7,6 +7,7 @@ import type {
   PageResponse,
 } from "../services/auditLogService";
 import AuditLogDetailModal from "./AuditLogDetailModal";
+import { formatShortDateTime } from "../utils/dateUtils";
 import "./AuditLogPage.css";
 
 function AuditLogPage() {
@@ -138,7 +139,7 @@ function AuditLogPage() {
                   </td>
                   <td>{log.userName || log.userId}</td>
                   <td>{log.clubName || log.clubId}</td>
-                  <td>{new Date(log.createdAt).toLocaleString("ko-KR")}</td>
+                  <td>{formatShortDateTime(log.createdAt)}</td>
                 </tr>
               ))}
             </tbody>

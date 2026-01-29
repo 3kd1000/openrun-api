@@ -54,6 +54,14 @@ public class User {
     @Column(name = "gender", length = 10, nullable = false)
     private Gender gender = Gender.PRIVATE; // 성별 (MALE, FEMALE, PRIVATE)
 
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "birth_date")
+    private String birthDate; // 생년월일 (YYMMDD 형식, 암호화 저장)
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "birth_date_visibility", length = 20)
+    private ContactVisibility birthDateVisibility = ContactVisibility.PRIVATE; // 생년월일 공개 범위 (기본: 비공개)
+
     @Column(name = "is_guest", nullable = false)
     private boolean isGuest = false; // 게스트 사용자 여부 (스코어보드 집계 제외)
 
@@ -110,6 +118,13 @@ public class User {
         }
         if (emailVisibility != null) {
             this.emailVisibility = emailVisibility;
+        }
+    }
+
+    public void updateBirthDateInfo(String birthDate, ContactVisibility birthDateVisibility) {
+        this.birthDate = birthDate; // null이 들어와도 업데이트 가능
+        if (birthDateVisibility != null) {
+            this.birthDateVisibility = birthDateVisibility;
         }
     }
 
