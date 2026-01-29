@@ -1,5 +1,7 @@
 package com.example.openrunapi.domain.club.service;
 
+import com.example.openrunapi.domain.audit.dto.ClubNoticeAuditSnapshot;
+import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubNotice;
@@ -31,6 +33,7 @@ public class ClubNoticeService {
     private final ClubNoticeReadRepository clubNoticeReadRepository;
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final AuditLogService auditLogService;
 
     private ClubMember requireMember(Long clubId, Long userId) {
         return clubMemberRepository.findByClubIdAndUserId(clubId, userId)
@@ -113,6 +116,11 @@ public class ClubNoticeService {
                 .build();
 
         ClubNotice saved = clubNoticeRepository.save(notice);
+        log.info("Club notice created successfully: {}", saved.getId());
+
+        // Audit 로깅
+        auditLogService.logClubNoticeCreate(userId, saved);
+
         return new ClubNoticeResponse(saved);
     }
 
@@ -135,7 +143,15 @@ public class ClubNoticeService {
             throw new SecurityException("공지사항 수정 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
+        // Audit용 스냅샷 (수정 전)
+        ClubNoticeAuditSnapshot beforeSnapshot = ClubNoticeAuditSnapshot.from(notice);
+
         notice.update(request.getTitle(), request.getContent());
+        log.info("Club notice updated successfully: {}", noticeId);
+
+        // Audit 로깅
+        auditLogService.logClubNoticeUpdate(userId, beforeSnapshot, notice);
+
         return new ClubNoticeResponse(notice);
     }
 
@@ -158,7 +174,11 @@ public class ClubNoticeService {
             throw new SecurityException("공지사항 삭제 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
+        // Audit 로깅 (삭제 전)
+        auditLogService.logClubNoticeDelete(userId, notice);
+
         clubNoticeRepository.delete(notice);
+        log.info("Club notice deleted successfully: {}", noticeId);
     }
 }
 

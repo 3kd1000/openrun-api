@@ -8,5 +8,7 @@ public enum AuditEntityType {
     SCHEDULE_PARTICIPANT,
     MATCH,
     CLUB,
-    CLUB_MEMBER
+    CLUB_MEMBER,
+    CLUB_RULE,
+    CLUB_NOTICE
 }

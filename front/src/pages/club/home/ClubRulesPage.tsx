@@ -52,10 +52,13 @@ const ClubRulesPage: React.FC = () => {
     }
   };
 
-  // 공지/회칙 진입 시 최신 공지까지 읽음 처리
+  // 공지/회칙 진입 시 최신 공지+회칙까지 읽음 처리
   useEffect(() => {
     if (!clubId) return;
-    void clubService.markClubNoticesRead(Number(clubId)).catch(() => {});
+    Promise.all([
+      clubService.markClubNoticesRead(Number(clubId)),
+      clubService.markClubRulesRead(Number(clubId)),
+    ]).catch(() => {});
   }, [clubId]);
 
   const handleBack = () => {
@@ -190,11 +193,8 @@ const ClubRulesPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="club-rules-page__list">
-                      {rules.map((rule, index) => (
-                        <div key={rule.id} className="club-rules-page__item">
-                          <span className="club-rules-page__item-number">
-                            {index + 1}.
-                          </span>
+                      {rules.map((rule) => (
+                        <div key={rule.id} className="club-rules-page__item club-rules-page__item--no-number">
                           <div className="club-rules-page__item-content">
                             <div className="club-rules-page__item-title">
                               {rule.title}

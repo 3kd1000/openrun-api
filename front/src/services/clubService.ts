@@ -42,6 +42,12 @@ export interface ClubNoticeUnreadCountResponse {
   unreadCount: number;
 }
 
+export interface ClubContentUnreadCountResponse {
+  noticeUnreadCount: number;
+  ruleUnreadCount: number;
+  totalUnreadCount: number;
+}
+
 export const clubService = {
   // 클럽 생성 (로그인 필요)
   createClub: async (data: CreateClubRequest): Promise<Club> => {
@@ -192,6 +198,34 @@ export const clubService = {
   markClubNoticesRead: async (clubId: number, upToNoticeId?: number): Promise<void> => {
     await axiosInstance.post(`/clubs/${clubId}/notices/mark-read`, {
       upToNoticeId: upToNoticeId ?? null,
+    });
+  },
+
+  // 회칙 unread count 조회
+  getClubRuleUnreadCount: async (clubId: number): Promise<number> => {
+    const response = await axiosInstance.get(`/clubs/${clubId}/rules/unread-count`);
+    return response.data;
+  },
+
+  // 공지사항 + 회칙 통합 unread count (프론트엔드에서 합산)
+  getClubContentUnreadCount: async (clubId: number): Promise<ClubContentUnreadCountResponse> => {
+    const [noticeRes, ruleCount] = await Promise.all([
+      axiosInstance.get(`/clubs/${clubId}/notices/unread-count`),
+      axiosInstance.get(`/clubs/${clubId}/rules/unread-count`),
+    ]);
+    const noticeUnreadCount = noticeRes.data.unreadCount;
+    const ruleUnreadCount = ruleCount.data;
+    return {
+      noticeUnreadCount,
+      ruleUnreadCount,
+      totalUnreadCount: noticeUnreadCount + ruleUnreadCount,
+    };
+  },
+
+  // 회칙 읽음 처리
+  markClubRulesRead: async (clubId: number, upToRuleId?: number): Promise<void> => {
+    await axiosInstance.post(`/clubs/${clubId}/rules/mark-read`, {
+      upToRuleId: upToRuleId ?? null,
     });
   },
 };
