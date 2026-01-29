@@ -16,6 +16,8 @@ export interface UserProfile {
   phoneVisibility?: ContactVisibility;
   emailVisibility?: ContactVisibility;
   gender?: 'MALE' | 'FEMALE' | 'PRIVATE';
+  birthDate?: string | null; // YYMMDD 형식
+  birthDateVisibility?: ContactVisibility;
   regionDepth1?: string | null;
   regionDepth2?: string | null;
   createdAt: string;
@@ -43,6 +45,8 @@ export interface UpdateUserRequest {
   phoneVisibility?: ContactVisibility;
   emailVisibility?: ContactVisibility;
   gender?: 'MALE' | 'FEMALE' | 'PRIVATE';
+  birthDate?: string | null; // YYMMDD 형식
+  birthDateVisibility?: ContactVisibility;
   regionDepth1?: string | null;
   regionDepth2?: string | null;
 }
@@ -161,6 +165,7 @@ export interface MemberProfile {
   imageUrl: string | null;
   phoneNumber: string | null;    // 공개범위에 따라 null 가능
   gender: 'MALE' | 'FEMALE' | 'PRIVATE' | null;
+  birthDate: string | null;      // 공개범위에 따라 null 가능 (YYMMDD)
 
   // Tennis Profile (user_profile)
   tennisStartedAt: string | null;

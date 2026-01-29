@@ -14,7 +14,7 @@ import {
   getMyClubs,
 } from "../../services/api/userApi";
 import {
-  // BookOpenIcon,
+  BookOpenIcon,
   EditIcon,
   FileTextIcon,
   LinkIcon,
@@ -193,7 +193,18 @@ const MorePage: React.FC = () => {
               <BookOpenIcon size={20} />
             </span>
             <span className="more-link">이용 가이드</span>
-          </div> */}
+          </div>
+          {import.meta.env.DEV && (
+            <div
+              className="more-item"
+              onClick={() => navigate("/more/guide-editor")}
+            >
+              <span className="more-icon">
+                <EditIcon size={20} />
+              </span>
+              <span className="more-link">가이드 에디터 (개발용)</span>
+            </div>
+          )} */}
           <div className="more-item">
             <span className="more-icon">
               <FileTextIcon size={20} />

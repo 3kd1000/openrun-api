@@ -147,3 +147,23 @@
 .comparison-table__row--changed .comparison-table__value:nth-child(3) {
   background-color: #e8f5e9;
 }
+
+/* Frontend Link Section */
+.audit-detail__link-section {
+  margin-bottom: 16px;
+}
+
+.audit-detail__link-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #1976d2;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.audit-detail__link-btn:hover {
+  background-color: #1565c0;
+}

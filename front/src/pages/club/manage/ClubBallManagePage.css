@@ -442,6 +442,17 @@
   border-color: var(--color-primary);
 }
 
+/* 입력 에러 스타일 */
+.ball-modal .input-error {
+  border-color: var(--color-error) !important;
+}
+
+.ball-modal .field-error-message {
+  color: var(--color-error);
+  font-size: var(--font-size-s);
+  margin-top: var(--space-xs);
+}
+
 /* 버튼 */
 .ball-manage-page__btn--cancel {
   padding: var(--space-s) var(--space-m);

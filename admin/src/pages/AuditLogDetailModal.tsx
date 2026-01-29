@@ -1,6 +1,11 @@
 import { useMemo } from "react";
 import { parseChanges } from "../services/auditLogService";
 import type { AuditLogResponse } from "../services/auditLogService";
+import { formatFullDateTime } from "../utils/dateUtils";
+import {
+  buildFrontendRoute,
+  getFrontendLinkLabel,
+} from "../utils/frontendLinkUtils";
 import "./AuditLogDetailModal.css";
 
 interface Props {
@@ -10,6 +15,16 @@ interface Props {
 
 function AuditLogDetailModal({ log, onClose }: Props) {
   const changes = useMemo(() => parseChanges(log.changes), [log.changes]);
+
+  const frontendUrl = useMemo(
+    () => buildFrontendRoute(log.entityType, log.entityId, log.clubId, log.changes),
+    [log.entityType, log.entityId, log.clubId, log.changes]
+  );
+
+  const frontendLinkLabel = useMemo(
+    () => getFrontendLinkLabel(log.entityType),
+    [log.entityType]
+  );
 
   const getActionLabel = () => {
     switch (log.actionType) {
@@ -90,9 +105,22 @@ function AuditLogDetailModal({ log, onClose }: Props) {
             </div>
             <div className="audit-detail__row">
               <span className="audit-detail__label">Time:</span>
-              <span>{new Date(log.createdAt).toLocaleString("ko-KR")}</span>
+              <span>{formatFullDateTime(log.createdAt)}</span>
             </div>
           </div>
+
+          {frontendUrl && (
+            <div className="audit-detail__link-section">
+              <a
+                href={frontendUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="audit-detail__link-btn"
+              >
+                🔗 {frontendLinkLabel}
+              </a>
+            </div>
+          )}
 
           <h4 className="audit-detail__section-title">변경 내역</h4>
 
