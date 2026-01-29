@@ -9,6 +9,11 @@ import {
   updateUser,
 } from "../services/api/userApi";
 import { setOpenRunSession } from "../utils/openrunSession";
+import {
+  normalizePhoneNumber,
+  validatePhoneNumber as validatePhone,
+  formatPhoneNumber,
+} from "../utils/contactUtils";
 import RegionSelector from "./common/RegionSelector";
 import "./ProfileEditModal.css";
 
@@ -27,7 +32,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   // 프로필 이미지 URL/미리보기는 현재 화면에서 숨김 처리(요청사항).
   // 저장 시 기존 값을 유지하기 위해 state는 유지하되 UI는 노출하지 않는다.
   const [imageUrl] = useState(user.imageUrl || "");
-  const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber || "");
+  const [phoneNumber, setPhoneNumber] = useState(formatPhoneNumber(user.phoneNumber));
   const [phoneVisibility, setPhoneVisibility] = useState<ContactVisibility>(
     user.phoneVisibility || "PRIVATE"
   );
@@ -96,20 +101,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   };
 
   const validatePhoneNumber = (value: string): boolean => {
-    if (!value.trim()) {
-      // 전화번호는 선택사항이므로 비어있어도 OK
-      setPhoneError(null);
-      return true;
-    }
-
-    const phonePattern = /^01[0-9]-?[0-9]{3,4}-?[0-9]{4}$/;
-    if (!phonePattern.test(value)) {
-      setPhoneError("올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)");
-      return false;
-    }
-
-    setPhoneError(null);
-    return true;
+    const error = validatePhone(value);
+    setPhoneError(error);
+    return error === null;
   };
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,11 +134,12 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         ? `${tennisStartedMonth}-01`
         : null; // month-only 입력 -> LocalDate(day=1)
 
+      const normalizedPhone = normalizePhoneNumber(phoneNumber);
       const [updatedUser] = await Promise.all([
         updateUser({
           name: name.trim(),
           imageUrl: imageUrl.trim() || null,
-          phoneNumber: phoneNumber.trim() || null,
+          phoneNumber: normalizedPhone || null,
           phoneVisibility,
           emailVisibility,
           gender,
@@ -294,7 +289,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   value={phoneNumber}
                   onChange={handlePhoneNumberChange}
                   onBlur={() => validatePhoneNumber(phoneNumber)}
-                  placeholder="010-1234-5678"
+                  placeholder="01012345678"
                   className={phoneError ? "input-error" : ""}
                 />
               </div>

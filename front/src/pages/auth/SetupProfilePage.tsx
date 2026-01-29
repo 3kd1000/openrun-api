@@ -11,6 +11,11 @@ import {
   getOpenRunSession,
   setOpenRunSession,
 } from "../../utils/openrunSession";
+import {
+  normalizePhoneNumber,
+  validatePhoneNumber as validatePhone,
+  formatPhoneNumber,
+} from "../../utils/contactUtils";
 import "./SetupProfilePage.css";
 
 interface LocationState {
@@ -76,7 +81,7 @@ const SetupProfilePage: React.FC = () => {
 
         // 기본 정보 설정 (기존 값이 있으면 사용)
         if (userProfile.name) setName(userProfile.name);
-        if (userProfile.phoneNumber) setPhoneNumber(userProfile.phoneNumber);
+        if (userProfile.phoneNumber) setPhoneNumber(formatPhoneNumber(userProfile.phoneNumber));
         if (userProfile.phoneVisibility)
           setPhoneVisibility(userProfile.phoneVisibility);
         if (userProfile.emailVisibility)
@@ -129,19 +134,9 @@ const SetupProfilePage: React.FC = () => {
   };
 
   const validatePhoneNumber = (value: string): boolean => {
-    if (!value.trim()) {
-      setPhoneError(null);
-      return true;
-    }
-
-    const phonePattern = /^01[0-9]-?[0-9]{3,4}-?[0-9]{4}$/;
-    if (!phonePattern.test(value)) {
-      setPhoneError("올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)");
-      return false;
-    }
-
-    setPhoneError(null);
-    return true;
+    const error = validatePhone(value);
+    setPhoneError(error);
+    return error === null;
   };
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,11 +176,12 @@ const SetupProfilePage: React.FC = () => {
         : null;
 
       // 기본 정보 + 테니스 프로필 동시 업데이트
+      const normalizedPhone = normalizePhoneNumber(phoneNumber);
       const [updatedUser] = await Promise.all([
         updateUser({
           name: name.trim(),
           imageUrl: defaultImageUrl.trim() || null,
-          phoneNumber: phoneNumber.trim() || null,
+          phoneNumber: normalizedPhone || null,
           phoneVisibility,
           emailVisibility,
           gender,
@@ -371,7 +367,7 @@ const SetupProfilePage: React.FC = () => {
                   value={phoneNumber}
                   onChange={handlePhoneNumberChange}
                   onBlur={() => validatePhoneNumber(phoneNumber)}
-                  placeholder="010-1234-5678"
+                  placeholder="01012345678"
                   className={`setup-profile-page__input ${
                     phoneError ? "input-error" : ""
                   }`}

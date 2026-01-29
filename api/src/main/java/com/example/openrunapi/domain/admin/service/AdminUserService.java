@@ -57,4 +57,23 @@ public class AdminUserService {
 
         return user;
     }
+
+    /**
+     * 사용자 생년월일 업데이트 (이름으로 검색)
+     *
+     * @param userName  사용자 이름
+     * @param birthDate 생년월일 (YYMMDD 형식)
+     * @return 업데이트된 사용자
+     */
+    @Transactional
+    public User updateBirthDateByName(String userName, String birthDate) {
+        User user = userRepository.findByName(userName)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userName));
+
+        user.updateBirthDateInfo(birthDate, null);
+
+        log.info("Admin updated birth date for user: {} (id: {})", user.getName(), user.getId());
+
+        return user;
+    }
 }

@@ -27,6 +27,8 @@ public class MemberProfileResponse {
     private final String phoneNumber;     // 공개범위에 따라 null 가능
     private final Gender gender;
     private final String birthDate;       // 공개범위에 따라 null 가능 (YYMMDD)
+    private final String regionDepth1;    // 지역 (시/도)
+    private final String regionDepth2;    // 지역 (시/군/구)
 
     // Tennis Profile (user_profile)
     private final LocalDate tennisStartedAt;
@@ -55,6 +57,10 @@ public class MemberProfileResponse {
         this.email = shouldShowEmail(user.getEmailVisibility(), isSameClub) ? user.getEmail() : null;
         this.phoneNumber = shouldShowPhone(user.getPhoneVisibility(), isSameClub) ? user.getPhoneNumber() : null;
         this.birthDate = shouldShowBirthDate(user.getBirthDateVisibility(), isSameClub) ? user.getBirthDate() : null;
+
+        // 지역 정보 (항상 공개)
+        this.regionDepth1 = user.getRegionDepth1();
+        this.regionDepth2 = user.getRegionDepth2();
 
         // Tennis Profile (없으면 기본값)
         if (userProfile != null) {

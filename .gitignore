@@ -52,6 +52,7 @@ temp/
 # API specific ignores
 api/build/
 api/bin/
+api/scripts/
 
 # Environment files with secrets
 .env
