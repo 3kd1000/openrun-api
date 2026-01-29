@@ -594,7 +594,6 @@
 @media (max-width: 768px) {
   .draw-list-page {
     padding: var(--space-xs) var(--space-s) var(--space-s) var(--space-s);
-    padding-bottom: 80px; /* 모바일 하단 네비게이션 공간 */
   }
 
   .page-header {

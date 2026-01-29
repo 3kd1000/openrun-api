@@ -1,6 +1,5 @@
 .club-recruiting-page {
   padding: var(--space-m);
-  padding-bottom: 100px; /* 하단 Navigation 영역 확보 */
 }
 
 .club-recruiting-page__header {

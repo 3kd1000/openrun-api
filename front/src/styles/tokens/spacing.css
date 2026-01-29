@@ -25,8 +25,11 @@
   /* Layout spacing */
   --nav-height-mobile: 68px;
   --nav-width-desktop: 200px;
+  --navigation-height: 68px; /* alias for backwards compatibility */
+  --header-height: 56px;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --content-padding-bottom: calc(112px + var(--safe-area-bottom));
+  /* 모바일 하단 네비게이션 영역 확보: nav height (68px) + 여유 공간 (12px) + safe area */
+  --content-padding-bottom: calc(var(--nav-height-mobile) + 12px + var(--safe-area-bottom));
 
   /* Grid & Flexbox gaps */
   --grid-gap-xs: var(--space-xs);
