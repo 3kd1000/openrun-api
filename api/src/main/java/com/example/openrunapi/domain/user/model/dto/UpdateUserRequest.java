@@ -25,6 +25,11 @@ public class UpdateUserRequest {
 
     private Gender gender;
 
+    @Pattern(regexp = "^[0-9]{6}$", message = "생년월일은 YYMMDD 형식이어야 합니다.")
+    private String birthDate;
+
+    private ContactVisibility birthDateVisibility;
+
     @Size(max = 20, message = "시/도는 20자를 초과할 수 없습니다.")
     private String regionDepth1;
 

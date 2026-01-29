@@ -37,6 +37,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [gender, setGender] = useState<"MALE" | "FEMALE" | "PRIVATE">(
     (user.gender as "MALE" | "FEMALE" | "PRIVATE") || "PRIVATE"
   );
+  const [birthDate, setBirthDate] = useState(user.birthDate || "");
+  const [birthDateVisibility, setBirthDateVisibility] = useState<ContactVisibility>(
+    user.birthDateVisibility || "PUBLIC"
+  );
   const [regionDepth1, setRegionDepth1] = useState(user.regionDepth1 || "");
   const [regionDepth2, setRegionDepth2] = useState(user.regionDepth2 || "");
   const [tennisStartedMonth, setTennisStartedMonth] = useState<string>(""); // YYYY-MM
@@ -144,6 +148,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           phoneVisibility,
           emailVisibility,
           gender,
+          birthDate: birthDate.trim() || null,
+          birthDateVisibility,
           regionDepth1: regionDepth1 || null,
           regionDepth2: regionDepth2 || null,
         }),
@@ -315,6 +321,41 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             {phoneError && (
               <div className="field-error-message">{phoneError}</div>
             )}
+          </div>
+
+          <div className="form-group">
+            <div className="profile-edit-modal__grid-row profile-edit-modal__grid-row--phone">
+              <div className="form-group profile-edit-modal__grid-item">
+                <label htmlFor="birthDate">생년월일</label>
+                <input
+                  type="text"
+                  id="birthDate"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="950101"
+                  maxLength={6}
+                />
+              </div>
+              <div className="form-group profile-edit-modal__grid-item profile-edit-modal__grid-item--compact">
+                <label htmlFor="birthDateVisibility">공개</label>
+                <select
+                  id="birthDateVisibility"
+                  value={birthDateVisibility}
+                  onChange={(e) =>
+                    setBirthDateVisibility(e.target.value as ContactVisibility)
+                  }
+                  className="visibility-select"
+                  title="비공개: 나만 볼 수 있음 / 공개: 클럽원 및 게스트 참여 시 공유"
+                >
+                  <option value="PRIVATE">
+                    {getVisibilityShortLabel("PRIVATE")}
+                  </option>
+                  <option value="PUBLIC">
+                    {getVisibilityShortLabel("PUBLIC")}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="form-group">

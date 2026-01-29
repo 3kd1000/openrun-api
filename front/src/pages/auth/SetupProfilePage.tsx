@@ -45,6 +45,9 @@ const SetupProfilePage: React.FC = () => {
   const [gender, setGender] = useState<"MALE" | "FEMALE" | "PRIVATE">(
     "PRIVATE"
   );
+  const [birthDate, setBirthDate] = useState("");
+  const [birthDateVisibility, setBirthDateVisibility] =
+    useState<ContactVisibility>("PUBLIC");
 
   // 테니스 프로필
   const [tennisStartedMonth, setTennisStartedMonth] = useState<string>(""); // YYYY-MM
@@ -79,6 +82,9 @@ const SetupProfilePage: React.FC = () => {
         if (userProfile.emailVisibility)
           setEmailVisibility(userProfile.emailVisibility);
         if (userProfile.gender) setGender(userProfile.gender);
+        if (userProfile.birthDate) setBirthDate(userProfile.birthDate);
+        if (userProfile.birthDateVisibility)
+          setBirthDateVisibility(userProfile.birthDateVisibility);
 
         // 테니스 프로필 설정
         if (tennisProfile.tennisStartedAt) {
@@ -183,6 +189,8 @@ const SetupProfilePage: React.FC = () => {
           phoneVisibility,
           emailVisibility,
           gender,
+          birthDate: birthDate.trim() || null,
+          birthDateVisibility,
         }),
         updateMyTennisProfile({
           tennisStartedAt,
@@ -403,6 +411,53 @@ const SetupProfilePage: React.FC = () => {
               서버에는 암호화되어 저장되고, 클럽과 게스트 신청 시에만
               사용됩니다.
             </small>
+          </div>
+
+          {/* 생년월일 + 공개 설정 */}
+          <div className="setup-profile-page__form-group">
+            <div className="setup-profile-page__grid-row">
+              <div className="setup-profile-page__form-group">
+                <label
+                  htmlFor="birthDate"
+                  className="setup-profile-page__label"
+                >
+                  생년월일(선택)
+                </label>
+                <input
+                  type="text"
+                  id="birthDate"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="950101"
+                  maxLength={6}
+                  className="setup-profile-page__input"
+                />
+              </div>
+              <div className="setup-profile-page__form-group">
+                <label
+                  htmlFor="birthDateVisibility"
+                  className="setup-profile-page__label"
+                >
+                  공개
+                </label>
+                <select
+                  id="birthDateVisibility"
+                  value={birthDateVisibility}
+                  onChange={(e) =>
+                    setBirthDateVisibility(e.target.value as ContactVisibility)
+                  }
+                  className="setup-profile-page__select"
+                  title="비공개: 나만 볼 수 있음 / 공개: 클럽원 및 게스트 참여 시 공유"
+                >
+                  <option value="PRIVATE">
+                    {getVisibilityShortLabel("PRIVATE")}
+                  </option>
+                  <option value="PUBLIC">
+                    {getVisibilityShortLabel("PUBLIC")}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* 테니스 프로필 */}
