@@ -5,7 +5,7 @@
  * - localhost:5174 → localhost:5173
  */
 export function getFrontendBaseUrl(): string {
-  const { hostname, port, protocol } = window.location;
+  const { hostname, protocol } = window.location;
 
   // localhost 처리 (admin: 5174, front: 5173)
   if (hostname === "localhost") {
