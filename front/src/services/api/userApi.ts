@@ -166,6 +166,8 @@ export interface MemberProfile {
   phoneNumber: string | null;    // 공개범위에 따라 null 가능
   gender: 'MALE' | 'FEMALE' | 'PRIVATE' | null;
   birthDate: string | null;      // 공개범위에 따라 null 가능 (YYMMDD)
+  regionDepth1: string | null;   // 지역 (시/도)
+  regionDepth2: string | null;   // 지역 (시/군/구)
 
   // Tennis Profile (user_profile)
   tennisStartedAt: string | null;

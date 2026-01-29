@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import type { MemberProfile } from "../services/api/userApi";
 import { getClubMemberProfile } from "../services/api/userApi";
 import { getRoleLabel, normalizeClubRole } from "../utils/role";
+import { formatPhoneNumber } from "../utils/contactUtils";
 import "./MemberProfileDrawer.css";
 
 interface MemberProfileDrawerProps {
@@ -139,7 +140,7 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                 <div className="profile-item">
                   <span className="profile-label">전화번호</span>
                   <span className="profile-value">
-                    {profile.phoneNumber || "비공개"}
+                    {profile.phoneNumber ? formatPhoneNumber(profile.phoneNumber) : "비공개"}
                   </span>
                 </div>
                 <div className="profile-item">
@@ -152,6 +153,14 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                   <span className="profile-label">생년월일</span>
                   <span className="profile-value">
                     {formatBirthDate(profile.birthDate)}
+                  </span>
+                </div>
+                <div className="profile-item">
+                  <span className="profile-label">지역</span>
+                  <span className="profile-value">
+                    {profile.regionDepth1 && profile.regionDepth2
+                      ? `${profile.regionDepth1} ${profile.regionDepth2}`
+                      : profile.regionDepth1 || "-"}
                   </span>
                 </div>
               </div>
