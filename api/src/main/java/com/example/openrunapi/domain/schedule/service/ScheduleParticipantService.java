@@ -36,6 +36,8 @@ public class ScheduleParticipantService {
 
     /**
      * 일정 참가 신청
+     * - 해당 클럽의 멤버만 참가신청 가능
+     * - 외부 게스트는 별도의 externalRequest 프로세스를 거쳐야 함
      */
     @Transactional
     public ParticipantResponse joinSchedule(Long scheduleId, Long userId) {
@@ -43,7 +45,10 @@ public class ScheduleParticipantService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // 2. 과거 일정 체크 (KST 기준)
+        // 2. 클럽 멤버십 체크 (해당 클럽의 멤버만 참가신청 가능)
+        permissionService.requireClubMembership(userId, schedule.getClubId());
+
+        // 3. 과거 일정 체크 (KST 기준)
         if (TimeValidationUtils.isPast(schedule.getScheduledAt())) {
             throw new IllegalStateException("이미 지난 일정에는 참가신청할 수 없습니다.");
         }

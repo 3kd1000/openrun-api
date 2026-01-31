@@ -10,6 +10,7 @@ import {
 } from "../../../../../components/common/Icons";
 import { logError } from "../../../../../utils/errorHandler";
 import { formatScheduleDateTime } from "../../../../../utils/dateUtils";
+import { getOpenRunSession } from "../../../../../utils/openrunSession";
 import type { Schedule, MatchType } from "../../../../../types/schedule";
 import "./UpcomingSchedulesWidget.css";
 
@@ -54,7 +55,13 @@ const UpcomingSchedulesWidget: React.FC<UpcomingSchedulesWidgetProps> = ({
   const loadUpcomingSchedules = async () => {
     try {
       setIsLoading(true);
-      const data = await scheduleService.getUpcomingSchedules(clubId);
+      const session = getOpenRunSession();
+      const userId = session.userId;
+      if (!userId) {
+        console.error("userId가 없습니다.");
+        return;
+      }
+      const data = await scheduleService.getUpcomingSchedules(userId, clubId);
       const now = new Date();
       const upcoming = data.filter((s) => new Date(s.scheduledAt) >= now);
       const pinned = upcoming

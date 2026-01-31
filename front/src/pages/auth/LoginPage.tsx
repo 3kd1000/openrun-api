@@ -9,6 +9,7 @@ import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
 import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface UserInfo {
   id: number;
@@ -20,6 +21,7 @@ interface UserInfo {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { refreshClubs } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kakaoAuthCode, setKakaoAuthCode] = useState<string | null>(null);
@@ -27,30 +29,48 @@ const LoginPage: React.FC = () => {
   const [registering, setRegistering] = useState(false);
   const [autoLoginEnabled, setAutoLoginEnabled] = useState(true); // 기본값: 자동 로그인 사용
 
-  // 로그인 후 원래 페이지로 돌아가기 (returnUrl이 있으면 그곳으로, 없으면 /schedules/club)
-  const navigateAfterLogin = () => {
+  // 로그인 후 원래 페이지로 돌아가기 (returnUrl이 있으면 그곳으로, 가입한 클럽이 없으면 /clubs/explore, 있으면 /schedules/club)
+  const navigateAfterLogin = async () => {
     const returnUrl = sessionStorage.getItem('returnUrl');
     if (returnUrl) {
       console.log(`✅ 저장된 URL로 이동: ${returnUrl}`);
       sessionStorage.removeItem('returnUrl'); // 사용 후 제거
       navigate(returnUrl, { replace: true });
-    } else {
-      console.log(`✅ 기본 페이지(/schedules/club)로 이동`);
+      return;
+    }
+
+    // 가입한 클럽이 있는지 확인 (AuthContext에서 클럽 정보 갱신)
+    try {
+      const clubs = await refreshClubs(); // refreshClubs가 갱신된 클럽 배열 반환
+      if (clubs.length === 0) {
+        console.log(`✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동`);
+        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+      } else {
+        console.log(`✅ 가입한 클럽 있음 → 기본 페이지(/schedules/club)로 이동`);
+        navigate("/schedules/club", { replace: true });
+      }
+    } catch (err) {
+      console.error("클럽 목록 조회 실패:", err);
+      // 에러가 나도 기본 페이지로 이동
+      console.log(`⚠️ 클럽 조회 실패 → 기본 페이지(/schedules/club)로 이동`);
       navigate("/schedules/club", { replace: true });
     }
   };
 
   // 이미 로그인되어있는지 체크 (PWA 시작 시 자동 로그인)
   useEffect(() => {
-    const session = getOpenRunSession();
-    const firebaseToken = session.firebaseToken;
-    const userId = session.userId;
+    const checkAndNavigate = async () => {
+      const session = getOpenRunSession();
+      const firebaseToken = session.firebaseToken;
+      const userId = session.userId;
 
-    // 이미 로그인되어있으면 원래 페이지 또는 메인 화면으로 이동
-    if (firebaseToken && userId) {
-      console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules/club로 자동 이동");
-      navigateAfterLogin();
-    }
+      // 이미 로그인되어있으면 원래 페이지 또는 메인 화면으로 이동
+      if (firebaseToken && userId) {
+        console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules/club로 자동 이동");
+        await navigateAfterLogin();
+      }
+    };
+    checkAndNavigate();
   }, [navigate]);
 
   // Kakao SDK 초기화
@@ -168,13 +188,13 @@ const LoginPage: React.FC = () => {
             } else {
               console.log("✅ 메인 화면으로 이동");
               if (debugMode) alert("Step 5: /schedules/club로 이동");
-              navigateAfterLogin();
+              await navigateAfterLogin();
             }
           } catch (error) {
             console.error("WebAuthn 등록 여부 확인 실패:", error);
             if (debugMode) alert(`WebAuthn 확인 실패 → /schedules/club로 이동\n${error}`);
             // 에러가 나도 메인 화면으로 이동
-            navigateAfterLogin();
+            await navigateAfterLogin();
           }
         }
       } catch (err: unknown) {
@@ -271,12 +291,12 @@ const LoginPage: React.FC = () => {
             setShowWebAuthnModal(true);
           } else {
             console.log("✅ 메인 화면으로 이동");
-            navigateAfterLogin();
+            await navigateAfterLogin();
           }
         } catch (error) {
           console.error("WebAuthn 등록 여부 확인 실패:", error);
           // 에러가 나도 메인 화면으로 이동
-          navigateAfterLogin();
+          await navigateAfterLogin();
         }
       }
     } catch (err: unknown) {
@@ -362,7 +382,7 @@ const LoginPage: React.FC = () => {
       console.log("✅ 사용자 정보:", userInfo);
 
       // 9. 메인 화면으로 이동 (WebAuthn은 이미 등록된 사용자만 사용 가능)
-      navigateAfterLogin();
+      await navigateAfterLogin();
     } catch (err: unknown) {
       console.error("❌ WebAuthn 로그인 실패:", err);
       if (err instanceof Error) {
@@ -423,7 +443,7 @@ const LoginPage: React.FC = () => {
 
       // 4. 모달 닫고 메인 화면으로 이동
       setShowWebAuthnModal(false);
-      navigateAfterLogin();
+      await navigateAfterLogin();
     } catch (err: unknown) {
       console.error("❌ WebAuthn 등록 실패:", err);
       if (err instanceof Error) {
@@ -445,9 +465,9 @@ const LoginPage: React.FC = () => {
   };
 
   // WebAuthn 등록 건너뛰기
-  const handleSkipWebAuthn = () => {
+  const handleSkipWebAuthn = async () => {
     setShowWebAuthnModal(false);
-    navigateAfterLogin();
+    await navigateAfterLogin();
   };
 
   return (

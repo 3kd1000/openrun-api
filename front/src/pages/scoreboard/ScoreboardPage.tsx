@@ -6,6 +6,7 @@ import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon } fro
 import { ClubSelector } from "../../components/ClubSelector";
 import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
 import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
+import { useAuth } from "../../contexts/AuthContext";
 import "./ScoreboardPage.css";
 
 interface RankingEntry {
@@ -27,7 +28,12 @@ interface ScoreboardResponse {
 type TabType = "ranking" | "matches" | "personal";
 
 const ScoreboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("ranking");
+  const { hasClubs, clubsLoading } = useAuth();
+
+  // 클럽에 가입하지 않은 사용자는 개인기록 탭을 기본으로 설정
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    return hasClubs ? "ranking" : "personal";
+  });
 
   // Tab 1: Rankings
   const START_YEAR = 2025; // 시작 연도 (하드코딩)
@@ -90,6 +96,16 @@ const ScoreboardPage: React.FC = () => {
 
   const clubId = selectedClubId || 1; // selectedClubId가 없으면 1 사용
   const isLoadingRef = useRef(false);
+
+  // 클럽 가입 여부에 따라 기본 탭 설정
+  useEffect(() => {
+    if (!clubsLoading) {
+      // 클럽에 가입하지 않았는데 ranking이나 matches 탭이면 personal로 전환
+      if (!hasClubs && (activeTab === "ranking" || activeTab === "matches")) {
+        setActiveTab("personal");
+      }
+    }
+  }, [clubsLoading, hasClubs, activeTab]);
 
   // 클럽 변경 시 세션에 저장
   const handleClubChange = (clubId: number | null) => {
@@ -349,30 +365,37 @@ const ScoreboardPage: React.FC = () => {
 
   return (
     <div className="scoreboard-page">
-      {/* ClubSelector */}
-      <div className="page-club-selector-container">
-        <ClubSelector
-          selectedClubId={selectedClubId}
-          onClubChange={handleClubChange}
-        />
-      </div>
+      {/* ClubSelector - 클럽에 가입한 경우만 표시 */}
+      {hasClubs && (
+        <div className="page-club-selector-container">
+          <ClubSelector
+            selectedClubId={selectedClubId}
+            onClubChange={handleClubChange}
+          />
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="tab-navigation">
-        <button
-          className={`tab-button ${activeTab === "ranking" ? "active" : ""}`}
-          onClick={() => setActiveTab("ranking")}
-        >
-          <TrophyIcon size={20} />
-          <span>랭킹</span>
-        </button>
-        <button
-          className={`tab-button ${activeTab === "matches" ? "active" : ""}`}
-          onClick={() => setActiveTab("matches")}
-        >
-          <ClipboardListIcon size={20} />
-          <span>경기 기록</span>
-        </button>
+        {/* 클럽 가입 시에만 랭킹/경기 기록 탭 표시 */}
+        {hasClubs && (
+          <>
+            <button
+              className={`tab-button ${activeTab === "ranking" ? "active" : ""}`}
+              onClick={() => setActiveTab("ranking")}
+            >
+              <TrophyIcon size={20} />
+              <span>랭킹</span>
+            </button>
+            <button
+              className={`tab-button ${activeTab === "matches" ? "active" : ""}`}
+              onClick={() => setActiveTab("matches")}
+            >
+              <ClipboardListIcon size={20} />
+              <span>경기 기록</span>
+            </button>
+          </>
+        )}
         <button
           className={`tab-button ${activeTab === "personal" ? "active" : ""}`}
           onClick={() => setActiveTab("personal")}

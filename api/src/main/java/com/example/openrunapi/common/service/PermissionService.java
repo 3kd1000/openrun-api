@@ -100,4 +100,36 @@ public class PermissionService {
             throw new SecurityException("회원 관리 권한이 없습니다.");
         }
     }
+
+    /**
+     * 클럽 멤버십 확인
+     * - System Admin은 모든 클럽의 멤버로 간주
+     * - 일반 사용자는 실제 클럽 멤버 여부 확인
+     *
+     * @param userId 사용자 ID
+     * @param clubId 클럽 ID
+     * @return 멤버 여부
+     */
+    public boolean isClubMember(Long userId, Long clubId) {
+        if (userId == null || clubId == null) {
+            return false;
+        }
+
+        // System Admin은 모든 클럽의 멤버로 간주
+        if (isSystemAdmin(userId)) {
+            return true;
+        }
+
+        // 클럽 멤버 확인
+        return clubMemberRepository.findByClubIdAndUserId(clubId, userId).isPresent();
+    }
+
+    /**
+     * 클럽 멤버십 필수 체크 (멤버가 아니면 예외 발생)
+     */
+    public void requireClubMembership(Long userId, Long clubId) {
+        if (!isClubMember(userId, clubId)) {
+            throw new SecurityException("해당 클럽의 멤버만 접근할 수 있습니다.");
+        }
+    }
 }

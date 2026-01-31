@@ -10,18 +10,18 @@ export const scheduleService = {
     return response.data;
   },
 
-  // 모든 일정 조회 (clubId 없으면 전체, 있으면 해당 클럽만)
-  getAllSchedules: async (clubId?: number): Promise<Schedule[]> => {
+  // 모든 일정 조회 (userId 필수, clubId 없으면 전체 조회는 관리자만 가능)
+  getAllSchedules: async (userId: number, clubId?: number): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: clubId ? { clubId } : undefined
+      params: { userId, ...(clubId && { clubId }) }
     });
     return response.data;
   },
 
   // 특정 클럽의 일정 조회
-  getSchedulesByClubId: async (clubId: number): Promise<Schedule[]> => {
+  getSchedulesByClubId: async (userId: number, clubId: number): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: { clubId }
+      params: { userId, clubId }
     });
     return response.data;
   },
@@ -35,21 +35,22 @@ export const scheduleService = {
   },
 
   // 향후 일정 조회
-  getUpcomingSchedules: async (clubId: number): Promise<Schedule[]> => {
+  getUpcomingSchedules: async (userId: number, clubId: number): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: { clubId, upcoming: true }
+      params: { userId, clubId, upcoming: true }
     });
     return response.data;
   },
 
   // 날짜 범위로 조회
   getSchedulesByDateRange: async (
+    userId: number,
     clubId: number,
     start: string,
     end: string
   ): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: { clubId, start, end }
+      params: { userId, clubId, start, end }
     });
     return response.data;
   },

@@ -75,8 +75,19 @@ const ClubExplorePage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: firebaseUser } = useAuth();
 
-  // URL에서 초기값 읽기
-  const initialTab = (searchParams.get("tab") === "member" ? "member" : "guest") as TabType;
+  // 초기 탭 결정: URL 파라미터 > location.state > 기본값(guest)
+  const initialTab = useMemo(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl === "member" || tabFromUrl === "guest") {
+      return tabFromUrl as TabType;
+    }
+    const state = location.state as { defaultTab?: TabType } | null;
+    if (state?.defaultTab === "member" || state?.defaultTab === "guest") {
+      return state.defaultTab;
+    }
+    return "guest" as TabType;
+  }, [searchParams, location.state]);
+
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
   // 게스트 모집 상태 - URL에서 초기값 읽기

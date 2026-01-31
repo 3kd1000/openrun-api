@@ -53,7 +53,7 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         setError("");
 
         // 현재 클럽의 모든 일정 조회
-        const clubSchedules = await scheduleService.getAllSchedules(currentClubId);
+        const clubSchedules = await scheduleService.getAllSchedules(currentUserId, currentClubId);
 
         // 과거 제외, 오늘 포함 (시간 안 지난 경우)
         const futureSchedules = clubSchedules.filter((schedule) => {
