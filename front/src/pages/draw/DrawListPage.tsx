@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import DrawViewModal from "../schedule/draw/DrawViewModal";
 import { isNotEmpty } from "../../utils/isEmpty";
+import { getOpenRunSession } from "../../utils/openrunSession";
 import "./DrawListPage.css";
 
 type TabType = "schedules" | "matches";
@@ -55,7 +56,14 @@ const DrawListPage: React.FC = () => {
       setSchedulesLoading(true);
       setSchedulesError(null);
 
-      const allSchedules = await scheduleService.getSchedulesByClubId(clubId);
+      const session = getOpenRunSession();
+      const userId = session.userId;
+      if (!userId) {
+        setSchedulesError("로그인이 필요합니다.");
+        return;
+      }
+
+      const allSchedules = await scheduleService.getSchedulesByClubId(userId, clubId);
 
       // Filter schedules that have drawType (대진이 생성된 일정만)
       const schedulesWithDraws = allSchedules.filter(

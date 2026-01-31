@@ -930,6 +930,16 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.mode-tab.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.mode-tab.disabled:hover {
+  background: transparent;
+}
+
 /* ========== 참가 상태 뱃지 ========== */
 .participation-badge {
   display: inline-flex;

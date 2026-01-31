@@ -15,6 +15,7 @@ import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubR
 import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
 import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
+import com.example.openrunapi.common.service.PermissionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,6 +35,7 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final DrawService drawService;
     private final ScheduleParticipantService participantService;
+    private final PermissionService permissionService;
 
     /**
      * 일정 생성
@@ -48,9 +50,12 @@ public class ScheduleController {
 
     /**
      * 모든 일정 조회
+     * - clubId가 있는 경우: 해당 클럽의 멤버만 조회 가능
+     * - clubId가 없는 경우: System Admin만 전체 일정 조회 가능
      */
     @GetMapping
     public ResponseEntity<List<ScheduleResponse>> getAllSchedules(
+            @RequestParam Long userId,
             @RequestParam(required = false) Long clubId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
@@ -59,6 +64,9 @@ public class ScheduleController {
         List<ScheduleResponse> responses;
 
         if (clubId != null) {
+            // 클럽 멤버십 체크
+            permissionService.requireClubMembership(userId, clubId);
+
             if (upcoming) {
                 // 특정 클럽의 향후 일정
                 responses = scheduleService.getUpcomingSchedules(clubId);
@@ -70,7 +78,10 @@ public class ScheduleController {
                 responses = scheduleService.getSchedulesByClubId(clubId);
             }
         } else {
-            // 전체 일정
+            // 전체 일정 조회는 System Admin만 가능
+            if (!permissionService.isSystemAdmin(userId)) {
+                throw new SecurityException("전체 일정 조회는 관리자만 가능합니다.");
+            }
             responses = scheduleService.getAllSchedules();
         }
 

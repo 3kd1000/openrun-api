@@ -6,6 +6,7 @@ import {
   updateMyTennisProfile,
   getCurrentUser,
   getMyTennisProfile,
+  getMyClubs,
 } from "../../services/api/userApi";
 import {
   getOpenRunSession,
@@ -201,8 +202,22 @@ const SetupProfilePage: React.FC = () => {
 
       console.log("✅ 프로필 설정 완료:", updatedUser);
 
-      // 메인 화면으로 이동
-      navigate("/schedules/club");
+      // 가입한 클럽이 있는지 확인
+      try {
+        const clubs = await getMyClubs();
+        if (clubs.length === 0) {
+          console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동");
+          navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        } else {
+          console.log("✅ 가입한 클럽 있음 → 기본 페이지(/schedules/club)로 이동");
+          navigate("/schedules/club");
+        }
+      } catch (err) {
+        console.error("클럽 목록 조회 실패:", err);
+        // 에러가 나도 기본 페이지로 이동
+        console.log("⚠️ 클럽 조회 실패 → 기본 페이지(/schedules/club)로 이동");
+        navigate("/schedules/club");
+      }
     } catch (err: unknown) {
       console.error("❌ 프로필 설정 실패:", err);
       const errorMessage =

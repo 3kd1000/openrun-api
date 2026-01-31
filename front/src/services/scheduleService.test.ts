@@ -67,10 +67,10 @@ describe("scheduleService", () => {
     it("clubId 없이 전체 일정 조회", async () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
-      const result = await scheduleService.getAllSchedules();
+      const result = await scheduleService.getAllSchedules(100);
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: undefined,
+        params: { userId: 100 },
       });
       expect(result).toEqual([mockSchedule]);
     });
@@ -78,10 +78,10 @@ describe("scheduleService", () => {
     it("clubId로 특정 클럽 일정 조회", async () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
-      const result = await scheduleService.getAllSchedules(1);
+      const result = await scheduleService.getAllSchedules(100, 1);
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: { clubId: 1 },
+        params: { userId: 100, clubId: 1 },
       });
       expect(result).toEqual([mockSchedule]);
     });
@@ -115,10 +115,10 @@ describe("scheduleService", () => {
     it("향후 일정 조회", async () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
-      const result = await scheduleService.getUpcomingSchedules(1);
+      const result = await scheduleService.getUpcomingSchedules(100, 1);
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: { clubId: 1, upcoming: true },
+        params: { userId: 100, clubId: 1, upcoming: true },
       });
       expect(result).toEqual([mockSchedule]);
     });
@@ -129,13 +129,14 @@ describe("scheduleService", () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
       const result = await scheduleService.getSchedulesByDateRange(
+        100,
         1,
         "2025-01-01",
         "2025-01-31"
       );
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: { clubId: 1, start: "2025-01-01", end: "2025-01-31" },
+        params: { userId: 100, clubId: 1, start: "2025-01-01", end: "2025-01-31" },
       });
       expect(result).toEqual([mockSchedule]);
     });

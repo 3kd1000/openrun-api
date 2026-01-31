@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { useAuth } from "../../../contexts/AuthContext";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
-import { getMySchedules } from "../../../services/api/userApi";
+import { getMySchedules, getMyClubs } from "../../../services/api/userApi";
 import type {
   Schedule,
   Participant,
@@ -91,6 +91,8 @@ const ScheduleListPage: React.FC = () => {
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const todayScheduleRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
+  // 가입한 클럽 수 (0이면 클럽일정 탭 비활성화)
+  const [hasClubs, setHasClubs] = useState<boolean>(true);
 
   const openScheduleIdFromState = useMemo(() => {
     const state = location.state as { openScheduleId?: number | string } | null;
@@ -99,6 +101,25 @@ const ScheduleListPage: React.FC = () => {
     const n = typeof raw === "number" ? raw : Number(raw);
     return Number.isFinite(n) ? n : null;
   }, [location.state]);
+
+  // 가입한 클럽 목록 확인
+  useEffect(() => {
+    const checkClubs = async () => {
+      try {
+        const clubs = await getMyClubs();
+        setHasClubs(clubs.length > 0);
+
+        // 가입한 클럽이 없고 현재 클럽일정 모드이면 개인일정으로 전환
+        if (clubs.length === 0 && scheduleMode === "club") {
+          setScheduleMode("personal");
+          navigate("/schedules/my", { replace: true });
+        }
+      } catch (err) {
+        console.error("클럽 목록 확인 실패:", err);
+      }
+    };
+    checkClubs();
+  }, []);
 
   // URL search params에서 scheduleId 가져오기 (링크복사로 공유된 URL)
   const scheduleIdFromParams = useMemo(() => {
@@ -127,14 +148,23 @@ const ScheduleListPage: React.FC = () => {
       setLoading(true);
       setError("");
 
+      // clubId가 없으면 빈 목록 반환 (가입한 클럽이 없는 경우)
       if (!selectedClubId) {
-        setError("클럽을 선택해주세요.");
+        setSchedules([]);
+        return;
+      }
+
+      // userId 가져오기
+      const session = getOpenRunSession();
+      const userId = session.userId;
+      if (!userId) {
+        setError("로그인이 필요합니다.");
         setSchedules([]);
         return;
       }
 
       // 일정 목록 조회 (선택된 클럽의 일정만)
-      const data = await scheduleService.getAllSchedules(selectedClubId);
+      const data = await scheduleService.getAllSchedules(userId, selectedClubId);
       // 일정날짜순으로 정렬 (오름차순)
       const sortedData = data.sort(
         (a, b) =>
@@ -144,18 +174,14 @@ const ScheduleListPage: React.FC = () => {
 
       // 내가 참여한 일정 목록 조회 (Firebase 사용자가 있는 경우에만)
       if (firebaseUser) {
-        const session = getOpenRunSession();
-        const userId = session.userId;
-        if (userId) {
-          try {
-            const participationIds = await scheduleService.getMyParticipations(
-              userId
-            );
-            setMyParticipations(new Set(participationIds));
-          } catch (err) {
-            console.error("참여 일정 조회 실패:", err);
-            // 참여 일정 조회 실패는 전체 일정 목록에는 영향을 주지 않음
-          }
+        try {
+          const participationIds = await scheduleService.getMyParticipations(
+            userId
+          );
+          setMyParticipations(new Set(participationIds));
+        } catch (err) {
+          console.error("참여 일정 조회 실패:", err);
+          // 참여 일정 조회 실패는 전체 일정 목록에는 영향을 주지 않음
         }
       } else {
         // Firebase 사용자가 없으면 참여 일정 조회하지 않음
@@ -478,12 +504,20 @@ const ScheduleListPage: React.FC = () => {
         {/* 일정 모드 탭 (클럽일정 / 개인일정) */}
         <div className="schedule-mode-tabs">
           <button
-            className={`mode-tab ${scheduleMode === "club" ? "active" : ""}`}
+            className={`mode-tab ${scheduleMode === "club" ? "active" : ""} ${
+              !hasClubs ? "disabled" : ""
+            }`}
+            disabled={!hasClubs}
             onClick={() => {
+              if (!hasClubs) {
+                setToastMessage("가입한 클럽이 없습니다. 먼저 클럽에 가입해주세요.");
+                return;
+              }
               setScheduleMode("club");
               setFilterDate(null);
               navigate("/schedules/club", { replace: true });
             }}
+            title={!hasClubs ? "가입한 클럽이 없습니다" : ""}
           >
             클럽일정
           </button>
