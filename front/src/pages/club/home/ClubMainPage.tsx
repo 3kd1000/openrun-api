@@ -420,12 +420,13 @@ const ClubMainPage: React.FC = () => {
 
   // 공지/회칙 통합 unread count 로드 (dot 표시용)
   useEffect(() => {
-    if (!clubId) return;
+    // 클럽에 가입하지 않았거나 clubId가 없으면 API 호출 안함
+    if (!clubId || !hasClubs) return;
     clubService
       .getClubContentUnreadCount(Number(clubId))
       .then((res) => setContentUnreadCount(res.totalUnreadCount))
       .catch(() => {});
-  }, [clubId]);
+  }, [clubId, hasClubs]);
 
   const handleClubChange = (newClubId: string) => {
     setOpenRunSession({ currentClubId: newClubId, currentClubRole: "UNKNOWN" });
