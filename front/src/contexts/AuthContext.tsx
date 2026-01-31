@@ -19,12 +19,17 @@ import {
   getOpenRunSession,
   setOpenRunSession,
 } from "../utils/openrunSession";
+import { getMyClubs, type MyClub } from "../services/api/userApi";
 
 interface AuthContextType {
   isAuthReady: boolean; // Firebase 인증 상태 복원 완료 여부
   isTokenRefreshing: boolean; // 현재 토큰 갱신 중 여부
   user: User | null; // 현재 Firebase User
+  clubs: MyClub[]; // 가입한 클럽 목록
+  hasClubs: boolean; // 가입한 클럽이 있는지 여부
+  clubsLoading: boolean; // 클럽 정보 로딩 중 여부
   refreshToken: () => Promise<void>; // 수동 토큰 갱신
+  refreshClubs: () => Promise<MyClub[]>; // 클럽 정보 갱신 (갱신된 클럽 배열 반환)
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +50,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isTokenRefreshing, setIsTokenRefreshing] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [clubs, setClubs] = useState<MyClub[]>([]);
+  const [clubsLoading, setClubsLoading] = useState(false);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const activityCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityTimeRef = useRef(Date.now());
@@ -157,6 +164,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsTokenRefreshing(false);
   };
 
+  // 클럽 정보 갱신 함수 (갱신된 클럽 배열 반환)
+  const refreshClubs = async (): Promise<MyClub[]> => {
+    try {
+      setClubsLoading(true);
+      const fetchedClubs = await getMyClubs();
+      setClubs(fetchedClubs);
+      console.log(`✅ 클럽 정보 갱신 완료: ${fetchedClubs.length}개 클럽`);
+      return fetchedClubs;
+    } catch (error) {
+      console.error("❌ 클럽 정보 갱신 실패:", error);
+      setClubs([]);
+      return [];
+    } finally {
+      setClubsLoading(false);
+    }
+  };
+
   // 세션 만료 처리
   const handleSessionExpiry = async () => {
     const now = getTimestamp();
@@ -168,6 +192,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     clearLoginSession();
     setUser(null);
+    setClubs([]); // 클럽 정보도 초기화
   };
 
   // Firebase 인증 상태 변화 감지 및 초기 세션 복원
@@ -343,6 +368,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [isAuthReady, user]);
 
+  // 사용자 로그인 시 클럽 정보 자동 로드
+  useEffect(() => {
+    if (!isAuthReady) return;
+
+    if (user) {
+      // 로그인 상태: 클럽 정보 로드
+      refreshClubs();
+    } else {
+      // 로그아웃 상태: 클럽 정보 초기화
+      setClubs([]);
+    }
+  }, [isAuthReady, user]);
+
   // 사용자 활동 감지
   useEffect(() => {
     if (!isAuthReady || !user) return;
@@ -390,7 +428,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthReady, isTokenRefreshing, user, refreshToken }}
+      value={{
+        isAuthReady,
+        isTokenRefreshing,
+        user,
+        clubs,
+        hasClubs: clubs.length > 0,
+        clubsLoading,
+        refreshToken,
+        refreshClubs,
+      }}
     >
       {children}
     </AuthContext.Provider>

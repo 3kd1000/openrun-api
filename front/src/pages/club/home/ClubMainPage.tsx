@@ -2,8 +2,9 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import axiosInstance from "../../../services/api/axiosInstance";
-import { getMyClubs, type MyClub } from "../../../services/api/userApi";
+import type { MyClub } from "../../../services/api/userApi";
 import type { Club } from "../../../types/club";
+import { useAuth } from "../../../contexts/AuthContext";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
 import {
   CompassIcon,
@@ -53,6 +54,7 @@ const ClubMainPage: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { clubId: clubIdParam } = useParams<{ clubId: string }>();
+  const { clubs, hasClubs } = useAuth();
 
   // 클럽 정보
   const [club, setClub] = useState<Club | null>(null);
@@ -356,9 +358,15 @@ const ClubMainPage: React.FC = () => {
     try {
       setIsLoadingClub(true);
 
-      // 사용자의 클럽 목록 조회
-      const clubs = await getMyClubs();
+      // 사용자의 클럽 목록은 AuthContext에서 가져옴
       setMyClubs(clubs);
+
+      // 가입한 클럽이 없으면 클럽 탐색 페이지로 리다이렉트
+      if (!hasClubs) {
+        console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동");
+        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        return;
+      }
 
       // 현재 클럽 정보 조회
       if (clubId) {
@@ -403,7 +411,7 @@ const ClubMainPage: React.FC = () => {
     } finally {
       setIsLoadingClub(false);
     }
-  }, [clubId, myRole, userIdStr]);
+  }, [clubId, myRole, userIdStr, clubs, hasClubs, navigate]);
 
   // 클럽 정보 로드
   useEffect(() => {

@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { useAuth } from "../../../contexts/AuthContext";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
-import { getMySchedules, getMyClubs } from "../../../services/api/userApi";
+import { getMySchedules } from "../../../services/api/userApi";
 import type {
   Schedule,
   Participant,
@@ -46,7 +46,7 @@ const ScheduleListPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user: firebaseUser } = useAuth();
+  const { user: firebaseUser, hasClubs, clubsLoading } = useAuth();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [personalSchedules, setPersonalSchedules] = useState<
     MyScheduleResponse[]
@@ -91,8 +91,6 @@ const ScheduleListPage: React.FC = () => {
   const [calendarDate, setCalendarDate] = useState<Date>(new Date());
   const todayScheduleRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
-  // 가입한 클럽 수 (0이면 클럽일정 탭 비활성화)
-  const [hasClubs, setHasClubs] = useState<boolean>(true);
 
   const openScheduleIdFromState = useMemo(() => {
     const state = location.state as { openScheduleId?: number | string } | null;
@@ -102,24 +100,13 @@ const ScheduleListPage: React.FC = () => {
     return Number.isFinite(n) ? n : null;
   }, [location.state]);
 
-  // 가입한 클럽 목록 확인
+  // 가입한 클럽이 없고 현재 클럽일정 모드이면 개인일정으로 전환
   useEffect(() => {
-    const checkClubs = async () => {
-      try {
-        const clubs = await getMyClubs();
-        setHasClubs(clubs.length > 0);
-
-        // 가입한 클럽이 없고 현재 클럽일정 모드이면 개인일정으로 전환
-        if (clubs.length === 0 && scheduleMode === "club") {
-          setScheduleMode("personal");
-          navigate("/schedules/my", { replace: true });
-        }
-      } catch (err) {
-        console.error("클럽 목록 확인 실패:", err);
-      }
-    };
-    checkClubs();
-  }, []);
+    if (!clubsLoading && !hasClubs && scheduleMode === "club") {
+      setScheduleMode("personal");
+      navigate("/schedules/my", { replace: true });
+    }
+  }, [clubsLoading, hasClubs, scheduleMode, navigate]);
 
   // URL search params에서 scheduleId 가져오기 (링크복사로 공유된 URL)
   const scheduleIdFromParams = useMemo(() => {
@@ -140,28 +127,40 @@ const ScheduleListPage: React.FC = () => {
 
   // 클럽 일정 조회
   const loadClubSchedules = useCallback(async () => {
+    // 클럽 목록 로딩 중이면 대기
+    if (clubsLoading) return;
+
+    // 가입한 클럽이 없으면 빈 목록 반환 (로딩 상태 없이)
+    if (!hasClubs) {
+      setSchedules([]);
+      setLoading(false);
+      return;
+    }
+
     // 이미 로딩 중이면 중복 호출 방지
     if (isLoadingRef.current) return;
+
+    // clubId가 없으면 빈 목록 반환 (로딩 상태 없이)
+    if (!selectedClubId) {
+      setSchedules([]);
+      setLoading(false);
+      return;
+    }
+
+    // userId 가져오기
+    const session = getOpenRunSession();
+    const userId = session.userId;
+    if (!userId) {
+      setError("로그인이 필요합니다.");
+      setSchedules([]);
+      setLoading(false);
+      return;
+    }
 
     isLoadingRef.current = true;
     try {
       setLoading(true);
       setError("");
-
-      // clubId가 없으면 빈 목록 반환 (가입한 클럽이 없는 경우)
-      if (!selectedClubId) {
-        setSchedules([]);
-        return;
-      }
-
-      // userId 가져오기
-      const session = getOpenRunSession();
-      const userId = session.userId;
-      if (!userId) {
-        setError("로그인이 필요합니다.");
-        setSchedules([]);
-        return;
-      }
 
       // 일정 목록 조회 (선택된 클럽의 일정만)
       const data = await scheduleService.getAllSchedules(userId, selectedClubId);
@@ -194,7 +193,7 @@ const ScheduleListPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [selectedClubId, firebaseUser]);
+  }, [selectedClubId, firebaseUser, clubsLoading, hasClubs]);
 
   // 개인 일정 조회
   const loadPersonalSchedules = useCallback(async () => {
@@ -494,13 +493,15 @@ const ScheduleListPage: React.FC = () => {
   return (
     <div className="schedule-page">
       <div className="schedule-header">
-        {/* ClubSelector */}
-        <div className="page-club-selector-container">
-          <ClubSelector
-            selectedClubId={selectedClubId}
-            onClubChange={handleClubChange}
-          />
-        </div>
+        {/* ClubSelector - 가입한 클럽이 있을 때만 표시 */}
+        {hasClubs && (
+          <div className="page-club-selector-container">
+            <ClubSelector
+              selectedClubId={selectedClubId}
+              onClubChange={handleClubChange}
+            />
+          </div>
+        )}
         {/* 일정 모드 탭 (클럽일정 / 개인일정) */}
         <div className="schedule-mode-tabs">
           <button
