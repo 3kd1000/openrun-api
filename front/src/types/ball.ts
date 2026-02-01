@@ -77,3 +77,15 @@ export interface UseBallRequest {
 export interface UpdateBallKeeperRequest {
   isBallKeeper: boolean;
 }
+
+// 공용구 수량 조정 요청 (단일)
+export interface AdjustBallRequest {
+  memberId: number;
+  quantity: number;
+  description?: string;
+}
+
+// 공용구 수량 조정 배치 요청
+export interface BatchAdjustBallRequest {
+  adjustments: AdjustBallRequest[];
+}

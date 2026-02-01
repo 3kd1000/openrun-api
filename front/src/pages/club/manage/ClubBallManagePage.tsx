@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ballService } from '../../../services/ballService';
+import { scheduleService } from '../../../services/scheduleService';
 import axiosInstance from '../../../services/api/axiosInstance';
 import type {
   BallSummaryResponse,
@@ -9,13 +10,16 @@ import type {
   BallKeeper,
   AddBallRequest,
   DistributeBallRequest,
+  AdjustBallRequest,
+  BatchAdjustBallRequest,
 } from '../../../types/ball';
 import type { ClubMembership } from '../../../types/club';
+import type { Schedule } from '../../../types/schedule';
 import { ArrowLeftIcon, PlusIcon } from '../../../components/common/Icons';
 import { getOpenRunSession } from '../../../utils/openrunSession';
 import { normalizeClubRole } from '../../../utils/role';
 import { getErrorMessage, logError } from '../../../utils/errorHandler';
-import { formatShortDate } from '../../../utils/dateUtils';
+import { formatShortDate, formatScheduleDateTime } from '../../../utils/dateUtils';
 import { useToast } from '../../../contexts/ToastContext';
 import './ClubBallManagePage.css';
 
@@ -154,6 +158,133 @@ const KeeperSelectorModal: React.FC<KeeperSelectorModalProps> = ({
   );
 };
 
+interface ScheduleSummaryModalProps {
+  scheduleId: number;
+  onClose: () => void;
+  onNavigateToDetail: () => void;
+}
+
+const ScheduleSummaryModal: React.FC<ScheduleSummaryModalProps> = ({
+  scheduleId,
+  onClose,
+  onNavigateToDetail,
+}) => {
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSchedule = async () => {
+      try {
+        setLoading(true);
+        const data = await scheduleService.getScheduleById(scheduleId);
+        setSchedule(data);
+      } catch (err) {
+        logError('일정 조회', err);
+        setError(getErrorMessage(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSchedule();
+  }, [scheduleId]);
+
+  const getMatchTypeLabel = (type: string | null | undefined) => {
+    switch (type) {
+      case 'MEN_DOUBLES':
+        return '남복';
+      case 'WOMEN_DOUBLES':
+        return '여복';
+      case 'MIXED_DOUBLES':
+        return '혼복';
+      case 'SINGLES':
+        return '단식';
+      default:
+        return '미정';
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-content ball-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h2>일정 요약</h2>
+          <button className="btn-close" onClick={onClose}>
+            &times;
+          </button>
+        </div>
+
+        <div className="ball-modal__body">
+          {loading && <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>}
+          {error && <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-error)' }}>{error}</div>}
+          {schedule && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-m)' }}>
+              <div className="form-group">
+                <label>장소</label>
+                <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                  {schedule.courtName}
+                </div>
+              </div>
+              <div className="form-group">
+                <label>일시</label>
+                <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                  {formatScheduleDateTime(schedule.scheduledAt, schedule.durationMinutes)}
+                </div>
+              </div>
+              <div className="form-group">
+                <label>참가 인원</label>
+                <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                  {schedule.currentParticipants} / {schedule.maxCapacity}명
+                </div>
+              </div>
+              {schedule.matchType && (
+                <div className="form-group">
+                  <label>경기 형식</label>
+                  <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                    {getMatchTypeLabel(schedule.matchType)}
+                  </div>
+                </div>
+              )}
+              {schedule.cost !== undefined && schedule.cost > 0 && (
+                <div className="form-group">
+                  <label>비용</label>
+                  <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                    {schedule.cost.toLocaleString()}원
+                  </div>
+                </div>
+              )}
+              {schedule.description && (
+                <div className="form-group">
+                  <label>설명</label>
+                  <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)', whiteSpace: 'pre-wrap' }}>
+                    {schedule.description}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn-secondary" onClick={onClose}>
+            닫기
+          </button>
+          <button
+            className="btn-primary"
+            onClick={onNavigateToDetail}
+            disabled={loading || !!error}
+          >
+            상세정보 보러가기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface AddBallModalProps {
   keepers: BallKeeper[];
   onClose: () => void;
@@ -275,14 +406,16 @@ interface DistributeModalProps {
   keepers: BallKeeper[];
   onClose: () => void;
   onSubmit: (request: DistributeBallRequest) => void;
+  initialFromMemberId?: number;
 }
 
 const DistributeModal: React.FC<DistributeModalProps> = ({
   keepers,
   onClose,
   onSubmit,
+  initialFromMemberId,
 }) => {
-  const [fromMemberId, setFromMemberId] = useState<number | ''>('');
+  const [fromMemberId, setFromMemberId] = useState<number | ''>(initialFromMemberId ?? '');
   const [toMemberId, setToMemberId] = useState<number | ''>('');
   const [quantity, setQuantity] = useState<string>('');
   const [description, setDescription] = useState('');
@@ -440,6 +573,14 @@ const ClubBallManagePage: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDistributeModal, setShowDistributeModal] = useState(false);
   const [savingKeepers, setSavingKeepers] = useState(false);
+  const [initialFromMemberId, setInitialFromMemberId] = useState<number | undefined>(undefined);
+  const [scheduleSummaryModalId, setScheduleSummaryModalId] = useState<number | null>(null);
+
+  // 재고관리 상태
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedQuantities, setEditedQuantities] = useState<Map<number, string>>(new Map());
+  const [quantityErrors, setQuantityErrors] = useState<Map<number, string>>(new Map());
+  const [savingAdjustments, setSavingAdjustments] = useState(false);
 
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
@@ -556,6 +697,97 @@ const ClubBallManagePage: React.FC = () => {
     }
   };
 
+  // 재고관리 모드 진입
+  const handleEnterEditMode = () => {
+    if (!summary) return;
+    // 현재 보유자들의 수량을 초기값으로 설정
+    const initialQuantities = new Map<number, string>();
+    summary.keepers.forEach(keeper => {
+      initialQuantities.set(keeper.memberId, keeper.quantity.toString());
+    });
+    setEditedQuantities(initialQuantities);
+    setQuantityErrors(new Map());
+    setIsEditMode(true);
+  };
+
+  // 재고관리 취소
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditedQuantities(new Map());
+    setQuantityErrors(new Map());
+  };
+
+  // 수량 변경 핸들러
+  const handleEditQuantityChange = (memberId: number, value: string) => {
+    // 숫자만 허용
+    if (value === '' || /^\d+$/.test(value)) {
+      const newQuantities = new Map(editedQuantities);
+      newQuantities.set(memberId, value);
+      setEditedQuantities(newQuantities);
+
+      // 유효성 검사
+      if (value) {
+        const num = Number(value);
+        const newErrors = new Map(quantityErrors);
+        if (isNaN(num) || !Number.isInteger(num) || num < 0) {
+          newErrors.set(memberId, '0 이상의 정수만 입력 가능합니다.');
+        } else {
+          newErrors.delete(memberId);
+        }
+        setQuantityErrors(newErrors);
+      } else {
+        const newErrors = new Map(quantityErrors);
+        newErrors.delete(memberId);
+        setQuantityErrors(newErrors);
+      }
+    }
+  };
+
+  // 재고 조정 저장
+  const handleSaveAdjustments = async () => {
+    if (!clubId || !summary) return;
+
+    // 변경된 항목만 추출하여 AdjustBallRequest 배열 생성
+    const adjustments: AdjustBallRequest[] = [];
+    summary.keepers.forEach(keeper => {
+      const editedValue = editedQuantities.get(keeper.memberId);
+      if (editedValue) {
+        const newQuantity = Number(editedValue);
+        if (newQuantity !== keeper.quantity && !isNaN(newQuantity)) {
+          const diff = newQuantity - keeper.quantity;
+          adjustments.push({
+            memberId: keeper.memberId,
+            quantity: diff,
+            description: '재고관리: 수량 조정',
+          });
+        }
+      }
+    });
+
+    if (adjustments.length === 0) {
+      setIsEditMode(false);
+      return;
+    }
+
+    setSavingAdjustments(true);
+    try {
+      // 배치로 한 번에 처리
+      const batchRequest: BatchAdjustBallRequest = { adjustments };
+      await ballService.batchAdjustQuantities(Number(clubId), batchRequest);
+
+      setIsEditMode(false);
+      setEditedQuantities(new Map());
+      setQuantityErrors(new Map());
+      await loadSummary();
+      await loadTransactions(0);
+      showToast(`${adjustments.length}건의 재고가 조정되었습니다.`, "success");
+    } catch (err) {
+      showToast(getErrorMessage(err), "error");
+    } finally {
+      setSavingAdjustments(false);
+    }
+  };
+
   const getTransactionTypeLabel = (type: string) => {
     switch (type) {
       case 'ADD':
@@ -601,11 +833,18 @@ const ClubBallManagePage: React.FC = () => {
     }
   };
 
-  // 일정 상세 모달 열기
-  const handleOpenSchedule = (scheduleId: number) => {
-    navigate('/schedules/club', {
-      state: { openScheduleId: scheduleId },
-    });
+  // 일정 요약 모달 열기
+  const handleShowScheduleSummary = (scheduleId: number) => {
+    setScheduleSummaryModalId(scheduleId);
+  };
+
+  // 일정 상세로 이동
+  const handleNavigateToScheduleDetail = () => {
+    if (scheduleSummaryModalId) {
+      navigate('/schedules/club', {
+        state: { openScheduleId: scheduleSummaryModalId },
+      });
+    }
   };
 
   if (loading) {
@@ -665,7 +904,7 @@ const ClubBallManagePage: React.FC = () => {
       )}
 
       {/* 관리자 액션 버튼 */}
-      {isAdmin && (
+      {isAdmin && !isEditMode && (
         <div className="ball-manage-page__actions">
           <button
             className="ball-manage-page__action-btn ball-manage-page__action-btn--add"
@@ -686,6 +925,33 @@ const ClubBallManagePage: React.FC = () => {
             onClick={() => setShowKeeperModal(true)}
           >
             보유자 지정
+          </button>
+          <button
+            className="ball-manage-page__action-btn ball-manage-page__action-btn--adjust"
+            onClick={handleEnterEditMode}
+            disabled={!summary || summary.keepers.length === 0}
+          >
+            재고관리
+          </button>
+        </div>
+      )}
+
+      {/* 재고관리 모드 액션 버튼 */}
+      {isAdmin && isEditMode && (
+        <div className="ball-manage-page__actions">
+          <button
+            className="ball-manage-page__action-btn ball-manage-page__action-btn--success"
+            onClick={handleSaveAdjustments}
+            disabled={savingAdjustments || quantityErrors.size > 0}
+          >
+            {savingAdjustments ? '저장 중...' : '저장'}
+          </button>
+          <button
+            className="ball-manage-page__action-btn ball-manage-page__action-btn--cancel"
+            onClick={handleCancelEdit}
+            disabled={savingAdjustments}
+          >
+            취소
           </button>
         </div>
       )}
@@ -715,9 +981,63 @@ const ClubBallManagePage: React.FC = () => {
                 아직 공용구 보유자가 없습니다.
                 {isAdmin && ' 상단의 "보유자 지정" 버튼을 눌러 보유자를 지정해주세요.'}
               </div>
+            ) : isEditMode ? (
+              // 재고관리 모드
+              summary.keepers.map((keeper) => {
+                const editedValue = editedQuantities.get(keeper.memberId) ?? keeper.quantity.toString();
+                const error = quantityErrors.get(keeper.memberId);
+                return (
+                  <div
+                    key={keeper.memberId}
+                    className="ball-manage-page__keeper-card ball-manage-page__keeper-card--edit"
+                  >
+                    <div className="ball-manage-page__keeper-info">
+                      <span className="ball-manage-page__keeper-name">{keeper.userName}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--space-xs)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={editedValue}
+                          onChange={(e) => handleEditQuantityChange(keeper.memberId, e.target.value)}
+                          className={error ? 'input-error' : ''}
+                          style={{
+                            width: '80px',
+                            padding: 'var(--space-xs) var(--space-s)',
+                            border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
+                            borderRadius: 'var(--radius-s)',
+                            fontSize: 'var(--font-size-base)',
+                            textAlign: 'right',
+                          }}
+                        />
+                        <span className="ball-manage-page__keeper-quantity">캔</span>
+                      </div>
+                      {error && (
+                        <div style={{ fontSize: 'var(--font-size-s)', color: 'var(--color-error)' }}>
+                          {error}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             ) : (
+              // 일반 모드
               summary.keepers.map((keeper) => (
-                <div key={keeper.memberId} className="ball-manage-page__keeper-card">
+                <div
+                  key={keeper.memberId}
+                  className="ball-manage-page__keeper-card"
+                  onClick={() => {
+                    if (isAdmin && summary.keepers.length >= 2) {
+                      setInitialFromMemberId(keeper.memberId);
+                      setShowDistributeModal(true);
+                    }
+                  }}
+                  style={{
+                    cursor: isAdmin && summary.keepers.length >= 2 && !isEditMode ? 'pointer' : 'default',
+                  }}
+                >
                   <div className="ball-manage-page__keeper-info">
                     <span className="ball-manage-page__keeper-name">{keeper.userName}</span>
                   </div>
@@ -749,7 +1069,7 @@ const ClubBallManagePage: React.FC = () => {
                         <button
                           type="button"
                           className="ball-manage-page__tx-schedule-link"
-                          onClick={() => handleOpenSchedule(tx.scheduleId!)}
+                          onClick={() => handleShowScheduleSummary(tx.scheduleId!)}
                         >
                           , {formatShortDate(tx.scheduleAt)}
                         </button>
@@ -796,8 +1116,20 @@ const ClubBallManagePage: React.FC = () => {
       {showDistributeModal && summary && (
         <DistributeModal
           keepers={summary.keepers}
-          onClose={() => setShowDistributeModal(false)}
+          onClose={() => {
+            setShowDistributeModal(false);
+            setInitialFromMemberId(undefined);
+          }}
           onSubmit={handleDistribute}
+          initialFromMemberId={initialFromMemberId}
+        />
+      )}
+
+      {scheduleSummaryModalId !== null && (
+        <ScheduleSummaryModal
+          scheduleId={scheduleSummaryModalId}
+          onClose={() => setScheduleSummaryModalId(null)}
+          onNavigateToDetail={handleNavigateToScheduleDetail}
         />
       )}
     </div>

@@ -23,9 +23,10 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedKeeperId, setSelectedKeeperId] = useState<number | ''>('');
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<string>('1');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [quantityError, setQuantityError] = useState<string | null>(null);
 
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
@@ -66,22 +67,54 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
   const selectedKeeper = keepers.find((k) => k.memberId === selectedKeeperId);
   const maxQuantity = selectedKeeper?.quantity ?? 0;
 
+  const validateQuantity = (value: string): boolean => {
+    if (!value.trim()) {
+      setQuantityError('수량을 입력해주세요.');
+      return false;
+    }
+    const num = Number(value);
+    if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+      setQuantityError('1 이상의 정수만 입력 가능합니다.');
+      return false;
+    }
+    if (num > maxQuantity) {
+      setQuantityError(`최대 ${maxQuantity}캔까지 사용 가능합니다.`);
+      return false;
+    }
+    setQuantityError(null);
+    return true;
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // 숫자만 허용
+    if (value === '' || /^\d+$/.test(value)) {
+      setQuantity(value);
+      if (value) {
+        validateQuantity(value);
+      } else {
+        setQuantityError(null);
+      }
+    }
+  };
+
   const handleSubmit = async () => {
-    if (selectedKeeperId === '' || quantity < 1) return;
+    if (selectedKeeperId === '' || !validateQuantity(quantity)) return;
 
     setSubmitting(true);
     try {
       const request: UseBallRequest = {
         fromMemberId: selectedKeeperId as number,
         scheduleId,
-        quantity,
+        quantity: Number(quantity),
         description: description || undefined,
       };
       await ballService.useBalls(clubId, request);
       setShowForm(false);
       setSelectedKeeperId('');
-      setQuantity(1);
+      setQuantity('1');
       setDescription('');
+      setQuantityError(null);
       await loadData();
     } catch (err) {
       showToast(getErrorMessage(err), "error");
@@ -157,13 +190,21 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
                 </option>
               ))}
             </select>
-            <input
-              type="number"
-              min={1}
-              max={maxQuantity}
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={quantity}
+                onChange={handleQuantityChange}
+                placeholder="수량"
+                className={quantityError ? 'input-error' : ''}
+              />
+              {quantityError && (
+                <div className="field-error-message" style={{ fontSize: 'var(--font-size-s)', color: 'var(--color-error)', marginTop: 'var(--space-xs)' }}>
+                  {quantityError}
+                </div>
+              )}
+            </div>
             <span className="schedule-ball-section__unit">캔</span>
           </div>
           <div className="schedule-ball-section__form-row schedule-ball-section__form-row--memo">
@@ -179,8 +220,8 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
               disabled={
                 submitting ||
                 selectedKeeperId === '' ||
-                quantity < 1 ||
-                quantity > maxQuantity
+                quantity === '' ||
+                !!quantityError
               }
             >
               {submitting ? '저장 중...' : '저장'}
@@ -190,8 +231,9 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
               onClick={() => {
                 setShowForm(false);
                 setSelectedKeeperId('');
-                setQuantity(1);
+                setQuantity('1');
                 setDescription('');
+                setQuantityError(null);
               }}
             >
               취소
