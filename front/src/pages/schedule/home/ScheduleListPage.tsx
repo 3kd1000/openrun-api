@@ -7,10 +7,10 @@ import React, {
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { useAuth } from "../../../contexts/AuthContext";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
 import { getMySchedules } from "../../../services/api/userApi";
+import { useClubsWithAuth } from "../../../hooks/useClubsWithAuth";
 import type {
   Schedule,
   Participant,
@@ -46,7 +46,7 @@ const ScheduleListPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user: firebaseUser, hasClubs, clubsLoading } = useAuth();
+  const { hasClubs, user: firebaseUser, isAuthReady } = useClubsWithAuth();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [personalSchedules, setPersonalSchedules] = useState<
     MyScheduleResponse[]
@@ -102,11 +102,11 @@ const ScheduleListPage: React.FC = () => {
 
   // 가입한 클럽이 없고 현재 클럽일정 모드이면 개인일정으로 전환
   useEffect(() => {
-    if (!clubsLoading && !hasClubs && scheduleMode === "club") {
+    if (!hasClubs && scheduleMode === "club") {
       setScheduleMode("personal");
       navigate("/schedules/my", { replace: true });
     }
-  }, [clubsLoading, hasClubs, scheduleMode, navigate]);
+  }, [hasClubs, scheduleMode, navigate]);
 
   // URL search params에서 scheduleId 가져오기 (링크복사로 공유된 URL)
   const scheduleIdFromParams = useMemo(() => {
@@ -127,11 +127,15 @@ const ScheduleListPage: React.FC = () => {
 
   // 클럽 일정 조회
   const loadClubSchedules = useCallback(async () => {
-    // 클럽 목록 로딩 중이면 대기
-    if (clubsLoading) return;
+    // Firebase 인증이 준비될 때까지 대기 (타이밍 이슈 방지)
+    if (!isAuthReady) {
+      console.log("⏳ Firebase 인증 준비 중... 클럽 일정 로딩 대기");
+      return;
+    }
 
-    // 가입한 클럽이 없으면 빈 목록 반환 (로딩 상태 없이)
+    // 가입한 클럽이 없으면 빈 목록 반환
     if (!hasClubs) {
+      console.log("✅ 가입한 클럽 없음 → 빈 일정 목록");
       setSchedules([]);
       setLoading(false);
       return;
@@ -193,7 +197,7 @@ const ScheduleListPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [selectedClubId, firebaseUser, clubsLoading, hasClubs]);
+  }, [selectedClubId, firebaseUser, isAuthReady, hasClubs]);
 
   // 개인 일정 조회
   const loadPersonalSchedules = useCallback(async () => {

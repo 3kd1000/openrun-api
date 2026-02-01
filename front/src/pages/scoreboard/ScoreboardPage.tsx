@@ -6,7 +6,7 @@ import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon } fro
 import { ClubSelector } from "../../components/ClubSelector";
 import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
 import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
-import { useAuth } from "../../contexts/AuthContext";
+import { useClubsWithAuth } from "../../hooks/useClubsWithAuth";
 import "./ScoreboardPage.css";
 
 interface RankingEntry {
@@ -28,7 +28,7 @@ interface ScoreboardResponse {
 type TabType = "ranking" | "matches" | "personal";
 
 const ScoreboardPage: React.FC = () => {
-  const { hasClubs, clubsLoading } = useAuth();
+  const { hasClubs, loading: clubsLoading } = useClubsWithAuth();
 
   // 클럽에 가입하지 않은 사용자는 개인기록 탭을 기본으로 설정
   const [activeTab, setActiveTab] = useState<TabType>(() => {
