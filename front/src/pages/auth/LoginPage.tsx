@@ -9,7 +9,8 @@ import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
 import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
-import { useAuth } from "../../contexts/AuthContext";
+import { getMyClubs } from "../../services/api/userApi";
+import { setMyClubsCache } from "../../utils/myClubsCache";
 
 interface UserInfo {
   id: number;
@@ -21,7 +22,6 @@ interface UserInfo {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { refreshClubs } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kakaoAuthCode, setKakaoAuthCode] = useState<string | null>(null);
@@ -39,9 +39,10 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    // 가입한 클럽이 있는지 확인 (AuthContext에서 클럽 정보 갱신)
+    // 가입한 클럽이 있는지 확인 (LocalStorage에 캐싱)
     try {
-      const clubs = await refreshClubs(); // refreshClubs가 갱신된 클럽 배열 반환
+      const clubs = await getMyClubs();
+      setMyClubsCache(clubs); // LocalStorage에 캐싱
       if (clubs.length === 0) {
         console.log(`✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동`);
         navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });

@@ -2,6 +2,10 @@ package com.example.openrunapi.domain.externalrequest.service;
 
 import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.club.model.Club;
+import com.example.openrunapi.domain.club.model.ClubMember;
+import com.example.openrunapi.domain.club.model.ClubMemberStatus;
+import com.example.openrunapi.domain.club.model.ClubRole;
+import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequestStatus;
@@ -39,6 +43,7 @@ public class ExternalRequestService {
 
     private final ExternalRequestRepository externalRequestRepository;
     private final ClubRepository clubRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
@@ -356,9 +361,34 @@ public class ExternalRequestService {
         User admin = userRepository.findById(adminUserId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + adminUserId));
         req.approve(admin, note);
+
+        // JOIN 타입 승인: club_member 생성 및 멤버 수 증가 (수동 승인 플로우)
+        if (req.getType() == ExternalRequestType.JOIN) {
+            // 이미 club_member가 존재하는지 확인 (자동 승인이었을 경우)
+            boolean memberExists = clubMemberRepository.findByClubIdAndUserId(clubId, req.getRequester().getId())
+                    .isPresent();
+
+            // 수동 승인 플로우: club_member 생성
+            if (!memberExists) {
+                ClubMember clubMember = ClubMember.builder()
+                        .club(req.getClub())
+                        .user(req.getRequester())
+                        .role(ClubRole.REGULAR)
+                        .status(ClubMemberStatus.ACTIVE)
+                        .build();
+                clubMemberRepository.save(clubMember);
+
+                // 멤버 수 증가
+                Club club = req.getClub();
+                club.updateMemberCount((club.getMemberCount() != null ? club.getMemberCount() : 0) + 1);
+            }
+        }
+
+        // GUEST 타입 승인: 일정 참가자로 추가
         if (req.getType() == ExternalRequestType.GUEST && req.getSchedule() != null) {
             scheduleParticipantService.addApprovedExternalGuest(req.getSchedule().getId(), req.getRequester().getId());
         }
+
         return toResponseWithProfile(req);
     }
 
@@ -373,6 +403,14 @@ public class ExternalRequestService {
         User admin = userRepository.findById(adminUserId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + adminUserId));
         req.reject(admin, note);
+
+        // JOIN 타입 거절: ClubMember 삭제
+        if (req.getType() == ExternalRequestType.JOIN) {
+            clubMemberRepository.findByClubIdAndUserId(clubId, req.getRequester().getId())
+                    .ifPresent(clubMemberRepository::delete);
+        }
+
+        // GUEST 타입 거절: 일정 참가자에서 제거
         if (req.getType() == ExternalRequestType.GUEST && req.getSchedule() != null) {
             scheduleParticipantService.removeApprovedExternalGuest(req.getSchedule().getId(), req.getRequester().getId());
         }

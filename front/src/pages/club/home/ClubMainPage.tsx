@@ -2,9 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import axiosInstance from "../../../services/api/axiosInstance";
-import type { MyClub } from "../../../services/api/userApi";
 import type { Club } from "../../../types/club";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useClubsWithAuth } from "../../../hooks/useClubsWithAuth";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
 import {
   CompassIcon,
@@ -54,11 +53,10 @@ const ClubMainPage: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { clubId: clubIdParam } = useParams<{ clubId: string }>();
-  const { clubs, hasClubs } = useAuth();
+  const { clubs: myClubs, isAuthReady, user } = useClubsWithAuth();
 
   // 클럽 정보
   const [club, setClub] = useState<Club | null>(null);
-  const [myClubs, setMyClubs] = useState<MyClub[]>([]);
   const [isLoadingClub, setIsLoadingClub] = useState(true);
   const [contentUnreadCount, setContentUnreadCount] = useState<number>(0);
 
@@ -355,14 +353,24 @@ const ClubMainPage: React.FC = () => {
   }, [draggingWidgetId, endDrag, moveWidget, widgetOrder]);
 
   const loadClubData = useCallback(async () => {
+    // Firebase 인증이 준비될 때까지 대기 (타이밍 이슈 방지)
+    if (!isAuthReady) {
+      console.log("⏳ Firebase 인증 준비 중... 클럽 데이터 로딩 대기");
+      return;
+    }
+
+    // 로그인되지 않았으면 로그인 페이지로
+    if (!user) {
+      console.log("❌ 로그인되지 않음 → 로그인 페이지로 이동");
+      navigate("/login", { replace: true });
+      return;
+    }
+
     try {
       setIsLoadingClub(true);
 
-      // 사용자의 클럽 목록은 AuthContext에서 가져옴
-      setMyClubs(clubs);
-
       // 가입한 클럽이 없으면 클럽 탐색 페이지로 리다이렉트
-      if (!hasClubs) {
+      if (myClubs.length === 0) {
         console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동");
         navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
         return;
@@ -372,16 +380,16 @@ const ClubMainPage: React.FC = () => {
       if (clubId) {
         const response = await axiosInstance.get(`/clubs/${clubId}`);
         setClub(response.data);
-      } else if (clubs.length > 0) {
+      } else if (myClubs.length > 0) {
         // clubId가 없으면 첫 번째 클럽을 기본으로 설정
-        setOpenRunSession({ currentClubId: String(clubs[0].id) });
-        const response = await axiosInstance.get(`/clubs/${clubs[0].id}`);
+        setOpenRunSession({ currentClubId: String(myClubs[0].id) });
+        const response = await axiosInstance.get(`/clubs/${myClubs[0].id}`);
         setClub(response.data);
       }
 
       // 현재 클럽에서의 내 역할(role) 조회 후 로컬 캐시
       const resolvedClubId =
-        clubId || (clubs.length > 0 ? String(clubs[0].id) : null);
+        clubId || (myClubs.length > 0 ? String(myClubs[0].id) : null);
       if (resolvedClubId && userIdStr) {
         try {
           const membershipResponse = await axiosInstance.get(
@@ -411,7 +419,7 @@ const ClubMainPage: React.FC = () => {
     } finally {
       setIsLoadingClub(false);
     }
-  }, [clubId, myRole, userIdStr, clubs, hasClubs, navigate]);
+  }, [clubId, myRole, userIdStr, navigate, isAuthReady, user, myClubs]);
 
   // 클럽 정보 로드
   useEffect(() => {
@@ -421,12 +429,12 @@ const ClubMainPage: React.FC = () => {
   // 공지/회칙 통합 unread count 로드 (dot 표시용)
   useEffect(() => {
     // 클럽에 가입하지 않았거나 clubId가 없으면 API 호출 안함
-    if (!clubId || !hasClubs) return;
+    if (!clubId || myClubs.length === 0) return;
     clubService
       .getClubContentUnreadCount(Number(clubId))
       .then((res) => setContentUnreadCount(res.totalUnreadCount))
       .catch(() => {});
-  }, [clubId, hasClubs]);
+  }, [clubId, myClubs]);
 
   const handleClubChange = (newClubId: string) => {
     setOpenRunSession({ currentClubId: newClubId, currentClubRole: "UNKNOWN" });

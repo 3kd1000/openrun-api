@@ -14,6 +14,7 @@ import {
   getOpenRunSession,
   setOpenRunSession,
 } from "../utils/openrunSession";
+import { clearMyClubsCache } from "../utils/myClubsCache";
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -108,6 +109,7 @@ export const clearLoginSession = () => {
   const now = getTimestamp();
   localStorage.removeItem("openrun_session_v1");
   localStorage.removeItem("login_expiry");
+  clearMyClubsCache(); // 클럽 캐시도 함께 삭제
   console.log(`🧹 [${now}] 로그인 세션 클리어`);
 };
 

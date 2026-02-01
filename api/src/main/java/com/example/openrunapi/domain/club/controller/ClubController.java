@@ -99,6 +99,10 @@ public class ClubController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * @deprecated Use ExternalRequestService.approve() instead
+     */
+    @Deprecated
     @PostMapping("/{clubId}/members/{userId}/approve")
     public ResponseEntity<Void> approveMember(@PathVariable Long clubId,
             @PathVariable Long userId,
@@ -108,6 +112,10 @@ public class ClubController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * @deprecated Use ExternalRequestService.reject() instead
+     */
+    @Deprecated
     @PostMapping("/{clubId}/members/{userId}/reject")
     public ResponseEntity<Void> rejectMember(@PathVariable Long clubId,
             @PathVariable Long userId,

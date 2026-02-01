@@ -183,18 +183,19 @@ public class ClubService {
         });
 
         boolean isAutoApprove = club.getJoinPolicy() == ClubJoinPolicy.AUTO;
-        ClubMemberStatus status = isAutoApprove ? ClubMemberStatus.ACTIVE : ClubMemberStatus.PENDING;
 
-        ClubMember clubMember = ClubMember.builder()
-                .club(club)
-                .user(user)
-                .role(ClubRole.REGULAR)
-                .status(status)
-                .build();
-        clubMemberRepository.save(clubMember);
-
-        // AUTO 정책으로 바로 ACTIVE가 된 경우 멤버 수 증가
+        // AUTO 정책: club_member 즉시 생성 및 멤버 수 증가
+        // MANUAL 정책: club_member는 승인 시(ExternalRequestService.approve)에 생성
         if (isAutoApprove) {
+            ClubMember clubMember = ClubMember.builder()
+                    .club(club)
+                    .user(user)
+                    .role(ClubRole.REGULAR)
+                    .status(ClubMemberStatus.ACTIVE)
+                    .build();
+            clubMemberRepository.save(clubMember);
+
+            // 멤버 수 증가
             club.updateMemberCount((club.getMemberCount() != null ? club.getMemberCount() : 0) + 1);
         }
 
@@ -211,6 +212,13 @@ public class ClubService {
         return isAutoApprove ? JoinRequestResponse.autoApproved() : JoinRequestResponse.pending();
     }
 
+    /**
+     * @deprecated Use ExternalRequestService.approve() instead.
+     * This method only updates ClubMember status and does not sync with ExternalRequest.
+     *
+     * NOTE: club_member는 이제 항상 ACTIVE 상태로 생성되므로 이 메서드는 실질적으로 불필요합니다.
+     */
+    @Deprecated
     @Transactional
     public void approveMember(Long clubId, Long adminId, Long targetUserId) {
         Club club = clubRepository.findById(clubId)
@@ -224,14 +232,15 @@ public class ClubService {
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 멤버를 찾을 수 없습니다."));
 
-        // PENDING → ACTIVE 변경 시 멤버 수 증가
-        if (member.getStatus() == ClubMemberStatus.PENDING) {
-            club.updateMemberCount((club.getMemberCount() != null ? club.getMemberCount() : 0) + 1);
-        }
-
-        member.updateStatus(ClubMemberStatus.ACTIVE);
+        // club_member는 항상 ACTIVE 상태이므로 상태 변경 불필요
+        // 멤버 수는 ExternalRequest 승인 시 증가하므로 여기서는 처리하지 않음
     }
 
+    /**
+     * @deprecated Use ExternalRequestService.reject() instead.
+     * This method only deletes ClubMember and does not sync with ExternalRequest.
+     */
+    @Deprecated
     @Transactional
     public void rejectMember(Long clubId, Long adminId, Long targetUserId) {
         Club club = clubRepository.findById(clubId)
