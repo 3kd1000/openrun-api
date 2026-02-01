@@ -12,6 +12,7 @@ import com.example.openrunapi.domain.club.model.ClubJoinPolicy;
 import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
 import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
+import com.example.openrunapi.domain.club.model.dto.MyClubResponse;
 import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
@@ -276,13 +277,13 @@ public class ClubService {
     }
 
     /**
-     * 사용자가 가입한 클럽 목록 조회
+     * 사용자가 가입한 클럽 목록 조회 (role 포함)
      */
-    public List<ClubResponse> getMyClubs(Long userId) {
+    public List<MyClubResponse> getMyClubs(Long userId) {
         List<ClubMember> clubMembers = clubMemberRepository.findAllByUserIdAndStatus(userId, ClubMemberStatus.ACTIVE);
 
         return clubMembers.stream()
-                .map(clubMember -> new ClubResponse(clubMember.getClub()))
+                .map(MyClubResponse::new)
                 .collect(Collectors.toList());
     }
 

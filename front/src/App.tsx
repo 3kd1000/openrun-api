@@ -39,6 +39,7 @@ import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { ClubLayout } from "./layouts/ClubLayout";
 import "./App.css";
 
 function App() {
@@ -194,10 +195,12 @@ function App() {
                 path="/clubs/:clubId"
                 element={
                   <ProtectedRoute>
-                    <ClubMainPage />
+                    <ClubLayout />
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route index element={<ClubMainPage />} />
+              </Route>
 
               {/* legacy: /club* -> /clubs/{clubId}* */}
               <Route
@@ -216,31 +219,18 @@ function App() {
               {import.meta.env.DEV && (
                 <Route path="/more/guide-editor" element={<GuideEditorPage />} />
               )}
-              {/* Protected 페이지 (로그인 필수) */}
+              {/* Protected 페이지 (로그인 필수) - ClubLayout 사용 */}
               <Route
-                path="/schedules/club"
                 element={
                   <ProtectedRoute>
-                    <ScheduleListPage />
+                    <ClubLayout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/schedules/my"
-                element={
-                  <ProtectedRoute>
-                    <ScheduleListPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/scoreboard"
-                element={
-                  <ProtectedRoute>
-                    <ScoreboardPage />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route path="/schedules/club" element={<ScheduleListPage />} />
+                <Route path="/schedules/my" element={<ScheduleListPage />} />
+                <Route path="/scoreboard" element={<ScoreboardPage />} />
+              </Route>
               <Route
                 path="/setup-profile"
                 element={

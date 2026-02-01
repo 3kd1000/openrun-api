@@ -6,7 +6,6 @@ import {
   updateMyTennisProfile,
   getCurrentUser,
   getMyTennisProfile,
-  getMyClubs,
 } from "../../services/api/userApi";
 import {
   getOpenRunSession,
@@ -17,7 +16,6 @@ import {
   validatePhoneNumber as validatePhone,
   formatPhoneNumber,
 } from "../../utils/contactUtils";
-import { setMyClubsCache } from "../../utils/myClubsCache";
 import "./SetupProfilePage.css";
 
 interface LocationState {
@@ -203,22 +201,14 @@ const SetupProfilePage: React.FC = () => {
 
       console.log("✅ 프로필 설정 완료:", updatedUser);
 
-      // 가입한 클럽이 있는지 확인 (LocalStorage에 캐싱)
-      try {
-        const clubs = await getMyClubs();
-        setMyClubsCache(clubs); // LocalStorage에 캐싱
-        if (clubs.length === 0) {
-          console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동");
-          navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
-        } else {
-          console.log("✅ 가입한 클럽 있음 → 기본 페이지(/schedules/club)로 이동");
-          navigate("/schedules/club");
-        }
-      } catch (err) {
-        console.error("클럽 목록 조회 실패:", err);
-        // 에러가 나도 기본 페이지로 이동
-        console.log("⚠️ 클럽 조회 실패 → 기본 페이지(/schedules/club)로 이동");
+      // currentClubId가 있으면 클럽일정, 없으면 클럽 탐색
+      const session = getOpenRunSession();
+      if (session.currentClubId) {
+        console.log("✅ 가입한 클럽 있음 → 클럽일정으로 이동");
         navigate("/schedules/club");
+      } else {
+        console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지로 이동");
+        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
       }
     } catch (err: unknown) {
       console.error("❌ 프로필 설정 실패:", err);
