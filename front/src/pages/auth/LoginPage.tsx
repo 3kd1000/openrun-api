@@ -9,8 +9,6 @@ import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
 import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
-import { getMyClubs } from "../../services/api/userApi";
-import { setMyClubsCache } from "../../utils/myClubsCache";
 
 interface UserInfo {
   id: number;
@@ -29,8 +27,8 @@ const LoginPage: React.FC = () => {
   const [registering, setRegistering] = useState(false);
   const [autoLoginEnabled, setAutoLoginEnabled] = useState(true); // 기본값: 자동 로그인 사용
 
-  // 로그인 후 원래 페이지로 돌아가기 (returnUrl이 있으면 그곳으로, 가입한 클럽이 없으면 /clubs/explore, 있으면 /schedules/club)
-  const navigateAfterLogin = async () => {
+  // 로그인 후 원래 페이지로 돌아가기
+  const navigateAfterLogin = () => {
     const returnUrl = sessionStorage.getItem('returnUrl');
     if (returnUrl) {
       console.log(`✅ 저장된 URL로 이동: ${returnUrl}`);
@@ -39,22 +37,14 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    // 가입한 클럽이 있는지 확인 (LocalStorage에 캐싱)
-    try {
-      const clubs = await getMyClubs();
-      setMyClubsCache(clubs); // LocalStorage에 캐싱
-      if (clubs.length === 0) {
-        console.log(`✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동`);
-        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
-      } else {
-        console.log(`✅ 가입한 클럽 있음 → 기본 페이지(/schedules/club)로 이동`);
-        navigate("/schedules/club", { replace: true });
-      }
-    } catch (err) {
-      console.error("클럽 목록 조회 실패:", err);
-      // 에러가 나도 기본 페이지로 이동
-      console.log(`⚠️ 클럽 조회 실패 → 기본 페이지(/schedules/club)로 이동`);
+    // currentClubId가 있으면 클럽일정, 없으면 클럽 탐색
+    const session = getOpenRunSession();
+    if (session.currentClubId) {
+      console.log(`✅ 가입한 클럽 있음 → 클럽일정으로 이동`);
       navigate("/schedules/club", { replace: true });
+    } else {
+      console.log(`✅ 가입한 클럽 없음 → 클럽 탐색 페이지로 이동`);
+      navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
     }
   };
 

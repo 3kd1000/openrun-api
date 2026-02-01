@@ -3,10 +3,8 @@ import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
 import { format } from "date-fns";
 import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon } from "../../components/common/Icons";
-import { ClubSelector } from "../../components/ClubSelector";
-import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
+import { getOpenRunSession } from "../../utils/openrunSession";
 import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
-import { useClubsWithAuth } from "../../hooks/useClubsWithAuth";
 import "./ScoreboardPage.css";
 
 interface RankingEntry {
@@ -28,11 +26,16 @@ interface ScoreboardResponse {
 type TabType = "ranking" | "matches" | "personal";
 
 const ScoreboardPage: React.FC = () => {
-  const { hasClubs, loading: clubsLoading } = useClubsWithAuth();
+  // 클럽 선택 상태는 ClubLayout에서 관리하므로 세션에서만 읽음
+  const session = getOpenRunSession();
+  const selectedClubId = session.currentClubId ? parseInt(session.currentClubId) : null;
+
+  // 클럽 가입 여부
+  const hasClub = !!selectedClubId;
 
   // 클럽에 가입하지 않은 사용자는 개인기록 탭을 기본으로 설정
   const [activeTab, setActiveTab] = useState<TabType>(() => {
-    return hasClubs ? "ranking" : "personal";
+    return hasClub ? "ranking" : "personal";
   });
 
   // Tab 1: Rankings
@@ -77,14 +80,8 @@ const ScoreboardPage: React.FC = () => {
   const personalLoadMoreRef = useRef<HTMLDivElement>(null);
   const isLoadingPersonalRef = useRef(false);
 
-  // 클럽 선택 상태
-  const [selectedClubId, setSelectedClubId] = useState<number | null>(() => {
-    const session = getOpenRunSession();
-    return session.currentClubId ? parseInt(session.currentClubId) : null;
-  });
-
   // 현재 사용자 이름 (개인기록 탭에서 하이라이팅용)
-  const currentUserName = getOpenRunSession().userName;
+  const currentUserName = session.userName;
 
   // 선수 이름 렌더링 (본인 이름은 Bold 처리)
   const renderPlayerName = (name: string) => {
@@ -99,22 +96,12 @@ const ScoreboardPage: React.FC = () => {
 
   // 클럽 가입 여부에 따라 기본 탭 설정
   useEffect(() => {
-    if (!clubsLoading) {
-      // 클럽에 가입하지 않았는데 ranking이나 matches 탭이면 personal로 전환
-      if (!hasClubs && (activeTab === "ranking" || activeTab === "matches")) {
-        setActiveTab("personal");
-      }
+    // 클럽에 가입하지 않았는데 ranking이나 matches 탭이면 personal로 전환
+    if (!hasClub && (activeTab === "ranking" || activeTab === "matches")) {
+      setActiveTab("personal");
     }
-  }, [clubsLoading, hasClubs, activeTab]);
+  }, [hasClub, activeTab]);
 
-  // 클럽 변경 시 세션에 저장
-  const handleClubChange = (clubId: number | null) => {
-    setSelectedClubId(clubId);
-    if (clubId) {
-      const session = getOpenRunSession();
-      setOpenRunSession({ ...session, currentClubId: clubId.toString() });
-    }
-  };
 
   // Tab 1: Fetch rankings
   const fetchScoreboard = useCallback(async () => {
@@ -365,20 +352,10 @@ const ScoreboardPage: React.FC = () => {
 
   return (
     <div className="scoreboard-page">
-      {/* ClubSelector - 클럽에 가입한 경우만 표시 */}
-      {hasClubs && (
-        <div className="page-club-selector-container">
-          <ClubSelector
-            selectedClubId={selectedClubId}
-            onClubChange={handleClubChange}
-          />
-        </div>
-      )}
-
       {/* Tab Navigation */}
       <div className="tab-navigation">
         {/* 클럽 가입 시에만 랭킹/경기 기록 탭 표시 */}
-        {hasClubs && (
+        {hasClub && (
           <>
             <button
               className={`tab-button ${activeTab === "ranking" ? "active" : ""}`}

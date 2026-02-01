@@ -1,0 +1,14 @@
+.club-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.club-layout__header {
+  flex-shrink: 0;
+}
+
+.club-layout__content {
+  flex: 1;
+  overflow-y: auto;
+}

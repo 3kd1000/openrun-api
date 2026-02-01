@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import axiosInstance from "../../../services/api/axiosInstance";
 import type { Club } from "../../../types/club";
-import { useClubsWithAuth } from "../../../hooks/useClubsWithAuth";
+import { useAuth } from "../../../contexts/AuthContext";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
 import {
   CompassIcon,
@@ -37,7 +37,6 @@ import MyRecentMatchesWidget from "./components/widgets/MyRecentMatchesWidget";
 import WidgetSettingsModal, {
   getDefaultSelectedWidgets,
 } from "./components/widgets/WidgetSettingsModal";
-import { ClubSelector } from "../../../components/ClubSelector";
 import "./ClubMainPage.css";
 import { clubService } from "../../../services/clubService";
 
@@ -53,7 +52,7 @@ const ClubMainPage: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { clubId: clubIdParam } = useParams<{ clubId: string }>();
-  const { clubs: myClubs, isAuthReady, user } = useClubsWithAuth();
+  const { isAuthReady, user } = useAuth();
 
   // 클럽 정보
   const [club, setClub] = useState<Club | null>(null);
@@ -369,31 +368,22 @@ const ClubMainPage: React.FC = () => {
     try {
       setIsLoadingClub(true);
 
-      // 가입한 클럽이 없으면 클럽 탐색 페이지로 리다이렉트
-      if (myClubs.length === 0) {
+      // 클럽 ID가 없으면 클럽 탐색 페이지로 리다이렉트
+      if (!clubId) {
         console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동");
         navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
         return;
       }
 
       // 현재 클럽 정보 조회
-      if (clubId) {
-        const response = await axiosInstance.get(`/clubs/${clubId}`);
-        setClub(response.data);
-      } else if (myClubs.length > 0) {
-        // clubId가 없으면 첫 번째 클럽을 기본으로 설정
-        setOpenRunSession({ currentClubId: String(myClubs[0].id) });
-        const response = await axiosInstance.get(`/clubs/${myClubs[0].id}`);
-        setClub(response.data);
-      }
+      const response = await axiosInstance.get(`/clubs/${clubId}`);
+      setClub(response.data);
 
       // 현재 클럽에서의 내 역할(role) 조회 후 로컬 캐시
-      const resolvedClubId =
-        clubId || (myClubs.length > 0 ? String(myClubs[0].id) : null);
-      if (resolvedClubId && userIdStr) {
+      if (clubId && userIdStr) {
         try {
           const membershipResponse = await axiosInstance.get(
-            `/clubs/${resolvedClubId}/membership`,
+            `/clubs/${clubId}/membership`,
             { params: { status: "ACTIVE" } }
           );
           const list = membershipResponse.data as Array<{
@@ -405,7 +395,7 @@ const ClubMainPage: React.FC = () => {
           setMyRole(role);
           setOpenRunSession({ currentClubRole: role });
         } catch {
-          // 역할 조회 실패 시 기존 값 유지 (UNKNOWN이면 MEMBER로 간주)
+          // 역할 조회 실패 시 기본 값 유지 (UNKNOWN이면 REGULAR로 간주)
           if (myRole === "UNKNOWN") setMyRole("REGULAR");
         }
       }
@@ -419,7 +409,7 @@ const ClubMainPage: React.FC = () => {
     } finally {
       setIsLoadingClub(false);
     }
-  }, [clubId, myRole, userIdStr, navigate, isAuthReady, user, myClubs]);
+  }, [clubId, myRole, userIdStr, navigate, isAuthReady, user]);
 
   // 클럽 정보 로드
   useEffect(() => {
@@ -428,18 +418,14 @@ const ClubMainPage: React.FC = () => {
 
   // 공지/회칙 통합 unread count 로드 (dot 표시용)
   useEffect(() => {
-    // 클럽에 가입하지 않았거나 clubId가 없으면 API 호출 안함
-    if (!clubId || myClubs.length === 0) return;
+    // clubId가 없으면 API 호출 안함
+    if (!clubId) return;
     clubService
       .getClubContentUnreadCount(Number(clubId))
       .then((res) => setContentUnreadCount(res.totalUnreadCount))
       .catch(() => {});
-  }, [clubId, myClubs]);
+  }, [clubId]);
 
-  const handleClubChange = (newClubId: string) => {
-    setOpenRunSession({ currentClubId: newClubId, currentClubRole: "UNKNOWN" });
-    navigate(`/clubs/${newClubId}`, { replace: true });
-  };
 
   // 헤더 아이콘 핸들러
   const handleExploreClubs = () => {
@@ -534,7 +520,7 @@ const ClubMainPage: React.FC = () => {
   }
 
   // 소속 클럽 없음
-  if (!club && myClubs.length === 0) {
+  if (!club && !clubId) {
     return (
       <div className="club-main-page">
         <div className="club-main-page__empty">
@@ -555,18 +541,6 @@ const ClubMainPage: React.FC = () => {
 
   return (
     <div className="club-main-page">
-      {/* ClubSelector */}
-      <div className="page-club-selector-container">
-        <ClubSelector
-          selectedClubId={clubId ? Number(clubId) : null}
-          onClubChange={(newClubId) => {
-            if (newClubId) {
-              handleClubChange(newClubId.toString());
-            }
-          }}
-        />
-      </div>
-
       {/* 클럽 헤더 액션 버튼 */}
       <div className={`club-main-page__header ${isMenuCollapsed ? "collapsed" : ""}`}>
         <div className="club-main-page__header-actions">

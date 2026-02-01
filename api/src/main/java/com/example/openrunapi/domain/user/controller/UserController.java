@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.user.controller;
 
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
+import com.example.openrunapi.domain.club.model.dto.MyClubResponse;
 import com.example.openrunapi.domain.club.service.ClubService;
 import com.example.openrunapi.domain.user.model.dto.OAuthProviderResponse;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserProfileRequest;
@@ -83,14 +84,14 @@ public class UserController {
     }
 
     /**
-     * 현재 사용자가 가입한 클럽 목록 조회
+     * 현재 사용자가 가입한 클럽 목록 조회 (role 포함)
      */
     @GetMapping("/me/clubs")
-    public ResponseEntity<java.util.List<ClubResponse>> getUserClubs(
+    public ResponseEntity<java.util.List<MyClubResponse>> getUserClubs(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
-        java.util.List<ClubResponse> clubs = clubService.getMyClubs(currentUserResponse.getId());
+        java.util.List<MyClubResponse> clubs = clubService.getMyClubs(currentUserResponse.getId());
         return ResponseEntity.ok(clubs);
     }
 
