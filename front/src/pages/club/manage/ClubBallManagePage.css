@@ -108,11 +108,11 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-s) var(--space-m);
+  padding: var(--space-m) var(--space-l);
   border: none;
   border-radius: var(--radius-m);
-  font-size: var(--font-size-m);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -145,6 +145,36 @@
 
 .ball-manage-page__action-btn--keeper:hover:not(:disabled) {
   background-color: #d4c4eb;
+}
+
+/* 재고관리 버튼 - 파스텔 오렌지 */
+.ball-manage-page__action-btn--adjust {
+  background-color: #ffe5cc;
+  color: #cc5500;
+}
+
+.ball-manage-page__action-btn--adjust:hover:not(:disabled) {
+  background-color: #ffd9b3;
+}
+
+/* 저장 버튼 - 파스텔 그린 (입고와 동일) */
+.ball-manage-page__action-btn--success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.ball-manage-page__action-btn--success:hover:not(:disabled) {
+  background-color: #c3e6cb;
+}
+
+/* 취소 버튼 - 회색 */
+.ball-manage-page__action-btn--cancel {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+.ball-manage-page__action-btn--cancel:hover:not(:disabled) {
+  background-color: #d6d8db;
 }
 
 .ball-manage-page__action-btn:disabled {
@@ -199,10 +229,28 @@
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-m);
   margin-bottom: var(--space-s);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ball-manage-page__keeper-card:hover {
+  background-color: var(--color-bg-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .ball-manage-page__keeper-card:last-child {
   margin-bottom: 0;
+}
+
+.ball-manage-page__keeper-card--edit {
+  cursor: default !important;
+}
+
+.ball-manage-page__keeper-card--edit:hover {
+  background-color: var(--color-bg-secondary);
+  transform: none;
+  box-shadow: none;
 }
 
 .ball-manage-page__keeper-info {
@@ -616,8 +664,9 @@
   }
 
   .ball-manage-page__action-btn {
-    font-size: var(--font-size-s);
-    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-m);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-s) var(--space-m);
   }
 }
 
@@ -655,5 +704,8 @@
   .ball-manage-page__action-btn {
     width: 100%;
     justify-content: center;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-s) var(--space-m);
   }
 }

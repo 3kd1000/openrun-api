@@ -7,6 +7,8 @@ import type {
   DistributeBallRequest,
   UseBallRequest,
   UpdateBallKeeperRequest,
+  AdjustBallRequest,
+  BatchAdjustBallRequest,
 } from '../types/ball';
 
 export const ballService = {
@@ -78,5 +80,22 @@ export const ballService = {
   // 사용 기록 삭제 (본인 or ADMIN+)
   deleteTransaction: async (clubId: number, transactionId: number): Promise<void> => {
     await axiosInstance.delete(`/clubs/${clubId}/balls/transactions/${transactionId}`);
+  },
+
+  // 공용구 수량 조정 (ADMIN+)
+  adjustQuantity: async (
+    clubId: number,
+    request: AdjustBallRequest
+  ): Promise<BallTransactionResponse> => {
+    const response = await axiosInstance.post(`/clubs/${clubId}/balls/adjust`, request);
+    return response.data;
+  },
+
+  // 공용구 수량 일괄 조정 (ADMIN+)
+  batchAdjustQuantities: async (
+    clubId: number,
+    request: BatchAdjustBallRequest
+  ): Promise<void> => {
+    await axiosInstance.post(`/clubs/${clubId}/balls/adjust/batch`, request);
   },
 };

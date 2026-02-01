@@ -347,4 +347,52 @@ public class ClubBallService {
         // 거래 기록 삭제
         transactionRepository.delete(transaction);
     }
+
+    /**
+     * 공용구 수량 일괄 조정 - ADMIN+ 가능
+     * - 재고관리용 배치 업데이트
+     * - quantity는 차이값 (양수: 증가, 음수: 감소)
+     */
+    @Transactional
+    public void batchAdjustQuantities(Long clubId, BatchAdjustBallRequest request, Long userId) {
+        log.info("Batch adjusting ball quantities for clubId: {}, adjustments count: {}", clubId, request.adjustments().size());
+
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
+
+        requireAdmin(clubId, userId);
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 모든 조정 건을 한 트랜잭션으로 처리
+        for (AdjustBallRequest adjustment : request.adjustments()) {
+            if (adjustment.quantity() == 0) {
+                continue; // 변경 없음
+            }
+
+            ClubMember member = clubMemberRepository.findById(adjustment.memberId())
+                    .orElseThrow(() -> new EntityNotFoundException("멤버를 찾을 수 없습니다: " + adjustment.memberId()));
+
+            if (!member.getClub().getId().equals(clubId)) {
+                throw new SecurityException("다른 클럽의 멤버는 수정할 수 없습니다.");
+            }
+
+            if (!member.getIsBallKeeper()) {
+                throw new IllegalStateException("공용구 보유자만 수량 조정이 가능합니다.");
+            }
+
+            // 수량 조정 (양수: 증가, 음수: 감소)
+            if (adjustment.quantity() > 0) {
+                member.addBalls(adjustment.quantity());
+            } else {
+                member.useBalls(Math.abs(adjustment.quantity()));
+            }
+
+            // 거래 기록 생성
+            ClubBallTransaction transaction = ClubBallTransaction.createAdjustTransaction(
+                    club, member, adjustment.quantity(), adjustment.description(), currentUser
+            );
+            transactionRepository.save(transaction);
+        }
+    }
 }

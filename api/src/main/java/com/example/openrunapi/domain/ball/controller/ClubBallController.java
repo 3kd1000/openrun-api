@@ -139,4 +139,20 @@ public class ClubBallController {
         clubBallService.deleteTransaction(clubId, transactionId, currentUser.getId());
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 공용구 수량 일괄 조정 (ADMIN+)
+     * - 재고관리용 배치 업데이트
+     * - quantity는 차이값 (양수: 증가, 음수: 감소)
+     */
+    @PostMapping("/adjust/batch")
+    public ResponseEntity<Void> batchAdjustQuantities(
+            @PathVariable Long clubId,
+            @Valid @RequestBody BatchAdjustBallRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        clubBallService.batchAdjustQuantities(clubId, request, currentUser.getId());
+        return ResponseEntity.ok().build();
+    }
 }
