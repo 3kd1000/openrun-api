@@ -25,6 +25,7 @@ import {
 import { isNotEmpty } from "../../../utils/isEmpty";
 import { formatScheduleDateTime } from "../../../utils/dateUtils";
 import { EditIcon, LinkIcon } from "../../../components/common/Icons";
+import UserNameWithBadge from "../../../components/common/UserNameWithBadge";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { useToast } from "../../../contexts/ToastContext";
 import { FEATURE_FLAGS } from "../../../config/featureFlags";
@@ -786,7 +787,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     <ul>
                       {confirmedParticipants.map((p, idx) => (
                         <li key={p.id}>
-                          {idx + 1}. {p.userName}
+                          {idx + 1}. <UserNameWithBadge userId={p.userId} userName={p.userName} awardTypes={p.awardTypes} />
                           {p.asGuest ? (
                             <span className="guest-badge"> 게스트</span>
                           ) : null}
@@ -805,7 +806,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     <ul>
                       {waitingParticipants.map((p, idx) => (
                         <li key={p.id} className="waiting">
-                          {idx + 1}. {p.userName}
+                          {idx + 1}. <UserNameWithBadge userId={p.userId} userName={p.userName} awardTypes={p.awardTypes} />
                           {p.asGuest ? (
                             <span className="guest-badge"> 게스트</span>
                           ) : null}

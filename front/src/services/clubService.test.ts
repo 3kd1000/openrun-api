@@ -103,13 +103,13 @@ describe("clubService", () => {
     });
 
     it("PATCH /clubs/:id/policy 호출하여 클럽 정책 수정", async () => {
-      const updatedClub = { ...mockClub, joinPolicy: "APPROVAL" };
+      const updatedClub = { ...mockClub, autoJoinEnabled: false };
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: updatedClub });
 
       const request: UpdateClubPolicyRequest = {
-        joinPolicy: "APPROVAL",
-        interclubRecruitmentStatus: "CLOSED",
-        memberRecruitmentStatus: "OPEN",
+        autoJoinEnabled: false,
+        interclubRecruitmentOpen: false,
+        memberRecruitmentOpen: true,
       };
 
       const result = await clubService.updateClubPolicy(1, request);

@@ -1,3 +1,23 @@
+// 어워드 타입
+export type AwardType = 'ATTENDANCE' | 'POINTS' | 'BOOKING';
+export type AwardPeriod = 'HALF_YEAR' | 'YEARLY';
+
+// 어워드 랭킹 타입
+export interface AwardRankingEntry {
+    rank: number;
+    userId: number;
+    userName: string;
+    value: number;  // 참석 횟수, 승점, 예약 횟수
+}
+
+export interface AwardRankingResponse {
+    type: AwardType;
+    period: AwardPeriod;
+    startDate: string;  // YYYY-MM-DD
+    endDate: string;    // YYYY-MM-DD
+    rankings: AwardRankingEntry[];
+}
+
 export interface Club {
     id: number;
     name: string;
@@ -6,12 +26,18 @@ export interface Club {
     regionDepth1?: string | null;
     regionDepth2?: string | null;
     ownerUserId: number;
-    joinPolicy?: 'APPROVAL' | 'AUTO';
-    interclubRecruitmentStatus?: 'CLOSED' | 'OPEN';
-    memberRecruitmentStatus?: 'CLOSED' | 'OPEN';
+    // 기본 정책 필드 (Boolean 통일)
+    autoJoinEnabled?: boolean | null;
+    interclubRecruitmentOpen?: boolean | null;
+    memberRecruitmentOpen?: boolean | null;
     memberRecruitmentNote?: string | null;
     activitySummary?: string | null;
     memberCount?: number;
+    // 어워드 정책 필드
+    awardPeriod?: AwardPeriod | null;
+    awardAttendanceEnabled?: boolean | null;
+    awardPointsEnabled?: boolean | null;
+    awardBookingEnabled?: boolean | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -46,10 +72,17 @@ export interface UpdateClubRequest {
 }
 
 export interface UpdateClubPolicyRequest {
-    joinPolicy: 'APPROVAL' | 'AUTO';
-    interclubRecruitmentStatus: 'CLOSED' | 'OPEN';
-    memberRecruitmentStatus: 'CLOSED' | 'OPEN';
+    autoJoinEnabled: boolean;
+    interclubRecruitmentOpen: boolean;
+    memberRecruitmentOpen: boolean;
     memberRecruitmentNote?: string | null;
+}
+
+export interface UpdateAwardPolicyRequest {
+    awardPeriod: AwardPeriod;
+    awardAttendanceEnabled: boolean;
+    awardPointsEnabled: boolean;
+    awardBookingEnabled: boolean;
 }
 
 export interface ClubRule {

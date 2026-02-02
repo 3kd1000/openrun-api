@@ -14,9 +14,9 @@ const ClubManagePolicyPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
 
   const [policy, setPolicy] = useState<UpdateClubPolicyRequest>({
-    joinPolicy: "APPROVAL",
-    interclubRecruitmentStatus: "CLOSED",
-    memberRecruitmentStatus: "OPEN",
+    autoJoinEnabled: false,
+    interclubRecruitmentOpen: false,
+    memberRecruitmentOpen: true,
     memberRecruitmentNote: "",
   });
   const [loading, setLoading] = useState(true);
@@ -30,10 +30,9 @@ const ClubManagePolicyPage: React.FC = () => {
         setLoading(true);
         const res = await axiosInstance.get<Club>(`/clubs/${clubId}`);
         setPolicy({
-          joinPolicy: res.data.joinPolicy ?? "APPROVAL",
-          interclubRecruitmentStatus:
-            res.data.interclubRecruitmentStatus ?? "CLOSED",
-          memberRecruitmentStatus: res.data.memberRecruitmentStatus ?? "OPEN",
+          autoJoinEnabled: res.data.autoJoinEnabled ?? false,
+          interclubRecruitmentOpen: res.data.interclubRecruitmentOpen ?? false,
+          memberRecruitmentOpen: res.data.memberRecruitmentOpen ?? true,
           memberRecruitmentNote: res.data.memberRecruitmentNote ?? "",
         });
       } catch (e) {
@@ -91,121 +90,66 @@ const ClubManagePolicyPage: React.FC = () => {
       {error && <div className="club-manage-policy-page__error">{error}</div>}
 
       <div className="club-manage-policy-page__section">
-        <div className="club-manage-policy-page__row">
-          <div className="club-manage-policy-page__row-title">
-            가입 승인 방식
+        {/* 자동 가입 승인 */}
+        <div className="club-manage-policy-page__toggle-row">
+          <div className="club-manage-policy-page__toggle-label">
+            <span className="club-manage-policy-page__toggle-title">자동 가입 승인</span>
+            <span className="club-manage-policy-page__toggle-desc">활성화 시 가입 신청이 자동으로 승인됩니다</span>
           </div>
-          <div className="club-manage-policy-page__row-desc">
-            기본값은 <b>승인 필요</b>입니다.
-          </div>
-          <div className="club-manage-policy-page__seg">
-            <button
-              type="button"
-              className={`club-manage-policy-page__seg-btn ${
-                policy.joinPolicy === "APPROVAL" ? "active" : ""
-              }`}
-              onClick={() =>
-                setPolicy((p) => ({ ...p, joinPolicy: "APPROVAL" }))
-              }
-              disabled={saving}
-            >
-              승인 필요
-            </button>
-            <button
-              type="button"
-              className={`club-manage-policy-page__seg-btn ${
-                policy.joinPolicy === "AUTO" ? "active" : ""
-              }`}
-              onClick={() => setPolicy((p) => ({ ...p, joinPolicy: "AUTO" }))}
-              disabled={saving}
-            >
-              자동 승인
-            </button>
-          </div>
+          <button
+            type="button"
+            className={`club-manage-policy-page__toggle ${policy.autoJoinEnabled ? "active" : ""}`}
+            onClick={() => setPolicy((p) => ({ ...p, autoJoinEnabled: !p.autoJoinEnabled }))}
+            disabled={saving}
+            aria-label="자동 가입 승인 토글"
+          >
+            <span className="club-manage-policy-page__toggle-slider" />
+          </button>
         </div>
 
         {FEATURE_FLAGS.INTERCLUB_ENABLED && (
           <>
             <div className="club-manage-policy-page__divider" />
 
-            <div className="club-manage-policy-page__row">
-              <div className="club-manage-policy-page__row-title">
-                교류전 모집 상태
+            {/* 교류전 모집 */}
+            <div className="club-manage-policy-page__toggle-row">
+              <div className="club-manage-policy-page__toggle-label">
+                <span className="club-manage-policy-page__toggle-title">교류전 모집</span>
+                <span className="club-manage-policy-page__toggle-desc">활성화 시 다른 클럽에서 교류전 신청 가능</span>
               </div>
-              <div className="club-manage-policy-page__row-desc">
-                기본값은 <b>CLOSED</b>입니다.
-              </div>
-              <div className="club-manage-policy-page__seg">
-                <button
-                  type="button"
-                  className={`club-manage-policy-page__seg-btn ${
-                    policy.interclubRecruitmentStatus === "CLOSED" ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    setPolicy((p) => ({
-                      ...p,
-                      interclubRecruitmentStatus: "CLOSED",
-                    }))
-                  }
-                  disabled={saving}
-                >
-                  CLOSED
-                </button>
-                <button
-                  type="button"
-                  className={`club-manage-policy-page__seg-btn ${
-                    policy.interclubRecruitmentStatus === "OPEN" ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    setPolicy((p) => ({ ...p, interclubRecruitmentStatus: "OPEN" }))
-                  }
-                  disabled={saving}
-                >
-                  OPEN
-                </button>
-              </div>
+              <button
+                type="button"
+                className={`club-manage-policy-page__toggle ${policy.interclubRecruitmentOpen ? "active" : ""}`}
+                onClick={() => setPolicy((p) => ({ ...p, interclubRecruitmentOpen: !p.interclubRecruitmentOpen }))}
+                disabled={saving}
+                aria-label="교류전 모집 토글"
+              >
+                <span className="club-manage-policy-page__toggle-slider" />
+              </button>
             </div>
           </>
         )}
 
         <div className="club-manage-policy-page__divider" />
 
-        <div className="club-manage-policy-page__row">
-          <div className="club-manage-policy-page__row-title">
-            신규회원 모집 상태
+        {/* 신규회원 모집 */}
+        <div className="club-manage-policy-page__toggle-row">
+          <div className="club-manage-policy-page__toggle-label">
+            <span className="club-manage-policy-page__toggle-title">신규회원 모집</span>
+            <span className="club-manage-policy-page__toggle-desc">활성화 시 클럽 상세에서 가입 신청 가능</span>
           </div>
-          <div className="club-manage-policy-page__row-desc">
-            기본값은 <b>모집중(OPEN)</b>입니다.
-          </div>
-          <div className="club-manage-policy-page__seg">
-            <button
-              type="button"
-              className={`club-manage-policy-page__seg-btn ${
-                policy.memberRecruitmentStatus === "OPEN" ? "active" : ""
-              }`}
-              onClick={() =>
-                setPolicy((p) => ({ ...p, memberRecruitmentStatus: "OPEN" }))
-              }
-              disabled={saving}
-            >
-              모집중
-            </button>
-            <button
-              type="button"
-              className={`club-manage-policy-page__seg-btn ${
-                policy.memberRecruitmentStatus === "CLOSED" ? "active" : ""
-              }`}
-              onClick={() =>
-                setPolicy((p) => ({ ...p, memberRecruitmentStatus: "CLOSED" }))
-              }
-              disabled={saving}
-            >
-              모집안함
-            </button>
-          </div>
+          <button
+            type="button"
+            className={`club-manage-policy-page__toggle ${policy.memberRecruitmentOpen ? "active" : ""}`}
+            onClick={() => setPolicy((p) => ({ ...p, memberRecruitmentOpen: !p.memberRecruitmentOpen }))}
+            disabled={saving}
+            aria-label="신규회원 모집 토글"
+          >
+            <span className="club-manage-policy-page__toggle-slider" />
+          </button>
         </div>
 
-        {policy.memberRecruitmentStatus === "OPEN" && (
+        {policy.memberRecruitmentOpen && (
           <>
             <div className="club-manage-policy-page__divider" />
 

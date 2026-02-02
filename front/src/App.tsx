@@ -15,6 +15,7 @@ import ClubManagePage from "./pages/club/manage/ClubManagePage";
 import ClubCreatePage from "./pages/club/create/ClubCreatePage";
 import ClubManageInfoPage from "./pages/club/manage/ClubManageInfoPage";
 import ClubManagePolicyPage from "./pages/club/manage/ClubManagePolicyPage";
+import ClubManageAwardPage from "./pages/club/manage/ClubManageAwardPage";
 import ClubCreateOnboardingPage from "./pages/club/create/ClubCreateOnboardingPage";
 import ClubNoticesManagePage from "./pages/club/manage/ClubNoticeManagePage";
 import ClubEntryRedirectPage from "./pages/club/home/ClubEntryRedirectPage";
@@ -38,6 +39,7 @@ import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { AwardWinnersProvider } from "./contexts/AwardWinnersContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ClubLayout } from "./layouts/ClubLayout";
 import "./App.css";
@@ -56,6 +58,7 @@ function App() {
     <ToastProvider>
       <ErrorBoundary>
         <AuthProvider>
+          <AwardWinnersProvider>
           <div className="App">
         {/* <DevUserSwitcher /> */}
         {shouldShowNavigation && <Navigation />}
@@ -122,6 +125,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ClubManagePolicyPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clubs/:clubId/manage/award"
+                element={
+                  <ProtectedRoute>
+                    <ClubManageAwardPage />
                   </ProtectedRoute>
                 }
               />
@@ -253,6 +264,7 @@ function App() {
         {/* PWA 업데이트 프롬프트 주석 */}
           {needRefresh && <PWAUpdatePrompt onUpdate={updateServiceWorker} />}
           </div>
+          </AwardWinnersProvider>
         </AuthProvider>
       </ErrorBoundary>
     </ToastProvider>

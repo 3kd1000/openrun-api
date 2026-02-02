@@ -9,6 +9,7 @@ import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
 import com.example.openrunapi.domain.club.model.dto.JoinRequestResponse;
 import com.example.openrunapi.domain.club.model.dto.TransferOwnershipRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateAwardPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.service.ClubService;
@@ -80,6 +81,20 @@ public class ClubController {
     ) {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
         ClubResponse response = clubService.updateClubPolicy(clubId, request, currentUserResponse.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 클럽 어워드 정책 수정 (정산 주기/어워드 타입 활성화) - 운영진 이상
+     */
+    @PatchMapping("/{clubId}/award-policy")
+    public ResponseEntity<ClubResponse> updateAwardPolicy(
+            @PathVariable Long clubId,
+            @RequestBody UpdateAwardPolicyRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        ClubResponse response = clubService.updateAwardPolicy(clubId, request, currentUserResponse.getId());
         return ResponseEntity.ok(response);
     }
 

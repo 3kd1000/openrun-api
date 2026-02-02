@@ -43,20 +43,7 @@ public class Club {
     @Column(nullable = false)
     private Long ownerUserId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "join_policy", nullable = false, length = 20)
-    private ClubJoinPolicy joinPolicy = ClubJoinPolicy.APPROVAL;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "interclub_recruitment_status", nullable = false, length = 20)
-    private InterclubRecruitmentStatus interclubRecruitmentStatus = InterclubRecruitmentStatus.CLOSED;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "member_recruitment_status", nullable = false, length = 20)
-    private MemberRecruitmentStatus memberRecruitmentStatus = MemberRecruitmentStatus.OPEN;
-
-    @Column(name = "member_recruitment_note", columnDefinition = "text")
-    private String memberRecruitmentNote;
+    // 정책 필드는 ClubPolicy 테이블로 분리됨 (V62 마이그레이션)
 
     @Column(name = "activity_summary", length = 200)
     private String activitySummary;
@@ -113,19 +100,7 @@ public class Club {
         return region;
     }
 
-    public void updatePolicies(ClubJoinPolicy joinPolicy, InterclubRecruitmentStatus interclubRecruitmentStatus, MemberRecruitmentStatus memberRecruitmentStatus, String memberRecruitmentNote) {
-        if (joinPolicy != null) {
-            this.joinPolicy = joinPolicy;
-        }
-        if (interclubRecruitmentStatus != null) {
-            this.interclubRecruitmentStatus = interclubRecruitmentStatus;
-        }
-        if (memberRecruitmentStatus != null) {
-            this.memberRecruitmentStatus = memberRecruitmentStatus;
-        }
-        // memberRecruitmentNote는 null이어도 업데이트 (빈 문자열로 초기화 가능)
-        this.memberRecruitmentNote = memberRecruitmentNote;
-    }
+    // updatePolicies()는 ClubPolicy로 이관됨
 
     public void changeOwner(Long newOwnerUserId) {
         this.ownerUserId = newOwnerUserId;

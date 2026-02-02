@@ -291,7 +291,7 @@ const ClubRecruitingPage: React.FC = () => {
           )}
 
           {/* 모집 안내글 */}
-          {club.memberRecruitmentStatus === "OPEN" && club.memberRecruitmentNote && (
+          {club.memberRecruitmentOpen && club.memberRecruitmentNote && (
             <div className="club-recruiting-page__info-item club-recruiting-page__info-item--block">
               <span className="club-recruiting-page__info-label">모집 안내</span>
               <div className="club-recruiting-page__recruit-content">

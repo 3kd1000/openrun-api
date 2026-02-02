@@ -18,6 +18,9 @@ function Layout() {
           <NavLink to="/audit-logs" className={({ isActive }) => isActive ? "active" : ""}>
             Audit Logs
           </NavLink>
+          <NavLink to="/award-winners" className={({ isActive }) => isActive ? "active" : ""}>
+            어워드 수상자
+          </NavLink>
         </nav>
         <div className="admin-sidebar__footer">
           {adminUser && (
