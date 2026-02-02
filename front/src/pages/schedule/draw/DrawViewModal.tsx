@@ -3,10 +3,13 @@ import { drawService } from "../../../services/drawService";
 import type {
   DrawResponse,
   BatchUpdateMatchRequest,
+  ManualGame,
+  CreateDrawRequestWithIds,
 } from "../../../services/drawService";
 import type { Schedule, Participant } from "../../../types/schedule";
 import DrawCreateModal from "./DrawCreateModal";
 import DrawGamesList from "../../../components/draw/DrawGamesList";
+import ManualDrawEditor from "../../../components/draw/ManualDrawEditor";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
@@ -40,6 +43,9 @@ const DrawViewModal: React.FC<Props> = ({
     Map<number, { teamAScore: string; teamBScore: string }>
   >(new Map());
   const [saving, setSaving] = useState(false);
+
+  // 대진 수정 모드
+  const [isEditingDraw, setIsEditingDraw] = useState(false);
 
   // 중복 호출 방지를 위한 ref
   const isLoadingRef = useRef(false);
@@ -235,6 +241,43 @@ const DrawViewModal: React.FC<Props> = ({
     }
   };
 
+  // 대진 수정 저장 핸들러
+  const handleSaveEditedDraw = async (manualGames: ManualGame[]) => {
+    try {
+      setSaving(true);
+      setError("");
+
+      // manualGames에서 모든 userId 추출
+      const allUserIds = new Set<number>();
+      manualGames.forEach((g) => {
+        g.teamAUserIds.forEach((id) => allUserIds.add(id));
+        g.teamBUserIds.forEach((id) => allUserIds.add(id));
+      });
+
+      const requestWithIds: CreateDrawRequestWithIds = {
+        drawType: "MANUAL",
+        numberOfTotalPlayer: allUserIds.size,
+        userIds: Array.from(allUserIds),
+        manualGames,
+      };
+
+      await drawService.createDrawWithScheduleByIds(schedule.id, requestWithIds);
+
+      // 대진표 다시 로드
+      await loadDraw();
+      setIsEditingDraw(false);
+      onSuccess(); // 부모 컴포넌트에 알림
+    } catch (err: unknown) {
+      console.error("대진 수정 실패:", err);
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "대진 수정에 실패했습니다.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // 경기 결과가 하나라도 입력되었는지 확인
   const hasAnyResult =
     drawResult?.games.some(
@@ -244,8 +287,11 @@ const DrawViewModal: React.FC<Props> = ({
   // 일정이 미래인지 확인 (미래 일정은 결과 입력 불가)
   const isFutureSchedule = !isPastDate(schedule.scheduledAt);
 
+  // 대진 수정 가능 여부: 경기 결과가 입력되지 않은 경우에만
+  const canEditDraw = !hasAnyResult && drawResult !== null;
+
   // ESC 키로 모달 닫기 (편집 모드가 아닐 때만)
-  useEscapeKey(onClose, !isEditMode && !showRegenerateModal);
+  useEscapeKey(onClose, !isEditMode && !showRegenerateModal && !isEditingDraw);
 
   if (showRegenerateModal) {
     return (
@@ -294,6 +340,15 @@ const DrawViewModal: React.FC<Props> = ({
 
           {loading ? (
             <div className="loading">대진표를 불러오는 중...</div>
+          ) : isEditingDraw && drawResult ? (
+            /* 대진 수정 모드 */
+            <ManualDrawEditor
+              participants={participants}
+              playerCount={confirmedParticipantCount}
+              initialGames={drawResult.games}
+              onComplete={handleSaveEditedDraw}
+              onCancel={() => setIsEditingDraw(false)}
+            />
           ) : drawResult ? (
             <div className="draw-result-section">
               <DrawGamesList
@@ -307,79 +362,94 @@ const DrawViewModal: React.FC<Props> = ({
             </div>
           ) : null}
 
-          {/* 액션 버튼 - 모든 버튼 btn-wrapper로 균등 배치 */}
-          <div className="modal-actions">
-            <div className="btn-wrapper">
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="btn-copy"
-                disabled={!drawResult || isEditMode}
+          {/* 액션 버튼 - 대진 수정 모드가 아닐 때만 표시 */}
+          {!isEditingDraw && (
+            <div className="modal-actions">
+              <div className="btn-wrapper">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="btn-copy"
+                  disabled={!drawResult || isEditMode}
+                >
+                  {copied ? (
+                    <>
+                      <CheckIcon size={16} />
+                      <span>복사됨</span>
+                    </>
+                  ) : (
+                    <>
+                      <CopyIcon size={16} />
+                      <span>복사</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <div
+                className="btn-wrapper"
+                title={
+                  hasAnyResult
+                    ? "경기 결과가 입력된 대진표는 재생성할 수 없습니다"
+                    : ""
+                }
               >
-                {copied ? (
-                  <>
-                    <CheckIcon size={16} />
-                    <span>복사됨</span>
-                  </>
-                ) : (
-                  <>
-                    <CopyIcon size={16} />
-                    <span>복사</span>
-                  </>
-                )}
-              </button>
-            </div>
-            <div
-              className="btn-wrapper"
-              title={
-                hasAnyResult
-                  ? "경기 결과가 입력된 대진표는 재생성할 수 없습니다"
-                  : ""
-              }
-            >
-              <button
-                type="button"
-                onClick={() => setShowRegenerateModal(true)}
-                className="btn-regenerate"
-                disabled={!drawResult || isEditMode || hasAnyResult}
+                <button
+                  type="button"
+                  onClick={() => setShowRegenerateModal(true)}
+                  className="btn-regenerate"
+                  disabled={!drawResult || isEditMode || hasAnyResult}
+                >
+                  <RefreshCwIcon size={16} /> 재생성
+                </button>
+              </div>
+              {/* 대진 수정 버튼: 경기 결과가 없을 때만 표시 */}
+              {canEditDraw && (
+                <div className="btn-wrapper">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingDraw(true)}
+                    className="btn-edit-draw"
+                    disabled={isEditMode}
+                  >
+                    <EditIcon size={16} /> 대진수정
+                  </button>
+                </div>
+              )}
+              <div
+                className="btn-wrapper"
+                title={
+                  isFutureSchedule
+                    ? "경기 일정이 지난 후에만 결과를 입력할 수 있습니다"
+                    : ""
+                }
               >
-                <RefreshCwIcon size={16} /> 재생성
-              </button>
+                <button
+                  type="button"
+                  onClick={handleToggleEditMode}
+                  className={isEditMode ? "btn-save" : "btn-edit"}
+                  disabled={!drawResult || saving || isFutureSchedule}
+                >
+                  {saving ? (
+                    "저장 중..."
+                  ) : isEditMode ? (
+                    <><CheckIcon size={16} /> 입력완료</>
+                  ) : (
+                    <><EditIcon size={16} /> 결과입력</>
+                  )}
+                </button>
+              </div>
+              <div className="btn-wrapper">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-primary"
+                  disabled={isEditMode}
+                >
+                  확인
+                </button>
+              </div>
             </div>
-            <div
-              className="btn-wrapper"
-              title={
-                isFutureSchedule
-                  ? "경기 일정이 지난 후에만 결과를 입력할 수 있습니다"
-                  : ""
-              }
-            >
-              <button
-                type="button"
-                onClick={handleToggleEditMode}
-                className={isEditMode ? "btn-save" : "btn-edit"}
-                disabled={!drawResult || saving || isFutureSchedule}
-              >
-                {saving ? (
-                  "저장 중..."
-                ) : isEditMode ? (
-                  <><CheckIcon size={16} /> 입력완료</>
-                ) : (
-                  <><EditIcon size={16} /> 결과입력</>
-                )}
-              </button>
-            </div>
-            <div className="btn-wrapper">
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn-primary"
-                disabled={isEditMode}
-              >
-                확인
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

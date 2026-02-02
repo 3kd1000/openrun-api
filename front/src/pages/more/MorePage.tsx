@@ -21,6 +21,7 @@ import {
   ScaleIcon,
   UsersIcon,
   UserIcon,
+  BookOpenIcon,
 } from "../../components/common/Icons";
 import ProfileEditModal from "../../components/ProfileEditModal";
 import { setOpenRunSession } from "../../utils/openrunSession";
@@ -184,7 +185,7 @@ const MorePage: React.FC = () => {
         {/* 서비스 섹션 - 항상 표시 */}
         <div className="more-section">
           <h2>서비스</h2>
-          {/* <div
+          <div
             className="more-item"
             onClick={() => navigate("/more/user-guide")}
           >
@@ -203,7 +204,7 @@ const MorePage: React.FC = () => {
               </span>
               <span className="more-link">가이드 에디터 (개발용)</span>
             </div>
-          )} */}
+          )}
           <div className="more-item">
             <span className="more-icon">
               <FileTextIcon size={20} />

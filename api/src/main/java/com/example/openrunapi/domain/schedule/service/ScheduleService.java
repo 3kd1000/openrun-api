@@ -804,4 +804,142 @@ public class ScheduleService {
 
         log.info("=== 대진표 삭제 완료 ===");
     }
+
+    /**
+     * 수동 대진 저장 (MANUAL 타입)
+     * 프론트엔드에서 직접 구성한 대진을 저장
+     */
+    @Transactional
+    public DrawResponse saveManualDraw(Long scheduleId, ScheduleResponse scheduleResponse,
+                                        CreateDrawRequestWithIds request) {
+        log.info("=== 수동 대진 저장 시작 ===");
+        log.info("scheduleId: {}, manualGames: {}",
+                scheduleId, request.getManualGames() != null ? request.getManualGames().size() : 0);
+
+        if (request.getManualGames() == null || request.getManualGames().isEmpty()) {
+            throw new IllegalArgumentException("수동 대진 정보가 없습니다.");
+        }
+
+        // 일정 조회
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 기존 대진이 있으면 삭제 (재생성 대응)
+        List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
+        if (!existingMatches.isEmpty()) {
+            log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
+            matchRepository.deleteAll(existingMatches);
+        }
+
+        // Schedule에 대진 정보 저장
+        schedule.createDraw(request.getDrawType());
+        log.info("Schedule에 대진 정보 저장: drawType=MANUAL, isDrawValid=true");
+
+        // userId -> userName 매핑 생성
+        Map<Long, String> userIdToName = buildUserIdToNameMapFromManualGames(request.getManualGames());
+
+        Long clubId = scheduleResponse.getClubId();
+        LocalDateTime playedAt = scheduleResponse.getScheduledAt();
+
+        // manualGames -> Match 엔티티 변환 및 저장
+        List<Match> matches = new ArrayList<>();
+        List<DrawResponse.Game> responseGames = new ArrayList<>();
+
+        for (CreateDrawRequestWithIds.ManualGame game : request.getManualGames()) {
+            // Match 엔티티 생성
+            Match match = Match.builder()
+                    .clubId(clubId)
+                    .scheduleId(scheduleId)
+                    .matchNumber(game.getGameNo())
+                    .teamAPlayer1Id(game.getTeamAUserIds().get(0))
+                    .teamAPlayer2Id(game.getTeamAUserIds().size() > 1 ? game.getTeamAUserIds().get(1) : null)
+                    .teamBPlayer1Id(game.getTeamBUserIds().get(0))
+                    .teamBPlayer2Id(game.getTeamBUserIds().size() > 1 ? game.getTeamBUserIds().get(1) : null)
+                    .playedAt(playedAt)
+                    .isMigrated(false)
+                    .build();
+            matches.add(match);
+
+            // DrawResponse.Game 생성
+            List<String> teamANames = game.getTeamAUserIds().stream()
+                    .map(userIdToName::get)
+                    .collect(Collectors.toList());
+            List<String> teamBNames = game.getTeamBUserIds().stream()
+                    .map(userIdToName::get)
+                    .collect(Collectors.toList());
+
+            responseGames.add(DrawResponse.Game.builder()
+                    .gameNo(game.getGameNo())
+                    .roundNo(game.getRoundNo())
+                    .teamA(teamANames)
+                    .teamB(teamBNames)
+                    .build());
+        }
+
+        matchRepository.saveAll(matches);
+        log.info("수동 대진 Match 저장 완료: {} 건", matches.size());
+
+        // 참가자 상태 업데이트
+        updateParticipantStatusBasedOnManualGames(scheduleId, request.getManualGames());
+
+        log.info("=== 수동 대진 저장 완료 ===");
+        return new DrawResponse(responseGames);
+    }
+
+    /**
+     * 수동 대진 게임에서 userId -> userName 매핑 생성
+     */
+    private Map<Long, String> buildUserIdToNameMapFromManualGames(List<CreateDrawRequestWithIds.ManualGame> manualGames) {
+        Set<Long> allUserIds = new HashSet<>();
+        for (CreateDrawRequestWithIds.ManualGame game : manualGames) {
+            allUserIds.addAll(game.getTeamAUserIds());
+            allUserIds.addAll(game.getTeamBUserIds());
+        }
+
+        Map<Long, String> userIdToName = new HashMap<>();
+        for (Long userId : allUserIds) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userId));
+            userIdToName.put(userId, user.getName());
+        }
+
+        return userIdToName;
+    }
+
+    /**
+     * 수동 대진 기반 참가자 상태 업데이트
+     */
+    private void updateParticipantStatusBasedOnManualGames(Long scheduleId,
+                                                           List<CreateDrawRequestWithIds.ManualGame> manualGames) {
+        log.info("참가자 상태 업데이트 시작 (수동 대진)");
+
+        // 대진에 포함된 userId 집합
+        Set<Long> participatingUserIds = new HashSet<>();
+        for (CreateDrawRequestWithIds.ManualGame game : manualGames) {
+            participatingUserIds.addAll(game.getTeamAUserIds());
+            participatingUserIds.addAll(game.getTeamBUserIds());
+        }
+        log.info("대진 참여 userId: {}", participatingUserIds);
+
+        // 해당 일정의 모든 참가자 조회
+        List<ScheduleParticipant> participants =
+                participantRepository.findByScheduleIdOrderByPositionAsc(scheduleId);
+
+        for (ScheduleParticipant participant : participants) {
+            if (participatingUserIds.contains(participant.getUserId())) {
+                if (participant.getStatus() != ScheduleParticipant.ParticipantStatus.CONFIRMED) {
+                    participant.confirm();
+                    log.debug("userId={} CONFIRMED로 변경", participant.getUserId());
+                }
+            } else {
+                if (participant.getStatus() != ScheduleParticipant.ParticipantStatus.WAITING) {
+                    participant.waitlist();
+                    log.debug("userId={} WAITING으로 변경", participant.getUserId());
+                }
+            }
+        }
+
+        participantRepository.saveAll(participants);
+        log.info("참가자 상태 업데이트 완료");
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.controller;
 
+import com.example.openrunapi.domain.draw.model.DrawType;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequest;
 import com.example.openrunapi.domain.draw.model.dto.CreateDrawRequestWithIds;
 import com.example.openrunapi.domain.draw.model.dto.DrawResponse;
@@ -222,6 +223,7 @@ public class ScheduleController {
 
     /**
      * 클럽용 대진 생성 (DB 저장) - userId 기반 (신규 API, 동명이인 문제 해결)
+     * MANUAL 타입인 경우 프론트에서 직접 구성한 대진을 저장
      */
     @PostMapping("/{scheduleId}/draw/with-ids")
     public ResponseEntity<DrawResponse> createDrawForScheduleWithIds(
@@ -230,12 +232,19 @@ public class ScheduleController {
 
         // 일정 존재 확인 및 조회
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
-        
+
         // 과거 일정 체크 (KST 기준)
         if (TimeValidationUtils.isPast(scheduleResponse.getScheduledAt())) {
             throw new IllegalStateException("이미 지난 일정에는 대진을 생성할 수 없습니다.");
         }
 
+        // MANUAL 타입: DrawService 우회, 직접 Match 저장
+        if (request.getDrawType() == DrawType.MANUAL) {
+            DrawResponse response = scheduleService.saveManualDraw(scheduleId, scheduleResponse, request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+
+        // 자동 대진 (AA, AB, SEED)
         // userId를 userName으로 변환하여 CreateDrawRequest 생성
         CreateDrawRequest drawRequest = convertToCreateDrawRequest(request);
 

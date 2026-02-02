@@ -16,10 +16,22 @@ export interface DrawResponse {
   games: DrawGame[];
 }
 
+export type DrawType = "AA" | "AB" | "SEED" | "MANUAL";
+
+/**
+ * 수동 대진 게임 정보
+ */
+export interface ManualGame {
+  gameNo: number;
+  roundNo: number;
+  teamAUserIds: number[];  // Team A 선수 ID [player1, player2]
+  teamBUserIds: number[];  // Team B 선수 ID [player1, player2]
+}
+
 export interface CreateDrawRequest {
   userNames: string[];
   seedUserNames?: string[];
-  drawType: "AA" | "AB" | "SEED";
+  drawType: DrawType;
   groupAUserNames?: string[];
   groupBUserNames?: string[];
   numberOfTotalPlayer: number;
@@ -28,10 +40,11 @@ export interface CreateDrawRequest {
 export interface CreateDrawRequestWithIds {
   userIds: number[];
   seedUserIds?: number[];
-  drawType: "AA" | "AB" | "SEED";
+  drawType: DrawType;
   groupAUserIds?: number[];
   groupBUserIds?: number[];
   numberOfTotalPlayer: number;
+  manualGames?: ManualGame[];  // MANUAL 타입인 경우 수동 대진 정보
 }
 
 export interface UpdateMatchRequest {
