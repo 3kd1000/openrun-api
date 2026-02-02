@@ -35,6 +35,8 @@ import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.repository.UserProfileRepository;
 import com.example.openrunapi.domain.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -608,7 +610,22 @@ public class ClubService {
             if (status == null) {
                 return cb.conjunction();
             }
-            return cb.equal(root.get("memberRecruitmentStatus"), status);
+
+            // ClubPolicy 서브쿼리로 memberRecruitmentOpen 확인
+            // MemberRecruitmentStatus.OPEN → memberRecruitmentOpen = true
+            // MemberRecruitmentStatus.CLOSED → memberRecruitmentOpen = false
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<ClubPolicy> policyRoot = subquery.from(ClubPolicy.class);
+
+            Boolean targetValue = (status == MemberRecruitmentStatus.OPEN);
+
+            subquery.select(policyRoot.get("clubId"))
+                    .where(cb.and(
+                            cb.equal(policyRoot.get("clubId"), root.get("id")),
+                            cb.equal(policyRoot.get("memberRecruitmentOpen"), targetValue)
+                    ));
+
+            return cb.exists(subquery);
         };
     }
 }

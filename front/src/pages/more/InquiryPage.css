@@ -1,0 +1,500 @@
+/* ===== InquiryPage 전용 스타일 ===== */
+/* 컴포넌트별 고유 prefix: inquiry-page */
+
+.inquiry-page {
+  padding: var(--space-l);
+  min-height: calc(100vh - 140px);
+  box-sizing: border-box;
+}
+
+.inquiry-page__content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ===== 헤더 ===== */
+.inquiry-page__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  margin-bottom: var(--space-xl);
+}
+
+.inquiry-page__header h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.inquiry-page__back-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  background: transparent;
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-s);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-s);
+  transition: var(--transition-base);
+}
+
+.inquiry-page__back-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ===== 문의 작성 폼 ===== */
+.inquiry-page__form {
+  background: var(--color-bg-primary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  padding: var(--space-l);
+  margin-bottom: var(--space-l);
+}
+
+.inquiry-page__textarea {
+  width: 100%;
+  padding: var(--space-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+  box-sizing: border-box;
+}
+
+.inquiry-page__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.inquiry-page__form-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-xs);
+}
+
+.inquiry-page__char-count {
+  font-size: var(--font-size-s);
+  color: var(--color-text-tertiary);
+}
+
+.inquiry-page__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-s);
+  margin-top: var(--space-m);
+}
+
+.inquiry-page__btn-cancel {
+  padding: var(--space-s) var(--space-m);
+  background: var(--color-bg-secondary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-s);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.inquiry-page__btn-cancel:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+}
+
+.inquiry-page__btn-submit {
+  padding: var(--space-s) var(--space-l);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-s);
+  color: white;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.inquiry-page__btn-submit:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.inquiry-page__btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== 새 문의 작성 버튼 ===== */
+.inquiry-page__new-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-s);
+  width: 100%;
+  padding: var(--space-m);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-s);
+  color: white;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+  margin-bottom: var(--space-l);
+}
+
+.inquiry-page__new-btn:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-s);
+}
+
+/* ===== 문의 목록 ===== */
+.inquiry-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+}
+
+/* ===== 문의 카드 ===== */
+.inquiry-page__card {
+  background: var(--color-bg-primary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  transition: var(--transition-base);
+}
+
+.inquiry-page__card:hover {
+  border-color: var(--color-primary);
+}
+
+.inquiry-page__card.is-expanded {
+  border-color: var(--color-primary);
+}
+
+.inquiry-page__card-header {
+  padding: var(--space-m);
+  cursor: pointer;
+}
+
+.inquiry-page__card-content {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  margin-bottom: var(--space-s);
+}
+
+.inquiry-page__card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+}
+
+.inquiry-page__card-date {
+  font-size: var(--font-size-s);
+  color: var(--color-text-tertiary);
+}
+
+.inquiry-page__comment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-s);
+  background: var(--color-primary);
+  color: white;
+  border-radius: 12px;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ===== 스레드 (확장 영역) ===== */
+.inquiry-page__thread {
+  border-top: var(--border-width-thin) solid var(--color-border-secondary);
+  padding: var(--space-m);
+  background: var(--color-bg-secondary);
+}
+
+.inquiry-page__original {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-s);
+  padding: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.inquiry-page__original-label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.inquiry-page__original-content {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* ===== 댓글 영역 ===== */
+.inquiry-page__comments {
+  margin-bottom: var(--space-m);
+}
+
+.inquiry-page__comments-loading,
+.inquiry-page__no-reply {
+  text-align: center;
+  padding: var(--space-m);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-s);
+}
+
+.inquiry-page__comment {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-s);
+  padding: var(--space-m);
+  margin-bottom: var(--space-s);
+}
+
+.inquiry-page__comment:last-child {
+  margin-bottom: 0;
+}
+
+.inquiry-page__comment-author {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.inquiry-page__comment-content {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.inquiry-page__comment-date {
+  font-size: var(--font-size-s);
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-xs);
+}
+
+/* ===== 추가 문의 입력 ===== */
+.inquiry-page__add-comment {
+  display: flex;
+  gap: var(--space-s);
+  align-items: flex-end;
+}
+
+.inquiry-page__comment-input {
+  flex: 1;
+  padding: var(--space-s);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  resize: none;
+  min-height: 60px;
+}
+
+.inquiry-page__comment-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.inquiry-page__btn-comment {
+  padding: var(--space-s) var(--space-m);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-s);
+  color: white;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+  white-space: nowrap;
+}
+
+.inquiry-page__btn-comment:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.inquiry-page__btn-comment:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== 빈 상태 ===== */
+.inquiry-page__empty {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--color-text-tertiary);
+}
+
+.inquiry-page__empty p {
+  margin-bottom: var(--space-m);
+}
+
+.inquiry-page__empty button {
+  padding: var(--space-s) var(--space-l);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-s);
+  color: white;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.inquiry-page__empty button:hover {
+  background: var(--color-primary-hover);
+}
+
+/* ===== 로딩 상태 ===== */
+.inquiry-page__loading {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--color-text-secondary);
+}
+
+/* ===== 안내 문구 ===== */
+.inquiry-page__notice {
+  margin-top: var(--space-xl);
+  padding: var(--space-l);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-m);
+}
+
+.inquiry-page__notice h2 {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-s) 0;
+}
+
+.inquiry-page__notice p {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin: var(--space-xs) 0;
+  line-height: 1.5;
+}
+
+/* ===== 미디어 쿼리: 미디어 대형 (401px ~ 768px) ===== */
+@media (min-width: 426px) and (max-width: 768px) {
+  .inquiry-page {
+    padding: var(--space-m);
+  }
+
+  .inquiry-page__header h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .inquiry-page__form {
+    padding: var(--space-m);
+  }
+
+  .inquiry-page__textarea {
+    font-size: var(--font-size-s);
+  }
+}
+
+/* ===== 미디어 쿼리: 미디어 중형 (361px ~ 400px) ===== */
+@media (min-width: 360px) and (max-width: 425px) {
+  .inquiry-page {
+    padding: var(--space-s);
+  }
+
+  .inquiry-page__header h1 {
+    font-size: var(--font-size-l);
+  }
+
+  .inquiry-page__header {
+    margin-bottom: var(--space-l);
+  }
+
+  .inquiry-page__form {
+    padding: var(--space-s);
+  }
+
+  .inquiry-page__textarea {
+    font-size: var(--font-size-s);
+    min-height: 100px;
+  }
+
+  .inquiry-page__card-content {
+    font-size: var(--font-size-s);
+  }
+
+  .inquiry-page__add-comment {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inquiry-page__btn-comment {
+    width: 100%;
+  }
+}
+
+/* ===== 미디어 쿼리: 미디어 소형 (360px 이하) ===== */
+@media (max-width: 359px) {
+  .inquiry-page {
+    padding: var(--space-s);
+  }
+
+  .inquiry-page__header h1 {
+    font-size: var(--font-size-base);
+  }
+
+  .inquiry-page__header {
+    margin-bottom: var(--space-m);
+  }
+
+  .inquiry-page__back-btn span {
+    display: none;
+  }
+
+  .inquiry-page__form {
+    padding: var(--space-s);
+  }
+
+  .inquiry-page__textarea {
+    font-size: var(--font-size-s);
+    min-height: 80px;
+    padding: var(--space-s);
+  }
+
+  .inquiry-page__btn-submit,
+  .inquiry-page__btn-cancel {
+    font-size: var(--font-size-s);
+    padding: var(--space-s);
+  }
+
+  .inquiry-page__card-content,
+  .inquiry-page__original-content,
+  .inquiry-page__comment-content {
+    font-size: var(--font-size-s);
+  }
+
+  .inquiry-page__add-comment {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inquiry-page__btn-comment {
+    width: 100%;
+  }
+
+  .inquiry-page__notice h2 {
+    font-size: var(--font-size-base);
+  }
+
+  .inquiry-page__notice p {
+    font-size: var(--font-size-s);
+  }
+}

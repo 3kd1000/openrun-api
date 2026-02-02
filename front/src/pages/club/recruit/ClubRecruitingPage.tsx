@@ -11,6 +11,7 @@ import { postService } from "../../../services/postService";
 import { commentService } from "../../../services/commentService";
 import type { Post, Comment } from "../../../types/post";
 import { getOpenRunSession } from "../../../utils/openrunSession";
+import { syncClubList } from "../../../services/api/userApi";
 import { useToast } from "../../../contexts/ToastContext";
 import "./ClubRecruitingPage.css";
 
@@ -119,7 +120,8 @@ const ClubRecruitingPage: React.FC = () => {
       const { autoApproved, message } = response.data;
 
       if (autoApproved) {
-        // 자동승인인 경우 클럽 메인페이지로 이동
+        // 자동승인인 경우 세션 업데이트 후 클럽 메인페이지로 이동
+        await syncClubList();
         showToast(message, "success");
         navigate(`/clubs/${clubId}`);
       } else {

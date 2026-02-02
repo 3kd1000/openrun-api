@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { MyClub } from "../../services/api/userApi";
-import { getMyClubs } from "../../services/api/userApi";
+import { getMyClubs, syncClubList } from "../../services/api/userApi";
 import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import { isNotEmpty } from "../../utils/isEmpty";
@@ -59,6 +59,7 @@ const MyClubsPage: React.FC = () => {
       await axiosInstance.delete(`/clubs/${clubId}/members/me`);
       showToast("클럽 탈퇴가 완료되었습니다", "success");
       loadClubs(); // 목록 새로고침
+      await syncClubList(); // 세션 clubList 업데이트
     } catch (error: unknown) {
       console.error("클럽 탈퇴 실패:", error);
       const errorMessage =

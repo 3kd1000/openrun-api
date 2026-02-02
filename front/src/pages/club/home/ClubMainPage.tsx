@@ -39,6 +39,7 @@ import WidgetSettingsModal, {
 } from "./components/widgets/WidgetSettingsModal";
 import "./ClubMainPage.css";
 import { clubService } from "../../../services/clubService";
+import { syncClubList } from "../../../services/api/userApi";
 
 // 신규 위젯 ID 타입 (board 제거, 신규 위젯 추가)
 type ClubWidgetId =
@@ -58,6 +59,11 @@ const ClubMainPage: React.FC = () => {
   const [club, setClub] = useState<Club | null>(null);
   const [isLoadingClub, setIsLoadingClub] = useState(true);
   const [contentUnreadCount, setContentUnreadCount] = useState<number>(0);
+
+  // clubList 로딩 완료 여부 (기존 사용자 동기화 대기용)
+  const [clubListLoaded, setClubListLoaded] = useState(() => {
+    return getOpenRunSession().clubList !== undefined;
+  });
 
   const session = getOpenRunSession();
   const clubId = clubIdParam ?? session.currentClubId;
@@ -358,6 +364,12 @@ const ClubMainPage: React.FC = () => {
       return;
     }
 
+    // clubList 로딩 대기 (기존 사용자 동기화)
+    if (!clubListLoaded) {
+      console.log("⏳ clubList 로딩 대기 중...");
+      return;
+    }
+
     // 로그인되지 않았으면 로그인 페이지로
     if (!user) {
       console.log("❌ 로그인되지 않음 → 로그인 페이지로 이동");
@@ -402,14 +414,30 @@ const ClubMainPage: React.FC = () => {
     } catch (error: unknown) {
       logError("클럽 정보 조회", error);
       if (axios.isAxiosError(error) && error.response?.status === 403) {
+        // 클럽 멤버가 아님 → 세션 정리 후 클럽 탐색 페이지로 이동
+        console.log("⚠️ 클럽 멤버가 아님 → 세션 정리 후 클럽 탐색 페이지로 이동");
+        setOpenRunSession({ currentClubId: undefined, currentClubRole: undefined });
         showToast("클럽 정보를 조회할 권한이 없습니다", "error");
+        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        return;
       } else {
         showToast(getErrorMessage(error), "error");
       }
     } finally {
       setIsLoadingClub(false);
     }
-  }, [clubId, myRole, userIdStr, navigate, isAuthReady, user]);
+  }, [clubId, myRole, userIdStr, navigate, isAuthReady, user, clubListLoaded]);
+
+  // 기존 사용자 세션에 clubList가 없으면 동기화
+  useEffect(() => {
+    const session = getOpenRunSession();
+    if (isAuthReady && user && !session.clubList) {
+      console.log("⚠️ 세션에 clubList 없음 → 동기화 시작");
+      syncClubList().then(() => {
+        setClubListLoaded(true);
+      });
+    }
+  }, [isAuthReady, user]);
 
   // 클럽 정보 로드
   useEffect(() => {

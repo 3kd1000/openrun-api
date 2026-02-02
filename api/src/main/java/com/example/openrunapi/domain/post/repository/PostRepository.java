@@ -33,4 +33,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE p.club.id = :clubId AND p.postType = :postType AND p.deleted = false")
     Page<Post> findByClubIdAndPostTypeAndNotDeletedPaged(@Param("clubId") Long clubId, @Param("postType") PostType postType, Pageable pageable);
+
+    /**
+     * 시스템 클럽에서 특정 사용자가 작성한 문의글 조회 (서비스 문의용)
+     */
+    @Query("SELECT p FROM Post p WHERE p.club.id = :clubId AND p.postType = :postType AND p.author.id = :authorId AND p.deleted = false ORDER BY p.createdAt DESC")
+    List<Post> findByClubIdAndPostTypeAndAuthorIdAndNotDeleted(
+            @Param("clubId") Long clubId,
+            @Param("postType") PostType postType,
+            @Param("authorId") Long authorId
+    );
 }

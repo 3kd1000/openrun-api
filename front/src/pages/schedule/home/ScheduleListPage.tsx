@@ -9,7 +9,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
-import { getMySchedules } from "../../../services/api/userApi";
+import { getMySchedules, syncClubList } from "../../../services/api/userApi";
 import { useAuth } from "../../../contexts/AuthContext";
 import type {
   Schedule,
@@ -27,7 +27,7 @@ import {
   CalendarIcon,
   ClipboardListIcon,
 } from "../../../components/common/Icons";
-import { getOpenRunSession } from "../../../utils/openrunSession";
+import { getOpenRunSession, hasJoinedClub } from "../../../utils/openrunSession";
 import {
   getOpenRunUiSettings,
   setOpenRunUiSettings,
@@ -61,8 +61,14 @@ const ScheduleListPage: React.FC = () => {
   const session = getOpenRunSession();
   const selectedClubId = session.currentClubId ? parseInt(session.currentClubId) : null;
 
-  // 클럽 가입 여부 (LocalStorage의 currentClubId로 간단히 판단)
-  const hasClub = !!selectedClubId;
+  // clubList 로딩 완료 여부 (리렌더링 트리거용)
+  const [clubListLoaded, setClubListLoaded] = useState(() => {
+    return getOpenRunSession().clubList !== undefined;
+  });
+
+  // 클럽 가입 여부 (세션의 clubList 기반으로 판단)
+  // clubListLoaded가 변경되면 리렌더링되어 최신 값 반영
+  const hasClub = clubListLoaded ? hasJoinedClub() : undefined;
 
   // 일정 모드 (클럽일정 / 개인일정) - URL 경로에 따라 초기값 설정
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>(() => {
@@ -99,9 +105,21 @@ const ScheduleListPage: React.FC = () => {
     return Number.isFinite(n) ? n : null;
   }, [location.state]);
 
-  // 가입한 클럽이 없고 현재 클럽일정 모드이면 개인일정으로 전환
+  // 기존 사용자 세션에 clubList가 없으면 동기화
   useEffect(() => {
-    if (!hasClub && scheduleMode === "club") {
+    const session = getOpenRunSession();
+    if (isAuthReady && firebaseUser && !session.clubList) {
+      console.log("⚠️ 세션에 clubList 없음 → 동기화 시작");
+      syncClubList().then(() => {
+        setClubListLoaded(true);
+      });
+    }
+  }, [isAuthReady, firebaseUser]);
+
+  // 가입한 클럽이 없고 현재 클럽일정 모드이면 개인일정으로 전환
+  // hasClub === undefined (아직 로드 안 됨)일 때는 판단 보류
+  useEffect(() => {
+    if (hasClub === false && scheduleMode === "club") {
       setScheduleMode("personal");
       navigate("/schedules/my", { replace: true });
     }
@@ -124,8 +142,14 @@ const ScheduleListPage: React.FC = () => {
       return;
     }
 
+    // clubList 로딩 대기 (undefined = 아직 로드 안 됨)
+    if (hasClub === undefined) {
+      console.log("⏳ clubList 로딩 대기 중...");
+      return;
+    }
+
     // 가입한 클럽이 없으면 빈 목록 반환
-    if (!hasClub) {
+    if (hasClub === false) {
       console.log("✅ 가입한 클럽 없음 → 빈 일정 목록");
       setSchedules([]);
       setLoading(false);
@@ -183,12 +207,24 @@ const ScheduleListPage: React.FC = () => {
       }
     } catch (err) {
       console.error("일정 조회 실패:", err);
+      // 403 에러 (클럽 멤버가 아님) → 개인일정으로 전환
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosError = err as { response?: { status?: number } };
+        if (axiosError.response?.status === 403) {
+          console.log("⚠️ 클럽 멤버가 아님 → 개인일정으로 전환");
+          setScheduleMode("personal");
+          navigate("/schedules/my", { replace: true });
+          setLoading(false);
+          isLoadingRef.current = false;
+          return;
+        }
+      }
       setError("일정을 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [selectedClubId, firebaseUser, isAuthReady, hasClub]);
+  }, [selectedClubId, firebaseUser, isAuthReady, hasClub, navigate]);
 
   // 개인 일정 조회
   const loadPersonalSchedules = useCallback(async () => {
