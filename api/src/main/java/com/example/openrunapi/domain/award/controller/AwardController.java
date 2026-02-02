@@ -4,6 +4,7 @@ import com.example.openrunapi.domain.award.model.dto.AwardRankingResponse;
 import com.example.openrunapi.domain.award.model.dto.AwardWinnerResponse;
 import com.example.openrunapi.domain.award.model.dto.AwardWinnersResponse;
 import com.example.openrunapi.domain.award.model.dto.SaveAwardWinnerRequest;
+import com.example.openrunapi.domain.award.model.dto.UpdateAwardWinnerRequest;
 import com.example.openrunapi.domain.award.service.AwardService;
 import com.example.openrunapi.domain.club.model.AwardPeriod;
 import com.example.openrunapi.domain.club.model.AwardType;
@@ -93,6 +94,22 @@ public class AwardController {
     public ResponseEntity<List<AwardWinnerResponse>> getAllAwardWinners(@PathVariable Long clubId) {
         List<AwardWinnerResponse> winners = awardService.getAllAwardWinners(clubId);
         return ResponseEntity.ok(winners);
+    }
+
+    /**
+     * 수상자 수정 (Admin용)
+     */
+    @PutMapping("/manage/{winnerId}")
+    public ResponseEntity<AwardWinnerResponse> updateAwardWinner(
+            @PathVariable Long clubId,
+            @PathVariable Long winnerId,
+            @RequestBody UpdateAwardWinnerRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId
+    ) {
+        AwardWinnerResponse response = awardService.updateAwardWinner(
+                winnerId, request.getUserId(), request.getValue(), userId
+        );
+        return ResponseEntity.ok(response);
     }
 
     /**

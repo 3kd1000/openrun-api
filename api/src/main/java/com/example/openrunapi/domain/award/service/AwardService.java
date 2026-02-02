@@ -561,6 +561,26 @@ public class AwardService {
     }
 
     /**
+     * 수상자 수정
+     */
+    @Transactional
+    public AwardWinnerResponse updateAwardWinner(Long id, Long userId, Long value, Long updatedBy) {
+        AwardWinner winner = awardWinnerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("수상자를 찾을 수 없습니다. id=" + id));
+
+        winner.setUserId(userId);
+        winner.setValue(value);
+        winner.setCreatedBy(updatedBy);  // 수정자로 갱신
+        winner.setCreatedAt(LocalDateTime.now());  // 수정 시간으로 갱신
+
+        String userName = userRepository.findById(userId)
+                .map(u -> u.getName())
+                .orElse("알 수 없음");
+
+        return AwardWinnerResponse.from(winner, userName);
+    }
+
+    /**
      * 수상자 삭제
      */
     @Transactional
