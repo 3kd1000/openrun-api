@@ -8,7 +8,8 @@ import {
 import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
-import { getOpenRunSession, setOpenRunSession } from "../../utils/openrunSession";
+import { syncClubList } from "../../services/api/userApi";
+import { getOpenRunSession, setOpenRunSession, hasJoinedClub } from "../../utils/openrunSession";
 
 interface UserInfo {
   id: number;
@@ -37,9 +38,8 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    // currentClubId가 있으면 클럽일정, 없으면 클럽 탐색
-    const session = getOpenRunSession();
-    if (session.currentClubId) {
+    // clubList 기반으로 가입한 클럽 여부 확인
+    if (hasJoinedClub()) {
       console.log(`✅ 가입한 클럽 있음 → 클럽일정으로 이동`);
       navigate("/schedules/club", { replace: true });
     } else {
@@ -146,9 +146,11 @@ const LoginPage: React.FC = () => {
           userName: userInfo.name,
           userEmail: userInfo.email,
           userImageUrl: userInfo.imageUrl,
-          currentClubId: "1", // openrun 클럽 ID (향후 동적 변경)
           autoLoginEnabled,
         });
+
+        // 클럽 목록 동기화 (currentClubId 자동 설정)
+        await syncClubList();
 
         console.log("✅ 카카오 로그인 성공:", userInfo);
 
@@ -250,9 +252,11 @@ const LoginPage: React.FC = () => {
         userName: userInfo.name,
         userEmail: userInfo.email,
         userImageUrl: userInfo.imageUrl,
-        currentClubId: "1", // openrun 클럽 ID (향후 동적 변경)
         autoLoginEnabled,
       });
+
+      // 클럽 목록 동기화 (currentClubId 자동 설정)
+      await syncClubList();
 
       console.log("✅ [3/4] localStorage 저장 완료");
 
@@ -359,9 +363,11 @@ const LoginPage: React.FC = () => {
         userName: userInfo.name,
         userEmail: userInfo.email,
         userImageUrl: userInfo.imageUrl,
-        currentClubId: "1",
         autoLoginEnabled,
       });
+
+      // 클럽 목록 동기화 (currentClubId 자동 설정)
+      await syncClubList();
 
       console.log("✅ [4/5] 세션 저장 완료");
 

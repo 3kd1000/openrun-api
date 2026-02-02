@@ -9,6 +9,11 @@ import { normalizeClubRole, type ClubRoleOrUnknown } from "../utils/role";
 
 export const OPENRUN_SESSION_KEY = "openrun_session_v1";
 
+export interface ClubSummary {
+  id: number;
+  name: string;
+}
+
 export interface OpenRunSessionV1 {
   version: 1;
   userId?: number;
@@ -21,6 +26,8 @@ export interface OpenRunSessionV1 {
   autoLoginEnabled?: boolean;
   currentClubId?: string;
   currentClubRole?: ClubRoleOrUnknown;
+  /** 가입한 클럽 목록 (로그인/토큰갱신/가입/탈퇴 시 업데이트) */
+  clubList?: ClubSummary[];
 }
 
 function safeJsonParse<T>(value: string | null): T | null {
@@ -122,4 +129,52 @@ export function setOpenRunSession(patch: Partial<OpenRunSessionV1>) {
 
 export function clearOpenRunSession() {
   localStorage.removeItem(OPENRUN_SESSION_KEY);
+}
+
+/**
+ * 가입한 클럽이 있는지 확인 (clubList 기반)
+ * @returns true: 클럽 있음, false: 클럽 없음, undefined: 아직 로드 안 됨
+ */
+export function hasJoinedClub(): boolean | undefined {
+  const session = getOpenRunSession();
+  // clubList가 undefined면 아직 로드 안 됨 (기존 사용자)
+  if (session.clubList === undefined) {
+    return undefined;
+  }
+  return session.clubList.length > 0;
+}
+
+/**
+ * 현재 선택된 클럽이 clubList에 있는지 확인
+ * 없으면 첫 번째 클럽으로 변경하거나 null로 설정
+ */
+export function validateAndFixCurrentClub(): void {
+  const session = getOpenRunSession();
+  const clubList = session.clubList ?? [];
+  const currentClubId = session.currentClubId;
+
+  if (clubList.length === 0) {
+    // 가입한 클럽이 없으면 currentClubId 제거
+    if (currentClubId) {
+      setOpenRunSession({ currentClubId: undefined, currentClubRole: undefined });
+    }
+    return;
+  }
+
+  // currentClubId가 clubList에 있는지 확인
+  const isValid = currentClubId && clubList.some(c => String(c.id) === currentClubId);
+  if (!isValid) {
+    // 첫 번째 클럽으로 변경
+    const firstClub = clubList[0];
+    setOpenRunSession({ currentClubId: String(firstClub.id) });
+    console.log(`⚠️ currentClubId 수정: ${currentClubId} → ${firstClub.id} (${firstClub.name})`);
+  }
+}
+
+/**
+ * clubList 업데이트 (가입/탈퇴 시 호출)
+ */
+export function updateClubList(clubList: ClubSummary[]): void {
+  setOpenRunSession({ clubList });
+  validateAndFixCurrentClub();
 }

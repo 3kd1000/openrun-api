@@ -114,6 +114,24 @@ export const getMyClubs = async (): Promise<MyClub[]> => {
 };
 
 /**
+ * 클럽 목록을 조회해서 세션에 저장 (로그인/토큰갱신/가입/탈퇴 시 호출)
+ * @returns 클럽 목록
+ */
+export const syncClubList = async (): Promise<MyClub[]> => {
+  const { updateClubList } = await import('../../utils/openrunSession');
+  try {
+    const clubs = await getMyClubs();
+    updateClubList(clubs.map(c => ({ id: c.id, name: c.name })));
+    console.log(`✅ clubList 동기화 완료: ${clubs.length}개 클럽`);
+    return clubs;
+  } catch (error) {
+    console.error('❌ clubList 동기화 실패:', error);
+    // 실패해도 기존 세션 유지
+    return [];
+  }
+};
+
+/**
  * 내가 참가한 모든 일정 조회 (개인일정)
  * - ScheduleParticipant + ExternalRequest 조합
  * - 클럽 멤버로 참가한 일정 + 게스트로 신청한 일정

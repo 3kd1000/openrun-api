@@ -32,6 +32,7 @@ import MyClubsPage from "./pages/more/MyClubsPage";
 import UserGuidePage from "./pages/more/UserGuidePage";
 import UserGuideDetailPage from "./pages/more/UserGuideDetailPage";
 import GuideEditorPage from "./pages/more/GuideEditorPage";
+import InquiryPage from "./pages/more/InquiryPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -224,6 +225,14 @@ function App() {
                 element={<OAuthProvidersPage />}
               />
               <Route path="/more/my-clubs" element={<MyClubsPage />} />
+              <Route
+                path="/more/inquiry"
+                element={
+                  <ProtectedRoute>
+                    <InquiryPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/more/user-guide" element={<UserGuidePage />} />
               <Route path="/more/user-guide/:category" element={<UserGuideDetailPage />} />
               {/* 가이드 에디터: 개발 환경에서만 접근 가능 */}

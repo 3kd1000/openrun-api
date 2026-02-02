@@ -5,6 +5,7 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import AuditLogPage from "./pages/AuditLogPage";
 import AwardWinnerPage from "./pages/AwardWinnerPage";
+import InquiryManagePage from "./pages/InquiryManagePage";
 import LoginPage from "./pages/LoginPage";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="audit-logs" element={<AuditLogPage />} />
           <Route path="award-winners" element={<AwardWinnerPage />} />
+          <Route path="inquiries" element={<InquiryManagePage />} />
         </Route>
       </Routes>
     </AuthProvider>

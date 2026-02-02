@@ -226,13 +226,11 @@ const MorePage: React.FC = () => {
               오픈소스 라이센스
             </div>
           </div>
-          <div className="more-item">
+          <div className="more-item" onClick={() => navigate("/more/inquiry")}>
             <span className="more-icon">
               <MailIcon size={20} />
             </span>
-            <a href="mailto:dev.openrun@gmail.com" className="more-link">
-              문의하기
-            </a>
+            <span className="more-link">문의하기</span>
           </div>
         </div>
 

@@ -21,6 +21,9 @@ function Layout() {
           <NavLink to="/award-winners" className={({ isActive }) => isActive ? "active" : ""}>
             어워드 수상자
           </NavLink>
+          <NavLink to="/inquiries" className={({ isActive }) => isActive ? "active" : ""}>
+            문의 관리
+          </NavLink>
         </nav>
         <div className="admin-sidebar__footer">
           {adminUser && (
