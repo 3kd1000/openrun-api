@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
+import type { AwardRankingResponse, AwardPeriod, Club } from "../../types/club";
 import { format } from "date-fns";
-import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon } from "../../components/common/Icons";
+import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon, StarIcon, MedalIcon } from "../../components/common/Icons";
 import { getOpenRunSession } from "../../utils/openrunSession";
 import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
+import { awardService, type AwardPeriodOption } from "../../services/awardService";
+import UserNameWithBadge from "../../components/common/UserNameWithBadge";
 import "./ScoreboardPage.css";
 
 interface RankingEntry {
@@ -23,7 +26,7 @@ interface ScoreboardResponse {
   rankings: RankingEntry[];
 }
 
-type TabType = "ranking" | "matches" | "personal";
+type TabType = "ranking" | "matches" | "awards" | "personal";
 
 const ScoreboardPage: React.FC = () => {
   // 클럽 선택 상태는 ClubLayout에서 관리하므로 세션에서만 읽음
@@ -83,6 +86,15 @@ const ScoreboardPage: React.FC = () => {
   // 현재 사용자 이름 (개인기록 탭에서 하이라이팅용)
   const currentUserName = session.userName;
 
+  // Tab 4: Awards (어워드)
+  const [awardRankings, setAwardRankings] = useState<AwardRankingResponse[]>([]);
+  const [awardLoading, setAwardLoading] = useState(false);
+  const [awardError, setAwardError] = useState<string | null>(null);
+  const [clubAwardPeriod, setClubAwardPeriod] = useState<AwardPeriod>("HALF_YEAR");
+  const [periodOptions, setPeriodOptions] = useState<AwardPeriodOption[]>([]);
+  const [selectedPeriodIndex, setSelectedPeriodIndex] = useState(0);
+  const isLoadingAwardRef = useRef(false);
+
   // 선수 이름 렌더링 (본인 이름은 Bold 처리)
   const renderPlayerName = (name: string) => {
     if (currentUserName && name === currentUserName) {
@@ -96,8 +108,8 @@ const ScoreboardPage: React.FC = () => {
 
   // 클럽 가입 여부에 따라 기본 탭 설정
   useEffect(() => {
-    // 클럽에 가입하지 않았는데 ranking이나 matches 탭이면 personal로 전환
-    if (!hasClub && (activeTab === "ranking" || activeTab === "matches")) {
+    // 클럽에 가입하지 않았는데 클럽 전용 탭이면 personal로 전환
+    if (!hasClub && (activeTab === "ranking" || activeTab === "matches" || activeTab === "awards")) {
       setActiveTab("personal");
     }
   }, [hasClub, activeTab]);
@@ -265,6 +277,57 @@ const ScoreboardPage: React.FC = () => {
     }
   }, [personalHasMore, personalPage, fetchPersonalData]);
 
+  // Tab 4: 어워드 데이터 로드
+  const fetchAwardData = useCallback(async (periodIndex: number = 0) => {
+    if (isLoadingAwardRef.current || !selectedClubId) return;
+
+    isLoadingAwardRef.current = true;
+    try {
+      setAwardLoading(true);
+      setAwardError(null);
+
+      // 첫 로드 시 클럽 정보에서 award period 가져오기
+      if (periodOptions.length === 0) {
+        const clubResponse = await axiosInstance.get<Club>(`/clubs/${selectedClubId}`);
+        const period = clubResponse.data.awardPeriod || "HALF_YEAR";
+        setClubAwardPeriod(period);
+
+        // 기간 옵션 생성
+        const options = awardService.generatePeriodOptions(period, 6);
+        setPeriodOptions(options);
+      }
+
+      // 선택된 기간으로 랭킹 조회
+      const currentOptions = periodOptions.length > 0
+        ? periodOptions
+        : awardService.generatePeriodOptions(clubAwardPeriod, 6);
+
+      const selectedOption = currentOptions[periodIndex];
+      if (selectedOption) {
+        const rankings = await awardService.getAwardRankings(
+          selectedClubId,
+          undefined,
+          selectedOption.startDate,
+          selectedOption.endDate,
+          3  // 상위 3명만
+        );
+        setAwardRankings(rankings);
+      }
+    } catch (err) {
+      console.error("Failed to fetch award data:", err);
+      setAwardError("어워드 정보를 불러오는데 실패했습니다.");
+    } finally {
+      setAwardLoading(false);
+      isLoadingAwardRef.current = false;
+    }
+  }, [selectedClubId, periodOptions, clubAwardPeriod]);
+
+  // 기간 선택 변경 핸들러
+  const handlePeriodChange = (index: number) => {
+    setSelectedPeriodIndex(index);
+    fetchAwardData(index);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchMatches(playerName || undefined);
@@ -350,6 +413,13 @@ const ScoreboardPage: React.FC = () => {
     }
   }, [activeTab, personalStats, fetchPersonalData]);
 
+  // 어워드 탭 진입 시에만 데이터 로드
+  useEffect(() => {
+    if (activeTab === "awards" && awardRankings.length === 0) {
+      fetchAwardData(0);
+    }
+  }, [activeTab, awardRankings.length, fetchAwardData]);
+
   return (
     <div className="scoreboard-page">
       {/* Tab Navigation */}
@@ -369,7 +439,14 @@ const ScoreboardPage: React.FC = () => {
               onClick={() => setActiveTab("matches")}
             >
               <ClipboardListIcon size={20} />
-              <span>경기 기록</span>
+              <span>경기기록</span>
+            </button>
+            <button
+              className={`tab-button ${activeTab === "awards" ? "active" : ""}`}
+              onClick={() => setActiveTab("awards")}
+            >
+              <StarIcon size={20} />
+              <span>어워드</span>
             </button>
           </>
         )}
@@ -467,7 +544,7 @@ const ScoreboardPage: React.FC = () => {
                   {rankings.map((entry) => (
                     <tr key={entry.userId}>
                       <td className="rank">{entry.rank}</td>
-                      <td className="name">{entry.userName}</td>
+                      <td className="name"><UserNameWithBadge userId={entry.userId} userName={entry.userName} /></td>
                       <td>{entry.totalMatches}</td>
                       <td className="points">{entry.points}</td>
                       <td>{entry.winRate}%</td>
@@ -600,9 +677,9 @@ const ScoreboardPage: React.FC = () => {
                           }`}
                         >
                           <span className="players-inline">
-                            {match.teamAPlayer1Name}
-                            {match.teamAPlayer2Name &&
-                              ` ${match.teamAPlayer2Name}`}
+                            <UserNameWithBadge userId={match.teamAPlayer1Id} userName={match.teamAPlayer1Name} />
+                            {match.teamAPlayer2Id && match.teamAPlayer2Name &&
+                              <> <UserNameWithBadge userId={match.teamAPlayer2Id} userName={match.teamAPlayer2Name} /></>}
                           </span>
                           {completed &&
                             match.teamAScore !== undefined &&
@@ -630,9 +707,9 @@ const ScoreboardPage: React.FC = () => {
                               </span>
                             )}
                           <span className="players-inline">
-                            {match.teamBPlayer1Name}
-                            {match.teamBPlayer2Name &&
-                              ` ${match.teamBPlayer2Name}`}
+                            <UserNameWithBadge userId={match.teamBPlayer1Id} userName={match.teamBPlayer1Name} />
+                            {match.teamBPlayer2Id && match.teamBPlayer2Name &&
+                              <> <UserNameWithBadge userId={match.teamBPlayer2Id} userName={match.teamBPlayer2Name} /></>}
                           </span>
                         </div>
                       </div>
@@ -655,7 +732,87 @@ const ScoreboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 3: Personal Record */}
+      {/* Tab 3: Awards */}
+      {activeTab === "awards" && (
+        <div className="tab-content">
+          {/* 기간 선택 */}
+          <div className="award-period-filter">
+            <label>기간:</label>
+            <select
+              value={selectedPeriodIndex}
+              onChange={(e) => handlePeriodChange(parseInt(e.target.value))}
+              className="period-select"
+              disabled={awardLoading}
+            >
+              {periodOptions.map((option, index) => (
+                <option key={index} value={index}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {awardLoading ? (
+            <div className="empty-state">
+              <p>로딩 중...</p>
+            </div>
+          ) : awardError ? (
+            <div className="empty-state">
+              <p>{awardError}</p>
+            </div>
+          ) : awardRankings.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <StarIcon size={64} color="var(--color-text-secondary)" />
+              </div>
+              <h3>활성화된 어워드가 없습니다</h3>
+              <p>클럽 관리 {">"} 어워드 정책에서 어워드를 활성화하세요</p>
+            </div>
+          ) : (
+            <div className="award-list">
+              {awardRankings.map((award) => (
+                <div key={award.type} className="award-card">
+                  <div className="award-card__header">
+                    <span className="award-card__type">
+                      {awardService.getAwardTypeName(award.type)}
+                    </span>
+                  </div>
+                  {award.rankings.length === 0 ? (
+                    <div className="award-card__empty">
+                      기록이 없습니다
+                    </div>
+                  ) : (
+                    <div className="award-card__rankings">
+                      {award.rankings.map((entry, index) => (
+                        <div
+                          key={entry.userId}
+                          className={`award-card__entry ${index === 0 ? "winner" : ""}`}
+                        >
+                          <span className="award-card__rank">
+                            {index === 0 ? (
+                              <MedalIcon size={24} rank={1} />
+                            ) : index === 1 ? (
+                              <MedalIcon size={20} rank={2} />
+                            ) : (
+                              <MedalIcon size={18} rank={3} />
+                            )}
+                          </span>
+                          <span className="award-card__name"><UserNameWithBadge userId={entry.userId} userName={entry.userName} /></span>
+                          <span className="award-card__value">
+                            {entry.value}{awardService.getAwardTypeUnit(award.type)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab 4: Personal Record */}
       {activeTab === "personal" && (
         <div className="tab-content">
           {personalLoading ? (

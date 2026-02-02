@@ -527,8 +527,8 @@ const ClubExplorePage: React.FC = () => {
                   <div className="club-explore-page__club-item-info">
                     <div className="club-explore-page__club-item-header">
                       <span className="club-explore-page__club-item-name">{club.name}</span>
-                      <span className={`club-explore-page__club-item-badge ${club.joinPolicy === "AUTO" ? "club-explore-page__club-item-badge--auto" : ""}`}>
-                        {club.joinPolicy === "AUTO" ? "바로가입" : "승인제"}
+                      <span className={`club-explore-page__club-item-badge ${club.autoJoinEnabled ? "club-explore-page__club-item-badge--auto" : ""}`}>
+                        {club.autoJoinEnabled ? "바로가입" : "승인제"}
                       </span>
                     </div>
                     <div className="club-explore-page__club-item-details">

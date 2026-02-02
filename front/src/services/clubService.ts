@@ -9,7 +9,7 @@ import type {
   CreateClubNoticeRequest,
   UpdateClubNoticeRequest
 } from '../types/club';
-import type { Club, CreateClubRequest, UpdateClubRequest, UpdateClubPolicyRequest } from '../types/club';
+import type { Club, CreateClubRequest, UpdateClubRequest, UpdateClubPolicyRequest, UpdateAwardPolicyRequest, AwardRankingResponse, AwardType } from '../types/club';
 import type { Post } from '../types/post';
 
 export type ExternalRequestType = 'JOIN' | 'GUEST' | 'INTERCLUB';
@@ -64,6 +64,12 @@ export const clubService = {
   // 클럽 운영 정책 수정 (운영진 이상)
   updateClubPolicy: async (clubId: number, data: UpdateClubPolicyRequest): Promise<Club> => {
     const response = await axiosInstance.patch(`/clubs/${clubId}/policy`, data);
+    return response.data;
+  },
+
+  // 클럽 어워드 정책 수정 (운영진 이상)
+  updateAwardPolicy: async (clubId: number, data: UpdateAwardPolicyRequest): Promise<Club> => {
+    const response = await axiosInstance.patch(`/clubs/${clubId}/award-policy`, data);
     return response.data;
   },
 
@@ -227,5 +233,19 @@ export const clubService = {
     await axiosInstance.post(`/clubs/${clubId}/rules/mark-read`, {
       upToRuleId: upToRuleId ?? null,
     });
+  },
+
+  // 어워드 랭킹 조회
+  getAwardRankings: async (
+    clubId: number,
+    params?: {
+      type?: AwardType;
+      startDate?: string;
+      endDate?: string;
+      limit?: number;
+    }
+  ): Promise<AwardRankingResponse[]> => {
+    const response = await axiosInstance.get(`/clubs/${clubId}/awards`, { params });
+    return response.data;
   },
 };

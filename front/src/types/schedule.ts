@@ -50,6 +50,7 @@ export interface Participant {
   position: number;
   joinedAt: string;
   asGuest: boolean;
+  awardTypes?: string[];  // 수상 타입 목록 (ATTENDANCE, POINTS, BOOKING)
 }
 
 /**

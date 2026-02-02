@@ -55,9 +55,9 @@ const ClubCreateOnboardingPage: React.FC = () => {
       setSaving(true);
       // 신규 생성된 클럽의 기본값 + 작성된 모집글로 저장
       await clubService.updateClubPolicy(id, {
-        joinPolicy: "APPROVAL",
-        interclubRecruitmentStatus: "CLOSED",
-        memberRecruitmentStatus: "OPEN",
+        autoJoinEnabled: false,
+        interclubRecruitmentOpen: false,
+        memberRecruitmentOpen: true,
         memberRecruitmentNote: recruitmentNote.trim() || null,
       });
       setSaved(true);

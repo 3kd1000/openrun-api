@@ -856,15 +856,21 @@
 /* ========== 모바일 최적화 (탭 및 검색) ========== */
 @media (max-width: 768px) {
   .tab-navigation {
-    gap: var(--space-xxs);
+    gap: 0;
     margin-bottom: var(--space-l);
   }
 
   .tab-button {
     flex: 1;
-    padding: var(--space-m) var(--space-s);
-    font-size: var(--font-size-base);
-    min-height: 44px;
+    padding: var(--space-s) var(--space-xs);
+    font-size: var(--font-size-s);
+    min-height: 40px;
+    gap: 2px;
+  }
+
+  .tab-button svg {
+    width: 16px;
+    height: 16px;
   }
 
   .ranking-filters {
@@ -1223,4 +1229,193 @@
 .my-name {
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
+}
+
+/* ========== 어워드 탭 ========== */
+.award-period-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+  padding: var(--space-s) var(--space-m);
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-m);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+}
+
+.award-period-filter label {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.period-select {
+  flex: 1;
+  padding: var(--space-xs) var(--space-s);
+  border: var(--border-width-thin) solid var(--color-border-primary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  max-width: 180px;
+}
+
+.award-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.award-card {
+  background: var(--color-bg-primary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-m);
+  overflow: hidden;
+}
+
+.award-card__header {
+  padding: var(--space-xs) var(--space-m);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  color: white;
+}
+
+.award-card__type {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.award-card__empty {
+  padding: var(--space-l);
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-s);
+}
+
+.award-card__rankings {
+  padding: var(--space-xxs);
+}
+
+.award-card__entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding: var(--space-xs) var(--space-m);
+  border-bottom: var(--border-width-thin) solid var(--color-border-tertiary);
+}
+
+.award-card__entry:last-child {
+  border-bottom: none;
+}
+
+.award-card__entry.winner {
+  background: linear-gradient(90deg, var(--color-warning-bg) 0%, transparent 100%);
+}
+
+.award-card__rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+}
+
+.award-card__name {
+  flex: 1;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.award-card__entry.winner .award-card__name {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-bold);
+}
+
+.award-card__value {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.award-card__entry.winner .award-card__value {
+  font-size: var(--font-size-m);
+  color: var(--color-warning);
+}
+
+/* ========== 어워드 탭 모바일 대응 ========== */
+@media (max-width: 768px) {
+  .award-period-filter {
+    padding: var(--space-xs) var(--space-s);
+    margin-bottom: var(--space-s);
+  }
+
+  .award-period-filter label {
+    font-size: var(--font-size-xs);
+  }
+
+  .period-select {
+    padding: var(--space-xs) var(--space-s);
+    font-size: var(--font-size-xs);
+    max-width: none;
+  }
+
+  .award-list {
+    gap: var(--space-xs);
+  }
+
+  .award-card__header {
+    padding: var(--space-xxs) var(--space-s);
+  }
+
+  .award-card__type {
+    font-size: var(--font-size-s);
+  }
+
+  .award-card__entry {
+    padding: var(--space-xxs) var(--space-s);
+    gap: var(--space-xs);
+  }
+
+  .award-card__name {
+    font-size: var(--font-size-s);
+  }
+
+  .award-card__entry.winner .award-card__name {
+    font-size: var(--font-size-base);
+  }
+
+  .award-card__value {
+    font-size: var(--font-size-s);
+  }
+
+  .award-card__entry.winner .award-card__value {
+    font-size: var(--font-size-base);
+  }
+}
+
+@media (max-width: 359px) {
+  .award-card__entry {
+    padding: var(--space-xxs) var(--space-xs);
+    gap: var(--space-xxs);
+  }
+
+  .award-card__rank {
+    min-width: 20px;
+  }
+
+  .award-card__name {
+    font-size: var(--font-size-xs);
+  }
+
+  .award-card__entry.winner .award-card__name {
+    font-size: var(--font-size-s);
+  }
+
+  .award-card__value {
+    font-size: var(--font-size-xs);
+  }
+
+  .award-card__entry.winner .award-card__value {
+    font-size: var(--font-size-s);
+  }
 }

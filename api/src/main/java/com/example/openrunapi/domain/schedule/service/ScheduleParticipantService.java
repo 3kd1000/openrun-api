@@ -2,6 +2,7 @@ package com.example.openrunapi.domain.schedule.service;
 
 import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.audit.service.AuditLogService;
+import com.example.openrunapi.domain.award.service.AwardService;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
@@ -33,6 +34,7 @@ public class ScheduleParticipantService {
     private final UserRepository userRepository;
     private final PermissionService permissionService;
     private final AuditLogService auditLogService;
+    private final AwardService awardService;
 
     /**
      * 일정 참가 신청
@@ -227,11 +229,47 @@ public class ScheduleParticipantService {
     }
 
     /**
-     * 특정 일정의 참가자 목록 조회 (userName 포함)
+     * 특정 일정의 참가자 목록 조회 (userName, awardTypes 포함)
      */
     public List<ParticipantResponse> getParticipants(Long scheduleId) {
-        // User와 JOIN하여 userName 포함하여 조회
-        return participantRepository.findActiveParticipantsWithUserName(scheduleId, ParticipantStatus.CANCELLED);
+        // 1. 참가자 목록 조회
+        List<ParticipantResponse> participants = participantRepository
+                .findActiveParticipantsWithUserName(scheduleId, ParticipantStatus.CANCELLED);
+
+        if (participants.isEmpty()) {
+            return participants;
+        }
+
+        // 2. Schedule에서 clubId 가져오기
+        Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+        if (schedule == null) {
+            return participants;
+        }
+
+        // 3. 직전 완료 기간의 수상자 조회
+        try {
+            var winnersResponse = awardService.getCurrentWinners(schedule.getClubId());
+
+            // userId -> List<AwardType> 매핑
+            Map<Long, List<String>> userAwardTypes = new HashMap<>();
+            if (winnersResponse.getWinners() != null) {
+                for (var winner : winnersResponse.getWinners()) {
+                    userAwardTypes.computeIfAbsent(winner.getUserId(), k -> new ArrayList<>())
+                            .add(winner.getType().name());
+                }
+            }
+
+            // 4. 참가자별 수상 타입 설정
+            return participants.stream()
+                    .map(p -> {
+                        List<String> types = userAwardTypes.getOrDefault(p.getUserId(), List.of());
+                        return types.isEmpty() ? p : p.withAwardTypes(types);
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("수상자 정보 조회 실패: {}", e.getMessage());
+            return participants;
+        }
     }
 
     /**

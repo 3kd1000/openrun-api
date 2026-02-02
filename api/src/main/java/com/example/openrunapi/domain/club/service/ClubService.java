@@ -3,23 +3,26 @@ package com.example.openrunapi.domain.club.service;
 import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.audit.dto.ClubAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ClubMemberAuditSnapshot;
+import com.example.openrunapi.domain.audit.dto.ClubPolicyAuditSnapshot;
 import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubMemberStatus;
 import com.example.openrunapi.domain.club.model.ClubRole;
-import com.example.openrunapi.domain.club.model.ClubJoinPolicy;
+import com.example.openrunapi.domain.club.model.ClubPolicy;
 import com.example.openrunapi.domain.club.model.MemberRecruitmentStatus;
 import com.example.openrunapi.domain.club.model.dto.ClubMembershipResponse;
 import com.example.openrunapi.domain.club.model.dto.ClubResponse;
 import com.example.openrunapi.domain.club.model.dto.MyClubResponse;
 import com.example.openrunapi.domain.club.model.dto.MemberProfileResponse;
 import com.example.openrunapi.domain.club.model.dto.CreateClubRequest;
+import com.example.openrunapi.domain.club.model.dto.UpdateAwardPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubMemberRolesRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubPolicyRequest;
 import com.example.openrunapi.domain.club.model.dto.TransferOwnershipRequest;
 import com.example.openrunapi.domain.club.model.dto.UpdateClubRequest;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
+import com.example.openrunapi.domain.club.repository.ClubPolicyRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.club.model.dto.JoinRequestResponse;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
@@ -48,6 +51,7 @@ import java.util.stream.Collectors;
 public class ClubService {
 
     private final ClubRepository clubRepository;
+    private final ClubPolicyRepository clubPolicyRepository;
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final ClubMemberRepository clubMemberRepository;
@@ -81,13 +85,20 @@ public class ClubService {
         // 멤버 수 초기화 (OWNER 1명)
         savedClub.updateMemberCount(1);
 
-        return new ClubResponse(savedClub);
+        // ClubPolicy 생성 (기본값으로 초기화)
+        ClubPolicy clubPolicy = ClubPolicy.builder()
+                .clubId(savedClub.getId())
+                .build();
+        ClubPolicy savedPolicy = clubPolicyRepository.save(clubPolicy);
+
+        return new ClubResponse(savedClub, savedPolicy);
     }
 
     public ClubResponse findClub(Long clubId) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
-        return new ClubResponse(club);
+        ClubPolicy policy = clubPolicyRepository.findByClubId(clubId).orElse(null);
+        return new ClubResponse(club, policy);
     }
 
     public Page<ClubResponse> findClubs(String keyword, String region, MemberRecruitmentStatus memberRecruitmentStatus, Pageable pageable) {
@@ -95,7 +106,13 @@ public class ClubService {
                 .and(filterRegion(region))
                 .and(filterMemberRecruitmentStatus(memberRecruitmentStatus));
         Page<Club> clubs = clubRepository.findAll(spec, pageable);
-        return clubs.map(ClubResponse::new);
+
+        // ClubPolicy 일괄 조회 (N+1 방지)
+        List<Long> clubIds = clubs.getContent().stream().map(Club::getId).toList();
+        java.util.Map<Long, ClubPolicy> policyMap = clubPolicyRepository.findByClubIdIn(clubIds).stream()
+                .collect(Collectors.toMap(ClubPolicy::getClubId, p -> p));
+
+        return clubs.map(club -> new ClubResponse(club, policyMap.get(club.getId())));
     }
 
     @Transactional
@@ -126,7 +143,8 @@ public class ClubService {
         // Audit: 클럽 정보 수정 로그
         auditLogService.logClubUpdate(currentUserId, beforeSnapshot, club);
 
-        return new ClubResponse(club);
+        ClubPolicy policy = clubPolicyRepository.findByClubId(clubId).orElse(null);
+        return new ClubResponse(club, policy);
     }
 
     /**
@@ -138,8 +156,61 @@ public class ClubService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
 
         permissionService.requireScheduleManagePermission(currentUserId, clubId);
-        club.updatePolicies(request.getJoinPolicy(), request.getInterclubRecruitmentStatus(), request.getMemberRecruitmentStatus(), request.getMemberRecruitmentNote());
-        return new ClubResponse(club);
+
+        // ClubPolicy 조회 또는 생성
+        ClubPolicy policy = clubPolicyRepository.findByClubId(clubId)
+                .orElseGet(() -> {
+                    ClubPolicy newPolicy = ClubPolicy.builder().clubId(clubId).build();
+                    return clubPolicyRepository.save(newPolicy);
+                });
+
+        // Audit: 변경 전 스냅샷 저장
+        ClubPolicyAuditSnapshot beforeSnapshot = ClubPolicyAuditSnapshot.from(policy);
+
+        policy.updateGeneralPolicy(
+                request.getAutoJoinEnabled(),
+                request.getInterclubRecruitmentOpen(),
+                request.getMemberRecruitmentOpen(),
+                request.getMemberRecruitmentNote()
+        );
+
+        // Audit: 변경 로그 기록
+        auditLogService.logClubPolicyUpdate(currentUserId, beforeSnapshot, policy);
+
+        return new ClubResponse(club, policy);
+    }
+
+    /**
+     * 클럽 어워드 정책 수정 - 운영진 이상
+     */
+    @Transactional
+    public ClubResponse updateAwardPolicy(Long clubId, UpdateAwardPolicyRequest request, Long currentUserId) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId));
+
+        permissionService.requireScheduleManagePermission(currentUserId, clubId);
+
+        // ClubPolicy 조회 또는 생성
+        ClubPolicy policy = clubPolicyRepository.findByClubId(clubId)
+                .orElseGet(() -> {
+                    ClubPolicy newPolicy = ClubPolicy.builder().clubId(clubId).build();
+                    return clubPolicyRepository.save(newPolicy);
+                });
+
+        // Audit: 변경 전 스냅샷 저장
+        ClubPolicyAuditSnapshot beforeSnapshot = ClubPolicyAuditSnapshot.from(policy);
+
+        policy.updateAwardPolicy(
+                request.getAwardPeriod(),
+                request.getAwardAttendanceEnabled(),
+                request.getAwardPointsEnabled(),
+                request.getAwardBookingEnabled()
+        );
+
+        // Audit: 변경 로그 기록
+        auditLogService.logClubPolicyUpdate(currentUserId, beforeSnapshot, policy);
+
+        return new ClubResponse(club, policy);
     }
 
     @Transactional
@@ -183,7 +254,9 @@ public class ClubService {
             externalRequestRepository.flush();  // delete를 먼저 DB에 반영
         });
 
-        boolean isAutoApprove = club.getJoinPolicy() == ClubJoinPolicy.AUTO;
+        // ClubPolicy에서 autoJoinEnabled 가져오기 (없으면 false = 승인필요)
+        ClubPolicy policy = clubPolicyRepository.findByClubId(clubId).orElse(null);
+        boolean isAutoApprove = (policy != null) ? Boolean.TRUE.equals(policy.getAutoJoinEnabled()) : false;
 
         // AUTO 정책: club_member 즉시 생성 및 멤버 수 증가
         // MANUAL 정책: club_member는 승인 시(ExternalRequestService.approve)에 생성

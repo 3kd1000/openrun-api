@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import AuditLogPage from "./pages/AuditLogPage";
+import AwardWinnerPage from "./pages/AwardWinnerPage";
 import LoginPage from "./pages/LoginPage";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         >
           <Route index element={<HomePage />} />
           <Route path="audit-logs" element={<AuditLogPage />} />
+          <Route path="award-winners" element={<AwardWinnerPage />} />
         </Route>
       </Routes>
     </AuthProvider>

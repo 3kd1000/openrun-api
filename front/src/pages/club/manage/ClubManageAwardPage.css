@@ -1,15 +1,15 @@
-.club-manage-policy-page {
+.club-manage-award-page {
   padding: var(--space-l);
 }
 
-.club-manage-policy-page__header {
+.club-manage-award-page__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-l);
 }
 
-.club-manage-policy-page__back-btn {
+.club-manage-award-page__back-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -20,23 +20,23 @@
   background: var(--color-white);
 }
 
-.club-manage-policy-page__title {
+.club-manage-award-page__title {
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
 }
 
-.club-manage-policy-page__header-spacer {
+.club-manage-award-page__header-spacer {
   width: 40px;
 }
 
-.club-manage-policy-page__loading {
+.club-manage-award-page__loading {
   text-align: center;
   padding: var(--space-xl);
   color: var(--color-text-secondary);
 }
 
-.club-manage-policy-page__hint {
+.club-manage-award-page__hint {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,7 +45,7 @@
   margin-bottom: var(--space-m);
 }
 
-.club-manage-policy-page__error {
+.club-manage-award-page__error {
   padding: var(--space-s) var(--space-m);
   border: 1px solid var(--color-danger);
   background: var(--color-danger-bg);
@@ -54,37 +54,37 @@
   margin-bottom: var(--space-m);
 }
 
-.club-manage-policy-page__section {
+.club-manage-award-page__section {
   background: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-l);
   padding: var(--space-l);
 }
 
-.club-manage-policy-page__row {
+.club-manage-award-page__row {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
 }
 
-.club-manage-policy-page__row-title {
+.club-manage-award-page__row-title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
-.club-manage-policy-page__row-desc {
+.club-manage-award-page__row-desc {
   font-size: var(--font-size-s);
   color: var(--color-text-secondary);
 }
 
-.club-manage-policy-page__seg {
+.club-manage-award-page__seg {
   display: flex;
   gap: var(--space-xs);
   margin-top: var(--space-s);
 }
 
-.club-manage-policy-page__seg-btn {
+.club-manage-award-page__seg-btn {
   flex: 1;
   padding: var(--space-s) var(--space-m);
   border-radius: var(--radius-m);
@@ -95,24 +95,24 @@
   cursor: pointer;
 }
 
-.club-manage-policy-page__seg-btn.active {
+.club-manage-award-page__seg-btn.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: white;
 }
 
-.club-manage-policy-page__seg-btn:disabled {
+.club-manage-award-page__seg-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.club-manage-policy-page__divider {
+.club-manage-award-page__divider {
   height: 1px;
   background: var(--color-border);
   margin: var(--space-l) 0;
 }
 
-.club-manage-policy-page__save {
+.club-manage-award-page__save {
   width: 100%;
   margin-top: var(--space-m);
   padding: var(--space-m) var(--space-l);
@@ -125,32 +125,7 @@
   cursor: pointer;
 }
 
-.club-manage-policy-page__save:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.club-manage-policy-page__textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: var(--space-s) var(--space-m);
-  margin-top: var(--space-s);
-  border: 1.5px solid var(--color-text-tertiary);
-  border-radius: var(--radius-m);
-  font-size: var(--font-size-base);
-  font-family: inherit;
-  color: var(--color-text-primary);
-  background: var(--color-white);
-  resize: vertical;
-  box-sizing: border-box;
-}
-
-.club-manage-policy-page__textarea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.club-manage-policy-page__textarea:disabled {
+.club-manage-award-page__save:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -158,14 +133,14 @@
 /* ========================================
    토글 스위치 스타일 (iOS 스타일)
    ======================================== */
-.club-manage-policy-page__toggle-row {
+.club-manage-award-page__toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: var(--space-s) 0;
 }
 
-.club-manage-policy-page__toggle-label {
+.club-manage-award-page__toggle-label {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -173,19 +148,19 @@
   min-width: 0;
 }
 
-.club-manage-policy-page__toggle-title {
+.club-manage-award-page__toggle-title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
-.club-manage-policy-page__toggle-desc {
+.club-manage-award-page__toggle-desc {
   font-size: var(--font-size-s);
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
 
-.club-manage-policy-page__toggle {
+.club-manage-award-page__toggle {
   position: relative;
   width: 52px;
   height: 32px;
@@ -198,11 +173,12 @@
   margin-left: var(--space-m);
 }
 
-.club-manage-policy-page__toggle.active {
+.club-manage-award-page__toggle.active {
   background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
 }
 
-.club-manage-policy-page__toggle-slider {
+.club-manage-award-page__toggle::after {
+  content: '';
   position: absolute;
   top: 2px;
   left: 2px;
@@ -214,25 +190,25 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.club-manage-policy-page__toggle.active .club-manage-policy-page__toggle-slider {
+.club-manage-award-page__toggle.active::after {
   transform: translateX(20px);
 }
 
-.club-manage-policy-page__toggle:disabled {
+.club-manage-award-page__toggle:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.club-manage-policy-page__toggle:focus-visible {
+.club-manage-award-page__toggle:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* 호버 효과 */
-.club-manage-policy-page__toggle:not(:disabled):hover {
+.club-manage-award-page__toggle:not(:disabled):hover {
   background: #d0d0d0;
 }
 
-.club-manage-policy-page__toggle.active:not(:disabled):hover {
+.club-manage-award-page__toggle.active:not(:disabled):hover {
   background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
 }

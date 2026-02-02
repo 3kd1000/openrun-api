@@ -3,6 +3,7 @@ package com.example.openrunapi.domain.audit.service;
 import com.example.openrunapi.domain.audit.dto.ClubAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ClubMemberAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ClubNoticeAuditSnapshot;
+import com.example.openrunapi.domain.audit.dto.ClubPolicyAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ClubRuleAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.MatchAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ScheduleAuditSnapshot;
@@ -10,6 +11,7 @@ import com.example.openrunapi.domain.audit.dto.ScheduleParticipantAuditSnapshot;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.model.ClubNotice;
+import com.example.openrunapi.domain.club.model.ClubPolicy;
 import com.example.openrunapi.domain.club.model.ClubRule;
 import com.example.openrunapi.domain.audit.model.AuditActionType;
 import com.example.openrunapi.domain.audit.model.AuditEntityType;
@@ -167,6 +169,20 @@ public class AuditLogService {
 
         saveAuditLog(userId, AuditEntityType.CLUB, afterClub.getId(),
                 AuditActionType.UPDATE, changes, afterClub.getId());
+    }
+
+    // === ClubPolicy Audit ===
+
+    /**
+     * ClubPolicy 수정 로그 (운영 정책/어워드 정책 수정)
+     */
+    @Transactional
+    public void logClubPolicyUpdate(Long userId, ClubPolicyAuditSnapshot before, ClubPolicy afterPolicy) {
+        ClubPolicyAuditSnapshot after = ClubPolicyAuditSnapshot.from(afterPolicy);
+        String changes = buildChangesJson(before, after);
+
+        saveAuditLog(userId, AuditEntityType.CLUB_POLICY, afterPolicy.getId(),
+                AuditActionType.UPDATE, changes, afterPolicy.getClubId());
     }
 
     // === ClubMember Audit ===
