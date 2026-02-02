@@ -23,6 +23,41 @@ export interface AwardWinnersResponse {
 }
 
 /**
+ * 수상자 저장 요청 DTO
+ */
+export interface SaveAwardWinnerRequest {
+  awardType: AwardType;
+  userId: number;
+  periodStart: string;  // YYYY-MM-DD
+  periodEnd: string;    // YYYY-MM-DD
+  value?: number;       // 기록값 (선택)
+}
+
+/**
+ * 수상자 수정 요청 DTO
+ */
+export interface UpdateAwardWinnerRequest {
+  userId: number;
+  value?: number;  // 기록값 (선택)
+}
+
+/**
+ * 수상자 응답 DTO
+ */
+export interface AwardWinnerResponse {
+  id: number;
+  clubId: number;
+  awardType: AwardType;
+  userId: number;
+  userName: string;
+  periodStart: string;
+  periodEnd: string;
+  value: number;
+  confirmedAt: string;
+  confirmedByUserId: number;
+}
+
+/**
  * 어워드 관련 서비스
  */
 export const awardService = {
@@ -147,5 +182,84 @@ export const awardService = {
       `/clubs/${clubId}/awards/winners`
     );
     return response.data;
+  },
+
+  // ==================== 수상자 관리 API ====================
+
+  /**
+   * 수상자 저장 (Admin용)
+   */
+  async saveAwardWinner(
+    clubId: number,
+    request: SaveAwardWinnerRequest
+  ): Promise<AwardWinnerResponse> {
+    const response = await axiosInstance.post<AwardWinnerResponse>(
+      `/clubs/${clubId}/awards/manage`,
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * 특정 기간 수상자 조회 (Admin용)
+   */
+  async getAwardWinners(
+    clubId: number,
+    periodStart: string,
+    periodEnd: string
+  ): Promise<AwardWinnerResponse[]> {
+    const response = await axiosInstance.get<AwardWinnerResponse[]>(
+      `/clubs/${clubId}/awards/manage`,
+      { params: { periodStart, periodEnd } }
+    );
+    return response.data;
+  },
+
+  /**
+   * 모든 수상 기록 조회 (Admin용)
+   */
+  async getAllAwardWinners(clubId: number): Promise<AwardWinnerResponse[]> {
+    const response = await axiosInstance.get<AwardWinnerResponse[]>(
+      `/clubs/${clubId}/awards/manage/all`
+    );
+    return response.data;
+  },
+
+  /**
+   * 수상자 수정 (Admin용)
+   */
+  async updateAwardWinner(
+    clubId: number,
+    winnerId: number,
+    request: UpdateAwardWinnerRequest
+  ): Promise<AwardWinnerResponse> {
+    const response = await axiosInstance.put<AwardWinnerResponse>(
+      `/clubs/${clubId}/awards/manage/${winnerId}`,
+      request
+    );
+    return response.data;
+  },
+
+  /**
+   * 수상자 삭제 (Admin용)
+   */
+  async deleteAwardWinner(clubId: number, winnerId: number): Promise<void> {
+    await axiosInstance.delete(`/clubs/${clubId}/awards/manage/${winnerId}`);
+  },
+
+  /**
+   * 어워드 타입 배지 라벨 (짧은 형태)
+   */
+  getAwardBadgeLabel(type: AwardType): string {
+    switch (type) {
+      case "ATTENDANCE":
+        return "참여왕";
+      case "POINTS":
+        return "승점왕";
+      case "BOOKING":
+        return "예약왕";
+      default:
+        return type;
+    }
   },
 };

@@ -126,7 +126,7 @@ const ClubManagePage: React.FC = () => {
         >
           <div className="club-manage-page__menu-left">
             <TrophyIcon size={18} />
-            <span>어워드 정책</span>
+            <span>어워드 관리</span>
           </div>
           <ChevronRightIcon size={18} />
         </button>
