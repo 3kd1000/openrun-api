@@ -97,14 +97,23 @@ const ClubMainPage: React.FC = () => {
   };
 
   // URL 기준 clubId를 session에 동기화 (클럽 내 라우팅 표준화)
+  // 단, clubList에 있는 유효한 클럽만 세션에 저장
   useEffect(() => {
-    if (!clubIdParam) return;
-    try {
-      setOpenRunSession({ currentClubId: clubIdParam });
-    } catch {
-      // ignore
+    if (!clubIdParam || !clubListLoaded) return;
+
+    const currentSession = getOpenRunSession();
+    const clubList = currentSession.clubList ?? [];
+    const isValidClub = clubList.some(c => String(c.id) === clubIdParam);
+
+    if (isValidClub) {
+      try {
+        setOpenRunSession({ currentClubId: clubIdParam });
+      } catch {
+        // ignore
+      }
     }
-  }, [clubIdParam]);
+    // 유효하지 않은 clubId는 loadClubData에서 처리
+  }, [clubIdParam, clubListLoaded]);
 
   // legacy key들 마이그레이션 (한 번만)
   useEffect(() => {
@@ -384,6 +393,28 @@ const ClubMainPage: React.FC = () => {
       if (!clubId) {
         console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동");
         navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        return;
+      }
+
+      // URL의 clubId가 세션의 clubList에 있는지 사전 검증
+      const currentSession = getOpenRunSession();
+      const clubList = currentSession.clubList ?? [];
+      const isValidClub = clubList.some(c => String(c.id) === clubId);
+
+      if (!isValidClub) {
+        console.log(`⚠️ 권한 없는 클럽 접근: ${clubId}`);
+
+        if (clubList.length > 0) {
+          // 가입한 클럽이 있으면 첫 번째 클럽으로 리다이렉트
+          const firstClub = clubList[0];
+          showToast("해당 클럽에 가입되어 있지 않습니다", "error");
+          setOpenRunSession({ currentClubId: String(firstClub.id) });
+          navigate(`/clubs/${firstClub.id}`, { replace: true });
+        } else {
+          // 가입한 클럽이 없으면 클럽 탐색 페이지로
+          showToast("가입한 클럽이 없습니다", "error");
+          navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        }
         return;
       }
 
