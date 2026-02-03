@@ -590,6 +590,7 @@ public class AwardService {
 
     /**
      * 기간 옵션 생성 (Admin용)
+     * 현재 진행 중인 시즌은 제외하고 직전 완료 시즌부터 N개 반환
      */
     public List<Map<String, Object>> generatePeriodOptions(AwardPeriod period, int count) {
         List<Map<String, Object>> options = new ArrayList<>();
@@ -598,10 +599,19 @@ public class AwardService {
         int month = now.getMonthValue();
 
         if (period == AwardPeriod.HALF_YEAR) {
-            // 현재 반기부터 과거로
-            boolean isFirstHalf = month <= 6;
-            int startYear = year;
-            boolean startFirstHalf = isFirstHalf;  // 현재 반기부터 시작 (상반기면 상반기, 하반기면 하반기)
+            // 현재 시즌 건너뛰고 직전 완료 시즌부터 시작
+            int startYear;
+            boolean startFirstHalf;
+
+            if (month <= 6) {
+                // 현재 상반기 → 직전 완료는 전년 하반기
+                startYear = year - 1;
+                startFirstHalf = false;
+            } else {
+                // 현재 하반기 → 직전 완료는 올해 상반기
+                startYear = year;
+                startFirstHalf = true;
+            }
 
             for (int i = 0; i < count; i++) {
                 LocalDate periodStart, periodEnd;
@@ -634,9 +644,9 @@ public class AwardService {
                 }
             }
         } else {
-            // YEARLY
+            // YEARLY: 현재 연도 제외, 전년부터 시작
             for (int i = 0; i < count; i++) {
-                int targetYear = year - i;
+                int targetYear = year - 1 - i;
                 LocalDate periodStart = LocalDate.of(targetYear, 1, 1);
                 LocalDate periodEnd = LocalDate.of(targetYear, 12, 31);
 

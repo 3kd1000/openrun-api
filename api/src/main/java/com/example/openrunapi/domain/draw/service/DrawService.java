@@ -21,6 +21,11 @@ public class DrawService {
 
     @Transactional
     public DrawResponse generateDrawSequence(CreateDrawRequest request) {
+        return generateDrawSequence(request, null);
+    }
+
+    @Transactional
+    public DrawResponse generateDrawSequence(CreateDrawRequest request, Integer courtCount) {
 
         ValidationResult validation = isValidRequest(request);
         if (!validation.isValid()) {
@@ -39,19 +44,20 @@ public class DrawService {
 
         switch (drawType) {
             case AA:
-                return generateAAMatches(request.getUserNames());
+                return generateAAMatches(request.getUserNames(), courtCount);
             case AB:
-                return generateABMatches(request.getGroupAUserNames(), request.getGroupBUserNames());
+                return generateABMatches(request.getGroupAUserNames(), request.getGroupBUserNames(), courtCount);
             case SEED:
-                return generateSEEDMatches(request.getUserNames(),  request.getSeedUserNames());
+                return generateSEEDMatches(request.getUserNames(),  request.getSeedUserNames(), courtCount);
             default:
                 throw new IllegalArgumentException("지원하지 않는 대진 방식입니다.");
         }
     }
 
-    private DrawResponse generateAAMatches(List<String> userNames) {
+    private DrawResponse generateAAMatches(List<String> userNames, Integer courtCount) {
         int n = userNames.size();
-        int gamesPerRound = n / 4;
+        int maxByPlayers = n / 4;
+        int gamesPerRound = (courtCount != null && courtCount > 0) ? Math.min(maxByPlayers, courtCount) : maxByPlayers;
 
         List<String> sequence = DrawPattern.AA_PATTERNS.get(n);
 
@@ -78,9 +84,10 @@ public class DrawService {
         return new DrawResponse(games);
     }
 
-    private DrawResponse generateABMatches(List<String> groupAList, List<String> groupBList) {
+    private DrawResponse generateABMatches(List<String> groupAList, List<String> groupBList, Integer courtCount) {
         int n = groupAList.size() + groupBList.size();
-        int gamesPerRound = n / 4;
+        int maxByPlayers = n / 4;
+        int gamesPerRound = (courtCount != null && courtCount > 0) ? Math.min(maxByPlayers, courtCount) : maxByPlayers;
 
         List<String> sequence = DrawPattern.AB_PATTERNS.get(n);
 
@@ -117,9 +124,10 @@ public class DrawService {
         return new DrawResponse(games);
     }
 
-    private DrawResponse generateSEEDMatches(List<String> userNames, List<String> seedUserNames) {
+    private DrawResponse generateSEEDMatches(List<String> userNames, List<String> seedUserNames, Integer courtCount) {
         int n = userNames.size() + seedUserNames.size();
-        int gamesPerRound = n / 4;
+        int maxByPlayers = n / 4;
+        int gamesPerRound = (courtCount != null && courtCount > 0) ? Math.min(maxByPlayers, courtCount) : maxByPlayers;
 
         List<String> sequence = DrawPattern.AA_PATTERNS.get(n);
         List<String> seedPositions = DrawPattern.SEED_POSITIONS.get(n);

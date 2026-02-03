@@ -228,7 +228,8 @@ public class ScheduleService {
                 request.getReservedByUserId(),
                 request.getParticipationStartAt(),
                 request.getMatchType(),
-                request.getDurationMinutes()
+                request.getDurationMinutes(),
+                request.getNumberOfCourts()
         );
 
         // 정원이 증가한 경우, 대기자를 확정으로 승격

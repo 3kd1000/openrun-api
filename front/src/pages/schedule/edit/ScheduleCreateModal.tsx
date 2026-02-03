@@ -59,6 +59,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
         durationMinutes: data.durationMinutes,
         courtName: data.courtName,
         maxCapacity: data.maxCapacity,
+        numberOfCourts: data.numberOfCourts || undefined,
         cost: data.cost,
         description: data.description,
         reservedByUserId: data.reservedByUserId,

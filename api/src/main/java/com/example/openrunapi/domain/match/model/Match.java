@@ -100,7 +100,7 @@ public class Match {
         this.teamAScore = teamAScore;
         this.teamBScore = teamBScore;
         this.result = result;
-        this.playedAt = playedAt != null ? playedAt : LocalDateTime.now();
+        this.playedAt = playedAt != null ? playedAt : this.playedAt;
     }
 
     /**

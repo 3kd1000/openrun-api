@@ -89,8 +89,8 @@ export const awardService = {
   },
 
   /**
-   * 과거 정산 기간 목록 생성
-   * 현재 기간 + 과거 N개 기간 반환
+   * 과거 완료된 정산 기간 목록 생성
+   * 현재 진행 중인 시즌은 제외하고 직전 완료 시즌부터 N개 반환
    */
   generatePeriodOptions(
     periodType: "HALF_YEAR" | "YEARLY",
@@ -102,9 +102,19 @@ export const awardService = {
     const currentMonth = now.getMonth() + 1;
 
     if (periodType === "HALF_YEAR") {
-      // 반기별 옵션
-      let year = currentYear;
-      let isFirstHalf = currentMonth <= 6;
+      // 현재 시즌 건너뛰고 직전 완료 시즌부터 시작
+      let year: number;
+      let isFirstHalf: boolean;
+
+      if (currentMonth <= 6) {
+        // 현재 상반기 → 직전 완료는 전년 하반기
+        year = currentYear - 1;
+        isFirstHalf = false;
+      } else {
+        // 현재 하반기 → 직전 완료는 올해 상반기
+        year = currentYear;
+        isFirstHalf = true;
+      }
 
       for (let i = 0; i < count; i++) {
         if (isFirstHalf) {
@@ -127,9 +137,9 @@ export const awardService = {
         }
       }
     } else {
-      // 연간 옵션
+      // 연간 옵션: 현재 연도 제외, 전년부터 시작
       for (let i = 0; i < count; i++) {
-        const year = currentYear - i;
+        const year = currentYear - 1 - i;
         options.push({
           label: `${year}년`,
           startDate: `${year}-01-01`,

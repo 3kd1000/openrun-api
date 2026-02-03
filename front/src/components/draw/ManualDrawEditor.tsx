@@ -22,6 +22,8 @@ interface ManualDrawEditorProps {
   participants: Participant[];
   /** 총 플레이어 수 */
   playerCount: number;
+  /** 코트 수 (지정 시 해당 값 우선 적용) */
+  numberOfCourts?: number | null;
   /** 수정 모드: 기존 대진 데이터 (없으면 생성 모드) */
   initialGames?: DrawGame[];
   /** 완료 콜백 */
@@ -47,11 +49,12 @@ interface EditableGame {
  * | 12~15명 | 3 게임 |
  * | 16명 | 4 게임 |
  */
-const getGamesPerRound = (playerCount: number): number => {
-  if (playerCount <= 7) return 1;
-  if (playerCount <= 11) return 2;
-  if (playerCount <= 15) return 3;
-  return 4;
+const getGamesPerRound = (playerCount: number, numberOfCourts?: number | null): number => {
+  const maxByPlayers = Math.floor(playerCount / 4) || 1;
+  if (numberOfCourts != null && numberOfCourts >= 1) {
+    return Math.min(maxByPlayers, numberOfCourts);
+  }
+  return maxByPlayers;
 };
 
 /**
@@ -74,8 +77,8 @@ const getRoundCount = (playerCount: number): number => {
 /**
  * 초기 빈 Game 구조 생성
  */
-const createEmptyGames = (playerCount: number): EditableGame[] => {
-  const gamesPerRound = getGamesPerRound(playerCount);
+const createEmptyGames = (playerCount: number, numberOfCourts?: number | null): EditableGame[] => {
+  const gamesPerRound = getGamesPerRound(playerCount, numberOfCourts);
   const roundCount = getRoundCount(playerCount);
   const games: EditableGame[] = [];
   let gameNo = 1;
@@ -127,6 +130,7 @@ const convertToManualGames = (games: EditableGame[]): ManualGame[] => {
 const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
   participants,
   playerCount,
+  numberOfCourts,
   initialGames,
   onComplete,
   onCancel,
@@ -156,7 +160,7 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
   useEffect(() => {
     if (initialGames && initialGames.length > 0) {
       // 수정 모드: 인원수 기반으로 빈 슬롯 생성 후 기존 데이터 순서대로 채워넣기
-      const emptyGames = createEmptyGames(playerCount);
+      const emptyGames = createEmptyGames(playerCount, numberOfCourts);
       const existingGames = convertToEditableGames(initialGames, participants);
 
       const mergedGames = emptyGames.map((emptyGame, index) => {
@@ -173,9 +177,9 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
       setGames(mergedGames);
     } else {
       // 생성 모드: 빈 구조 생성
-      setGames(createEmptyGames(playerCount));
+      setGames(createEmptyGames(playerCount, numberOfCourts));
     }
-  }, [initialGames, participants, playerCount]);
+  }, [initialGames, participants, playerCount, numberOfCourts]);
 
   // 라운드별로 그룹화
   const gamesByRound = useMemo(() => {

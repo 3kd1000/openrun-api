@@ -660,10 +660,10 @@ const ScheduleDetailModal: React.FC<Props> = ({
               <p>{schedule.courtName}</p>
             </div>
 
-            {schedule.reservedByUserName && (
+            {schedule.numberOfCourts != null && schedule.numberOfCourts >= 1 && (
               <div className="detail-item">
-                <label>예약자</label>
-                <p>{schedule.reservedByUserName}</p>
+                <label>코트수</label>
+                <p>{schedule.numberOfCourts}면</p>
               </div>
             )}
 
@@ -676,6 +676,13 @@ const ScheduleDetailModal: React.FC<Props> = ({
                 )}
               </p>
             </div>
+
+            {schedule.reservedByUserName && (
+              <div className="detail-item">
+                <label>예약자</label>
+                <p>{schedule.reservedByUserName}</p>
+              </div>
+            )}
 
             {schedule.matchType && (
               <div className="detail-item">
@@ -939,6 +946,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
               durationMinutes: schedule.durationMinutes || 120,
               courtName: formData.courtName,
               maxCapacity: formData.maxCapacity,
+              numberOfCourts: schedule.numberOfCourts || undefined,
               cost: formData.cost,
               description: formData.description,
               reservedByUserId: formData.reservedByUserId,
@@ -989,6 +997,7 @@ const ScheduleDetailModal: React.FC<Props> = ({
                   durationMinutes: data.durationMinutes,
                   courtName: data.courtName,
                   maxCapacity: data.maxCapacity,
+                  numberOfCourts: data.numberOfCourts || undefined,
                   cost: data.cost,
                   description: data.description,
                   reservedByUserId: data.reservedByUserId,
