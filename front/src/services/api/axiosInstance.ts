@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getCurrentToken, clearLoginSession } from '../firebase';
 import { getOpenRunSession, setOpenRunSession } from '../../utils/openrunSession';
+import { authBridge } from '../authBridge';
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
@@ -58,6 +59,24 @@ axiosInstance.interceptors.response.use(
     const hasToken = sanitizeToken(session.firebaseToken) !== null;
 
     if (error.response?.status === 401 && !originalRequest._retry && hasToken) {
+
+      // AuthContext에서 토큰 갱신 중이면 완료를 대기한 후 재시도
+      if (authBridge.isTokenRefreshing) {
+        try {
+          await authBridge.waitForRefresh();
+          // 갱신 완료 후 세션에서 새 토큰 읽기
+          const updatedSession = getOpenRunSession();
+          const newToken = sanitizeToken(updatedSession.firebaseToken);
+          if (newToken) {
+            originalRequest._retry = true;
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            return axiosInstance(originalRequest);
+          }
+        } catch {
+          // 갱신 대기 실패(타임아웃 등) 시 아래 로직으로 계속
+        }
+      }
+
       if (isRefreshing) {
         // 이미 토큰 리프레시 중이면 큐에 추가
         return new Promise((resolve, reject) => {

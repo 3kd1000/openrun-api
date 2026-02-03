@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
   useRef,
+  useCallback,
 } from "react";
 import type { User } from "firebase/auth";
 import {
@@ -19,6 +20,8 @@ import {
   getOpenRunSession,
   setOpenRunSession,
 } from "../utils/openrunSession";
+import { authBridge } from "../services/authBridge";
+import { getCurrentUser } from "../services/api/userApi";
 
 interface AuthContextType {
   isAuthReady: boolean; // Firebase 인증 상태 복원 완료 여부
@@ -49,12 +52,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const activityCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityTimeRef = useRef(Date.now());
 
+  // useRef로 최신 값 참조 (클로저 이슈 해결)
+  const isTokenRefreshingRef = useRef(false);
+  // refreshToken의 resolve를 외부에서 호출하기 위한 ref
+  const resolveRefreshRef = useRef<(() => void) | null>(null);
+
+  // state + ref + authBridge 동시 업데이트 헬퍼
+  const updateTokenRefreshing = useCallback(
+    (value: boolean, promise?: Promise<void>) => {
+      setIsTokenRefreshing(value);
+      isTokenRefreshingRef.current = value;
+      if (value && promise) {
+        authBridge.setRefreshing(promise);
+      } else if (!value) {
+        authBridge.clearRefreshing();
+      }
+    },
+    []
+  );
+
+  /**
+   * 세션에 userId가 없으면 /users/me API로 복원
+   * 토큰 갱신 후 호출되어, clearLoginSession 이후에도 userId를 자동 복구
+   */
+  const restoreUserInfoIfNeeded = async () => {
+    const session = getOpenRunSession();
+    if (session.userId) return; // 이미 있으면 스킵
+
+    const now = getTimestamp();
+    try {
+      console.log(`🔄 [${now}] 세션에 userId 없음 → /users/me API로 복원 시도`);
+      const userInfo = await getCurrentUser();
+      setOpenRunSession({
+        userId: userInfo.id,
+        userName: userInfo.name,
+        userEmail: userInfo.email,
+        userImageUrl: userInfo.imageUrl,
+      });
+      console.log(
+        `✅ [${now}] userId 복원 완료: ${userInfo.id} (${userInfo.name})`
+      );
+    } catch (error) {
+      console.warn(`⚠️ [${now}] userId 복원 실패 (계속 진행):`, error);
+    }
+  };
+
   // 토큰 갱신 함수 (재사용 가능)
   const refreshToken = async () => {
     const now = getTimestamp();
 
-    // 이미 갱신 중이면 중복 호출 방지
-    if (isTokenRefreshing) {
+    // useRef로 최신 값 체크 (클로저 이슈 해결)
+    if (isTokenRefreshingRef.current) {
       console.log(`ℹ️ [${now}] 토큰 갱신 이미 진행 중 → 스킵`);
       return;
     }
@@ -74,87 +122,95 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return;
     }
 
-    setIsTokenRefreshing(true);
+    // Promise를 생성하여 authBridge에 등록 (외부에서 대기 가능)
+    let resolveRefresh: () => void;
+    const refreshPromise = new Promise<void>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    resolveRefreshRef.current = resolveRefresh!;
+
+    updateTokenRefreshing(true, refreshPromise);
 
     // 최대 3회 재시도
     let retryCount = 0;
     const maxRetries = 3;
 
-    while (retryCount < maxRetries) {
-      try {
-        currentUser = auth.currentUser;
-        if (!currentUser) {
-          console.warn(`⚠️ [${now}] 재시도 중 사용자 없음 → 토큰 갱신 중단`);
-          setIsTokenRefreshing(false);
+    try {
+      while (retryCount < maxRetries) {
+        try {
+          currentUser = auth.currentUser;
+          if (!currentUser) {
+            console.warn(`⚠️ [${now}] 재시도 중 사용자 없음 → 토큰 갱신 중단`);
+            return;
+          }
+
+          const idToken = await currentUser.getIdToken(true);
+          setOpenRunSession({
+            firebaseToken: idToken,
+            firebaseUid: currentUser.uid,
+            tokenLastRefresh: getTimestamp(),
+          });
+
+          const refreshTime = getTimestamp();
+
+          // 토큰 만료 시간 계산
+          const tokenExpiry = new Date();
+          tokenExpiry.setHours(tokenExpiry.getHours() + 1);
+          const tokenExpiryStr = tokenExpiry.toLocaleString("ko-KR", {
+            timeZone: "Asia/Seoul",
+          });
+
+          // 슬라이딩 윈도우: 자동 로그인 활성화 시 만료 시간도 갱신
+          if (autoLoginEnabled) {
+            setLoginExpiry(true);
+            const loginExpiryStr = localStorage.getItem("login_expiry");
+            const loginExpiry = loginExpiryStr
+              ? new Date(loginExpiryStr).toLocaleString("ko-KR", {
+                  timeZone: "Asia/Seoul",
+                })
+              : "N/A";
+            console.log(
+              `🔄 [${refreshTime}] Firebase 토큰 자동 갱신 + 만료 시간 연장`
+            );
+            console.log(`   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`);
+            console.log(`   → 로그인 세션 만료: ${loginExpiry} (30일 후)`);
+          } else {
+            const loginExpiryStr = localStorage.getItem("login_expiry");
+            const loginExpiry = loginExpiryStr
+              ? new Date(loginExpiryStr).toLocaleString("ko-KR", {
+                  timeZone: "Asia/Seoul",
+                })
+              : "N/A";
+            console.log(
+              `🔄 [${refreshTime}] Firebase 토큰 자동 갱신 (만료 시간 유지)`
+            );
+            console.log(`   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`);
+            console.log(`   → 로그인 세션 만료: ${loginExpiry}`);
+          }
+
           return;
-        }
-
-        const idToken = await currentUser.getIdToken(true);
-        setOpenRunSession({
-          firebaseToken: idToken,
-          firebaseUid: currentUser.uid,
-          tokenLastRefresh: getTimestamp(),
-        });
-
-        const refreshTime = getTimestamp();
-
-        // 토큰 만료 시간 계산
-        const tokenExpiry = new Date();
-        tokenExpiry.setHours(tokenExpiry.getHours() + 1);
-        const tokenExpiryStr = tokenExpiry.toLocaleString("ko-KR", {
-          timeZone: "Asia/Seoul",
-        });
-
-        // 슬라이딩 윈도우: 자동 로그인 활성화 시 만료 시간도 갱신
-        if (autoLoginEnabled) {
-          setLoginExpiry(true);
-          const loginExpiryStr = localStorage.getItem("login_expiry");
-          const loginExpiry = loginExpiryStr
-            ? new Date(loginExpiryStr).toLocaleString("ko-KR", {
-                timeZone: "Asia/Seoul",
-              })
-            : "N/A";
-          console.log(
-            `🔄 [${refreshTime}] Firebase 토큰 자동 갱신 + 만료 시간 연장`
-          );
-          console.log(`   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`);
-          console.log(`   → 로그인 세션 만료: ${loginExpiry} (30일 후)`);
-        } else {
-          const loginExpiryStr = localStorage.getItem("login_expiry");
-          const loginExpiry = loginExpiryStr
-            ? new Date(loginExpiryStr).toLocaleString("ko-KR", {
-                timeZone: "Asia/Seoul",
-              })
-            : "N/A";
-          console.log(
-            `🔄 [${refreshTime}] Firebase 토큰 자동 갱신 (만료 시간 유지)`
-          );
-          console.log(`   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`);
-          console.log(`   → 로그인 세션 만료: ${loginExpiry}`);
-        }
-
-        setIsTokenRefreshing(false);
-        return;
-      } catch (error) {
-        retryCount++;
-        if (retryCount < maxRetries) {
-          const waitTime = retryCount * 500;
-          console.warn(
-            `⚠️ [${now}] 토큰 자동 갱신 실패 (시도 ${retryCount}/${maxRetries}), ${waitTime}ms 후 재시도...`,
-            error
-          );
-          await new Promise((resolve) => setTimeout(resolve, waitTime));
-        } else {
-          console.error(
-            `❌ [${now}] 토큰 자동 갱신 실패 (최대 재시도 횟수 초과):`,
-            error
-          );
-          setIsTokenRefreshing(false);
+        } catch (error) {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const waitTime = retryCount * 500;
+            console.warn(
+              `⚠️ [${now}] 토큰 자동 갱신 실패 (시도 ${retryCount}/${maxRetries}), ${waitTime}ms 후 재시도...`,
+              error
+            );
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          } else {
+            console.error(
+              `❌ [${now}] 토큰 자동 갱신 실패 (최대 재시도 횟수 초과):`,
+              error
+            );
+          }
         }
       }
+    } finally {
+      // 성공/실패 모두 갱신 상태 해제 + 대기 중인 요청 해제
+      updateTokenRefreshing(false);
+      resolveRefresh!();
     }
-
-    setIsTokenRefreshing(false);
   };
 
   // 세션 만료 처리
@@ -197,88 +253,99 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           setUser(firebaseUser);
 
-          // 토큰 갱신 (중복 방지 플래그 사용)
-          if (!isTokenRefreshing) {
-            setIsTokenRefreshing(true);
+          // 토큰 갱신 (중복 방지 - useRef로 최신 값 체크)
+          if (!isTokenRefreshingRef.current) {
+            // Promise를 생성하여 authBridge에 등록
+            let resolveRefresh: () => void;
+            const refreshPromise = new Promise<void>((resolve) => {
+              resolveRefresh = resolve;
+            });
+            resolveRefreshRef.current = resolveRefresh!;
+
+            updateTokenRefreshing(true, refreshPromise);
 
             let retryCount = 0;
             const maxRetries = 3;
             let tokenRefreshSuccess = false;
 
-            while (retryCount < maxRetries && !tokenRefreshSuccess) {
-              try {
-                const idToken = await firebaseUser.getIdToken(true);
-                setOpenRunSession({
-                  firebaseToken: idToken,
-                  firebaseUid: firebaseUser.uid,
-                  tokenLastRefresh: getTimestamp(),
-                });
+            try {
+              while (retryCount < maxRetries && !tokenRefreshSuccess) {
+                try {
+                  const idToken = await firebaseUser.getIdToken(true);
+                  setOpenRunSession({
+                    firebaseToken: idToken,
+                    firebaseUid: firebaseUser.uid,
+                    tokenLastRefresh: getTimestamp(),
+                  });
 
-                const refreshTime = getTimestamp();
+                  const refreshTime = getTimestamp();
 
-                const tokenExpiry = new Date();
-                tokenExpiry.setHours(tokenExpiry.getHours() + 1);
-                const tokenExpiryStr = tokenExpiry.toLocaleString("ko-KR", {
-                  timeZone: "Asia/Seoul",
-                });
+                  const tokenExpiry = new Date();
+                  tokenExpiry.setHours(tokenExpiry.getHours() + 1);
+                  const tokenExpiryStr = tokenExpiry.toLocaleString("ko-KR", {
+                    timeZone: "Asia/Seoul",
+                  });
 
-                if (isNewLogin || autoLoginEnabled) {
-                  setLoginExpiry(autoLoginEnabled);
-                  const updatedLoginExpiryStr =
-                    localStorage.getItem("login_expiry");
-                  const loginExpiry = updatedLoginExpiryStr
-                    ? new Date(updatedLoginExpiryStr).toLocaleString("ko-KR", {
-                        timeZone: "Asia/Seoul",
-                      })
-                    : "N/A";
-                  console.log(
-                    `✅ [${refreshTime}] Firebase 토큰 자동 갱신${
-                      isNewLogin ? " (신규 로그인)" : " + 만료 시간 연장"
-                    }`
-                  );
-                  console.log(
-                    `   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`
-                  );
-                  console.log(
-                    `   → 로그인 세션 만료: ${loginExpiry} (${
-                      autoLoginEnabled ? "30일" : "1시간"
-                    } 후)`
-                  );
-                } else {
-                  const loginExpiry = loginExpiryStr
-                    ? new Date(loginExpiryStr).toLocaleString("ko-KR", {
-                        timeZone: "Asia/Seoul",
-                      })
-                    : "N/A";
-                  console.log(
-                    `✅ [${refreshTime}] Firebase 토큰 자동 갱신 (만료 시간 유지)`
-                  );
-                  console.log(
-                    `   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`
-                  );
-                  console.log(`   → 로그인 세션 만료: ${loginExpiry}`);
-                }
+                  if (isNewLogin || autoLoginEnabled) {
+                    setLoginExpiry(autoLoginEnabled);
+                    const updatedLoginExpiryStr =
+                      localStorage.getItem("login_expiry");
+                    const loginExpiry = updatedLoginExpiryStr
+                      ? new Date(updatedLoginExpiryStr).toLocaleString("ko-KR", {
+                          timeZone: "Asia/Seoul",
+                        })
+                      : "N/A";
+                    console.log(
+                      `✅ [${refreshTime}] Firebase 토큰 자동 갱신${
+                        isNewLogin ? " (신규 로그인)" : " + 만료 시간 연장"
+                      }`
+                    );
+                    console.log(
+                      `   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`
+                    );
+                    console.log(
+                      `   → 로그인 세션 만료: ${loginExpiry} (${
+                        autoLoginEnabled ? "30일" : "1시간"
+                      } 후)`
+                    );
+                  } else {
+                    const loginExpiry = loginExpiryStr
+                      ? new Date(loginExpiryStr).toLocaleString("ko-KR", {
+                          timeZone: "Asia/Seoul",
+                        })
+                      : "N/A";
+                    console.log(
+                      `✅ [${refreshTime}] Firebase 토큰 자동 갱신 (만료 시간 유지)`
+                    );
+                    console.log(
+                      `   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`
+                    );
+                    console.log(`   → 로그인 세션 만료: ${loginExpiry}`);
+                  }
 
-                tokenRefreshSuccess = true;
-              } catch (error) {
-                retryCount++;
-                if (retryCount < maxRetries) {
-                  const waitTime = retryCount * 500;
-                  console.warn(
-                    `⚠️ [${timestamp}] 토큰 갱신 실패 (시도 ${retryCount}/${maxRetries}), ${waitTime}ms 후 재시도...`,
-                    error
-                  );
-                  await new Promise((resolve) => setTimeout(resolve, waitTime));
-                } else {
-                  console.error(
-                    `❌ [${timestamp}] 토큰 갱신 실패 (최대 재시도 횟수 초과):`,
-                    error
-                  );
+                  tokenRefreshSuccess = true;
+                } catch (error) {
+                  retryCount++;
+                  if (retryCount < maxRetries) {
+                    const waitTime = retryCount * 500;
+                    console.warn(
+                      `⚠️ [${timestamp}] 토큰 갱신 실패 (시도 ${retryCount}/${maxRetries}), ${waitTime}ms 후 재시도...`,
+                      error
+                    );
+                    await new Promise((resolve) => setTimeout(resolve, waitTime));
+                  } else {
+                    console.error(
+                      `❌ [${timestamp}] 토큰 갱신 실패 (최대 재시도 횟수 초과):`,
+                      error
+                    );
+                  }
                 }
               }
+            } finally {
+              // 성공/실패 모두 갱신 상태 해제
+              updateTokenRefreshing(false);
+              resolveRefresh!();
             }
-
-            setIsTokenRefreshing(false);
 
             // 토큰 갱신 실패 시 로그아웃 처리
             if (!tokenRefreshSuccess) {
@@ -287,6 +354,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setIsAuthReady(true);
               return;
             }
+
+            // 토큰 갱신 성공 후 userId가 없으면 자동 복원
+            await restoreUserInfoIfNeeded();
           }
         } else {
           console.log(`ℹ️ [${timestamp}] Firebase 로그아웃 상태`);

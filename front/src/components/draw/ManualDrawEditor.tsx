@@ -155,8 +155,22 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
   // 초기화
   useEffect(() => {
     if (initialGames && initialGames.length > 0) {
-      // 수정 모드: 기존 대진 데이터로 초기화
-      setGames(convertToEditableGames(initialGames, participants));
+      // 수정 모드: 인원수 기반으로 빈 슬롯 생성 후 기존 데이터 순서대로 채워넣기
+      const emptyGames = createEmptyGames(playerCount);
+      const existingGames = convertToEditableGames(initialGames, participants);
+
+      const mergedGames = emptyGames.map((emptyGame, index) => {
+        if (index < existingGames.length) {
+          return {
+            ...emptyGame,
+            teamAUserIds: existingGames[index].teamAUserIds,
+            teamBUserIds: existingGames[index].teamBUserIds,
+          };
+        }
+        return emptyGame;
+      });
+
+      setGames(mergedGames);
     } else {
       // 생성 모드: 빈 구조 생성
       setGames(createEmptyGames(playerCount));

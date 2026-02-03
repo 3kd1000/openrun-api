@@ -233,11 +233,6 @@ public class ScheduleController {
         // 일정 존재 확인 및 조회
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
 
-        // 과거 일정 체크 (KST 기준)
-        if (TimeValidationUtils.isPast(scheduleResponse.getScheduledAt())) {
-            throw new IllegalStateException("이미 지난 일정에는 대진을 생성할 수 없습니다.");
-        }
-
         // MANUAL 타입: DrawService 우회, 직접 Match 저장
         if (request.getDrawType() == DrawType.MANUAL) {
             DrawResponse response = scheduleService.saveManualDraw(scheduleId, scheduleResponse, request);
