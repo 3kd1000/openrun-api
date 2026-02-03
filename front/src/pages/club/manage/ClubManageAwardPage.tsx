@@ -313,10 +313,7 @@ const ClubManageAwardPage: React.FC = () => {
     }
   };
 
-  // 특정 타입이 이미 확정되었는지 확인
-  const isTypeConfirmed = (type: AwardType): boolean => {
-    return confirmedWinners.some((w) => w.awardType === type);
-  };
+  // 확정된 수상자 정보 가져오기 (아래 getConfirmedWinner에서 활용)
 
   // 확정된 수상자 정보 가져오기
   const getConfirmedWinner = (type: AwardType): AwardWinnerResponse | undefined => {

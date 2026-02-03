@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isTokenValid, clearLoginSession } from '../services/firebase';
+import './ProtectedRoute.css';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,12 +14,14 @@ interface ProtectedRouteProps {
  * 사용법:
  * <Route path="/schedules" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
  *
- * AuthContext의 isAuthReady와 user를 사용하여 인증 상태를 확인하고,
+ * AuthContext의 isAuthReady, isTokenRefreshing, user를 사용하여 인증 상태를 확인하고,
  * Firebase 토큰 유효성을 검증하여 localStorage에 정보가 있어도
  * 토큰이 유효하지 않으면 미로그인으로 처리합니다.
+ *
+ * 토큰 갱신 중에는 "인증 확인 중..." 대기 UI를 표시합니다.
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthReady, user } = useAuth();
+  const { isAuthReady, isTokenRefreshing, user } = useAuth();
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,6 +30,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const checkAuth = async () => {
       // Firebase 인증 상태 복원이 완료될 때까지 대기
       if (!isAuthReady) {
+        return;
+      }
+
+      // 토큰 갱신 중이면 검사 보류 (대기 UI 표시)
+      if (isTokenRefreshing) {
         return;
       }
 
@@ -59,12 +67,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       }
     };
 
+    // 아직 인증 확인이 안 된 경우에만 로딩 UI 표시
+    // (이미 인증된 상태에서 45분 주기 토큰 갱신 시 화면 깜빡임 방지)
+    if (!isAuthenticated) {
+      setIsChecking(true);
+    }
     checkAuth();
-  }, [isAuthReady, user]);
+  }, [isAuthReady, user, isTokenRefreshing]);
 
-  // Firebase 인증 상태 복원 대기 또는 토큰 검증 중에는 로딩 상태
+  // Firebase 인증 상태 복원 대기 또는 토큰 검증 중에는 대기 UI 표시
   if (!isAuthReady || isChecking) {
-    return null; // 또는 <LoadingSpinner /> 등
+    return (
+      <div className="auth-checking">
+        <div className="auth-checking__spinner" />
+        <p className="auth-checking__text">인증 확인 중...</p>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
