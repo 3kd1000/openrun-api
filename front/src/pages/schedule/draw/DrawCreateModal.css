@@ -76,6 +76,13 @@
   flex-wrap: nowrap;
 }
 
+/* 4개 버튼 그리드 (MANUAL 포함) */
+.draw-type-buttons--four {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xs);
+}
+
 .draw-type-btn {
   flex: 1;
   padding: 10px var(--space-s);
@@ -520,6 +527,12 @@
 
   /* 대진 타입 버튼 - 높이 통일 */
   .draw-type-buttons {
+    gap: var(--space-xs);
+  }
+
+  /* 4개 버튼: 모바일에서 2x2 그리드 */
+  .draw-type-buttons--four {
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-xs);
   }
 

@@ -154,6 +154,7 @@
 .btn-copy,
 .btn-regenerate,
 .btn-edit,
+.btn-edit-draw,
 .btn-save,
 .draw-view-modal .btn-primary {
   padding: 10px var(--space-m);
@@ -208,9 +209,19 @@
   background: var(--color-success-hover);
 }
 
+.btn-edit-draw {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.btn-edit-draw:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+}
+
 .btn-copy:disabled,
 .btn-regenerate:disabled,
 .btn-edit:disabled,
+.btn-edit-draw:disabled,
 .btn-save:disabled,
 .draw-view-modal .btn-primary:disabled {
   opacity: var(--opacity-disabled);
@@ -303,6 +314,7 @@
   .draw-view-modal .btn-copy,
   .draw-view-modal .btn-regenerate,
   .draw-view-modal .btn-edit,
+  .draw-view-modal .btn-edit-draw,
   .draw-view-modal .btn-save,
   .draw-view-modal .btn-primary {
     height: 38px;
@@ -336,6 +348,7 @@
     .draw-view-modal .btn-copy,
     .draw-view-modal .btn-regenerate,
     .draw-view-modal .btn-edit,
+    .draw-view-modal .btn-edit-draw,
     .draw-view-modal .btn-save,
     .draw-view-modal .btn-primary {
       font-size: var(--font-size-m);
@@ -363,6 +376,7 @@
     .draw-view-modal .btn-copy,
     .draw-view-modal .btn-regenerate,
     .draw-view-modal .btn-edit,
+    .draw-view-modal .btn-edit-draw,
     .draw-view-modal .btn-save,
     .draw-view-modal .btn-primary {
       flex: 1 1 0;
@@ -397,6 +411,7 @@
   .draw-view-modal .btn-copy,
   .draw-view-modal .btn-regenerate,
   .draw-view-modal .btn-edit,
+  .draw-view-modal .btn-edit-draw,
   .draw-view-modal .btn-save,
   .draw-view-modal .btn-primary {
     width: 100%;

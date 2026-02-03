@@ -4,6 +4,7 @@ import { drawService } from "../../../services/drawService";
 import type {
   DrawResponse,
   CreateDrawRequestWithIds,
+  ManualGame,
 } from "../../../services/drawService";
 import { participantService } from "../../../services/participantService";
 import { userService } from "../../../services/userService";
@@ -11,6 +12,7 @@ import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { validateDrawCreation } from "../../../utils/scheduleValidation";
 import type { Schedule } from "../../../types/schedule";
 import DrawGamesList from "../../../components/draw/DrawGamesList";
+import ManualDrawEditor from "../../../components/draw/ManualDrawEditor";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import Toast from "../../../components/common/Toast";
 import { CheckIcon, CopyIcon } from "../../../components/common/Icons";
@@ -25,7 +27,7 @@ interface Props {
   onSuccess: () => void;
 }
 
-type DrawType = "AA" | "AB" | "SEED";
+type DrawType = "AA" | "AB" | "SEED" | "MANUAL";
 
 const DrawCreateModal: React.FC<Props> = ({
   scheduleId,
@@ -218,6 +220,15 @@ const DrawCreateModal: React.FC<Props> = ({
       setGroupA([]);
       setGroupB([]);
       setConfirmedGroup([]);
+    } else if (drawType === "MANUAL") {
+      // MANUAL: 수동 대진은 ManualDrawEditor에서 처리
+      // 참가 확정자는 confirmedGroup에 유지
+      setConfirmedGroup(confirmedUserIds);
+      setWaitingGroup(waitingIds);
+      setGroupA([]);
+      setGroupB([]);
+      setSeedPlayers([]);
+      setNormalPlayers([]);
     }
   }, [drawType, localParticipants, confirmedUserIds]);
 
@@ -455,6 +466,49 @@ const DrawCreateModal: React.FC<Props> = ({
     }
   };
 
+  // MANUAL 대진 생성 완료 핸들러
+  const handleManualDrawComplete = async (manualGames: ManualGame[]) => {
+    // 과거 일정 체크
+    const validation = validateDrawCreation(schedule.scheduledAt);
+    if (!validation.isValid) {
+      setError(validation.errorMessage || "대진 생성에 실패했습니다.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      // manualGames에서 모든 userId 추출
+      const allUserIds = new Set<number>();
+      manualGames.forEach((g) => {
+        g.teamAUserIds.forEach((id) => allUserIds.add(id));
+        g.teamBUserIds.forEach((id) => allUserIds.add(id));
+      });
+
+      const requestWithIds: CreateDrawRequestWithIds = {
+        drawType: "MANUAL",
+        numberOfTotalPlayer: allUserIds.size,
+        userIds: Array.from(allUserIds),
+        manualGames,
+      };
+
+      const result = await drawService.createDrawWithScheduleByIds(
+        scheduleId,
+        requestWithIds
+      );
+      setDrawResult(result);
+    } catch (err: unknown) {
+      console.error("수동 대진 생성 실패:", err);
+      const errorMessage = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(errorMessage || "수동 대진 생성에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 클립보드 복사
   const handleCopy = async () => {
     try {
@@ -473,7 +527,7 @@ const DrawCreateModal: React.FC<Props> = ({
 
   // 현재 선택된 총 인원
   const totalSelected =
-    drawType === "AA"
+    drawType === "AA" || drawType === "MANUAL"
       ? confirmedGroup.length
       : drawType === "AB"
       ? groupA.length + groupB.length
@@ -503,6 +557,9 @@ const DrawCreateModal: React.FC<Props> = ({
         normalPlayers.length > 0 &&
         seedPlayers.length === getSeedCount(totalSelected)
       );
+    } else if (drawType === "MANUAL") {
+      // MANUAL: ManualDrawEditor에서 자체 유효성 검사 (여기선 기본 조건만)
+      return confirmedGroup.length >= 4;
     }
 
     return false;
@@ -540,7 +597,7 @@ const DrawCreateModal: React.FC<Props> = ({
                 {showDrawTypeInfo ? "▲" : "▼"}
               </button>
             </div>
-            <div className="draw-type-buttons">
+            <div className="draw-type-buttons draw-type-buttons--four">
               <button
                 type="button"
                 className={`draw-type-btn ${drawType === "AA" ? "active" : ""}`}
@@ -567,6 +624,17 @@ const DrawCreateModal: React.FC<Props> = ({
                 title={localParticipants.length < 6 ? "6인 이상일 때 사용 가능" : undefined}
               >
                 SEED (시드)
+              </button>
+              <button
+                type="button"
+                className={`draw-type-btn ${
+                  drawType === "MANUAL" ? "active" : ""
+                }`}
+                onClick={() => setDrawType("MANUAL")}
+                disabled={localParticipants.length < 4}
+                title={localParticipants.length < 4 ? "4인 이상일 때 사용 가능" : undefined}
+              >
+                수동
               </button>
             </div>
 
@@ -598,6 +666,16 @@ const DrawCreateModal: React.FC<Props> = ({
                     </p>
                     <p className="info-players">
                       참가 인원: 6~16명 (시드 개수는 총 인원에 따라 변동)
+                    </p>
+                  </>
+                )}
+                {drawType === "MANUAL" && (
+                  <>
+                    <p className="info-description">
+                      각 게임별로 4명의 선수를 직접 지정합니다.
+                    </p>
+                    <p className="info-players">
+                      참가 인원: 4~16명
                     </p>
                   </>
                 )}
@@ -959,6 +1037,15 @@ const DrawCreateModal: React.FC<Props> = ({
             </>
           )}
 
+          {/* MANUAL 타입: 수동 대진 편집기 */}
+          {drawType === "MANUAL" && !drawResult && (
+            <ManualDrawEditor
+              participants={localParticipants}
+              playerCount={confirmedGroup.length}
+              onComplete={handleManualDrawComplete}
+            />
+          )}
+
           {/* 대진 생성 결과 */}
           {drawResult && (
             <div className="draw-result-section">
@@ -968,7 +1055,7 @@ const DrawCreateModal: React.FC<Props> = ({
 
           {/* 액션 버튼 */}
           <div className="modal-actions">
-            {!drawResult ? (
+            {!drawResult && drawType !== "MANUAL" ? (
               <>
                 <button
                   type="button"
@@ -990,6 +1077,19 @@ const DrawCreateModal: React.FC<Props> = ({
                   {loading ? "생성 중..." : "대진 생성"}
                 </button>
               </>
+            ) : !drawResult && drawType === "MANUAL" ? (
+              /* MANUAL 타입은 ManualDrawEditor 내부에서 저장/취소 처리 */
+              <button
+                type="button"
+                onClick={() => {
+                  onSuccess();
+                  onClose();
+                }}
+                className="btn-secondary"
+                disabled={loading}
+              >
+                취소
+              </button>
             ) : (
               <>
                 <button type="button" onClick={handleCopy} className="btn-copy">
