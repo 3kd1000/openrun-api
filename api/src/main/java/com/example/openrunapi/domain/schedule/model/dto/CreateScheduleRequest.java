@@ -46,6 +46,9 @@ public class CreateScheduleRequest {
     @Min(value = 30, message = "기간은 최소 30분 이상이어야 합니다.")
     private Integer durationMinutes;
 
+    @Min(value = 1, message = "코트 수는 1 이상이어야 합니다.")
+    private Integer numberOfCourts;
+
     /**
      * Schedule 엔티티로 변환하는 메소드
      */
@@ -61,6 +64,7 @@ public class CreateScheduleRequest {
                 .participationStartAt(this.participationStartAt)
                 .matchType(this.matchType)
                 .durationMinutes(this.durationMinutes)
+                .numberOfCourts(this.numberOfCourts)
                 .build();
     }
 }

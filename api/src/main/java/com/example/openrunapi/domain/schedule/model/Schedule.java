@@ -88,6 +88,9 @@ public class Schedule {
     @Column(name = "duration_minutes")
     private Integer durationMinutes = 120;
 
+    @Column(name = "number_of_courts")
+    private Integer numberOfCourts;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -99,7 +102,8 @@ public class Schedule {
     @Builder
     public Schedule(Long clubId, String courtName, LocalDateTime scheduledAt,
                     Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                    LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes) {
+                    LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes,
+                    Integer numberOfCourts) {
         this.clubId = clubId;
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
@@ -110,11 +114,13 @@ public class Schedule {
         this.participationStartAt = participationStartAt;
         this.matchType = matchType;
         this.durationMinutes = durationMinutes != null ? durationMinutes : 120;
+        this.numberOfCourts = numberOfCourts;
     }
 
     public void update(String courtName, LocalDateTime scheduledAt,
                        Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
-                       LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes) {
+                       LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes,
+                       Integer numberOfCourts) {
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
         this.maxCapacity = maxCapacity;
@@ -124,6 +130,7 @@ public class Schedule {
         this.participationStartAt = participationStartAt;
         this.matchType = matchType;
         this.durationMinutes = durationMinutes != null ? durationMinutes : 120;
+        this.numberOfCourts = numberOfCourts;
     }
 
     public void incrementParticipants() {

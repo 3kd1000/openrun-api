@@ -89,6 +89,7 @@ const DrawViewModal: React.FC<Props> = ({
         scheduledAt: schedule.scheduledAt,
         drawType: schedule.drawType || "",
         playerCount: confirmedParticipantCount,
+        numberOfCourts: schedule.numberOfCourts,
       });
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -162,7 +163,7 @@ const DrawViewModal: React.FC<Props> = ({
               teamAScore,
               teamBScore,
               result,
-              playedAt: new Date().toISOString(),
+              playedAt: schedule.scheduledAt,
             },
           };
         });
@@ -345,6 +346,7 @@ const DrawViewModal: React.FC<Props> = ({
             <ManualDrawEditor
               participants={participants}
               playerCount={confirmedParticipantCount}
+              numberOfCourts={schedule.numberOfCourts}
               initialGames={drawResult.games}
               onComplete={handleSaveEditedDraw}
               onCancel={() => setIsEditingDraw(false)}
@@ -354,6 +356,7 @@ const DrawViewModal: React.FC<Props> = ({
               <DrawGamesList
                 games={drawResult.games}
                 playerCount={confirmedParticipantCount}
+                numberOfCourts={schedule.numberOfCourts}
                 isEditMode={isEditMode}
                 onScoreChange={handleScoreChange}
                 matchScores={matchScores}

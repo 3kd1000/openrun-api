@@ -27,6 +27,7 @@ export interface ScheduleFormData {
   durationMinutes: number;
   courtName: string;
   maxCapacity: number;
+  numberOfCourts?: number;
   cost?: number;
   description: string;
   reservedByUserId?: number;
@@ -43,6 +44,7 @@ interface ScheduleFormSectionProps {
     durationMinutes?: number;
     courtName?: string;
     maxCapacity?: number;
+    numberOfCourts?: number;
     cost?: number;
     description?: string;
     reservedByUserId?: number;
@@ -86,6 +88,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
     durationMinutes: initialData?.durationMinutes || 120,
     courtName: initialData?.courtName || "",
     maxCapacity: initialData?.maxCapacity || 4,
+    numberOfCourts: initialData?.numberOfCourts || undefined,
     cost: initialData?.cost,
     description: initialData?.description || "",
     reservedByUserId: initialData?.reservedByUserId,
@@ -335,6 +338,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       durationMinutes: selectedDuration,
       courtName: formData.courtName,
       maxCapacity: formData.maxCapacity,
+      numberOfCourts: formData.numberOfCourts,
       cost: formData.cost,
       description: formData.description,
       reservedByUserId: formData.reservedByUserId,
@@ -613,6 +617,22 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             }
             min="1"
             required
+          />
+        </div>
+
+        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
+          <label>코트 수</label>
+          <input
+            type="number"
+            value={formData.numberOfCourts || ""}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                numberOfCourts: e.target.value ? parseInt(e.target.value) : undefined,
+              })
+            }
+            min="1"
+            placeholder="자동"
           />
         </div>
 

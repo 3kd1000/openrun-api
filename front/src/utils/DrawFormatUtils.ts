@@ -14,13 +14,15 @@ import type { DrawResponse, DrawGame } from "../services/drawService";
  * - 12~15명: 3코트 → 3게임/라운드
  * - 16명: 4코트 → 4게임/라운드
  * @param playerCount - 참가 인원수
+ * @param numberOfCourts - 코트 수 (지정 시 해당 값 우선 적용)
  * @returns 라운드당 게임 수
  */
-export function getGamesPerRound(playerCount: number): number {
-  if (playerCount <= 7) return 1;
-  if (playerCount <= 11) return 2;
-  if (playerCount <= 15) return 3;
-  return 4; // 16명
+export function getGamesPerRound(playerCount: number, numberOfCourts?: number | null): number {
+  const maxByPlayers = Math.floor(playerCount / 4) || 1;
+  if (numberOfCourts != null && numberOfCourts >= 1) {
+    return Math.min(maxByPlayers, numberOfCourts);
+  }
+  return maxByPlayers;
 }
 
 /**
@@ -42,17 +44,19 @@ export function estimatePlayerCount(totalGames: number): number {
  * 인원수에 따라 라운드당 게임 수가 달라짐
  * @param games - 대진표의 게임 목록
  * @param playerCount - 참가 인원수 (없으면 게임 수로 추정)
+ * @param numberOfCourts - 코트 수 (지정 시 해당 값 우선 적용)
  * @returns 라운드 번호를 키로 하는 게임 그룹
  */
 export function groupGamesByRound(
   games: DrawGame[],
-  playerCount?: number
+  playerCount?: number,
+  numberOfCourts?: number | null
 ): { [round: number]: DrawGame[] } {
   const gamesByRound: { [round: number]: DrawGame[] } = {};
 
   // 인원수가 주어지지 않으면 게임 수로 추정
   const effectivePlayerCount = playerCount ?? estimatePlayerCount(games.length);
-  const gamesPerRound = getGamesPerRound(effectivePlayerCount);
+  const gamesPerRound = getGamesPerRound(effectivePlayerCount, numberOfCourts);
 
   // gameNo 기준으로 정렬 후 라운드 재계산
   const sortedGames = [...games].sort((a, b) => a.gameNo - b.gameNo);
@@ -97,6 +101,7 @@ export function formatDrawAsText(
     scheduledAt?: string; // 일정 시간
     drawType?: string; // 대진 타입
     playerCount?: number; // 참가 인원수 (라운드 계산용)
+    numberOfCourts?: number | null; // 코트 수
   }
 ): string {
   if (!drawResult) return "";
@@ -123,7 +128,7 @@ export function formatDrawAsText(
   }
 
   // 라운드별로 그룹화 (인원수 기반으로 라운드당 게임 수 계산)
-  const gamesByRound = groupGamesByRound(drawResult.games, options?.playerCount);
+  const gamesByRound = groupGamesByRound(drawResult.games, options?.playerCount, options?.numberOfCourts);
   const sortedRounds = getSortedRounds(gamesByRound);
 
   // 각 라운드별로 텍스트 생성

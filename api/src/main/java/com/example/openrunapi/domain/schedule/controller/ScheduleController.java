@@ -213,7 +213,7 @@ public class ScheduleController {
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
 
         // 대진 생성 (draw_statistics 자동 증가 포함)
-        DrawResponse response = drawService.generateDrawSequence(request);
+        DrawResponse response = drawService.generateDrawSequence(request, scheduleResponse.getNumberOfCourts());
 
         // Match 테이블에 저장
         scheduleService.saveMatchesFromDraw(scheduleId, scheduleResponse, response, request);
@@ -244,7 +244,7 @@ public class ScheduleController {
         CreateDrawRequest drawRequest = convertToCreateDrawRequest(request);
 
         // 대진 생성 (draw_statistics 자동 증가 포함)
-        DrawResponse response = drawService.generateDrawSequence(drawRequest);
+        DrawResponse response = drawService.generateDrawSequence(drawRequest, scheduleResponse.getNumberOfCourts());
 
         // Match 테이블에 저장 (userId 기반)
         scheduleService.saveMatchesFromDrawWithIds(scheduleId, scheduleResponse, response, request);

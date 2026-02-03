@@ -618,6 +618,10 @@
   /* meta-row의 공통 스타일 상속 */
 }
 
+.schedule-courts {
+  color: var(--color-text-secondary);
+}
+
 .schedule-participants {
   display: flex;
   align-items: center;

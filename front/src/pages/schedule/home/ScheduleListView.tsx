@@ -130,7 +130,7 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                 </div>
               )}
 
-              {/* 2. 날짜 및 시간, 신청인원 / 총인원 */}
+              {/* 2. 날짜 및 시간, 코트수, 신청인원 / 총인원 */}
               <div className="schedule-meta-row">
                 <p className="schedule-time">
                   {formatScheduleDateTime(
@@ -138,6 +138,11 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                     schedule.durationMinutes
                   )}
                 </p>
+                {schedule.numberOfCourts != null && schedule.numberOfCourts >= 1 && (
+                  <span className="schedule-courts">
+                    코트 {schedule.numberOfCourts}면
+                  </span>
+                )}
                 <div className="schedule-participants">
                   <span className="stat-confirmed">
                     신청 {schedule.currentParticipants}명

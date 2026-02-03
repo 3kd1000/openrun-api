@@ -20,6 +20,8 @@ export interface DrawGamesListProps {
   games: DrawGame[];
   /** 참가 인원수 (라운드당 게임 수 계산용) */
   playerCount?: number;
+  /** 코트 수 (지정 시 해당 값 우선 적용) */
+  numberOfCourts?: number | null;
   /** 편집 모드 활성화 여부 (DrawViewModal에서 결과 입력 시 사용) */
   isEditMode?: boolean;
   /** 스코어 변경 핸들러 (편집 모드에서 사용) */
@@ -37,13 +39,14 @@ export interface DrawGamesListProps {
 const DrawGamesList: React.FC<DrawGamesListProps> = ({
   games,
   playerCount,
+  numberOfCourts,
   isEditMode = false,
   onScoreChange,
   matchScores,
   onResetResult,
 }) => {
   // 라운드별로 그룹화 (인원수 기반으로 라운드당 게임 수 계산)
-  const gamesByRound = groupGamesByRound(games, playerCount);
+  const gamesByRound = groupGamesByRound(games, playerCount, numberOfCourts);
   const sortedRounds = getSortedRounds(gamesByRound);
 
   return (

@@ -516,6 +516,7 @@ const DrawCreateModal: React.FC<Props> = ({
         title: "🎯 대진표",
         drawType: drawType,
         playerCount: totalSelected,
+        numberOfCourts: schedule.numberOfCourts,
       });
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -1042,6 +1043,7 @@ const DrawCreateModal: React.FC<Props> = ({
             <ManualDrawEditor
               participants={localParticipants}
               playerCount={confirmedGroup.length}
+              numberOfCourts={schedule.numberOfCourts}
               onComplete={handleManualDrawComplete}
             />
           )}
@@ -1049,7 +1051,7 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* 대진 생성 결과 */}
           {drawResult && (
             <div className="draw-result-section">
-              <DrawGamesList games={drawResult.games} playerCount={totalSelected} />
+              <DrawGamesList games={drawResult.games} playerCount={totalSelected} numberOfCourts={schedule.numberOfCourts} />
             </div>
           )}
 
