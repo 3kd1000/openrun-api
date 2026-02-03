@@ -337,6 +337,10 @@ public class ScheduleParticipantService {
             }
             log.info("제거된 참가자: {} 명 (확정: {}명)", toRemove.size(), removedConfirmedCount);
 
+            // 대진 무효화 (참가자가 제거되었으므로 기존 대진은 더 이상 유효하지 않음)
+            schedule.invalidateDraw();
+            log.info("참가자 제거로 대진 무효화");
+
             // 제거된 확정 참가자가 있으면 대기 중인 사람을 확정으로 변경
             if (removedConfirmedCount > 0) {
                 List<ScheduleParticipant> waitingList = participantRepository

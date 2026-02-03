@@ -124,13 +124,5 @@ export const validateDrawCreation = (
     };
   }
 
-  // 과거 일정에는 대진 생성 불가
-  if (isPastDate(scheduledAt)) {
-    return {
-      isValid: false,
-      errorMessage: "이미 지난 일정에는 대진을 생성할 수 없습니다.",
-    };
-  }
-
   return { isValid: true };
 };

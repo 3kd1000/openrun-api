@@ -739,18 +739,9 @@ const ScheduleDetailModal: React.FC<Props> = ({
                     type="button"
                     onClick={() => setShowDrawCreateModal(true)}
                     className="btn-draw-inline btn-draw-inline--primary"
-                    disabled={
-                      !!(
-                        (schedule.scheduledAt &&
-                          new Date() >= new Date(schedule.scheduledAt)) ||
-                        schedule.maxCapacity < 4
-                      )
-                    }
+                    disabled={schedule.maxCapacity < 4}
                     title={
-                      schedule.scheduledAt &&
-                      new Date() >= new Date(schedule.scheduledAt)
-                        ? "이미 지난 일정에는 대진을 생성할 수 없습니다."
-                        : schedule.maxCapacity < 4
+                      schedule.maxCapacity < 4
                         ? `대진 생성은 4인 이상의 모임일 때 가능합니다. (현재 모임 총원: ${schedule.maxCapacity}명)`
                         : undefined
                     }
