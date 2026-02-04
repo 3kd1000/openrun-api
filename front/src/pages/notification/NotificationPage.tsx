@@ -72,7 +72,9 @@ const NotificationIcon: React.FC<{ type: string }> = ({ type }) => {
 
 const formatTimeAgo = (dateStr: string): string => {
   const now = new Date();
-  const date = new Date(dateStr);
+  // 서버에서 UTC로 저장된 날짜가 'Z' suffix 없이 올 수 있으므로 명시적으로 UTC 처리
+  const normalizedDateStr = dateStr.endsWith("Z") ? dateStr : `${dateStr}Z`;
+  const date = new Date(normalizedDateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
   const diffHour = Math.floor(diffMs / 3600000);
