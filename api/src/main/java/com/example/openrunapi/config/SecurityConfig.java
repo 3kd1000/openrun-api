@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/clubs/*/members/**").authenticated() // 클럽 멤버/가입 관리 API (로그인 필요)
                         .requestMatchers("/api/clubs/*/membership/**").authenticated() // 클럽원 상세(권한/상태) API (로그인 필요)
                         .requestMatchers("/api/users/guests").permitAll() // 게스트 목록 조회
+                        .requestMatchers("/api/fcm/tokens/**").authenticated() // FCM 토큰 관리 API (로그인 필요)
+                        .requestMatchers("/api/notifications/**").authenticated() // 알림 API (로그인 필요)
                         // 그 외 모든 API 요청은 인증 필요
                         .requestMatchers("/api/**").authenticated()
                         // 그 외 요청은 거부 (API 서버이므로 정적 리소스나 SPA 라우팅 불필요)

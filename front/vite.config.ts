@@ -22,6 +22,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,ico,png,svg,jpeg}"],
         // 구버전 캐시 자동 삭제
         cleanupOutdatedCaches: true,
+        // firebase-messaging-sw.js는 Workbox에서 제외 (별도 SW로 동작)
+        navigateFallbackDenylist: [/^\/firebase-messaging-sw\.js$/],
         runtimeCaching: [
           // HTML 문서: 항상 네트워크 우선 (배포 시 최신 버전 즉시 반영)
           {

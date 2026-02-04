@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { getOpenRunSession } from "../../utils/openrunSession";
+import { useNotification } from "../../contexts/NotificationContext";
 import "./Navigation.css";
 
 // 선 스타일 SVG 아이콘 컴포넌트
@@ -58,6 +59,22 @@ const TrophyIcon: React.FC<{ isActive: boolean }> = () => (
   </svg>
 );
 
+const BellIcon: React.FC<{ isActive: boolean }> = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
 const MoreIcon: React.FC<{ isActive: boolean }> = () => (
   <svg
     width="24"
@@ -78,6 +95,7 @@ const MoreIcon: React.FC<{ isActive: boolean }> = () => (
 const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { unreadCount } = useNotification();
 
   const isClubRoute =
     location.pathname === "/clubs" ||
@@ -107,6 +125,7 @@ const Navigation: React.FC = () => {
     { path: "/clubs", label: "홈", icon: HomeIcon, onClick: handleClubClick },
     { path: "/schedules/club", label: "일정관리", icon: CalendarIcon },
     { path: "/scoreboard", label: "기록", icon: TrophyIcon },
+    { path: "/notifications", label: "알림", icon: BellIcon },
     { path: "/more", label: "더보기", icon: MoreIcon },
   ];
 
@@ -134,6 +153,11 @@ const Navigation: React.FC = () => {
               <>
                 <span className="nav-icon">
                   <IconComponent isActive={forcedActive} />
+                  {item.label === "알림" && unreadCount > 0 && (
+                    <span className="nav-badge">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                 </span>
                 <span className="nav-label">
                   {item.label}

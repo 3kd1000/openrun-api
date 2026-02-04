@@ -33,6 +33,7 @@ import UserGuidePage from "./pages/more/UserGuidePage";
 import UserGuideDetailPage from "./pages/more/UserGuideDetailPage";
 import GuideEditorPage from "./pages/more/GuideEditorPage";
 import InquiryPage from "./pages/more/InquiryPage";
+import NotificationPage from "./pages/notification/NotificationPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -41,6 +42,7 @@ import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { AwardWinnersProvider } from "./contexts/AwardWinnersContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ClubLayout } from "./layouts/ClubLayout";
 import "./App.css";
@@ -59,6 +61,7 @@ function App() {
     <ToastProvider>
       <ErrorBoundary>
         <AuthProvider>
+          <NotificationProvider>
           <AwardWinnersProvider>
           <div className="App">
         {/* <DevUserSwitcher /> */}
@@ -219,6 +222,14 @@ function App() {
                 path="/club"
                 element={<ClubEntryRedirectPage />}
               />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <NotificationPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/more" element={<MorePage />} />
               <Route
                 path="/more/oauth-providers"
@@ -274,6 +285,7 @@ function App() {
           {needRefresh && <PWAUpdatePrompt onUpdate={updateServiceWorker} />}
           </div>
           </AwardWinnersProvider>
+          </NotificationProvider>
         </AuthProvider>
       </ErrorBoundary>
     </ToastProvider>

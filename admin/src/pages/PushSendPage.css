@@ -1,0 +1,76 @@
+.push-send-page h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-s);
+}
+
+.push-send-page__description {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-l);
+}
+
+.push-send-page__message {
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  margin-bottom: var(--space-m);
+}
+
+.push-send-page__message--success {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.push-send-page__message--error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.push-send-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  max-width: 600px;
+}
+
+.push-send-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.push-send-page__field label {
+  font-size: var(--font-size-s);
+  font-weight: 500;
+}
+
+.push-send-page__field input,
+.push-send-page__field textarea,
+.push-send-page__field select {
+  padding: var(--space-s) var(--space-m);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-s);
+  background-color: var(--color-surface);
+  font-family: inherit;
+  outline: none;
+}
+
+.push-send-page__field input:focus,
+.push-send-page__field textarea:focus,
+.push-send-page__field select:focus {
+  border-color: var(--color-primary);
+}
+
+.push-send-page__field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.push-send-page__btn {
+  margin-top: var(--space-s);
+  width: fit-content;
+}
+
+.push-send-page__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
