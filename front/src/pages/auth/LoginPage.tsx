@@ -4,7 +4,9 @@ import {
   signInWithGooglePopup,
   auth,
   setLoginExpiry,
+  clearLoginSession,
 } from "../../services/firebase";
+import { useAuth } from "../../contexts/AuthContext";
 import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
@@ -21,6 +23,7 @@ interface UserInfo {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthReady, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kakaoAuthCode, setKakaoAuthCode] = useState<string | null>(null);
@@ -51,18 +54,28 @@ const LoginPage: React.FC = () => {
   // 이미 로그인되어있는지 체크 (PWA 시작 시 자동 로그인)
   useEffect(() => {
     const checkAndNavigate = async () => {
+      // Firebase 인증 상태 복원이 완료될 때까지 대기
+      if (!isAuthReady) return;
+
       const session = getOpenRunSession();
       const firebaseToken = session.firebaseToken;
       const userId = session.userId;
 
-      // 이미 로그인되어있으면 원래 페이지 또는 메인 화면으로 이동
-      if (firebaseToken && userId) {
-        console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules/club로 자동 이동");
-        await navigateAfterLogin();
+      if (!firebaseToken || !userId) return;
+
+      // 세션 데이터는 있지만 Firebase Auth 사용자가 없으면 → stale 세션 정리
+      if (!user) {
+        console.warn("⚠️ 세션 데이터가 있지만 Firebase Auth 사용자 없음 → stale 세션 정리");
+        clearLoginSession();
+        return;
       }
+
+      // Firebase Auth 사용자도 있고 세션 데이터도 있으면 → 자동 네비게이션
+      console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules/club로 자동 이동");
+      await navigateAfterLogin();
     };
     checkAndNavigate();
-  }, [navigate]);
+  }, [isAuthReady, user, navigate]);
 
   // Kakao SDK 초기화
   useEffect(() => {

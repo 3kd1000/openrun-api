@@ -51,15 +51,12 @@ export const requestFcmToken = async (): Promise<string | null> => {
       return null;
     }
 
-    // firebase-messaging-sw.js 서비스 워커 등록
-    const registration = await navigator.serviceWorker.register(
-      "/firebase-messaging-sw.js"
-    );
-
+    // Firebase SDK가 firebase-messaging-sw.js를 자동으로
+    // /firebase-cloud-messaging-push-scope 스코프에 등록
+    // (Workbox sw.js와 스코프 충돌 방지)
     const messaging = getMessagingInstance();
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration,
     });
 
     console.log("[FCM] 토큰 발급 완료");
