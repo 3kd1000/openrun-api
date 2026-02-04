@@ -47,6 +47,12 @@ public class FcmTokenService {
     }
 
     @Transactional
+    public void removeStaleToken(String token) {
+        fcmDeviceTokenRepository.deleteByToken(token);
+        log.info("Removed stale FCM token: {}...", token.substring(0, Math.min(20, token.length())));
+    }
+
+    @Transactional
     public void removeAllTokens(Long userId) {
         fcmDeviceTokenRepository.deleteByUserId(userId);
         log.info("Removed all FCM tokens for user: {}", userId);

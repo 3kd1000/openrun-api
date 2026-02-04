@@ -73,10 +73,15 @@ public class FcmSenderService {
     private void handleMessagingException(String token, FirebaseMessagingException e) {
         MessagingErrorCode errorCode = e.getMessagingErrorCode();
 
-        if (errorCode == MessagingErrorCode.UNREGISTERED) {
-            log.warn("Token is unregistered. Removing stale token: {}", token);
-            // Delete stale token - we need userId but don't have it here
-            // This will be handled by the service layer when sending to user
+        if (errorCode == MessagingErrorCode.UNREGISTERED
+                || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
+            log.warn("Stale/invalid FCM token detected ({}). Removing: {}...",
+                    errorCode, token.substring(0, Math.min(20, token.length())));
+            try {
+                fcmTokenService.removeStaleToken(token);
+            } catch (Exception ex) {
+                log.error("Failed to remove stale token", ex);
+            }
         } else {
             log.error("Firebase messaging error ({}): {}", errorCode, e.getMessage());
         }

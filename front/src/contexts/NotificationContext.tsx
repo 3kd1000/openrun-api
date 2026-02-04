@@ -28,6 +28,10 @@ interface NotificationContextType {
   notifications: NotificationItem[];
   unreadCount: number;
   loading: boolean;
+  /** 푸시 알림 권한이 아직 요청되지 않은 상태 (iOS에서 배너 표시용) */
+  needsPermission: boolean;
+  /** 사용자 제스처(탭/클릭) 안에서 호출해야 하는 권한 요청 함수 (iOS 필수) */
+  requestPushPermission: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
   refreshUnreadCount: () => Promise<void>;
   markAsRead: (id: number) => Promise<void>;
@@ -60,29 +64,54 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [needsPermission, setNeedsPermission] = useState(false);
   const fcmTokenRef = useRef<string | null>(null);
   const fcmInitializedRef = useRef(false);
 
-  // FCM 초기화 및 토큰 등록
+  // FCM 토큰 등록 공통 로직
+  const initFcmToken = useCallback(async () => {
+    try {
+      const token = await requestFcmToken();
+      if (token) {
+        fcmTokenRef.current = token;
+        await registerTokenToServer(token);
+        fcmInitializedRef.current = true;
+        setNeedsPermission(false);
+        return true;
+      }
+    } catch (error) {
+      console.error("[Notification] FCM 초기화 실패:", error);
+    }
+    return false;
+  }, []);
+
+  // FCM 초기화 및 토큰 등록 (데스크톱에서는 자동으로 동작, iOS에서는 권한 미허용 시 needsPermission 설정)
   useEffect(() => {
     if (!isAuthReady || !user || fcmInitializedRef.current) return;
     if (!isFcmSupported()) return;
 
     const initFcm = async () => {
-      try {
-        const token = await requestFcmToken();
-        if (token) {
-          fcmTokenRef.current = token;
-          await registerTokenToServer(token);
-          fcmInitializedRef.current = true;
-        }
-      } catch (error) {
-        console.error("[Notification] FCM 초기화 실패:", error);
+      // 이미 권한이 부여된 경우에만 자동 초기화 (데스크톱 재방문, 이미 허용한 iOS)
+      if (Notification.permission === "granted") {
+        await initFcmToken();
+      } else if (Notification.permission === "default") {
+        // 아직 권한 요청 안 됨 → 배너 표시 (iOS는 사용자 제스처 필요)
+        setNeedsPermission(true);
       }
+      // "denied"면 아무것도 하지 않음
     };
 
     initFcm();
-  }, [isAuthReady, user]);
+  }, [isAuthReady, user, initFcmToken]);
+
+  // 사용자 제스처에서 호출하는 권한 요청 (iOS에서 필수)
+  const requestPushPermission = useCallback(async () => {
+    const success = await initFcmToken();
+    if (!success) {
+      // 권한이 거부됐거나 토큰 발급 실패
+      setNeedsPermission(false);
+    }
+  }, [initFcmToken]);
 
   // 포그라운드 메시지 수신 처리
   useEffect(() => {
@@ -178,6 +207,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         notifications,
         unreadCount,
         loading,
+        needsPermission,
+        requestPushPermission,
         refreshNotifications,
         refreshUnreadCount,
         markAsRead,

@@ -97,6 +97,8 @@ const NotificationPage: React.FC = () => {
     notifications,
     unreadCount,
     loading,
+    needsPermission,
+    requestPushPermission,
     refreshNotifications,
     markAsRead,
     markAllAsRead,
@@ -143,6 +145,27 @@ const NotificationPage: React.FC = () => {
           </button>
         )}
       </div>
+
+      {needsPermission && (
+        <div className="notification-page__permission-banner">
+          <div className="notification-page__permission-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </div>
+          <div className="notification-page__permission-text">
+            <p className="notification-page__permission-title">푸시 알림 받기</p>
+            <p className="notification-page__permission-desc">일정, 대진표 등 중요한 알림을 받으려면 알림을 허용해주세요.</p>
+          </div>
+          <button
+            className="notification-page__permission-btn"
+            onClick={requestPushPermission}
+          >
+            허용
+          </button>
+        </div>
+      )}
 
       {loading && notifications.length === 0 ? (
         <div className="notification-page__empty">불러오는 중...</div>
