@@ -200,6 +200,7 @@
 .scoreboard-page .scoreboard-table td.name {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  text-align: center;
 }
 
 .scoreboard-page .scoreboard-table td.points {

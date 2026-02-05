@@ -18,8 +18,10 @@
   margin-bottom: 0; /* 헤더와 캘린더 사이 간격 제거 */
   margin-top: 0;
   position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
+  /* ClubLayout header 아래에 위치하도록 top 조정 */
+  /* ClubSelector 높이(~40px) + ClubLayout header padding(~8px) = ~48px */
+  top: 48px;
+  z-index: calc(var(--z-sticky) - 1);
   background: var(--color-bg-primary);
   padding: var(--space-m);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -366,6 +368,32 @@
   margin-top: 0; /* 헤더와 리스트 사이 간격 제거 */
 }
 
+/* ========== Infinite Scroll 센티넬 ========== */
+.schedule-list__sentinel {
+  grid-column: 1 / -1; /* 전체 너비 차지 */
+  min-height: 1px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-m);
+}
+
+.schedule-list__sentinel--top {
+  order: -1; /* 최상단에 배치 */
+}
+
+.schedule-list__sentinel--bottom {
+  order: 9999; /* 최하단에 배치 */
+}
+
+.schedule-list__loading {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-s);
+  padding: var(--space-s) var(--space-m);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-m);
+}
+
 /* ========== 일정 카드 ========== */
 .schedule-page .schedule-card {
   position: relative;
@@ -673,6 +701,8 @@
   .schedule-header {
     /* ClubMainPage와 동일한 상단 거리 유지 */
     padding: var(--space-m) var(--space-m) var(--space-m) var(--space-m);
+    /* ClubSelector 높이 조정: Tablet ~42px, Mobile ~40px */
+    top: 42px;
   }
 
   .header-top {
@@ -802,6 +832,8 @@
 @media (min-width: 360px) and (max-width: 425px) {
   .schedule-header {
     padding: var(--space-xs) var(--space-s) var(--space-s) var(--space-s);
+    /* ClubSelector 높이 조정: Mobile Large ~40px */
+    top: 40px;
   }
 
   .header-actions {
@@ -834,6 +866,8 @@
 @media (max-width: 359px) {
   .schedule-header {
     padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-xs);
+    /* ClubSelector 높이 조정: Mobile Small ~36px */
+    top: 36px;
   }
 
   .header-actions {

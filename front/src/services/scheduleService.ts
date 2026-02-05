@@ -1,6 +1,17 @@
 import axiosInstance from './api/axiosInstance';
 import type { Schedule, CreateScheduleRequest } from '../types/schedule';
 
+// 커서 기반 페이지네이션 응답 타입
+export interface ScheduleCursorResponse {
+  content: Schedule[];
+  hasMore: boolean;
+  nextCursor: string | null;  // ISO 8601 날짜 문자열
+  size: number;
+}
+
+// 커서 조회 방향
+export type CursorDirection = 'PAST' | 'FUTURE';
+
 export const scheduleService = {
   // 일정 생성
   createSchedule: async (data: CreateScheduleRequest, userId?: number): Promise<Schedule> => {
@@ -117,6 +128,27 @@ export const scheduleService = {
   ): Promise<Schedule> => {
     const response = await axiosInstance.patch(`/schedules/${scheduleId}/interclub-recruit`, { open, note: note ?? null }, {
       params: { userId },
+    });
+    return response.data;
+  },
+
+  /**
+   * 커서 기반 페이지네이션 일정 조회 (Infinite Scroll용)
+   * @param userId 사용자 ID
+   * @param clubId 클럽 ID
+   * @param pivotDate 기준 날짜 (ISO 8601 형식)
+   * @param direction PAST(과거 방향) | FUTURE(미래 방향)
+   * @param size 조회할 개수 (기본 30, 최대 50)
+   */
+  getSchedulesByCursor: async (
+    userId: number,
+    clubId: number,
+    pivotDate: string,
+    direction: CursorDirection = 'FUTURE',
+    size: number = 30
+  ): Promise<ScheduleCursorResponse> => {
+    const response = await axiosInstance.get('/schedules/cursor', {
+      params: { userId, clubId, pivotDate, direction, size }
     });
     return response.data;
   },

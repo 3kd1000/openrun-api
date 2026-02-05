@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
-import type { AwardRankingResponse, AwardPeriod, Club } from "../../types/club";
+import type { AwardRankingResponse, AwardRankingEntry, AwardType, AwardPeriod, Club } from "../../types/club";
 import { format } from "date-fns";
 import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon, StarIcon, MedalIcon } from "../../components/common/Icons";
 import { getOpenRunSession } from "../../utils/openrunSession";
@@ -297,19 +297,40 @@ const ScoreboardPage: React.FC = () => {
         setPeriodOptions(options);
       }
 
-      // 선택된 기간으로 랭킹 조회
+      // 선택된 기간으로 수상자 조회 (확정된 수상 기록)
       const currentOptions = periodOptions.length > 0
         ? periodOptions
         : awardService.generatePeriodOptions(clubAwardPeriod, 6);
 
       const selectedOption = currentOptions[periodIndex];
       if (selectedOption) {
-        const rankings = await awardService.getAwardRankings(
+        const winners = await awardService.getAwardWinners(
           selectedClubId,
-          undefined,
           selectedOption.startDate,
-          selectedOption.endDate,
-          3  // 상위 3명만
+          selectedOption.endDate
+        );
+
+        // AwardWinnerResponse[] → AwardRankingResponse[] 변환 (awardType별 그룹핑)
+        const typeMap = new Map<AwardType, AwardRankingEntry[]>();
+        winners.forEach((w) => {
+          const entries = typeMap.get(w.awardType) || [];
+          entries.push({
+            rank: entries.length + 1,
+            userId: w.userId,
+            userName: w.userName,
+            value: w.value,
+          });
+          typeMap.set(w.awardType, entries);
+        });
+
+        const rankings: AwardRankingResponse[] = Array.from(typeMap.entries()).map(
+          ([type, entries]) => ({
+            type,
+            period: clubAwardPeriod,
+            startDate: selectedOption.startDate,
+            endDate: selectedOption.endDate,
+            rankings: entries,
+          })
         );
         setAwardRankings(rankings);
       }
@@ -765,8 +786,8 @@ const ScoreboardPage: React.FC = () => {
               <div className="empty-icon">
                 <StarIcon size={64} color="var(--color-text-secondary)" />
               </div>
-              <h3>활성화된 어워드가 없습니다</h3>
-              <p>클럽 관리 {">"} 어워드 정책에서 어워드를 활성화하세요</p>
+              <h3>수상 기록이 없습니다</h3>
+              <p>해당 기간의 수상 기록이 아직 등록되지 않았습니다</p>
             </div>
           ) : (
             <div className="award-list">

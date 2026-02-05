@@ -17,8 +17,16 @@ interface ScheduleListViewProps {
   myParticipations: Set<number>;
   scheduleMode: ScheduleMode;
   todayScheduleRef: RefObject<HTMLDivElement | null>;
+  firstFutureIndex?: number; // 첫 번째 미래 일정의 인덱스 (스크롤 타겟)
   onScheduleClick: (schedule: Schedule) => void;
   onDrawViewClick: (e: React.MouseEvent, schedule: Schedule) => void;
+  // Infinite Scroll props
+  topSentinelRef?: RefObject<HTMLDivElement | null>;
+  bottomSentinelRef?: RefObject<HTMLDivElement | null>;
+  loadingPast?: boolean;
+  loadingFuture?: boolean;
+  hasMorePast?: boolean;
+  hasMoreFuture?: boolean;
 }
 
 const ScheduleListView: React.FC<ScheduleListViewProps> = ({
@@ -26,19 +34,30 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
   myParticipations,
   scheduleMode,
   todayScheduleRef,
+  firstFutureIndex = 0,
   onScheduleClick,
   onDrawViewClick,
+  topSentinelRef,
+  bottomSentinelRef,
+  loadingPast = false,
+  loadingFuture = false,
+  hasMorePast = false,
+  hasMoreFuture = false,
 }) => {
   return (
     <div className="schedule-list">
+      {/* 상단 센티넬 (과거 일정 로드 트리거) */}
+      {scheduleMode === "club" && hasMorePast && (
+        <div ref={topSentinelRef} className="schedule-list__sentinel schedule-list__sentinel--top">
+          {loadingPast && <div className="schedule-list__loading">과거 일정 불러오는 중...</div>}
+        </div>
+      )}
+
       {displaySchedules.map((item, index) => {
         const schedule = item.schedule;
         const isPast = new Date(schedule.scheduledAt) < new Date();
-        const isFirstFuture =
-          !isPast &&
-          displaySchedules
-            .slice(0, index)
-            .every((s) => new Date(s.schedule.scheduledAt) < new Date());
+        // firstFutureIndex 기반으로 스크롤 타겟 결정 (초기 로딩 시 PAST 응답 길이로 계산됨)
+        const isScrollTarget = index === firstFutureIndex;
         const isParticipating = myParticipations.has(schedule.id);
         const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
         const hasValidDraw = schedule.drawType && schedule.isDrawValid;
@@ -72,7 +91,7 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
         return (
           <div
             key={schedule.id}
-            ref={isFirstFuture ? todayScheduleRef : null}
+            ref={isScrollTarget ? todayScheduleRef : null}
             className={`schedule-card ${
               isPast ? "past-schedule" : ""
             } ${capacityStatus} ${drawStatus} ${
@@ -227,6 +246,13 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
           </div>
         );
       })}
+
+      {/* 하단 센티넬 (미래 일정 로드 트리거) */}
+      {scheduleMode === "club" && hasMoreFuture && (
+        <div ref={bottomSentinelRef} className="schedule-list__sentinel schedule-list__sentinel--bottom">
+          {loadingFuture && <div className="schedule-list__loading">미래 일정 불러오는 중...</div>}
+        </div>
+      )}
     </div>
   );
 };

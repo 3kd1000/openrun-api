@@ -1,6 +1,7 @@
 .user-name-with-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 3px;
   flex-wrap: wrap;
 }

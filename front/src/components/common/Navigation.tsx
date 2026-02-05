@@ -105,7 +105,7 @@ const Navigation: React.FC = () => {
     onClick?: (e: React.MouseEvent) => void;
   }> = [
     { path: "/clubs", label: "홈", icon: HomeIcon, onClick: handleClubClick },
-    { path: "/schedules/club", label: "일정관리", icon: CalendarIcon },
+    { path: "/schedules/club", label: "일정", icon: CalendarIcon },
     { path: "/scoreboard", label: "기록", icon: TrophyIcon },
     { path: "/more", label: "더보기", icon: MoreIcon },
   ];
@@ -121,24 +121,24 @@ const Navigation: React.FC = () => {
             onClick={item.onClick}
             className={({ isActive }) => {
               let forcedActive = isActive;
-              if (item.label === "클럽") forcedActive = isClubRoute;
-              if (item.label === "일정관리") forcedActive = isScheduleRoute;
+              if (item.label === "홈") forcedActive = isClubRoute;
+              if (item.label === "일정") forcedActive = isScheduleRoute;
               return `nav-item ${forcedActive ? "active" : ""}`;
             }}
           >
             {({ isActive }) => {
               let forcedActive = isActive;
-              if (item.label === "클럽") forcedActive = isClubRoute;
-              if (item.label === "일정관리") forcedActive = isScheduleRoute;
+              if (item.label === "홈") forcedActive = isClubRoute;
+              if (item.label === "일정") forcedActive = isScheduleRoute;
               return (
-              <>
-                <span className="nav-icon">
-                  <IconComponent isActive={forcedActive} />
-                </span>
-                <span className="nav-label">
-                  {item.label}
-                </span>
-              </>
+                <>
+                  <span className="nav-icon">
+                    <IconComponent isActive={forcedActive} />
+                  </span>
+                  <span className="nav-label">
+                    {item.label}
+                  </span>
+                </>
               );
             }}
           </NavLink>

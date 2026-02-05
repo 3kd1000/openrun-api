@@ -22,10 +22,27 @@ import {
   UsersIcon,
   UserIcon,
   BookOpenIcon,
+  Share2Icon,
+  PhoneIcon,
 } from "../../components/common/Icons";
+import { AppHeader } from "../../components/common/AppHeader";
 import ProfileEditModal from "../../components/ProfileEditModal";
 import { setOpenRunSession } from "../../utils/openrunSession";
 import "./MorePage.css";
+
+/**
+ * iOS Safari 브라우저인지 확인 (PWA가 아닌 경우)
+ */
+const isIOSSafariBrowser = (): boolean => {
+  const ua = navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isSafari = /safari/.test(ua) && !/crios|fxios|edgios/.test(ua);
+  // standalone이면 PWA로 실행 중
+  const isStandalone =
+    ("standalone" in window.navigator && (window.navigator as { standalone?: boolean }).standalone) ||
+    window.matchMedia("(display-mode: standalone)").matches;
+  return isIOS && isSafari && !isStandalone;
+};
 
 const MorePage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +52,10 @@ const MorePage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
   const [myClubs, setMyClubs] = useState<MyClub[]>([]);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+
+  // iOS Safari 브라우저 여부 (PWA가 아닌 경우에만 설치 안내 표시)
+  const showIOSInstallBanner = isIOSSafariBrowser();
 
   const isLoggedIn = isAuthReady && firebaseUser;
 
@@ -124,6 +145,9 @@ const MorePage: React.FC = () => {
 
   return (
     <div className="more-page">
+      <AppHeader showBell={false}>
+        <h1 className="more-page__title">더보기</h1>
+      </AppHeader>
       <div className="more-content">
         {/* 프로필 카드 - 로그인 시에만 표시 */}
         {isLoggedIn && !isLoading && user && (
@@ -179,6 +203,25 @@ const MorePage: React.FC = () => {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* iOS Safari에서 PWA 설치 안내 배너 */}
+        {showIOSInstallBanner && (
+          <div
+            className="ios-install-banner"
+            onClick={() => setShowInstallGuide(true)}
+          >
+            <span className="ios-install-banner__icon">
+              <PhoneIcon size={24} />
+            </span>
+            <div className="ios-install-banner__text">
+              <span className="ios-install-banner__title">앱으로 설치하기</span>
+              <span className="ios-install-banner__desc">
+                푸시 알림을 받으려면 홈 화면에 추가하세요
+              </span>
+            </div>
+            <span className="ios-install-banner__arrow">›</span>
           </div>
         )}
 
@@ -254,6 +297,53 @@ const MorePage: React.FC = () => {
           onClose={() => setIsEditModalOpen(false)}
           onUpdate={handleProfileUpdate}
         />
+      )}
+
+      {/* iOS PWA 설치 가이드 모달 */}
+      {showInstallGuide && (
+        <div
+          className="ios-install-modal-overlay"
+          onClick={() => setShowInstallGuide(false)}
+        >
+          <div
+            className="ios-install-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="ios-install-modal__title">앱 설치 방법</h3>
+            <div className="ios-install-modal__steps">
+              <div className="ios-install-modal__step">
+                <span className="ios-install-modal__step-num">1</span>
+                <div className="ios-install-modal__step-content">
+                  <span className="ios-install-modal__step-icon">
+                    <Share2Icon size={20} />
+                  </span>
+                  <span>하단의 <strong>공유</strong> 버튼을 탭하세요</span>
+                </div>
+              </div>
+              <div className="ios-install-modal__step">
+                <span className="ios-install-modal__step-num">2</span>
+                <div className="ios-install-modal__step-content">
+                  <span>메뉴에서 <strong>홈 화면에 추가</strong>를 선택하세요</span>
+                </div>
+              </div>
+              <div className="ios-install-modal__step">
+                <span className="ios-install-modal__step-num">3</span>
+                <div className="ios-install-modal__step-content">
+                  <span>오른쪽 상단의 <strong>추가</strong>를 탭하세요</span>
+                </div>
+              </div>
+            </div>
+            <p className="ios-install-modal__note">
+              설치 후 앱에서 알림 탭 → 알림 허용을 눌러주세요
+            </p>
+            <button
+              className="ios-install-modal__close-btn"
+              onClick={() => setShowInstallGuide(false)}
+            >
+              확인
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

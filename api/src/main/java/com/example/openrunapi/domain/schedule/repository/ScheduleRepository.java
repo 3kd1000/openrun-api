@@ -1,6 +1,8 @@
 package com.example.openrunapi.domain.schedule.repository;
 
 import com.example.openrunapi.domain.schedule.model.Schedule;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -51,4 +53,59 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long>, JpaSp
     @Query("SELECT s.clubId, COUNT(s), SUM(s.currentParticipants) " +
            "FROM Schedule s GROUP BY s.clubId")
     List<Object[]> getActivityStatsByClub();
+
+    /**
+     * 특정 클럽의 최근 일정 50개 조회 (Admin용)
+     */
+    List<Schedule> findTop50ByClubIdOrderByScheduledAtDesc(Long clubId);
+
+    /**
+     * 특정 클럽의 일정 페이징 조회 (Admin용)
+     */
+    Page<Schedule> findByClubIdOrderByScheduledAtDesc(Long clubId, Pageable pageable);
+
+    /**
+     * 커서 기반 페이지네이션: 과거 방향 (pivotDate 이전, 내림차순)
+     * Infinite Scroll 리스트뷰용
+     */
+    @Query("""
+        SELECT s FROM Schedule s
+        WHERE s.clubId = :clubId AND s.scheduledAt < :pivotDate
+        ORDER BY s.scheduledAt DESC
+    """)
+    List<Schedule> findByClubIdPast(
+            @Param("clubId") Long clubId,
+            @Param("pivotDate") LocalDateTime pivotDate,
+            Pageable pageable
+    );
+
+    /**
+     * 커서 기반 페이지네이션: 미래 방향 (pivotDate 이후, 오름차순)
+     * Infinite Scroll 리스트뷰용
+     */
+    @Query("""
+        SELECT s FROM Schedule s
+        WHERE s.clubId = :clubId AND s.scheduledAt >= :pivotDate
+        ORDER BY s.scheduledAt ASC
+    """)
+    List<Schedule> findByClubIdFuture(
+            @Param("clubId") Long clubId,
+            @Param("pivotDate") LocalDateTime pivotDate,
+            Pageable pageable
+    );
+
+    /**
+     * 특정 클럽의 전체 일정 수 조회
+     */
+    long countByClubId(Long clubId);
+
+    /**
+     * 특정 클럽에서 pivotDate 이전의 일정 수 조회
+     */
+    long countByClubIdAndScheduledAtBefore(Long clubId, LocalDateTime pivotDate);
+
+    /**
+     * 특정 클럽에서 pivotDate 이후의 일정 수 조회
+     */
+    long countByClubIdAndScheduledAtGreaterThanEqual(Long clubId, LocalDateTime pivotDate);
 }

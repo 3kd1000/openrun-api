@@ -24,6 +24,12 @@ function Layout() {
           <NavLink to="/inquiries" className={({ isActive }) => isActive ? "active" : ""}>
             문의 관리
           </NavLink>
+          <NavLink to="/push-send" className={({ isActive }) => isActive ? "active" : ""}>
+            알림 발송
+          </NavLink>
+          <NavLink to="/notification-history" className={({ isActive }) => isActive ? "active" : ""}>
+            알림 이력
+          </NavLink>
         </nav>
         <div className="admin-sidebar__footer">
           {adminUser && (
