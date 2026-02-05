@@ -44,7 +44,7 @@ public class MemberProfileResponse {
      * 클럽 멤버 프로필 응답 생성
      * @param user 사용자 정보
      * @param userProfile 사용자 테니스 프로필 (nullable)
-     * @param clubMember 클럽 멤버십 정보
+     * @param clubMember 클럽 멤버십 정보 (nullable - 가입 신청자는 멤버가 아닐 수 있음)
      * @param isSameClub 조회자와 같은 클럽 멤버인지 여부 (연락처 공개 범위 판단용)
      */
     public MemberProfileResponse(User user, UserProfile userProfile, ClubMember clubMember, boolean isSameClub) {
@@ -75,9 +75,9 @@ public class MemberProfileResponse {
             this.formerPlayer = false;
         }
 
-        // Club Membership 정보
-        this.role = clubMember.getRole();
-        this.joinedAt = clubMember.getJoinedAt();
+        // Club Membership 정보 (가입 신청자는 clubMember가 null)
+        this.role = clubMember != null ? clubMember.getRole() : null;
+        this.joinedAt = clubMember != null ? clubMember.getJoinedAt() : null;
     }
 
     /**

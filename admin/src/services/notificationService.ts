@@ -120,3 +120,19 @@ export async function getClubMemberIds(clubId: number): Promise<number[]> {
   const { data } = await api.get<number[]>(`/admin/clubs/${clubId}/member-ids`);
   return data;
 }
+
+/**
+ * 클럽 멤버 정보 (개별 선택용)
+ */
+export interface ClubMemberInfo {
+  id: number;
+  name: string;
+}
+
+/**
+ * 클럽의 ACTIVE 멤버 목록 조회 (개별 선택용)
+ */
+export async function getClubMembers(clubId: number): Promise<ClubMemberInfo[]> {
+  const { data } = await api.get<ClubMemberInfo[]>(`/admin/clubs/${clubId}/members`);
+  return data;
+}

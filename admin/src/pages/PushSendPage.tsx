@@ -7,6 +7,7 @@ import {
 } from "../services/notificationService";
 import type { ClubItem, ScheduleSimple, PageResponse } from "../services/notificationService";
 import { formatShortDateTime } from "../utils/dateUtils";
+import MemberSelectModal from "../components/MemberSelectModal";
 import "./PushSendPage.css";
 
 const NOTIFICATION_TYPES = [
@@ -35,6 +36,7 @@ function PushSendPage() {
   const [selectedResourceId, setSelectedResourceId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
 
   useEffect(() => {
     getClubs().then(setClubs).catch(console.error);
@@ -114,6 +116,20 @@ function PushSendPage() {
     }
   };
 
+  const handleOpenMemberModal = () => {
+    if (!clubId) {
+      setMessage({ text: "먼저 클럽을 선택해주세요.", isError: true });
+      return;
+    }
+    setShowMemberModal(true);
+  };
+
+  const handleMemberSelectConfirm = (selectedIds: number[]) => {
+    setUserIdsInput(selectedIds.join(", "));
+    setShowMemberModal(false);
+    setMessage({ text: `${selectedIds.length}명의 클럽원이 선택되었습니다.`, isError: false });
+  };
+
   const handleSend = async () => {
     const userIds = parseUserIds(userIdsInput);
     if (!clubId || userIds.length === 0 || !title || !body) {
@@ -187,6 +203,14 @@ function PushSendPage() {
               disabled={!clubId || loadingMembers}
             >
               {loadingMembers ? "로딩..." : "클럽 전체"}
+            </button>
+            <button
+              type="button"
+              className="push-send-page__select-all-btn"
+              onClick={handleOpenMemberModal}
+              disabled={!clubId}
+            >
+              클럽원 검색
             </button>
           </div>
         </div>
@@ -333,6 +357,15 @@ function PushSendPage() {
           {sending ? "발송 중..." : "알림 발송"}
         </button>
       </div>
+
+      {showMemberModal && clubId && (
+        <MemberSelectModal
+          clubId={Number(clubId)}
+          initialSelectedIds={parseUserIds(userIdsInput)}
+          onConfirm={handleMemberSelectConfirm}
+          onClose={() => setShowMemberModal(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,193 @@
+.member-modal__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.member-modal {
+  background-color: var(--color-surface, #fff);
+  border-radius: var(--radius-l, 12px);
+  width: 440px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.member-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-m, 16px) var(--space-l, 20px);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.member-modal__header h3 {
+  margin: 0;
+  font-size: var(--font-size-l, 18px);
+}
+
+.member-modal__close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--color-text-secondary, #6b7280);
+  padding: 4px 8px;
+}
+
+.member-modal__search {
+  padding: var(--space-m, 16px) var(--space-l, 20px) var(--space-s, 8px);
+}
+
+.member-modal__search input {
+  width: 100%;
+  padding: var(--space-s, 8px) var(--space-m, 12px);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-m, 8px);
+  font-size: var(--font-size-s, 14px);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.member-modal__search input:focus {
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.member-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-l, 20px) var(--space-s, 8px);
+}
+
+.member-modal__action-btn {
+  background: none;
+  border: none;
+  color: var(--color-primary, #3b82f6);
+  font-size: var(--font-size-xs, 13px);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.member-modal__action-btn:hover {
+  text-decoration: underline;
+}
+
+.member-modal__count {
+  font-size: var(--font-size-xs, 13px);
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.member-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-l, 20px);
+  min-height: 200px;
+  max-height: 400px;
+}
+
+.member-modal__status {
+  text-align: center;
+  padding: var(--space-l, 20px);
+  color: var(--color-text-secondary, #6b7280);
+  font-size: var(--font-size-s, 14px);
+}
+
+.member-modal__status--error {
+  color: #dc2626;
+}
+
+.member-modal__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-s, 14px);
+}
+
+.member-modal__table th,
+.member-modal__table td {
+  padding: var(--space-s, 8px) var(--space-s, 8px);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.member-modal__table th {
+  font-weight: 600;
+  color: var(--color-text-secondary, #6b7280);
+  font-size: var(--font-size-xs, 13px);
+  position: sticky;
+  top: 0;
+  background-color: var(--color-surface, #fff);
+}
+
+.member-modal__th-check,
+.member-modal__td-check {
+  width: 36px;
+  text-align: center !important;
+}
+
+.member-modal__table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.member-modal__table tbody tr:hover {
+  background-color: var(--color-bg, #f9fafb);
+}
+
+.member-modal__table tbody tr.selected {
+  background-color: #eff6ff;
+}
+
+.member-modal__table tbody tr.selected:hover {
+  background-color: #dbeafe;
+}
+
+.member-modal__footer {
+  display: flex;
+  gap: var(--space-s, 8px);
+  padding: var(--space-m, 16px) var(--space-l, 20px);
+  border-top: 1px solid var(--color-border, #e5e7eb);
+  justify-content: flex-end;
+}
+
+.member-modal__cancel-btn {
+  padding: var(--space-s, 8px) var(--space-m, 16px);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-m, 8px);
+  background: var(--color-surface, #fff);
+  font-size: var(--font-size-s, 14px);
+  cursor: pointer;
+}
+
+.member-modal__cancel-btn:hover {
+  background-color: var(--color-bg, #f9fafb);
+}
+
+.member-modal__confirm-btn {
+  padding: var(--space-s, 8px) var(--space-m, 16px);
+  border: none;
+  border-radius: var(--radius-m, 8px);
+  background-color: var(--color-primary, #3b82f6);
+  color: white;
+  font-size: var(--font-size-s, 14px);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.member-modal__confirm-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.member-modal__confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
