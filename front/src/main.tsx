@@ -10,16 +10,18 @@ const PROMPT_TRIGGERED_KEY = 'pwa_prompt_triggered'
 const PROMPT_COOLDOWN_KEY = 'pwa_last_prompt_time'
 const PROMPT_COOLDOWN_DURATION = 5 * 60 * 1000 // 5분
 
+// 이전에 localStorage에 남아있던 플래그 정리 (sessionStorage로 전환)
+localStorage.removeItem(PROMPT_TRIGGERED_KEY)
+
 const updateSW = registerSW({
   onNeedRefresh() {
-    // localStorage에서 중복 호출 방지 플래그 확인 (페이지 새로고침에도 유지)
-    const promptTriggered = localStorage.getItem(PROMPT_TRIGGERED_KEY)
-    if (promptTriggered === 'true') {
+    // sessionStorage로 같은 세션 내 중복 표시 방지 (앱 재실행 시 자동 초기화)
+    if (sessionStorage.getItem(PROMPT_TRIGGERED_KEY) === 'true') {
       console.log('⏱️ 업데이트 프롬프트 이미 표시됨 → 스킵')
       return
     }
 
-    // localStorage에서 마지막 프롬프트 표시 시간 확인
+    // 마지막 프롬프트 표시 후 5분 쿨다운
     const lastPromptTime = localStorage.getItem(PROMPT_COOLDOWN_KEY)
     if (lastPromptTime) {
       const timeSinceLastPrompt = Date.now() - parseInt(lastPromptTime, 10)
@@ -29,8 +31,8 @@ const updateSW = registerSW({
       }
     }
 
-    // localStorage에 플래그 설정 (페이지 새로고침에도 유지)
-    localStorage.setItem(PROMPT_TRIGGERED_KEY, 'true')
+    // sessionStorage에 플래그 설정 (같은 세션 내 중복 방지, 앱 종료 시 자동 초기화)
+    sessionStorage.setItem(PROMPT_TRIGGERED_KEY, 'true')
     localStorage.setItem(PROMPT_COOLDOWN_KEY, Date.now().toString())
 
     console.log('🔄 새로운 버전 감지: 업데이트 프롬프트 표시')
@@ -81,7 +83,7 @@ const updateSW = registerSW({
 window.updatePWA = async () => {
   await updateSW(true)
   // 업데이트 완료 후 플래그 및 쿨다운 리셋
-  localStorage.removeItem(PROMPT_TRIGGERED_KEY)
+  sessionStorage.removeItem(PROMPT_TRIGGERED_KEY)
   localStorage.removeItem(PROMPT_COOLDOWN_KEY)
 }
 
