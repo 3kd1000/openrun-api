@@ -107,6 +107,24 @@ public class AwardService {
             case BOOKING -> getBookingRanking(clubId, startDate, endDate, limit);
         };
 
+        // 실시간 랭킹이 비어있으면 확정 수상자로 fallback
+        if (rankings.isEmpty()) {
+            Optional<AwardWinner> savedWinner = awardWinnerRepository
+                    .findByClubIdAndAwardTypeAndPeriodStartAndPeriodEnd(clubId, type, startDate, endDate);
+            if (savedWinner.isPresent()) {
+                AwardWinner winner = savedWinner.get();
+                String userName = userRepository.findById(winner.getUserId())
+                        .map(u -> u.getName())
+                        .orElse("알 수 없음");
+                rankings = List.of(AwardRankingEntry.builder()
+                        .rank(1)
+                        .userId(winner.getUserId())
+                        .userName(userName)
+                        .value(winner.getValue())
+                        .build());
+            }
+        }
+
         return AwardRankingResponse.builder()
                 .type(type)
                 .period(period)
