@@ -10,8 +10,8 @@ interface AppHeaderProps {
 
 /**
  * AppHeader - 앱 전역 상단 헤더
- * - 왼쪽: children (ClubSelector 등)
- * - 오른쪽: 알림 종 아이콘 + 배지
+ * - 3열 Grid 레이아웃: 좌측 spacer | 중앙 children | 우측 bell
+ * - children(ClubSelector)이 정확히 화면 중앙에 배치됨
  */
 export const AppHeader: React.FC<AppHeaderProps> = ({ children, showBell = true }) => {
   const navigate = useNavigate();
@@ -22,10 +22,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ children, showBell = true 
   };
 
   return (
-    <header className="app-header">
-      <div className="app-header__left">
+    <header className={`app-header ${showBell ? "" : "app-header--no-bell"}`}>
+      {/* 좌측 spacer - bell과 대칭을 위해 */}
+      {showBell && <div className="app-header__spacer" />}
+
+      <div className="app-header__center">
         {children}
       </div>
+
       {showBell && (
         <button
           className="app-header__bell"

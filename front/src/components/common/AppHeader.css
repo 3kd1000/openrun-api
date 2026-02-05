@@ -1,7 +1,7 @@
 .app-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 36px 1fr 36px; /* 좌측 spacer | 중앙 content | 우측 bell */
   align-items: center;
-  justify-content: center;
   padding: var(--space-xs) var(--space-m);
   background: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-light);
@@ -9,9 +9,21 @@
   gap: var(--space-s);
 }
 
-.app-header__left {
+/* 좌측 빈 공간 (bell과 대칭) */
+.app-header__spacer {
+  width: 36px;
+}
+
+/* 중앙 콘텐츠 */
+.app-header__center {
   display: flex;
   align-items: center;
+  justify-content: center;
+}
+
+/* bell 없을 때 (MorePage 등) - 단순 중앙 정렬 */
+.app-header--no-bell {
+  display: flex;
   justify-content: center;
 }
 
@@ -60,8 +72,13 @@
 /* 반응형 */
 @media (max-width: 480px) {
   .app-header {
+    grid-template-columns: 32px 1fr 32px;
     padding: var(--space-xs) var(--space-s);
     gap: var(--space-xs);
+  }
+
+  .app-header__spacer {
+    width: 32px;
   }
 
   .app-header__bell {
