@@ -17,6 +17,7 @@ interface ScheduleListViewProps {
   myParticipations: Set<number>;
   scheduleMode: ScheduleMode;
   todayScheduleRef: RefObject<HTMLDivElement | null>;
+  firstFutureIndex?: number; // 첫 번째 미래 일정의 인덱스 (스크롤 타겟)
   onScheduleClick: (schedule: Schedule) => void;
   onDrawViewClick: (e: React.MouseEvent, schedule: Schedule) => void;
   // Infinite Scroll props
@@ -33,6 +34,7 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
   myParticipations,
   scheduleMode,
   todayScheduleRef,
+  firstFutureIndex = 0,
   onScheduleClick,
   onDrawViewClick,
   topSentinelRef,
@@ -54,11 +56,8 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
       {displaySchedules.map((item, index) => {
         const schedule = item.schedule;
         const isPast = new Date(schedule.scheduledAt) < new Date();
-        const isFirstFuture =
-          !isPast &&
-          displaySchedules
-            .slice(0, index)
-            .every((s) => new Date(s.schedule.scheduledAt) < new Date());
+        // firstFutureIndex 기반으로 스크롤 타겟 결정 (초기 로딩 시 PAST 응답 길이로 계산됨)
+        const isScrollTarget = index === firstFutureIndex;
         const isParticipating = myParticipations.has(schedule.id);
         const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
         const hasValidDraw = schedule.drawType && schedule.isDrawValid;
@@ -92,7 +91,7 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
         return (
           <div
             key={schedule.id}
-            ref={isFirstFuture ? todayScheduleRef : null}
+            ref={isScrollTarget ? todayScheduleRef : null}
             className={`schedule-card ${
               isPast ? "past-schedule" : ""
             } ${capacityStatus} ${drawStatus} ${

@@ -107,6 +107,8 @@ const ScheduleListPage: React.FC = () => {
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
   const INITIAL_PAGE_SIZE = 30;
+  // 첫 번째 미래 일정의 인덱스 (초기 로딩 시 PAST 응답 길이로 계산)
+  const [firstFutureIndex, setFirstFutureIndex] = useState<number>(0);
 
   const openScheduleIdFromState = useMemo(() => {
     const state = location.state as { openScheduleId?: number | string } | null;
@@ -209,6 +211,9 @@ const ScheduleListPage: React.FC = () => {
       // 과거 일정(오름차순) + 미래 일정(오름차순) 합치기
       const combinedSchedules = [...pastResponse.content, ...futureResponse.content];
       setSchedules(combinedSchedules);
+
+      // 첫 번째 미래 일정 인덱스 저장 (PAST 응답 길이 = 미래 일정 시작 인덱스)
+      setFirstFutureIndex(pastResponse.content.length);
 
       // 커서 상태 업데이트
       setPastCursor(pastResponse.nextCursor);
@@ -855,6 +860,7 @@ const ScheduleListPage: React.FC = () => {
           myParticipations={myParticipations}
           scheduleMode={scheduleMode}
           todayScheduleRef={todayScheduleRef}
+          firstFutureIndex={firstFutureIndex}
           onScheduleClick={handleScheduleClick}
           onDrawViewClick={handleDrawViewClick}
           topSentinelRef={topSentinelRef}
