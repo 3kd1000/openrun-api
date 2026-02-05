@@ -482,9 +482,9 @@ public class ClubService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
 
-        // 클럽 멤버십 조회
+        // 클럽 멤버십 조회 (가입 신청자는 멤버가 아닐 수 있으므로 Optional)
         ClubMember clubMember = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 사용자는 클럽 멤버가 아닙니다. userId=" + userId + ", clubId=" + clubId));
+                .orElse(null);
 
         // UserProfile 조회 (없을 수도 있음)
         UserProfile userProfile = userProfileRepository.findById(userId).orElse(null);
