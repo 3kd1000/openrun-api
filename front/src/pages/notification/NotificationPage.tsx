@@ -7,7 +7,8 @@ const TYPE_LABELS: Record<string, string> = {
   SCHEDULE: "일정",
   DRAW: "대진표",
   CLUB_INVITE: "클럽 초대",
-  CLUB_JOIN: "클럽 가입",
+  EXTERNAL_REQUEST: "외부 신청",
+  REQUEST_RESULT: "신청 결과",
   SYSTEM: "시스템",
 };
 
@@ -15,7 +16,8 @@ const TYPE_ICONS: Record<string, string> = {
   SCHEDULE: "calendar",
   DRAW: "trophy",
   CLUB_INVITE: "mail",
-  CLUB_JOIN: "users",
+  EXTERNAL_REQUEST: "users",      // 가입/게스트 신청 (운영진 수신)
+  REQUEST_RESULT: "check-circle", // 신청 결과 (신청자 수신)
   SYSTEM: "info",
 };
 
@@ -57,6 +59,13 @@ const NotificationIcon: React.FC<{ type: string }> = ({ type }) => {
           <circle cx="9" cy="7" r="4" />
           <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      );
+    case "check-circle":
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
       );
     default:
@@ -118,16 +127,28 @@ const NotificationPage: React.FC = () => {
       markAsRead(notification.id);
     }
 
-    // 타입에 따라 페이지 이동
+    // 타입에 따라 페이지 이동 (referenceId가 있으면 특정 리소스로 이동)
     if (notification.type === "SCHEDULE") {
-      navigate("/schedules/club");
+      if (notification.referenceId) {
+        navigate(`/schedules/club?scheduleId=${notification.referenceId}`);
+      } else {
+        navigate("/schedules/club");
+      }
     } else if (notification.type === "DRAW") {
-      navigate("/scoreboard");
-    } else if (
-      (notification.type === "CLUB_INVITE" ||
-        notification.type === "CLUB_JOIN") &&
-      notification.referenceId
-    ) {
+      // DRAW는 대진표 모달 바로 열기
+      if (notification.referenceId) {
+        navigate(`/schedules/club?scheduleId=${notification.referenceId}&openDraw=true`);
+      } else {
+        navigate("/schedules/club");
+      }
+    } else if (notification.type === "CLUB_INVITE" && notification.referenceId) {
+      // 클럽 초대 → 클럽 메인 페이지
+      navigate(`/clubs/${notification.referenceId}`);
+    } else if (notification.type === "EXTERNAL_REQUEST" && notification.referenceId) {
+      // 외부 신청 (가입/게스트/교류전) → 신청 관리 페이지 (운영진용)
+      navigate(`/clubs/${notification.referenceId}/manage/external-requests`);
+    } else if (notification.type === "REQUEST_RESULT" && notification.referenceId) {
+      // 신청 결과 → 클럽 메인 페이지 (신청자용)
       navigate(`/clubs/${notification.referenceId}`);
     }
   };
@@ -135,6 +156,25 @@ const NotificationPage: React.FC = () => {
   return (
     <div className="notification-page">
       <div className="notification-page__header">
+        <button
+          className="notification-page__back-btn"
+          onClick={() => navigate(-1)}
+          aria-label="뒤로 가기"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 12H5" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
         <h1 className="notification-page__title">알림</h1>
         {unreadCount > 0 && (
           <button

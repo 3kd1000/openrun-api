@@ -68,13 +68,30 @@ export const requestFcmToken = async (): Promise<string | null> => {
 };
 
 /**
+ * 디바이스 타입 판별 (MOBILE / DESKTOP)
+ */
+const getDeviceType = (): "MOBILE" | "DESKTOP" => {
+  const ua = navigator.userAgent.toLowerCase();
+  if (
+    ua.includes("iphone") ||
+    ua.includes("ipad") ||
+    ua.includes("android") ||
+    ua.includes("mobile")
+  ) {
+    return "MOBILE";
+  }
+  return "DESKTOP";
+};
+
+/**
  * 백엔드에 FCM 토큰 등록
  */
 export const registerTokenToServer = async (token: string): Promise<void> => {
   try {
     const deviceInfo = `${navigator.userAgent.substring(0, 200)}`;
-    await axiosInstance.post("/fcm/tokens", { token, deviceInfo });
-    console.log("[FCM] 서버에 토큰 등록 완료");
+    const deviceType = getDeviceType();
+    await axiosInstance.post("/fcm/tokens", { token, deviceInfo, deviceType });
+    console.log("[FCM] 서버에 토큰 등록 완료 (deviceType:", deviceType, ")");
   } catch (error) {
     console.error("[FCM] 서버 토큰 등록 실패:", error);
   }

@@ -17,7 +17,8 @@ const NOTIFICATION_TYPES: { value: NotificationType; label: string }[] = [
   { value: "SCHEDULE", label: "일정" },
   { value: "DRAW", label: "대진표" },
   { value: "CLUB_INVITE", label: "클럽 초대" },
-  { value: "CLUB_JOIN", label: "클럽 가입" },
+  { value: "EXTERNAL_REQUEST", label: "외부 신청" },
+  { value: "REQUEST_RESULT", label: "신청 결과" },
 ];
 
 function NotificationHistoryPage() {

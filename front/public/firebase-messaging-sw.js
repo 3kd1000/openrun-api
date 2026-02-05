@@ -51,10 +51,14 @@ self.addEventListener("notificationclick", (event) => {
     targetUrl = "/schedules/club";
   } else if (data.type === "DRAW" && data.referenceId) {
     targetUrl = "/scoreboard";
-  } else if (
-    (data.type === "CLUB_INVITE" || data.type === "CLUB_JOIN") &&
-    data.referenceId
-  ) {
+  } else if (data.type === "CLUB_INVITE" && data.referenceId) {
+    // 클럽 초대 → 클럽 메인 페이지
+    targetUrl = `/clubs/${data.referenceId}`;
+  } else if (data.type === "EXTERNAL_REQUEST" && data.referenceId) {
+    // 외부 신청 (가입/게스트/교류전) → 신청 관리 페이지 (운영진용)
+    targetUrl = `/clubs/${data.referenceId}/manage/external-requests`;
+  } else if (data.type === "REQUEST_RESULT" && data.referenceId) {
+    // 신청 결과 → 클럽 메인 페이지 (신청자용)
     targetUrl = `/clubs/${data.referenceId}`;
   }
 

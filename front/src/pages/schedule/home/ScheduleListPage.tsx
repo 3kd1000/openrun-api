@@ -97,6 +97,17 @@ const ScheduleListPage: React.FC = () => {
   const todayScheduleRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
 
+  // Infinite Scroll 커서 기반 상태
+  const [pastCursor, setPastCursor] = useState<string | null>(null);
+  const [futureCursor, setFutureCursor] = useState<string | null>(null);
+  const [hasMorePast, setHasMorePast] = useState(true);
+  const [hasMoreFuture, setHasMoreFuture] = useState(true);
+  const [loadingPast, setLoadingPast] = useState(false);
+  const [loadingFuture, setLoadingFuture] = useState(false);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
+  const INITIAL_PAGE_SIZE = 30;
+
   const openScheduleIdFromState = useMemo(() => {
     const state = location.state as { openScheduleId?: number | string } | null;
     const raw = state?.openScheduleId;
@@ -133,9 +144,15 @@ const ScheduleListPage: React.FC = () => {
     return Number.isFinite(n) ? n : null;
   }, [searchParams]);
 
+  // URL search params에서 openDraw 가져오기 (알림에서 대진표 바로 열기)
+  const openDrawFromParams = useMemo(() => {
+    return searchParams.get("openDraw") === "true";
+  }, [searchParams]);
 
-  // 클럽 일정 조회
-  const loadClubSchedules = useCallback(async () => {
+
+  // 클럽 일정 초기 조회 (커서 기반 - pivotDate 기준 PAST + FUTURE)
+  // pivotDate가 없으면 오늘 날짜 사용, 있으면 해당 날짜 기준으로 로드
+  const loadClubSchedules = useCallback(async (pivotDateOverride?: string) => {
     // Firebase 인증이 준비될 때까지 대기 (타이밍 이슈 방지)
     if (!isAuthReady) {
       console.log("⏳ Firebase 인증 준비 중... 클럽 일정 로딩 대기");
@@ -181,14 +198,23 @@ const ScheduleListPage: React.FC = () => {
       setLoading(true);
       setError("");
 
-      // 일정 목록 조회 (선택된 클럽의 일정만)
-      const data = await scheduleService.getAllSchedules(userId, selectedClubId);
-      // 일정날짜순으로 정렬 (오름차순)
-      const sortedData = data.sort(
-        (a, b) =>
-          new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
-      );
-      setSchedules(sortedData);
+      // pivotDate: 전달받은 값 또는 오늘 날짜
+      const pivotDate = pivotDateOverride || new Date().toISOString();
+
+      const [pastResponse, futureResponse] = await Promise.all([
+        scheduleService.getSchedulesByCursor(userId, selectedClubId, pivotDate, "PAST", INITIAL_PAGE_SIZE),
+        scheduleService.getSchedulesByCursor(userId, selectedClubId, pivotDate, "FUTURE", INITIAL_PAGE_SIZE),
+      ]);
+
+      // 과거 일정(오름차순) + 미래 일정(오름차순) 합치기
+      const combinedSchedules = [...pastResponse.content, ...futureResponse.content];
+      setSchedules(combinedSchedules);
+
+      // 커서 상태 업데이트
+      setPastCursor(pastResponse.nextCursor);
+      setFutureCursor(futureResponse.nextCursor);
+      setHasMorePast(pastResponse.hasMore);
+      setHasMoreFuture(futureResponse.hasMore);
 
       // 내가 참여한 일정 목록 조회 (Firebase 사용자가 있는 경우에만)
       if (firebaseUser) {
@@ -225,6 +251,91 @@ const ScheduleListPage: React.FC = () => {
       isLoadingRef.current = false;
     }
   }, [selectedClubId, firebaseUser, isAuthReady, hasClub, navigate]);
+
+  // 과거 일정 추가 로드 (위로 스크롤 시)
+  const loadMorePast = useCallback(async () => {
+    if (!hasMorePast || loadingPast || !selectedClubId || !pastCursor) return;
+
+    const session = getOpenRunSession();
+    const userId = session.userId;
+    if (!userId) return;
+
+    setLoadingPast(true);
+    try {
+      const response = await scheduleService.getSchedulesByCursor(
+        userId, selectedClubId, pastCursor, "PAST", INITIAL_PAGE_SIZE
+      );
+
+      // 과거 일정을 앞에 추가 (오름차순 유지)
+      setSchedules(prev => [...response.content, ...prev]);
+      setPastCursor(response.nextCursor);
+      setHasMorePast(response.hasMore);
+    } catch (err) {
+      console.error("과거 일정 로드 실패:", err);
+    } finally {
+      setLoadingPast(false);
+    }
+  }, [hasMorePast, loadingPast, selectedClubId, pastCursor]);
+
+  // 미래 일정 추가 로드 (아래로 스크롤 시)
+  const loadMoreFuture = useCallback(async () => {
+    if (!hasMoreFuture || loadingFuture || !selectedClubId || !futureCursor) return;
+
+    const session = getOpenRunSession();
+    const userId = session.userId;
+    if (!userId) return;
+
+    setLoadingFuture(true);
+    try {
+      const response = await scheduleService.getSchedulesByCursor(
+        userId, selectedClubId, futureCursor, "FUTURE", INITIAL_PAGE_SIZE
+      );
+
+      // 미래 일정을 뒤에 추가
+      setSchedules(prev => [...prev, ...response.content]);
+      setFutureCursor(response.nextCursor);
+      setHasMoreFuture(response.hasMore);
+    } catch (err) {
+      console.error("미래 일정 로드 실패:", err);
+    } finally {
+      setLoadingFuture(false);
+    }
+  }, [hasMoreFuture, loadingFuture, selectedClubId, futureCursor]);
+
+  // Intersection Observer로 스크롤 끝 감지
+  useEffect(() => {
+    if (viewMode !== "list" || scheduleMode !== "club") return;
+
+    const topObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMorePast && !loadingPast) {
+          loadMorePast();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const bottomObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreFuture && !loadingFuture) {
+          loadMoreFuture();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (topSentinelRef.current) {
+      topObserver.observe(topSentinelRef.current);
+    }
+    if (bottomSentinelRef.current) {
+      bottomObserver.observe(bottomSentinelRef.current);
+    }
+
+    return () => {
+      topObserver.disconnect();
+      bottomObserver.disconnect();
+    };
+  }, [viewMode, scheduleMode, hasMorePast, hasMoreFuture, loadingPast, loadingFuture, loadMorePast, loadMoreFuture]);
 
   // 개인 일정 조회
   const loadPersonalSchedules = useCallback(async () => {
@@ -271,6 +382,7 @@ const ScheduleListPage: React.FC = () => {
   // 일정 상세 모달 자동 오픈 (state 또는 URL params에서 scheduleId 가져오기)
   // - state: ClubMainPage "다가오는 일정" 클릭 시
   // - params: 링크복사로 공유된 URL 접근 시
+  // - openDraw=true: 알림에서 대진표 바로 열기
   useEffect(() => {
     const targetScheduleId = openScheduleIdFromState || scheduleIdFromParams;
     if (!targetScheduleId) return;
@@ -283,24 +395,78 @@ const ScheduleListPage: React.FC = () => {
       setFilterDate(d);
       setViewMode("list");
       setScheduleMode("club"); // 클럽일정 모드로 전환
-      setSelectedScheduleId(target.id);
-      setShowDetailModal(true);
-    } else {
-      // 목록에 없으면 일단 상세 모달은 열되 필터는 유지하지 않음
-      setSelectedScheduleId(targetScheduleId);
-      setShowDetailModal(true);
-    }
 
-    // state/params 재사용으로 인한 재오픈 방지
-    if (openScheduleIdFromState) {
-      navigate(location.pathname, { replace: true, state: null });
-    }
-    if (scheduleIdFromParams) {
-      // URL params 정리
-      setSearchParams({}, { replace: true });
+      // openDraw=true인 경우 대진표 모달 바로 열기
+      if (openDrawFromParams && target.isDrawValid) {
+        participantService.getParticipants(target.id).then((participants) => {
+          setDrawParticipants(participants);
+          setSelectedScheduleForDraw(target);
+          setShowDrawViewModal(true);
+        }).catch((err) => {
+          console.error("참가자 조회 실패:", err);
+          // 실패 시 일정 상세 모달로 fallback
+          setSelectedScheduleId(target.id);
+          setShowDetailModal(true);
+        });
+      } else {
+        setSelectedScheduleId(target.id);
+        setShowDetailModal(true);
+      }
+
+      // state/params 재사용으로 인한 재오픈 방지
+      if (openScheduleIdFromState) {
+        navigate(location.pathname, { replace: true, state: null });
+      }
+      if (scheduleIdFromParams) {
+        setSearchParams({}, { replace: true });
+      }
+    } else {
+      // 목록에 없으면 해당 일정 정보를 가져와서 그 기준으로 다시 로드
+      const session = getOpenRunSession();
+      const userId = session.userId;
+      if (userId) {
+        scheduleService.getScheduleById(targetScheduleId, userId)
+          .then((schedule) => {
+            // 해당 일정의 scheduledAt 기준으로 다시 로드
+            loadClubSchedules(schedule.scheduledAt);
+            setFilterDate(new Date(schedule.scheduledAt));
+            setViewMode("list");
+            setScheduleMode("club");
+
+            // openDraw=true인 경우 대진표 모달 바로 열기
+            if (openDrawFromParams && schedule.isDrawValid) {
+              participantService.getParticipants(schedule.id).then((participants) => {
+                setDrawParticipants(participants);
+                setSelectedScheduleForDraw(schedule);
+                setShowDrawViewModal(true);
+              }).catch((err) => {
+                console.error("참가자 조회 실패:", err);
+                setSelectedScheduleId(schedule.id);
+                setShowDetailModal(true);
+              });
+            } else {
+              setSelectedScheduleId(schedule.id);
+              setShowDetailModal(true);
+            }
+          })
+          .catch((err) => {
+            console.error("일정 조회 실패:", err);
+            // 일정이 없거나 권한이 없으면 모달만 열기 시도
+            setSelectedScheduleId(targetScheduleId);
+            setShowDetailModal(true);
+          });
+      }
+
+      // state/params 재사용으로 인한 재오픈 방지
+      if (openScheduleIdFromState) {
+        navigate(location.pathname, { replace: true, state: null });
+      }
+      if (scheduleIdFromParams) {
+        setSearchParams({}, { replace: true });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openScheduleIdFromState, scheduleIdFromParams, loading, schedules.length]);
+  }, [openScheduleIdFromState, scheduleIdFromParams, openDrawFromParams, loading, schedules.length]);
 
   // 뷰 모드 변경 시 UI 설정에 저장
   useEffect(() => {
@@ -691,6 +857,12 @@ const ScheduleListPage: React.FC = () => {
           todayScheduleRef={todayScheduleRef}
           onScheduleClick={handleScheduleClick}
           onDrawViewClick={handleDrawViewClick}
+          topSentinelRef={topSentinelRef}
+          bottomSentinelRef={bottomSentinelRef}
+          loadingPast={loadingPast}
+          loadingFuture={loadingFuture}
+          hasMorePast={hasMorePast}
+          hasMoreFuture={hasMoreFuture}
         />
       )}
 

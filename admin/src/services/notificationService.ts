@@ -5,7 +5,8 @@ export type NotificationType =
   | "SCHEDULE"
   | "DRAW"
   | "CLUB_INVITE"
-  | "CLUB_JOIN";
+  | "EXTERNAL_REQUEST"   // 외부 신청 도착 (운영진 수신)
+  | "REQUEST_RESULT";    // 신청 결과 (신청자 수신)
 
 export interface AdminNotificationResponse {
   id: number;
@@ -84,4 +85,38 @@ export async function getClubs(): Promise<ClubItem[]> {
     params: { size: 100 },
   });
   return data.content;
+}
+
+/**
+ * 일정 간소화 응답 (Admin 리소스 선택용)
+ */
+export interface ScheduleSimple {
+  id: number;
+  courtName: string;
+  scheduledAt: string;
+  maxCapacity: number;
+  currentParticipants: number;
+  isDrawValid: boolean;
+}
+
+/**
+ * 클럽별 일정 목록 조회 (Admin, 페이징)
+ */
+export async function getSchedulesByClub(
+  clubId: number,
+  page: number = 0,
+  size: number = 10
+): Promise<PageResponse<ScheduleSimple>> {
+  const { data } = await api.get<PageResponse<ScheduleSimple>>("/admin/schedules", {
+    params: { clubId, page, size },
+  });
+  return data;
+}
+
+/**
+ * 클럽의 ACTIVE 멤버 userId 목록 조회 (전체 선택용)
+ */
+export async function getClubMemberIds(clubId: number): Promise<number[]> {
+  const { data } = await api.get<number[]>(`/admin/clubs/${clubId}/member-ids`);
+  return data;
 }

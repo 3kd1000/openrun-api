@@ -2,14 +2,28 @@
 /* 컴포넌트별 고유 prefix: more-page, profile-card */
 
 .more-page {
-  padding: var(--space-l);
   min-height: calc(100vh - 140px);
   box-sizing: border-box;
+}
+
+/* AppHeader를 sticky로 고정 */
+.more-page > .app-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky, 100);
+}
+
+.more-page__title {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
 }
 
 .more-content {
   max-width: 600px;
   margin: 0 auto;
+  padding: var(--space-l);
 }
 
 .more-content h1 {
@@ -235,6 +249,162 @@
   text-align: center;
   padding: var(--space-xl);
   color: var(--color-text-secondary);
+}
+
+/* ===== iOS PWA 설치 배너 ===== */
+.ios-install-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  padding: var(--space-m);
+  margin-bottom: var(--space-xl);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  color: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ios-install-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.ios-install-banner__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ios-install-banner__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ios-install-banner__title {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 2px;
+}
+
+.ios-install-banner__desc {
+  display: block;
+  font-size: var(--font-size-s);
+  opacity: 0.9;
+}
+
+.ios-install-banner__arrow {
+  font-size: var(--font-size-2xl);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ===== iOS 설치 가이드 모달 ===== */
+.ios-install-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-l);
+}
+
+.ios-install-modal {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-l);
+  padding: var(--space-xl);
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.ios-install-modal__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-l) 0;
+  text-align: center;
+}
+
+.ios-install-modal__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  margin-bottom: var(--space-l);
+}
+
+.ios-install-modal__step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-m);
+}
+
+.ios-install-modal__step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 50%;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.ios-install-modal__step-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  flex: 1;
+  min-height: 28px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.ios-install-modal__step-icon {
+  display: inline-flex;
+  color: var(--color-primary);
+}
+
+.ios-install-modal__note {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin: 0 0 var(--space-l) 0;
+  padding: var(--space-m);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+}
+
+.ios-install-modal__close-btn {
+  width: 100%;
+  padding: var(--space-m);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.ios-install-modal__close-btn:hover {
+  background: var(--color-primary-hover);
 }
 
 /* ===== 미디어 쿼리: 미디어 대형 (401px ~ 768px) ===== */

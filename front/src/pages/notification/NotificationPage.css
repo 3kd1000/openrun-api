@@ -10,12 +10,34 @@
 
 .notification-page__header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: var(--space-s);
   margin-bottom: var(--space-l);
 }
 
+.notification-page__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: background-color 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.notification-page__back-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
 .notification-page__title {
+  flex: 1;
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);

@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.notification.service;
 
+import com.example.openrunapi.domain.notification.model.DeviceType;
 import com.example.openrunapi.domain.notification.model.FcmDeviceToken;
 import com.example.openrunapi.domain.notification.model.dto.RegisterTokenRequest;
 import com.example.openrunapi.domain.notification.repository.FcmDeviceTokenRepository;
@@ -22,21 +23,29 @@ public class FcmTokenService {
 
     @Transactional
     public void registerToken(Long userId, RegisterTokenRequest request) {
+        DeviceType deviceType = request.getResolvedDeviceType();
+
+        // 같은 토큰이 이미 있는지 확인
         Optional<FcmDeviceToken> existing = fcmDeviceTokenRepository.findByUserIdAndToken(userId, request.getToken());
 
         if (existing.isPresent()) {
-            // Update existing token
+            // 동일 토큰 업데이트
             existing.get().updateToken(request.getToken(), request.getDeviceInfo());
-            log.info("Updated FCM token for user: {}", userId);
+            log.info("Updated FCM token for user: {} ({})", userId, deviceType);
         } else {
-            // Create new token
+            // 같은 디바이스 타입의 기존 토큰 삭제 (디바이스 타입별 단일 토큰 유지)
+            fcmDeviceTokenRepository.deleteByUserIdAndDeviceType(userId, deviceType);
+            log.info("Deleted existing {} tokens for user: {}", deviceType, userId);
+
+            // 새 토큰 생성
             FcmDeviceToken token = FcmDeviceToken.builder()
                     .userId(userId)
                     .token(request.getToken())
                     .deviceInfo(request.getDeviceInfo())
+                    .deviceType(deviceType)
                     .build();
             fcmDeviceTokenRepository.save(token);
-            log.info("Registered new FCM token for user: {}", userId);
+            log.info("Registered new FCM token for user: {} ({})", userId, deviceType);
         }
     }
 

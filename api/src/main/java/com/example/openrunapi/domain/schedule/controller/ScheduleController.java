@@ -14,6 +14,7 @@ import com.example.openrunapi.domain.schedule.model.dto.UpdateSchedulePinnedRequ
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleGuestRecruitRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubRecruitRequest;
 import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
+import com.example.openrunapi.domain.schedule.model.dto.ScheduleCursorResponse;
 import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
 import com.example.openrunapi.common.service.PermissionService;
@@ -87,6 +88,35 @@ public class ScheduleController {
         }
 
         return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 커서 기반 페이지네이션 일정 조회 (Infinite Scroll 리스트뷰용)
+     * - direction=PAST: pivotDate 이전 일정 조회 (과거 방향)
+     * - direction=FUTURE: pivotDate 이후 일정 조회 (미래 방향)
+     */
+    @GetMapping("/cursor")
+    public ResponseEntity<ScheduleCursorResponse> getSchedulesByCursor(
+            @RequestParam Long userId,
+            @RequestParam Long clubId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime pivotDate,
+            @RequestParam(defaultValue = "FUTURE") String direction,
+            @RequestParam(defaultValue = "30") int size) {
+
+        // 클럽 멤버십 체크
+        permissionService.requireClubMembership(userId, clubId);
+
+        // size 제한 (최대 50)
+        int limitedSize = Math.min(size, 50);
+
+        ScheduleCursorResponse response;
+        if ("PAST".equalsIgnoreCase(direction)) {
+            response = scheduleService.getSchedulesByClubIdPast(clubId, pivotDate, limitedSize);
+        } else {
+            response = scheduleService.getSchedulesByClubIdFuture(clubId, pivotDate, limitedSize);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     /**

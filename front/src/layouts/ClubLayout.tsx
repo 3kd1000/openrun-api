@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation, useParams } from "react-router-dom";
 import { getMyClubs, type MyClub } from "../services/api/userApi";
 import { ClubSelector } from "../components/ClubSelector";
+import { AppHeader } from "../components/common/AppHeader";
 import { getOpenRunSession, setOpenRunSession } from "../utils/openrunSession";
 import { useAuth } from "../contexts/AuthContext";
 import { normalizeClubRole } from "../utils/role";
@@ -100,14 +101,14 @@ export const ClubLayout: React.FC = () => {
 
   return (
     <div className="club-layout" key={refreshKey}>
-      <div className="club-layout__header">
+      <AppHeader>
         <ClubSelector
           selectedClubId={selectedClubId}
           onClubChange={handleClubChange}
           clubs={clubs}
           isLoading={isLoading}
         />
-      </div>
+      </AppHeader>
       <div className="club-layout__content">
         <Outlet context={{ selectedClubId, clubs, isLoading }} />
       </div>

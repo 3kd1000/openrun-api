@@ -19,6 +19,13 @@ interface ScheduleListViewProps {
   todayScheduleRef: RefObject<HTMLDivElement | null>;
   onScheduleClick: (schedule: Schedule) => void;
   onDrawViewClick: (e: React.MouseEvent, schedule: Schedule) => void;
+  // Infinite Scroll props
+  topSentinelRef?: RefObject<HTMLDivElement | null>;
+  bottomSentinelRef?: RefObject<HTMLDivElement | null>;
+  loadingPast?: boolean;
+  loadingFuture?: boolean;
+  hasMorePast?: boolean;
+  hasMoreFuture?: boolean;
 }
 
 const ScheduleListView: React.FC<ScheduleListViewProps> = ({
@@ -28,9 +35,22 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
   todayScheduleRef,
   onScheduleClick,
   onDrawViewClick,
+  topSentinelRef,
+  bottomSentinelRef,
+  loadingPast = false,
+  loadingFuture = false,
+  hasMorePast = false,
+  hasMoreFuture = false,
 }) => {
   return (
     <div className="schedule-list">
+      {/* 상단 센티넬 (과거 일정 로드 트리거) */}
+      {scheduleMode === "club" && hasMorePast && (
+        <div ref={topSentinelRef} className="schedule-list__sentinel schedule-list__sentinel--top">
+          {loadingPast && <div className="schedule-list__loading">과거 일정 불러오는 중...</div>}
+        </div>
+      )}
+
       {displaySchedules.map((item, index) => {
         const schedule = item.schedule;
         const isPast = new Date(schedule.scheduledAt) < new Date();
@@ -227,6 +247,13 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
           </div>
         );
       })}
+
+      {/* 하단 센티넬 (미래 일정 로드 트리거) */}
+      {scheduleMode === "club" && hasMoreFuture && (
+        <div ref={bottomSentinelRef} className="schedule-list__sentinel schedule-list__sentinel--bottom">
+          {loadingFuture && <div className="schedule-list__loading">미래 일정 불러오는 중...</div>}
+        </div>
+      )}
     </div>
   );
 };

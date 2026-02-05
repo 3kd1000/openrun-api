@@ -75,4 +75,15 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
           AND cm.isBallKeeper = true
     """)
     Integer sumBallQuantityByClubId(@Param("clubId") Long clubId);
+
+    /**
+     * 클럽의 ACTIVE 멤버 userId 목록 조회 (Admin 알림 발송용)
+     */
+    @Query("""
+        SELECT cm.user.id
+        FROM ClubMember cm
+        WHERE cm.club.id = :clubId
+          AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
+    """)
+    List<Long> findActiveUserIdsByClubId(@Param("clubId") Long clubId);
 }

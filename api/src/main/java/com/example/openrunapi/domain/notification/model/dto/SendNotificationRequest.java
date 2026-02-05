@@ -21,7 +21,7 @@ public class SendNotificationRequest {
     private String title;
     @NotBlank
     private String body;
-    private String type; // SCHEDULE, DRAW, CLUB_INVITE, CLUB_JOIN, SYSTEM
+    private String type; // SCHEDULE, DRAW, CLUB_INVITE, EXTERNAL_REQUEST, REQUEST_RESULT, SYSTEM
     private Long referenceId;
     private String referenceType;
 }

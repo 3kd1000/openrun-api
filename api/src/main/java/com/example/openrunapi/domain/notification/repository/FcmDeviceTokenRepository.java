@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.notification.repository;
 
+import com.example.openrunapi.domain.notification.model.DeviceType;
 import com.example.openrunapi.domain.notification.model.FcmDeviceToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,5 +15,6 @@ public interface FcmDeviceTokenRepository extends JpaRepository<FcmDeviceToken, 
     void deleteByUserIdAndToken(Long userId, String token);
     void deleteByToken(String token);
     void deleteByUserId(Long userId);
+    void deleteByUserIdAndDeviceType(Long userId, DeviceType deviceType);
     List<FcmDeviceToken> findByUserIdIn(List<Long> userIds);
 }

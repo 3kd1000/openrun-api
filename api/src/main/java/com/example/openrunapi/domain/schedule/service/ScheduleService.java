@@ -18,6 +18,7 @@ import com.example.openrunapi.domain.schedule.model.dto.UpdateSchedulePinnedRequ
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleGuestRecruitRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubRecruitRequest;
 import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
+import com.example.openrunapi.domain.schedule.model.dto.ScheduleCursorResponse;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepository;
 import com.example.openrunapi.domain.club.model.Club;
@@ -111,6 +112,69 @@ public class ScheduleService {
         return scheduleRepository.findByClubId(clubId).stream()
                 .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 커서 기반 페이지네이션: 과거 방향 조회
+     * - pivotDate 이전의 일정을 최신순(내림차순)으로 조회
+     * - Infinite Scroll 리스트뷰용
+     * @param clubId 클럽 ID
+     * @param pivotDate 기준 날짜 (이 날짜 이전의 일정 조회)
+     * @param size 조회할 개수
+     * @return 커서 응답 (content는 오름차순으로 정렬하여 반환)
+     */
+    public ScheduleCursorResponse getSchedulesByClubIdPast(Long clubId, LocalDateTime pivotDate, int size) {
+        List<Schedule> schedules = scheduleRepository.findByClubIdPast(
+                clubId, pivotDate, org.springframework.data.domain.PageRequest.of(0, size + 1)
+        );
+
+        boolean hasMore = schedules.size() > size;
+        if (hasMore) {
+            schedules = schedules.subList(0, size);
+        }
+
+        // 내림차순으로 조회했으므로 오름차순으로 뒤집어서 반환 (프론트에서 prepend 시 순서 맞춤)
+        Collections.reverse(schedules);
+
+        LocalDateTime nextCursor = hasMore && !schedules.isEmpty()
+                ? schedules.get(0).getScheduledAt()  // 가장 오래된 일정의 날짜가 다음 커서
+                : null;
+
+        List<ScheduleResponse> content = schedules.stream()
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
+                .collect(Collectors.toList());
+
+        return new ScheduleCursorResponse(content, hasMore, nextCursor, content.size());
+    }
+
+    /**
+     * 커서 기반 페이지네이션: 미래 방향 조회
+     * - pivotDate 이후의 일정을 오름차순으로 조회
+     * - Infinite Scroll 리스트뷰용
+     * @param clubId 클럽 ID
+     * @param pivotDate 기준 날짜 (이 날짜 이후의 일정 조회)
+     * @param size 조회할 개수
+     * @return 커서 응답
+     */
+    public ScheduleCursorResponse getSchedulesByClubIdFuture(Long clubId, LocalDateTime pivotDate, int size) {
+        List<Schedule> schedules = scheduleRepository.findByClubIdFuture(
+                clubId, pivotDate, org.springframework.data.domain.PageRequest.of(0, size + 1)
+        );
+
+        boolean hasMore = schedules.size() > size;
+        if (hasMore) {
+            schedules = schedules.subList(0, size);
+        }
+
+        LocalDateTime nextCursor = hasMore && !schedules.isEmpty()
+                ? schedules.get(schedules.size() - 1).getScheduledAt()  // 가장 미래 일정의 날짜가 다음 커서
+                : null;
+
+        List<ScheduleResponse> content = schedules.stream()
+                .map(schedule -> new ScheduleResponse(schedule, clubRepository, userRepository))
+                .collect(Collectors.toList());
+
+        return new ScheduleCursorResponse(content, hasMore, nextCursor, content.size());
     }
 
     /**
