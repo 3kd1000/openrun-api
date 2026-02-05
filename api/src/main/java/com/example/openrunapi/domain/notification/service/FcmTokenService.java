@@ -72,4 +72,11 @@ public class FcmTokenService {
                 .map(FcmDeviceToken::getToken)
                 .collect(Collectors.toList());
     }
+
+    public List<String> getRegisteredDeviceTypes(Long userId) {
+        return fcmDeviceTokenRepository.findByUserId(userId).stream()
+                .map(t -> t.getDeviceType().name())
+                .distinct()
+                .collect(Collectors.toList());
+    }
 }

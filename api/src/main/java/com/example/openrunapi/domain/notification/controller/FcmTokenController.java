@@ -34,6 +34,21 @@ public class FcmTokenController {
     }
 
     /**
+     * Check which device types have registered FCM tokens for the current user
+     */
+    @GetMapping("/exists")
+    public ResponseEntity<java.util.Map<String, Object>> hasToken(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        java.util.List<String> deviceTypes = fcmTokenService.getRegisteredDeviceTypes(currentUser.getId());
+        return ResponseEntity.ok(java.util.Map.of(
+                "hasToken", !deviceTypes.isEmpty(),
+                "deviceTypes", deviceTypes
+        ));
+    }
+
+    /**
      * Remove FCM device token
      */
     @DeleteMapping

@@ -15,6 +15,7 @@ import {
   removeTokenFromServer,
   onForegroundMessage,
   isFcmSupported,
+  checkHasToken,
 } from "../services/fcmService";
 import {
   fetchNotifications,
@@ -85,20 +86,28 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     return false;
   }, []);
 
-  // FCM 초기화 및 토큰 등록 (데스크톱에서는 자동으로 동작, iOS에서는 권한 미허용 시 needsPermission 설정)
+  // FCM 초기화 및 토큰 등록
+  // DB에 등록된 토큰이 없으면 배너 표시, 있으면 자동 초기화
   useEffect(() => {
     if (!isAuthReady || !user || fcmInitializedRef.current) return;
-    if (!isFcmSupported()) return;
 
     const initFcm = async () => {
-      // 이미 권한이 부여된 경우에만 자동 초기화 (데스크톱 재방문, 이미 허용한 iOS)
-      if (Notification.permission === "granted") {
-        await initFcmToken();
-      } else if (Notification.permission === "default") {
-        // 아직 권한 요청 안 됨 → 배너 표시 (iOS는 사용자 제스처 필요)
-        setNeedsPermission(true);
+      // DB에서 등록된 토큰 존재 여부 확인
+      const hasToken = await checkHasToken();
+
+      if (hasToken) {
+        // 이미 등록된 토큰이 있음 → 배너 미표시
+        setNeedsPermission(false);
+        // 현재 브라우저에서 권한이 있으면 포그라운드 수신을 위해 초기화
+        if (isFcmSupported() && Notification.permission === "granted") {
+          await initFcmToken();
+        }
+      } else {
+        // 등록된 토큰 없음 → FCM 지원 + 권한 미거부 시 배너 표시
+        if (isFcmSupported() && Notification.permission !== "denied") {
+          setNeedsPermission(true);
+        }
       }
-      // "denied"면 아무것도 하지 않음
     };
 
     initFcm();
@@ -157,8 +166,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (!user) return;
     setLoading(true);
     try {
-      const data = await fetchNotifications();
+      const [data, count] = await Promise.all([
+        fetchNotifications(),
+        getUnreadCount(),
+      ]);
       setNotifications(data);
+      setUnreadCount(count);
     } catch (error) {
       console.error("[Notification] 알림 목록 조회 실패:", error);
     } finally {

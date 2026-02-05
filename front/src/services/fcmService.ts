@@ -110,6 +110,20 @@ export const removeTokenFromServer = async (token: string): Promise<void> => {
 };
 
 /**
+ * 현재 디바이스 타입에 해당하는 FCM 토큰이 서버에 등록되어 있는지 확인
+ */
+export const checkHasToken = async (): Promise<boolean> => {
+  try {
+    const response = await axiosInstance.get<{ hasToken: boolean; deviceTypes: string[] }>("/fcm/tokens/exists");
+    const currentDeviceType = getDeviceType();
+    return response.data.deviceTypes.includes(currentDeviceType);
+  } catch (error) {
+    console.error("[FCM] 토큰 존재 여부 확인 실패:", error);
+    return false;
+  }
+};
+
+/**
  * 포그라운드 메시지 수신 핸들러 등록
  * @returns 구독 해제 함수
  */

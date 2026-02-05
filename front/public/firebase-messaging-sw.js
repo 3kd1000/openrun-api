@@ -48,9 +48,9 @@ self.addEventListener("notificationclick", (event) => {
 
   // 알림 타입에 따라 이동할 페이지 결정
   if (data.type === "SCHEDULE" && data.referenceId) {
-    targetUrl = "/schedules/club";
+    targetUrl = `/schedules/club?scheduleId=${data.referenceId}`;
   } else if (data.type === "DRAW" && data.referenceId) {
-    targetUrl = "/scoreboard";
+    targetUrl = `/schedules/club?scheduleId=${data.referenceId}&openDraw=true`;
   } else if (data.type === "CLUB_INVITE" && data.referenceId) {
     // 클럽 초대 → 클럽 메인 페이지
     targetUrl = `/clubs/${data.referenceId}`;
