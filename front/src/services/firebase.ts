@@ -114,7 +114,7 @@ export const clearLoginSession = () => {
 /**
  * 앱 시작 시 세션 복원 (PWA 재시작 시 Firebase 토큰이 만료되어도 자동 갱신)
  * localStorage의 expiry를 확인하고, 아직 만료되지 않았으면 Firebase 토큰을 갱신
- * PWA 앱 재시작 시 Firebase 인증 상태가 복원되기까지 최대 3초 대기
+ * PWA 앱 재시작 시 Firebase 인증 상태가 복원되기까지 최대 5초 대기
  */
 export const restoreSessionIfValid = async (): Promise<boolean> => {
   const now = getTimestamp();
@@ -140,10 +140,10 @@ export const restoreSessionIfValid = async (): Promise<boolean> => {
   }
 
   // Firebase 인증 상태가 복원될 때까지 대기 (PWA 재시작 시)
-  // 최대 3초까지 대기, 100ms 간격으로 체크
+  // 최대 5초까지 대기, 100ms 간격으로 체크
   let user = auth.currentUser;
   let waitCount = 0;
-  const maxWaitCount = 30; // 3초 (30 * 100ms)
+  const maxWaitCount = 50; // 5초 (50 * 100ms)
 
   while (!user && waitCount < maxWaitCount) {
     await new Promise((resolve) => setTimeout(resolve, 100));
