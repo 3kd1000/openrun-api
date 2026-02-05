@@ -576,7 +576,7 @@ const DrawCreateModal: React.FC<Props> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h2>대진 생성</h2>
+          <h2>대진 생성 (한울방식)</h2>
           <button className="btn-close" onClick={onClose}>
             &times;
           </button>

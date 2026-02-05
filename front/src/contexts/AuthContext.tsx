@@ -13,6 +13,7 @@ import {
   clearLoginSession,
   setLoginExpiry,
   isLoginExpired,
+  restoreSessionIfValid,
 } from "../services/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getTimestamp } from "../utils/dateUtils";
@@ -360,7 +361,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         } else {
           console.log(`ℹ️ [${timestamp}] Firebase 로그아웃 상태`);
-          setUser(null);
+
+          // 자동 로그인 세션이 유효하면 복원 시도 (앱 리빌드/SW 업데이트 시 IndexedDB 복원 지연 대응)
+          const autoLoginEnabled = getOpenRunSession().autoLoginEnabled ?? false;
+          const loginExpiryStr = localStorage.getItem("login_expiry");
+
+          if (autoLoginEnabled && loginExpiryStr && !isLoginExpired()) {
+            console.log(`🔄 [${timestamp}] 자동 로그인 세션 유효 → 복원 시도`);
+            const restored = await restoreSessionIfValid();
+
+            if (restored && auth.currentUser) {
+              console.log(`✅ [${timestamp}] 세션 복원 성공 → 사용자 설정`);
+              setUser(auth.currentUser);
+              await restoreUserInfoIfNeeded();
+            } else {
+              console.warn(`⚠️ [${timestamp}] 세션 복원 실패 → 로그아웃 상태 유지`);
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
         }
 
         // 인증 상태 복원 완료 표시 (로그인 여부와 무관하게)

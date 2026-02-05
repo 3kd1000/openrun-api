@@ -448,10 +448,9 @@ const ScheduleCalendarView: React.FC<Props> = ({
     const deltaX = touch.clientX - touchStart.x;
     const deltaY = touch.clientY - touchStart.y;
 
-    // 수평 스와이프가 수직 스와이프보다 크면 스크롤 방지
+    // 수평 스와이프 감지 (CSS touch-action: pan-y pinch-zoom 으로 수평 스크롤은 이미 차단됨)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
       isHorizontalSwipe.current = true;
-      e.preventDefault(); // 스크롤 방지
     }
   };
 
