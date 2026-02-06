@@ -3,6 +3,7 @@ package com.example.openrunapi.domain.schedule.service;
 import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.award.service.AwardService;
+import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
@@ -35,10 +36,12 @@ public class ScheduleParticipantService {
     private final PermissionService permissionService;
     private final AuditLogService auditLogService;
     private final AwardService awardService;
+    private final MatchRepository matchRepository;
 
     /**
      * 일정 참가 신청
      * - 해당 클럽의 멤버만 참가신청 가능
+     * - 게스트 사용자(isGuest=true)는 클럽 멤버십 체크 없이 참가 가능
      * - 외부 게스트는 별도의 externalRequest 프로세스를 거쳐야 함
      */
     @Transactional
@@ -47,8 +50,14 @@ public class ScheduleParticipantService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // 2. 클럽 멤버십 체크 (해당 클럽의 멤버만 참가신청 가능)
-        permissionService.requireClubMembership(userId, schedule.getClubId());
+        // 2. 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
+
+        // 3. 클럽 멤버십 체크 (게스트 사용자는 제외)
+        if (!user.isGuest()) {
+            permissionService.requireClubMembership(userId, schedule.getClubId());
+        }
 
         // 3. 과거 일정 체크 (KST 기준)
         if (TimeValidationUtils.isPast(schedule.getScheduledAt())) {
@@ -81,13 +90,13 @@ public class ScheduleParticipantService {
         // 6. 다음 position 번호 가져오기
         Integer nextPosition = participantRepository.getNextPosition(scheduleId);
 
-        // 7. 참가자 생성 및 저장
+        // 7. 참가자 생성 및 저장 (게스트 사용자는 asGuest=true)
         ScheduleParticipant participant = ScheduleParticipant.builder()
                 .scheduleId(scheduleId)
                 .userId(userId)
                 .status(status)
                 .position(nextPosition)
-                .asGuest(false)
+                .asGuest(user.isGuest())
                 .build();
 
         ScheduleParticipant savedParticipant = participantRepository.save(participant);
@@ -98,10 +107,7 @@ public class ScheduleParticipantService {
         // 9. Audit 로깅
         auditLogService.logParticipantCreate(userId, savedParticipant, schedule.getClubId());
 
-        // 10. User 조회하여 userName 포함된 Response 반환
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
-
+        // 10. userName 포함된 Response 반환 (user는 위에서 이미 조회함)
         return new ParticipantResponse(savedParticipant, user.getName());
     }
 
@@ -169,7 +175,8 @@ public class ScheduleParticipantService {
         participantRepository.delete(participant);
         schedule.decrementParticipants();
 
-        schedule.invalidateDraw();
+        // 대진에 포함된 사용자가 제거되는 경우에만 무효화
+        invalidateDrawIfUserInDraw(schedule, userId);
 
         if (wasConfirmed) {
             List<ScheduleParticipant> waitingList = participantRepository
@@ -209,8 +216,8 @@ public class ScheduleParticipantService {
         // 5. Schedule의 currentParticipants 감소
         schedule.decrementParticipants();
 
-        // 6. 대진 무효화 (참가자 변동으로 기존 대진은 더 이상 유효하지 않음)
-        schedule.invalidateDraw();
+        // 6. 대진에 포함된 사용자가 취소하는 경우에만 무효화
+        invalidateDrawIfUserInDraw(schedule, userId);
 
         // 7. CONFIRMED 상태였다면 대기 중인 사람을 CONFIRMED로 변경
         if (wasConfirmed) {
@@ -337,9 +344,11 @@ public class ScheduleParticipantService {
             }
             log.info("제거된 참가자: {} 명 (확정: {}명)", toRemove.size(), removedConfirmedCount);
 
-            // 대진 무효화 (참가자가 제거되었으므로 기존 대진은 더 이상 유효하지 않음)
-            schedule.invalidateDraw();
-            log.info("참가자 제거로 대진 무효화");
+            // 대진에 포함된 참가자가 제거된 경우에만 무효화
+            Set<Long> removedUserIds = toRemove.stream()
+                    .map(ScheduleParticipant::getUserId)
+                    .collect(Collectors.toSet());
+            invalidateDrawIfAnyUserInDraw(schedule, removedUserIds);
 
             // 제거된 확정 참가자가 있으면 대기 중인 사람을 확정으로 변경
             if (removedConfirmedCount > 0) {
@@ -417,10 +426,7 @@ public class ScheduleParticipantService {
             }
             log.info("추가된 참가자: {} 명 (확정: {}명, 대기: {}명)",
                     toAdd.size(), confirmedCount, waitingCount);
-
-            // 대진 무효화 (참가자가 추가되었으므로 기존 대진은 더 이상 유효하지 않음)
-            schedule.invalidateDraw();
-            log.info("참가자 추가로 대진 무효화");
+            // 참가자 추가는 기존 대진에 영향을 주지 않으므로 무효화하지 않음
         } else {
             log.info("변경사항 없음 (추가할 참가자 없음)");
         }
@@ -513,5 +519,37 @@ public class ScheduleParticipantService {
                 .canceledScheduleIds(canceledScheduleIds)
                 .failedOperations(failedOperations)
                 .build();
+    }
+
+    // === Private Helper Methods ===
+
+    /**
+     * 특정 사용자가 대진에 포함되어 있는 경우에만 대진 무효화
+     */
+    private void invalidateDrawIfUserInDraw(Schedule schedule, Long userId) {
+        if (!schedule.hasDraw()) {
+            return;
+        }
+        if (matchRepository.existsUserInDraw(schedule.getId(), userId)) {
+            schedule.invalidateDraw();
+            log.info("대진에 포함된 사용자({}) 제거로 대진 무효화", userId);
+        }
+    }
+
+    /**
+     * 여러 사용자 중 하나라도 대진에 포함되어 있는 경우 대진 무효화
+     */
+    private void invalidateDrawIfAnyUserInDraw(Schedule schedule, Set<Long> userIds) {
+        if (!schedule.hasDraw() || userIds.isEmpty()) {
+            return;
+        }
+        for (Long userId : userIds) {
+            if (matchRepository.existsUserInDraw(schedule.getId(), userId)) {
+                schedule.invalidateDraw();
+                log.info("대진에 포함된 사용자({}) 제거로 대진 무효화", userId);
+                return; // 하나라도 있으면 바로 무효화하고 종료
+            }
+        }
+        log.info("제거된 참가자 중 대진에 포함된 사람 없음 - 대진 유효 상태 유지");
     }
 }
