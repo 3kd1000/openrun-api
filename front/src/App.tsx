@@ -3,7 +3,6 @@ import DrawGenerationPage from "./pages/draw/DrawGenerationPage";
 import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
 import MorePage from "./pages/more/MorePage";
 import ScoreboardPage from "./pages/scoreboard/ScoreboardPage";
-import AuthTestPage from "./pages/auth/AuthTestPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SetupProfilePage from "./pages/auth/SetupProfilePage";
 import ClubRecruitingPage from "./pages/club/recruit/ClubRecruitingPage";
@@ -271,8 +270,6 @@ function App() {
                 }
               />
 
-              {/* 개발용 페이지 */}
-              <Route path="/auth-test" element={<AuthTestPage />} />
             </Routes>
           </div>
         </main>

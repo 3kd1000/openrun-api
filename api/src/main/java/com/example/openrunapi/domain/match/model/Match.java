@@ -44,15 +44,15 @@ public class Match {
     @Column(name = "match_number", nullable = false)
     private Integer matchNumber;
 
-    // Team A
-    @Column(name = "team_a_player1_id", nullable = false)
+    // Team A (nullable for withdrawn users)
+    @Column(name = "team_a_player1_id")
     private Long teamAPlayer1Id;
 
     @Column(name = "team_a_player2_id")
     private Long teamAPlayer2Id;
 
-    // Team B
-    @Column(name = "team_b_player1_id", nullable = false)
+    // Team B (nullable for withdrawn users)
+    @Column(name = "team_b_player1_id")
     private Long teamBPlayer1Id;
 
     @Column(name = "team_b_player2_id")

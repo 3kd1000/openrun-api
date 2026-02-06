@@ -11,6 +11,7 @@ import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
+import com.example.openrunapi.domain.user.model.dto.WithdrawalCheckResponse;
 import com.example.openrunapi.domain.user.service.UserService;
 import com.example.openrunapi.domain.schedule.model.dto.MyScheduleResponse;
 import jakarta.validation.Valid;
@@ -57,9 +58,30 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 회원 탈퇴 가능 여부 체크
+     * - 클럽 소유자인 경우: 다른 멤버가 있으면 탈퇴 불가 (양도 필요)
+     * - 탈퇴 시 삭제될 클럽 목록 반환
+     */
+    @GetMapping("/me/withdrawal")
+    public ResponseEntity<WithdrawalCheckResponse> checkWithdrawal(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        WithdrawalCheckResponse response = userService.checkWithdrawal(currentUserResponse.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 회원 탈퇴 실행
+     * - 소유한 클럽 중 본인만 있는 클럽 삭제
+     * - 모든 클럽 멤버십 삭제
+     * - 관련 데이터 익명화 (경기 기록 등)
+     * - 사용자 계정 삭제
+     */
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
-        userService.deleteUser(userDetails.getUsername());
+    public ResponseEntity<Void> withdrawUser(@AuthenticationPrincipal UserDetails userDetails) {
+        userService.withdrawUser(userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 

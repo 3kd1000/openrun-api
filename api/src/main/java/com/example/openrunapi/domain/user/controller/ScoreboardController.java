@@ -30,6 +30,7 @@ public class ScoreboardController {
      * @param startDate 시작일 (optional, ISO 형식: 2026-01-01T00:00:00)
      * @param endDate 종료일 (optional, ISO 형식: 2026-12-31T23:59:59)
      * @param sortBy 정렬 기준 (optional, 기본값: points) - points, totalMatches, winRate
+     * @param gender 성별 필터 (optional) - MALE, FEMALE, null(전체)
      * @return 랭킹 리스트
      */
     @GetMapping
@@ -37,12 +38,13 @@ public class ScoreboardController {
             @PathVariable Long clubId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
-            @RequestParam(required = false, defaultValue = "points") String sortBy
+            @RequestParam(required = false, defaultValue = "points") String sortBy,
+            @RequestParam(required = false) String gender
     ) {
         log.info("=== GET /api/clubs/{}/scoreboard ===", clubId);
-        log.info("startDate: {}, endDate: {}, sortBy: {}", startDate, endDate, sortBy);
-        
-        ScoreboardResponse response = scoreboardService.getClubScoreboard(clubId, startDate, endDate, sortBy);
+        log.info("startDate: {}, endDate: {}, sortBy: {}, gender: {}", startDate, endDate, sortBy, gender);
+
+        ScoreboardResponse response = scoreboardService.getClubScoreboard(clubId, startDate, endDate, sortBy, gender);
         return ResponseEntity.ok(response);
     }
 }

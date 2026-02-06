@@ -39,6 +39,7 @@
 }
 
 .ranking-year-filter,
+.ranking-gender-filter,
 .ranking-sort-filter {
   display: flex;
   align-items: center;
@@ -46,6 +47,7 @@
 }
 
 .ranking-year-filter label,
+.ranking-gender-filter label,
 .ranking-sort-filter label {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
@@ -54,6 +56,7 @@
 }
 
 .year-select,
+.gender-select,
 .sort-select {
   padding: var(--space-s) var(--space-m);
   border: var(--border-width-thin) solid var(--color-border-primary);
@@ -881,17 +884,20 @@
   }
 
   .ranking-year-filter,
+  .ranking-gender-filter,
   .ranking-sort-filter {
     flex: 1;
     min-width: 0;
   }
 
   .ranking-year-filter label,
+  .ranking-gender-filter label,
   .ranking-sort-filter label {
     font-size: var(--font-size-s);
   }
 
   .year-select,
+  .gender-select,
   .sort-select {
     flex: 1;
     padding: var(--space-xs) var(--space-s);

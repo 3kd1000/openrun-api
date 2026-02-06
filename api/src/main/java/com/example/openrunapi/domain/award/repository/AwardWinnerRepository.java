@@ -3,6 +3,7 @@ package com.example.openrunapi.domain.award.repository;
 import com.example.openrunapi.domain.award.model.AwardWinner;
 import com.example.openrunapi.domain.club.model.AwardType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -56,4 +57,11 @@ public interface AwardWinnerRepository extends JpaRepository<AwardWinner, Long> 
     void deleteByClubIdAndAwardTypeAndPeriodStartAndPeriodEnd(
             Long clubId, AwardType awardType, LocalDate periodStart, LocalDate periodEnd
     );
+
+    /**
+     * 탈퇴한 사용자의 수상 기록 익명화 (user_id를 null로 설정)
+     */
+    @Modifying
+    @Query("UPDATE AwardWinner aw SET aw.userId = null WHERE aw.userId = :userId")
+    void anonymizeByUserId(@Param("userId") Long userId);
 }

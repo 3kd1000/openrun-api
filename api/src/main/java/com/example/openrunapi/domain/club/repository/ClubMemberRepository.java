@@ -86,4 +86,25 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
           AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
     """)
     List<Long> findActiveUserIdsByClubId(@Param("clubId") Long clubId);
+
+    /**
+     * 클럽의 ACTIVE 멤버 수 조회
+     */
+    @Query("""
+        SELECT COUNT(cm)
+        FROM ClubMember cm
+        WHERE cm.club.id = :clubId
+          AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
+    """)
+    int countActiveByClubId(@Param("clubId") Long clubId);
+
+    /**
+     * 사용자의 모든 클럽 멤버십 조회 (탈퇴 처리용)
+     */
+    List<ClubMember> findAllByUserId(Long userId);
+
+    /**
+     * 사용자의 모든 클럽 멤버십 삭제 (탈퇴 처리용)
+     */
+    void deleteAllByUserId(Long userId);
 }

@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.admin.controller;
 
+import com.example.openrunapi.domain.admin.model.dto.UserStatsResponse;
 import com.example.openrunapi.domain.admin.service.AdminUserService;
 import com.example.openrunapi.domain.user.model.User;
 import jakarta.validation.Valid;
@@ -24,6 +25,21 @@ import java.util.Map;
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
+
+    /**
+     * 사용자 통계 조회 (대시보드용)
+     * - 전체 사용자 수, DAU, WAU, MAU
+     * - 신규 가입자 수 (오늘/이번 주/이번 달)
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<UserStatsResponse> getUserStats(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        adminUserService.validateAdminAccess(userDetails.getUsername());
+
+        UserStatsResponse stats = adminUserService.getUserStats();
+        return ResponseEntity.ok(stats);
+    }
 
     /**
      * 사용자 연락처 업데이트 (이름으로 검색)

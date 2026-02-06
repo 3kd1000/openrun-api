@@ -23,14 +23,21 @@ import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
 import com.example.openrunapi.domain.externalrequest.repository.ExternalRequestRepository;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
+import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
+import com.example.openrunapi.domain.user.model.dto.WithdrawalCheckResponse;
 import com.example.openrunapi.domain.user.repository.UserStatisticsRepository;
 import com.example.openrunapi.domain.club.model.Club;
+import com.example.openrunapi.domain.club.service.ClubService;
+import com.example.openrunapi.domain.award.repository.AwardWinnerRepository;
+import com.example.openrunapi.domain.post.repository.PostRepository;
+import com.example.openrunapi.domain.post.repository.CommentRepository;
+import com.example.openrunapi.domain.notification.repository.NotificationRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,8 +64,14 @@ public class UserService implements UserDetailsService {
     private final ExternalRequestRepository externalRequestRepository;
     private final ScheduleRepository scheduleRepository;
     private final ClubRepository clubRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final MatchRepository matchRepository;
     private final UserStatisticsRepository userStatisticsRepository;
+    private final AwardWinnerRepository awardWinnerRepository;
+    private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final NotificationRepository notificationRepository;
+    private final ClubService clubService;
 
     @Override
     @Transactional
@@ -429,8 +442,116 @@ public class UserService implements UserDetailsService {
      * 사용자 ID로 이름 조회
      */
     private String getUserName(Long userId) {
+        if (userId == null) {
+            return "탈퇴한 사용자";
+        }
         return userRepository.findById(userId)
                 .map(User::getName)
                 .orElse("알 수 없음");
+    }
+
+    // ==================== 회원 탈퇴 관련 메서드 ====================
+
+    /**
+     * 회원 탈퇴 가능 여부 체크
+     * - 클럽 소유자인 경우: 다른 멤버가 있으면 탈퇴 불가 (양도 필요)
+     * - 클럽 소유자이면서 본인만 있는 경우: 탈퇴 가능 (클럽 삭제됨)
+     */
+    public WithdrawalCheckResponse checkWithdrawal(Long userId) {
+        // 소유한 클럽 목록 조회
+        java.util.List<Club> ownedClubs = clubRepository.findByOwnerUserId(userId);
+
+        java.util.List<WithdrawalCheckResponse.OwnedClubInfo> clubsWithMembers = new java.util.ArrayList<>();
+        java.util.List<WithdrawalCheckResponse.OwnedClubInfo> clubsToDelete = new java.util.ArrayList<>();
+
+        for (Club club : ownedClubs) {
+            int memberCount = clubMemberRepository.countActiveByClubId(club.getId());
+
+            WithdrawalCheckResponse.OwnedClubInfo clubInfo = WithdrawalCheckResponse.OwnedClubInfo.builder()
+                    .clubId(club.getId())
+                    .clubName(club.getName())
+                    .memberCount(memberCount)
+                    .build();
+
+            if (memberCount > 1) {
+                // 다른 멤버가 있는 클럽 → 양도 필요
+                clubsWithMembers.add(clubInfo);
+            } else {
+                // 본인만 있는 클럽 → 삭제 예정
+                clubsToDelete.add(clubInfo);
+            }
+        }
+
+        if (!clubsWithMembers.isEmpty()) {
+            return WithdrawalCheckResponse.cannotWithdraw(
+                    "클럽 소유권을 다른 멤버에게 양도한 후 탈퇴할 수 있습니다.",
+                    clubsWithMembers
+            );
+        }
+
+        return WithdrawalCheckResponse.canWithdraw(clubsToDelete);
+    }
+
+    /**
+     * 회원 탈퇴 실행
+     * - 소유한 클럽 중 본인만 있는 클럽 삭제
+     * - 모든 클럽 멤버십 삭제
+     * - 관련 데이터 익명화 (경기 기록, 일정 참가, 게시글/댓글, 수상 기록, 외부 요청)
+     * - 알림 삭제
+     * - 사용자 삭제
+     */
+    @Transactional
+    public void withdrawUser(String uid) {
+        User user = oauthService.findUserByProviderUid(uid)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
+
+        Long userId = user.getId();
+
+        // 1. 탈퇴 가능 여부 재확인
+        WithdrawalCheckResponse checkResult = checkWithdrawal(userId);
+        if (!checkResult.isCanWithdraw()) {
+            throw new IllegalStateException(checkResult.getReason());
+        }
+
+        // 2. 본인만 있는 클럽 삭제 (soft delete)
+        if (checkResult.getOwnedClubsToDelete() != null) {
+            for (WithdrawalCheckResponse.OwnedClubInfo clubInfo : checkResult.getOwnedClubsToDelete()) {
+                clubService.deleteClub(clubInfo.getClubId(), userId);
+            }
+        }
+
+        // 3. 모든 클럽 멤버십 삭제
+        clubMemberRepository.deleteAllByUserId(userId);
+
+        // 4. 경기 기록 익명화 (4개 포지션 모두)
+        matchRepository.anonymizeTeamAPlayer1(userId);
+        matchRepository.anonymizeTeamAPlayer2(userId);
+        matchRepository.anonymizeTeamBPlayer1(userId);
+        matchRepository.anonymizeTeamBPlayer2(userId);
+
+        // 5. 일정 참가 기록 익명화
+        participantRepository.anonymizeByUserId(userId);
+
+        // 6. 외부 요청 익명화
+        externalRequestRepository.anonymizeByRequesterId(userId);
+
+        // 7. 수상 기록 익명화
+        awardWinnerRepository.anonymizeByUserId(userId);
+
+        // 8. 게시글/댓글 익명화
+        postRepository.anonymizeByAuthorId(userId);
+        commentRepository.anonymizeByAuthorId(userId);
+
+        // 9. 알림 삭제 (개인정보)
+        notificationRepository.deleteAllByUserId(userId);
+
+        // 10. OAuth 제공자 정보 삭제
+        userOAuthProviderRepository.deleteByUserId(userId);
+
+        // 11. 사용자 프로필 삭제
+        userProfileRepository.deleteById(userId);
+
+        // 12. 사용자 삭제
+        userRepository.delete(user);
     }
 }

@@ -1,6 +1,8 @@
 package com.example.openrunapi.domain.admin.service;
 
+import com.example.openrunapi.domain.admin.model.dto.UserStatsResponse;
 import com.example.openrunapi.domain.auth.service.OAuthService;
+import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.SystemAdminRepository;
 import com.example.openrunapi.domain.user.repository.UserRepository;
@@ -10,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 /**
  * Admin 사용자 관리 서비스
@@ -21,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminUserService {
 
     private final UserRepository userRepository;
+    private final ClubRepository clubRepository;
     private final SystemAdminRepository systemAdminRepository;
     private final OAuthService oauthService;
 
@@ -75,5 +80,56 @@ public class AdminUserService {
         log.info("Admin updated birth date for user: {} (id: {})", user.getName(), user.getId());
 
         return user;
+    }
+
+    /**
+     * 사용자 통계 조회
+     * - 전체 사용자 수
+     * - DAU (일간 활성 사용자)
+     * - WAU (주간 활성 사용자)
+     * - MAU (월간 활성 사용자)
+     * - 신규 가입자 수 (오늘/이번 주/이번 달)
+     *
+     * @return 사용자 통계 응답
+     */
+    @Transactional(readOnly = true)
+    public UserStatsResponse getUserStats() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfToday = now.toLocalDate().atStartOfDay();
+        LocalDateTime startOfWeek = now.minusDays(7);
+        LocalDateTime startOfMonth = now.minusDays(30);
+
+        // 전체 사용자 수 (게스트 제외)
+        long totalUsers = userRepository.countNonGuestUsers();
+
+        // 전체 클럽 수
+        long totalClubs = clubRepository.count();
+
+        // DAU: 오늘 로그인한 사용자 수
+        long dau = userRepository.countActiveUsersSince(startOfToday);
+
+        // WAU: 최근 7일 내 로그인한 사용자 수
+        long wau = userRepository.countActiveUsersSince(startOfWeek);
+
+        // MAU: 최근 30일 내 로그인한 사용자 수
+        long mau = userRepository.countActiveUsersSince(startOfMonth);
+
+        // 신규 가입자 수
+        long newUsersToday = userRepository.countNewUsersSince(startOfToday);
+        long newUsersThisWeek = userRepository.countNewUsersSince(startOfWeek);
+        long newUsersThisMonth = userRepository.countNewUsersSince(startOfMonth);
+
+        log.info("User stats - Total: {}, Clubs: {}, DAU: {}, WAU: {}, MAU: {}", totalUsers, totalClubs, dau, wau, mau);
+
+        return UserStatsResponse.builder()
+                .totalUsers(totalUsers)
+                .totalClubs(totalClubs)
+                .dau(dau)
+                .wau(wau)
+                .mau(mau)
+                .newUsersToday(newUsersToday)
+                .newUsersThisWeek(newUsersThisWeek)
+                .newUsersThisMonth(newUsersThisMonth)
+                .build();
     }
 }

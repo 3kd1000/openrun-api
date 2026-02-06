@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -44,4 +45,23 @@ public interface MatchRepository extends JpaRepository<Match, Long>, JpaSpecific
            "m.teamBPlayer1Id = :userId OR m.teamBPlayer2Id = :userId) " +
            "ORDER BY m.playedAt DESC")
     Page<Match> findAllByPlayerIdWithResult(@Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * 탈퇴한 사용자의 경기 기록 익명화 (player_id를 null로 설정)
+     */
+    @Modifying
+    @Query("UPDATE Match m SET m.teamAPlayer1Id = null WHERE m.teamAPlayer1Id = :userId")
+    void anonymizeTeamAPlayer1(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("UPDATE Match m SET m.teamAPlayer2Id = null WHERE m.teamAPlayer2Id = :userId")
+    void anonymizeTeamAPlayer2(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("UPDATE Match m SET m.teamBPlayer1Id = null WHERE m.teamBPlayer1Id = :userId")
+    void anonymizeTeamBPlayer1(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("UPDATE Match m SET m.teamBPlayer2Id = null WHERE m.teamBPlayer2Id = :userId")
+    void anonymizeTeamBPlayer2(@Param("userId") Long userId);
 }

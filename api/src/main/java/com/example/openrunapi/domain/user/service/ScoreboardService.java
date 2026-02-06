@@ -2,6 +2,7 @@ package com.example.openrunapi.domain.user.service;
 
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
+import com.example.openrunapi.domain.user.model.Gender;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserStatistics;
 import com.example.openrunapi.domain.user.model.dto.ScoreboardResponse;
@@ -34,30 +35,41 @@ public class ScoreboardService {
      * - 승점 내림차순 → 득실차 내림차순 정렬
      * - 사용자 이름 포함
      * - 게스트 사용자 제외
-     * 
+     *
      * @param clubId 클럽 ID
      * @param startDate 시작일 (optional, null이면 전체 기간)
      * @param endDate 종료일 (optional, null이면 전체 기간)
      * @param sortBy 정렬 기준 (points, totalMatches, winRate)
+     * @param gender 성별 필터 (optional, null이면 전체, "MALE" 또는 "FEMALE")
      * @return 랭킹 리스트
      */
     @Transactional(readOnly = true)
-    public ScoreboardResponse getClubScoreboard(Long clubId, LocalDateTime startDate, LocalDateTime endDate, String sortBy) {
+    public ScoreboardResponse getClubScoreboard(Long clubId, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String gender) {
         log.info("=== 스코어보드 조회 ===");
-        log.info("clubId: {}, startDate: {}, endDate: {}, sortBy: {}", clubId, startDate, endDate, sortBy);
+        log.info("clubId: {}, startDate: {}, endDate: {}, sortBy: {}, gender: {}", clubId, startDate, endDate, sortBy, gender);
+
+        // 성별 필터 파싱 (null 또는 빈 문자열이면 전체)
+        Gender genderFilter = null;
+        if (gender != null && !gender.isEmpty()) {
+            try {
+                genderFilter = Gender.valueOf(gender.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid gender filter: {}", gender);
+            }
+        }
 
         // 기간 필터가 있으면 Match 테이블에서 직접 집계, 없으면 UserStatistics 사용
         if (startDate != null || endDate != null) {
-            return getClubScoreboardByDateRange(clubId, startDate, endDate, sortBy);
+            return getClubScoreboardByDateRange(clubId, startDate, endDate, sortBy, genderFilter);
         } else {
-            return getClubScoreboardAllTime(clubId, sortBy);
+            return getClubScoreboardAllTime(clubId, sortBy, genderFilter);
         }
     }
 
     /**
      * 전체 기간 스코어보드 조회 (기존 로직)
      */
-    private ScoreboardResponse getClubScoreboardAllTime(Long clubId, String sortBy) {
+    private ScoreboardResponse getClubScoreboardAllTime(Long clubId, String sortBy, Gender genderFilter) {
         // 1. 통계 조회 (승점 순 정렬, 게스트 제외)
         List<UserStatistics> statistics = userStatisticsRepository
                 .findByClubIdExcludingGuestsOrderByPointsDescGoalDifferenceDesc(clubId);
@@ -78,7 +90,11 @@ public class ScoreboardService {
         Map<Long, String> userNameMap = users.stream()
                 .collect(Collectors.toMap(User::getId, User::getName));
 
-        // 3-1. 클럽 ACTIVE 멤버만 랭킹에 포함 (외부 승인 게스트/비멤버 제외)
+        // 3-1. 성별 필터링을 위한 맵 생성
+        Map<Long, Gender> userGenderMap = users.stream()
+                .collect(Collectors.toMap(User::getId, User::getGender));
+
+        // 3-2. 클럽 ACTIVE 멤버만 랭킹에 포함 (외부 승인 게스트/비멤버 제외)
         List<Long> activeMemberIds = clubMemberRepository.findActiveMemberUserIdsInClub(clubId, userIds);
         Set<Long> activeMemberIdSet = new HashSet<>(activeMemberIds);
 
@@ -100,6 +116,14 @@ public class ScoreboardService {
                             .build();
                 })
                 .filter(entry -> activeMemberIdSet.contains(entry.getUserId()))
+                // 성별 필터 적용
+                .filter(entry -> {
+                    if (genderFilter == null) {
+                        return true; // 전체 조회
+                    }
+                    Gender userGender = userGenderMap.get(entry.getUserId());
+                    return genderFilter.equals(userGender);
+                })
                 .sorted((a, b) -> compareRankings(a, b, sortBy))
                 .collect(Collectors.toList());
 
@@ -116,36 +140,36 @@ public class ScoreboardService {
     /**
      * 기간별 스코어보드 조회 (Match 테이블에서 직접 집계)
      */
-    private ScoreboardResponse getClubScoreboardByDateRange(Long clubId, LocalDateTime startDate, LocalDateTime endDate, String sortBy) {
+    private ScoreboardResponse getClubScoreboardByDateRange(Long clubId, LocalDateTime startDate, LocalDateTime endDate, String sortBy, Gender genderFilter) {
         // 1. 기간 내 완료된 경기만 조회
         List<Match> matches = matchRepository.findAll((root, query, criteriaBuilder) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
-            
+
             predicates.add(criteriaBuilder.equal(root.get("clubId"), clubId));
             predicates.add(criteriaBuilder.isNotNull(root.get("result")));
             predicates.add(criteriaBuilder.isNotNull(root.get("teamAScore")));
             predicates.add(criteriaBuilder.isNotNull(root.get("teamBScore")));
-            
+
             if (startDate != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("playedAt"), startDate));
             }
             if (endDate != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("playedAt"), endDate));
             }
-            
+
             return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         });
 
         // 2. 선수별 통계 집계
         Map<Long, PlayerStats> statsMap = new HashMap<>();
-        
+
         for (Match match : matches) {
             // Team A 선수들
             processPlayerStats(statsMap, match, match.getTeamAPlayer1Id(), true);
             if (match.getTeamAPlayer2Id() != null) {
                 processPlayerStats(statsMap, match, match.getTeamAPlayer2Id(), true);
             }
-            
+
             // Team B 선수들
             processPlayerStats(statsMap, match, match.getTeamBPlayer1Id(), false);
             if (match.getTeamBPlayer2Id() != null) {
@@ -160,7 +184,12 @@ public class ScoreboardService {
                 .filter(user -> !user.isGuest())
                 .collect(Collectors.toMap(User::getId, User::getName));
 
-        // 3-1. 클럽 ACTIVE 멤버만 포함 (외부 승인 게스트/비멤버 제외)
+        // 3-1. 성별 필터링을 위한 맵 생성
+        Map<Long, Gender> userGenderMap = users.stream()
+                .filter(user -> !user.isGuest())
+                .collect(Collectors.toMap(User::getId, User::getGender));
+
+        // 3-2. 클럽 ACTIVE 멤버만 포함 (외부 승인 게스트/비멤버 제외)
         List<Long> activeMemberIds = clubMemberRepository.findActiveMemberUserIdsInClub(clubId, new ArrayList<>(userNameMap.keySet()));
         Set<Long> activeMemberIdSet = new HashSet<>(activeMemberIds);
 
@@ -168,6 +197,14 @@ public class ScoreboardService {
         List<ScoreboardResponse.RankingEntry> rankings = statsMap.entrySet().stream()
                 .filter(entry -> userNameMap.containsKey(entry.getKey())) // 게스트 제외
                 .filter(entry -> activeMemberIdSet.contains(entry.getKey())) // 비멤버 제외
+                // 성별 필터 적용
+                .filter(entry -> {
+                    if (genderFilter == null) {
+                        return true; // 전체 조회
+                    }
+                    Gender userGender = userGenderMap.get(entry.getKey());
+                    return genderFilter.equals(userGender);
+                })
                 .map(entry -> {
                     Long userId = entry.getKey();
                     PlayerStats stats = entry.getValue();

@@ -1,5 +1,7 @@
 package com.example.openrunapi.domain.schedule.service;
 
+import com.example.openrunapi.domain.batch.model.BatchJobHistory;
+import com.example.openrunapi.domain.batch.service.BatchJobHistoryService;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
@@ -26,16 +28,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ScheduleMaintenanceService {
 
+    public static final String JOB_NAME = "SCHEDULE_MAINTENANCE";
+
     private final ScheduleRepository scheduleRepository;
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
+    private final BatchJobHistoryService batchJobHistoryService;
 
     /**
      * 매일 KST 새벽 3시 (= UTC 18시) 실행
      * 과거 일정의 고정/게스트모집/교류전모집 플래그를 자동으로 OFF
+     *
+     * @return [처리 일정 수, 고정 해제 수, 게스트 종료 수, 교류전 종료 수]
      */
     @Transactional
-    public void disableExpiredScheduleFeatures() {
+    public int[] disableExpiredScheduleFeatures() {
         log.info("[배치 시작] 과거 일정 플래그 자동 OFF 작업 시작");
 
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
@@ -45,7 +52,7 @@ public class ScheduleMaintenanceService {
 
         if (expiredSchedules.isEmpty()) {
             log.info("[배치 완료] 처리할 과거 일정 없음");
-            return;
+            return new int[]{0, 0, 0, 0};
         }
 
         log.info("[배치 진행] 처리 대상 일정 수: {}", expiredSchedules.size());
@@ -75,12 +82,15 @@ public class ScheduleMaintenanceService {
         log.info("[배치 완료] 처리 완료 - 고정 해제: {}건, 게스트 종료: {}건, 교류전 종료: {}건",
                  pinnedCount, guestCount, interclubCount);
 
+        return new int[]{expiredSchedules.size(), pinnedCount, guestCount, interclubCount};
     }
 
     /**
      * 클럽별 활동 요약(일정 수, 참가자 수) 및 멤버 수를 계산하여 저장
+     *
+     * @return 처리한 클럽 수
      */
-    private void updateClubActivitySummaries() {
+    private int updateClubActivitySummaries() {
         log.info("[배치 시작] 클럽 활동 요약 및 멤버 수 업데이트 작업 시작");
 
         // 모든 클럽의 일정 통계 조회
@@ -132,14 +142,33 @@ public class ScheduleMaintenanceService {
 
         clubRepository.saveAll(clubs);
         log.info("[배치 완료] 클럽 활동 요약 및 멤버 수 업데이트 완료 - {}개 클럽 처리", updatedCount);
+
+        return updatedCount;
     }
 
     @Scheduled(cron = "0 0 18 * * *", zone = "UTC")
     @Transactional
     public String executeBatch() {
-        disableExpiredScheduleFeatures();
-        updateClubActivitySummaries();
-        return "배치 작업이 실행되었습니다.";
+        BatchJobHistory history = batchJobHistoryService.startJob(JOB_NAME);
+
+        try {
+            int[] scheduleStats = disableExpiredScheduleFeatures();
+            int clubCount = updateClubActivitySummaries();
+
+            // 성공 기록
+            String summary = String.format(
+                    "{\"expiredSchedules\":%d,\"pinnedOff\":%d,\"guestOff\":%d,\"interclubOff\":%d,\"clubsUpdated\":%d}",
+                    scheduleStats[0], scheduleStats[1], scheduleStats[2], scheduleStats[3], clubCount
+            );
+            batchJobHistoryService.markSuccess(history.getId(), summary);
+
+            return "배치 작업이 실행되었습니다.";
+
+        } catch (Exception e) {
+            log.error("Schedule Maintenance 배치 실패", e);
+            batchJobHistoryService.markFailed(history.getId(), e.getMessage());
+            throw e;
+        }
     }
 
     /**
