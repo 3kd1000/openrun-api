@@ -11,6 +11,7 @@ import {
 import type { Club, UpdateAwardPolicyRequest, AwardRankingResponse, AwardType } from "../../../types/club";
 import { ArrowLeftIcon, CheckIcon, Trash2Icon, EditIcon, XIcon } from "../../../components/common/Icons";
 import { useToast } from "../../../contexts/ToastContext";
+import "../../../components/common/UserNameWithBadge.css"; // 공통 뱃지 스타일
 import "./ClubManageAwardPage.css";
 
 type TabType = "policy" | "winners";
@@ -508,7 +509,7 @@ const ClubManageAwardPage: React.FC = () => {
                 return (
                   <div key={type} className="club-manage-award-page__award-card">
                     <div className="club-manage-award-page__award-header">
-                      <span className={`club-manage-award-page__award-badge award-badge--${type.toLowerCase()}`}>
+                      <span className={`award-badge award-badge--${type.toLowerCase()}`}>
                         {awardService.getAwardBadgeLabel(type)}
                       </span>
                       <span className="club-manage-award-page__award-name">

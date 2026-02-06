@@ -320,26 +320,6 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.club-manage-award-page__award-badge {
-  padding: var(--space-xxs) var(--space-s);
-  border-radius: var(--radius-s);
-  font-size: var(--font-size-s);
-  font-weight: var(--font-weight-bold);
-  color: white;
-}
-
-.club-manage-award-page__award-badge.award-badge--attendance {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.club-manage-award-page__award-badge.award-badge--points {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.club-manage-award-page__award-badge.award-badge--booking {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-}
-
 .club-manage-award-page__award-name {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);

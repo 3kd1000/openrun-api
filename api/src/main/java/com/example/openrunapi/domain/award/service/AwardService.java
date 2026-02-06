@@ -5,6 +5,7 @@ import com.example.openrunapi.domain.award.model.dto.AwardRankingEntry;
 import com.example.openrunapi.domain.award.model.dto.AwardRankingResponse;
 import com.example.openrunapi.domain.award.model.dto.AwardWinnerResponse;
 import com.example.openrunapi.domain.award.model.dto.AwardWinnersResponse;
+import com.example.openrunapi.domain.award.model.dto.CumulativeAchievementResponse;
 import com.example.openrunapi.domain.award.model.dto.SaveAwardWinnerRequest;
 import com.example.openrunapi.domain.award.repository.AwardWinnerRepository;
 import com.example.openrunapi.domain.club.model.AwardPeriod;
@@ -22,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -604,6 +607,103 @@ public class AwardService {
     @Transactional
     public void deleteAwardWinner(Long id) {
         awardWinnerRepository.deleteById(id);
+    }
+
+    // ==================== 누적 업적 시스템 ====================
+
+    /**
+     * 클럽 내 전체 멤버의 누적 업적 조회
+     * - 어워드 타입별 수상 횟수
+     * - 대표 업적 (가장 높은 티어의 업적)
+     */
+    public CumulativeAchievementResponse getCumulativeAchievements(Long clubId) {
+        // 1. 타입별 수상 횟수 집계
+        List<Object[]> rawCounts = awardWinnerRepository.countAwardsByUserAndType(clubId);
+
+        // 2. 사용자별로 그룹화
+        Map<Long, Map<AwardType, Integer>> userAwardCounts = new LinkedHashMap<>();
+        for (Object[] row : rawCounts) {
+            Long userId = (Long) row[0];
+            AwardType awardType = (AwardType) row[1];
+            int count = ((Long) row[2]).intValue();
+
+            userAwardCounts
+                    .computeIfAbsent(userId, k -> new EnumMap<>(AwardType.class))
+                    .put(awardType, count);
+        }
+
+        // 3. 사용자 이름 조회
+        List<Long> userIds = new ArrayList<>(userAwardCounts.keySet());
+        Map<Long, String> userNames = getUserNames(userIds);
+
+        // 4. MemberAchievement 목록 생성
+        List<CumulativeAchievementResponse.MemberAchievement> members = new ArrayList<>();
+        for (Map.Entry<Long, Map<AwardType, Integer>> entry : userAwardCounts.entrySet()) {
+            Long userId = entry.getKey();
+            Map<AwardType, Integer> awardCounts = entry.getValue();
+
+            // 대표 업적 결정 (가장 높은 티어)
+            AwardType primaryAward = null;
+            int primaryTier = 0;
+
+            for (Map.Entry<AwardType, Integer> awardEntry : awardCounts.entrySet()) {
+                int tier = calculateTier(awardEntry.getValue());
+                if (tier > primaryTier) {
+                    primaryTier = tier;
+                    primaryAward = awardEntry.getKey();
+                }
+            }
+
+            members.add(CumulativeAchievementResponse.MemberAchievement.builder()
+                    .userId(userId)
+                    .userName(userNames.getOrDefault(userId, "알 수 없음"))
+                    .awardCounts(awardCounts)
+                    .primaryAward(primaryAward)
+                    .primaryTier(primaryTier)
+                    .build());
+        }
+
+        // 5. 대표 티어 순으로 정렬 (높은 티어가 먼저)
+        members.sort((a, b) -> {
+            int tierCompare = Integer.compare(b.getPrimaryTier(), a.getPrimaryTier());
+            if (tierCompare != 0) return tierCompare;
+            // 같은 티어면 이름순
+            return a.getUserName().compareTo(b.getUserName());
+        });
+
+        return CumulativeAchievementResponse.builder()
+                .members(members)
+                .build();
+    }
+
+    /**
+     * 특정 사용자의 상세 업적 조회
+     */
+    public List<AwardWinnerResponse> getUserAchievements(Long clubId, Long userId) {
+        List<AwardWinner> winners = awardWinnerRepository.findByClubIdAndUserId(clubId, userId);
+
+        return winners.stream()
+                .map(w -> {
+                    String userName = userRepository.findById(w.getUserId())
+                            .map(u -> u.getName())
+                            .orElse("알 수 없음");
+                    return AwardWinnerResponse.from(w, userName);
+                })
+                .toList();
+    }
+
+    /**
+     * 수상 횟수에 따른 티어 계산
+     * 1회 = 브론즈 (Tier 1)
+     * 2회 = 실버 (Tier 2)
+     * 3회 = 골드 (Tier 3)
+     * 4회 = 플래티넘 (Tier 4)
+     * 5회+ = 레인보우 (Tier 5)
+     */
+    private int calculateTier(int awardCount) {
+        if (awardCount <= 0) return 0;
+        if (awardCount >= 5) return 5;
+        return awardCount;
     }
 
     /**

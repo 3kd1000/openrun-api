@@ -18,6 +18,9 @@ function Layout() {
           <NavLink to="/audit-logs" className={({ isActive }) => isActive ? "active" : ""}>
             Audit Logs
           </NavLink>
+          <NavLink to="/batch" className={({ isActive }) => isActive ? "active" : ""}>
+            배치 작업
+          </NavLink>
           <NavLink to="/award-winners" className={({ isActive }) => isActive ? "active" : ""}>
             어워드 수상자
           </NavLink>

@@ -1,0 +1,257 @@
+.batch-page h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-s);
+}
+
+.batch-page__description {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-l);
+}
+
+/* ========== 배치 작업 목록 섹션 ========== */
+.batch-jobs-section {
+  margin-bottom: var(--space-xl);
+}
+
+.batch-jobs-section h3 {
+  font-size: var(--font-size-l);
+  margin-bottom: var(--space-m);
+}
+
+.batch-jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-m);
+}
+
+.batch-job-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  padding: var(--space-l);
+}
+
+.batch-job-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-s);
+}
+
+.batch-job-card__header h4 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+.batch-execute-btn {
+  padding: var(--space-xs) var(--space-m);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.batch-execute-btn:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.batch-execute-btn:disabled {
+  background-color: var(--color-border);
+  cursor: not-allowed;
+}
+
+.batch-job-card__description {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-s);
+}
+
+.batch-job-card__schedule {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.schedule-label {
+  font-weight: var(--font-weight-medium);
+}
+
+/* ========== 실행 이력 섹션 ========== */
+.batch-history-section h3 {
+  font-size: var(--font-size-l);
+  margin-bottom: var(--space-m);
+}
+
+.batch-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-m);
+}
+
+.batch-refresh-btn {
+  padding: var(--space-xs) var(--space-m);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+.batch-refresh-btn:hover:not(:disabled) {
+  background-color: var(--color-background);
+}
+
+.batch-loading,
+.batch-error {
+  padding: var(--space-l);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.batch-error {
+  color: var(--color-error);
+}
+
+/* ========== 테이블 스타일 ========== */
+.batch-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+}
+
+.batch-history-table th,
+.batch-history-table td {
+  padding: var(--space-m);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.batch-history-table th {
+  background-color: var(--color-background);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+.batch-history-table td {
+  font-size: var(--font-size-s);
+}
+
+.batch-history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.batch-history-table tr.row-failed {
+  background-color: #fef2f2;
+}
+
+.batch-empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: var(--space-xl) !important;
+}
+
+/* 상태 배지 */
+.batch-status {
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.batch-status--success {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.batch-status--failed {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.batch-status--running {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* 결과 셀 */
+.result-cell {
+  max-width: 300px;
+}
+
+.error-text {
+  color: #991b1b;
+  font-size: var(--font-size-xs);
+  word-break: break-all;
+}
+
+.summary-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.summary-item {
+  background-color: var(--color-background);
+  padding: 2px var(--space-xs);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* ========== 페이지네이션 ========== */
+.batch-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-m);
+  margin-top: var(--space-m);
+}
+
+.batch-pagination button {
+  padding: var(--space-xs) var(--space-m);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+.batch-pagination button:hover:not(:disabled) {
+  background-color: var(--color-background);
+}
+
+.batch-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+}
+
+/* ========== 반응형 ========== */
+@media (max-width: 768px) {
+  .batch-jobs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .batch-history-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .batch-job-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-s);
+  }
+}

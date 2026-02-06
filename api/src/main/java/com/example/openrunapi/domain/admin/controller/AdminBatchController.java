@@ -2,9 +2,12 @@ package com.example.openrunapi.domain.admin.controller;
 
 import com.example.openrunapi.domain.admin.model.dto.BatchHistoryResponse;
 import com.example.openrunapi.domain.admin.service.AdminUserService;
+import com.example.openrunapi.domain.audit.service.AuditLogMaintenanceService;
 import com.example.openrunapi.domain.batch.model.BatchJobHistory;
 import com.example.openrunapi.domain.batch.service.BatchJobHistoryService;
+import com.example.openrunapi.domain.schedule.service.ScheduleMaintenanceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -13,13 +16,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Admin 배치 작업 이력 조회 API
+ * Admin 배치 작업 이력 조회 및 수동 실행 API
  * - 배치 작업 실행 결과 모니터링
+ * - 배치 작업 수동 실행
  * - System Admin 권한 필요
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/admin/batch")
 @RequiredArgsConstructor
@@ -27,6 +33,8 @@ public class AdminBatchController {
 
     private final BatchJobHistoryService batchJobHistoryService;
     private final AdminUserService adminUserService;
+    private final ScheduleMaintenanceService scheduleMaintenanceService;
+    private final AuditLogMaintenanceService auditLogMaintenanceService;
 
     /**
      * 전체 배치 이력 조회 (페이징)
@@ -97,5 +105,55 @@ public class AdminBatchController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 일정 유지보수 배치 수동 실행
+     */
+    @PostMapping("/execute/SCHEDULE_MAINTENANCE")
+    public ResponseEntity<Map<String, String>> executeScheduleMaintenance(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        adminUserService.validateAdminAccess(userDetails.getUsername());
+        log.info("[Admin] 일정 유지보수 배치 수동 실행 요청 by {}", userDetails.getUsername());
+
+        try {
+            String result = scheduleMaintenanceService.executeNow();
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", result
+            ));
+        } catch (Exception e) {
+            log.error("[Admin] 일정 유지보수 배치 실행 실패", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", "배치 작업 실행 중 오류: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * 감사 로그 정리 배치 수동 실행
+     */
+    @PostMapping("/execute/AUDIT_LOG_CLEANUP")
+    public ResponseEntity<Map<String, String>> executeAuditLogCleanup(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        adminUserService.validateAdminAccess(userDetails.getUsername());
+        log.info("[Admin] 감사 로그 정리 배치 수동 실행 요청 by {}", userDetails.getUsername());
+
+        try {
+            String result = auditLogMaintenanceService.executeNow();
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", result
+            ));
+        } catch (Exception e) {
+            log.error("[Admin] 감사 로그 정리 배치 실행 실패", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", "배치 작업 실행 중 오류: " + e.getMessage()
+            ));
+        }
     }
 }

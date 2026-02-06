@@ -64,4 +64,26 @@ public interface AwardWinnerRepository extends JpaRepository<AwardWinner, Long> 
     @Modifying
     @Query("UPDATE AwardWinner aw SET aw.userId = null WHERE aw.userId = :userId")
     void anonymizeByUserId(@Param("userId") Long userId);
+
+    /**
+     * 클럽 내 전체 멤버의 누적 수상 현황 조회 (타입별 횟수)
+     * @return [userId, awardType, count]
+     */
+    @Query("SELECT aw.userId, aw.awardType, COUNT(aw) " +
+            "FROM AwardWinner aw " +
+            "WHERE aw.clubId = :clubId AND aw.userId IS NOT NULL " +
+            "GROUP BY aw.userId, aw.awardType " +
+            "ORDER BY aw.userId, aw.awardType")
+    List<Object[]> countAwardsByUserAndType(@Param("clubId") Long clubId);
+
+    /**
+     * 특정 사용자의 수상 기록 상세 조회 (클럽 내)
+     */
+    @Query("SELECT aw FROM AwardWinner aw " +
+            "WHERE aw.clubId = :clubId AND aw.userId = :userId " +
+            "ORDER BY aw.periodStart DESC")
+    List<AwardWinner> findByClubIdAndUserId(
+            @Param("clubId") Long clubId,
+            @Param("userId") Long userId
+    );
 }

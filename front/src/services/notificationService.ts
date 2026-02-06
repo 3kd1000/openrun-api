@@ -1,4 +1,5 @@
 // src/services/notificationService.ts
+import axios from "axios";
 import axiosInstance from "./api/axiosInstance";
 
 export interface NotificationItem {
@@ -40,9 +41,19 @@ export const markAllAsRead = async (): Promise<void> => {
 
 /**
  * 미읽음 알림 수 조회
+ * - 401 에러는 아직 인증되지 않은 상태이므로 0으로 처리
  */
 export const getUnreadCount = async (): Promise<number> => {
-  const response =
-    await axiosInstance.get<UnreadCountResponse>("/notifications/unread-count");
-  return response.data.count;
+  try {
+    const response =
+      await axiosInstance.get<UnreadCountResponse>("/notifications/unread-count");
+    return response.data.count;
+  } catch (error) {
+    // 401은 인증 전 상태 - 미읽음 수 0으로 처리
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      console.log("[Notification] 인증 대기 중, 미읽음 수 0으로 처리");
+      return 0;
+    }
+    throw error;
+  }
 };
