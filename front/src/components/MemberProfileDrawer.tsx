@@ -3,6 +3,9 @@ import type { MemberProfile } from "../services/api/userApi";
 import { getClubMemberProfile } from "../services/api/userApi";
 import { getRoleLabel, normalizeClubRole } from "../utils/role";
 import { formatPhoneNumber } from "../utils/contactUtils";
+import { useAwardWinners } from "../contexts/AwardWinnersContext";
+import { awardService, type TierName } from "../services/awardService";
+import type { AwardType } from "../types/club";
 import "./MemberProfileDrawer.css";
 
 interface MemberProfileDrawerProps {
@@ -10,6 +13,28 @@ interface MemberProfileDrawerProps {
   userId: number;
   onClose: () => void;
 }
+
+// 티어 한글명
+const getTierLabel = (tierName: TierName): string => {
+  switch (tierName) {
+    case "bronze": return "브론즈";
+    case "silver": return "실버";
+    case "gold": return "골드";
+    case "platinum": return "플래티넘";
+    case "rainbow": return "레인보우";
+    default: return "";
+  }
+};
+
+// 어워드 타입 한글명
+const getAwardTypeLabel = (type: AwardType): string => {
+  switch (type) {
+    case "ATTENDANCE": return "참여왕";
+    case "POINTS": return "승점왕";
+    case "BOOKING": return "예약왕";
+    default: return type;
+  }
+};
 
 const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
   clubId,
@@ -19,6 +44,7 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { getUserAchievement } = useAwardWinners();
 
   useEffect(() => {
     let mounted = true;
@@ -210,6 +236,41 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* 클럽 업적 */}
+              {(() => {
+                const achievement = getUserAchievement(userId);
+                if (!achievement) return null;
+
+                const awardEntries = Object.entries(achievement.awardCounts)
+                  .filter(([, count]) => count > 0)
+                  .map(([type, count]) => ({
+                    type: type as AwardType,
+                    count,
+                    tier: awardService.calculateTier(count),
+                    tierName: awardService.getTierName(awardService.calculateTier(count)),
+                  }));
+
+                if (awardEntries.length === 0) return null;
+
+                return (
+                  <div className="profile-section">
+                    <h3 className="section-title">클럽 업적</h3>
+                    <div className="achievement-list">
+                      {awardEntries.map(({ type, count, tierName }) => (
+                        <div key={type} className={`achievement-item achievement-item--${tierName}`}>
+                          <span className="achievement-badge">
+                            {getAwardTypeLabel(type)}
+                          </span>
+                          <span className="achievement-detail">
+                            {count}회 수상 · {getTierLabel(tierName)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>

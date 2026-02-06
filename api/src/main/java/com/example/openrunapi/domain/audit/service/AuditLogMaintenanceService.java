@@ -71,6 +71,16 @@ public class AuditLogMaintenanceService {
     }
 
     /**
+     * 수동 실행 메서드 (관리자 호출용) - 이력 기록 포함
+     */
+    @Transactional
+    public String executeNow() {
+        log.info("[수동 실행] Audit Log 정리 작업 수동 실행");
+        cleanupOldAuditLogs();
+        return "Audit Log 정리 작업이 실행되었습니다.";
+    }
+
+    /**
      * 수동 정리 메서드 (관리자 호출용)
      *
      * @return 삭제된 레코드 수

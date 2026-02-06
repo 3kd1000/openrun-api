@@ -63,3 +63,19 @@ export async function getRecentBatchHistory(
   );
   return data;
 }
+
+/**
+ * 배치 작업 실행 응답 타입
+ */
+export interface ExecuteResponse {
+  status: "success" | "error";
+  message: string;
+}
+
+/**
+ * 배치 작업 수동 실행
+ */
+export async function executeBatchJob(jobName: string): Promise<ExecuteResponse> {
+  const { data } = await api.post<ExecuteResponse>(`/admin/batch/execute/${jobName}`);
+  return data;
+}

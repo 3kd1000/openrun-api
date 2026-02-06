@@ -58,6 +58,38 @@ export interface AwardWinnerResponse {
 }
 
 /**
+ * 멤버별 누적 업적
+ */
+export interface MemberAchievement {
+  userId: number;
+  userName: string;
+  awardCounts: Record<AwardType, number>;  // 어워드 타입별 수상 횟수
+  primaryAward: AwardType | null;  // 대표 업적 (가장 높은 티어)
+  primaryTier: number;  // 대표 티어 (1~5)
+}
+
+/**
+ * 누적 업적 응답 DTO
+ */
+export interface CumulativeAchievementResponse {
+  members: MemberAchievement[];
+}
+
+/**
+ * 티어 정보
+ */
+export type TierLevel = 1 | 2 | 3 | 4 | 5;
+export type TierName = "bronze" | "silver" | "gold" | "platinum" | "rainbow";
+
+export const TIER_CONFIG: Record<TierLevel, { name: TierName; label: string; color: string }> = {
+  1: { name: "bronze", label: "브론즈", color: "#CD7F32" },
+  2: { name: "silver", label: "실버", color: "#C0C0C0" },
+  3: { name: "gold", label: "골드", color: "#FFD700" },
+  4: { name: "platinum", label: "플래티넘", color: "#E5E4E2" },
+  5: { name: "rainbow", label: "레인보우", color: "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)" },
+};
+
+/**
  * 어워드 관련 서비스
  */
 export const awardService = {
@@ -271,5 +303,56 @@ export const awardService = {
       default:
         return type;
     }
+  },
+
+  // ==================== 누적 업적 API ====================
+
+  /**
+   * 클럽 내 전체 멤버의 누적 업적 조회
+   */
+  async getCumulativeAchievements(clubId: number): Promise<CumulativeAchievementResponse> {
+    const response = await axiosInstance.get<CumulativeAchievementResponse>(
+      `/clubs/${clubId}/awards/achievements`
+    );
+    return response.data;
+  },
+
+  /**
+   * 특정 사용자의 상세 업적 조회 (수상 이력)
+   */
+  async getUserAchievements(clubId: number, userId: number): Promise<AwardWinnerResponse[]> {
+    const response = await axiosInstance.get<AwardWinnerResponse[]>(
+      `/clubs/${clubId}/awards/achievements/${userId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * 수상 횟수에 따른 티어 계산
+   * 1회 = 브론즈 (Tier 1)
+   * 2회 = 실버 (Tier 2)
+   * 3회 = 골드 (Tier 3)
+   * 4회 = 플래티넘 (Tier 4)
+   * 5회+ = 레인보우 (Tier 5)
+   */
+  calculateTier(awardCount: number): TierLevel {
+    if (awardCount <= 0) return 1;
+    if (awardCount >= 5) return 5;
+    return awardCount as TierLevel;
+  },
+
+  /**
+   * 티어 정보 반환
+   */
+  getTierInfo(tier: TierLevel): { name: TierName; label: string; color: string } {
+    return TIER_CONFIG[tier];
+  },
+
+  /**
+   * 티어 이름 반환 (영문)
+   */
+  getTierName(tier: number): TierName {
+    const validTier = Math.min(5, Math.max(1, tier)) as TierLevel;
+    return TIER_CONFIG[validTier].name;
   },
 };

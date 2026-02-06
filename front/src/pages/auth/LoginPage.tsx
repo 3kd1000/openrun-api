@@ -12,6 +12,7 @@ import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
 import { syncClubList } from "../../services/api/userApi";
 import { getOpenRunSession, setOpenRunSession, hasJoinedClub, setAutoLoginEnabled as saveAutoLoginSetting } from "../../utils/openrunSession";
+import AuthLoadingScreen from "../../components/AuthLoadingScreen";
 
 interface UserInfo {
   id: number;
@@ -30,6 +31,7 @@ const LoginPage: React.FC = () => {
   const [showWebAuthnModal, setShowWebAuthnModal] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [autoLoginEnabled, setAutoLoginEnabled] = useState(true); // 기본값: 자동 로그인 사용
+  const [isCheckingSession, setIsCheckingSession] = useState(true); // 세션 확인 중 여부
 
   // 로그인 후 원래 페이지로 돌아가기
   const navigateAfterLogin = () => {
@@ -61,18 +63,25 @@ const LoginPage: React.FC = () => {
       const firebaseToken = session.firebaseToken;
       const userId = session.userId;
 
-      if (!firebaseToken || !userId) return;
+      // 세션 데이터가 없으면 로그인 페이지 표시
+      if (!firebaseToken || !userId) {
+        console.log("ℹ️ 세션 데이터 없음 → 로그인 페이지 표시");
+        setIsCheckingSession(false);
+        return;
+      }
 
       // 세션 데이터는 있지만 Firebase Auth 사용자가 없으면 → stale 세션 정리
       if (!user) {
         console.warn("⚠️ 세션 데이터가 있지만 Firebase Auth 사용자 없음 → stale 세션 정리");
         clearLoginSession();
+        setIsCheckingSession(false);
         return;
       }
 
       // Firebase Auth 사용자도 있고 세션 데이터도 있으면 → 자동 네비게이션
       console.log("✅ 이미 로그인되어 있음 → 원래 페이지 또는 /schedules/club로 자동 이동");
       await navigateAfterLogin();
+      // navigateAfterLogin() 후에는 isCheckingSession을 false로 설정할 필요 없음 (다른 페이지로 이동됨)
     };
     checkAndNavigate();
   }, [isAuthReady, user, navigate]);
@@ -485,6 +494,11 @@ const LoginPage: React.FC = () => {
     setShowWebAuthnModal(false);
     await navigateAfterLogin();
   };
+
+  // Firebase 인증 상태 확인 중 또는 기존 세션 확인 중이면 스플래시 화면 표시
+  if (!isAuthReady || isCheckingSession) {
+    return <AuthLoadingScreen message="로그인 정보 확인 중..." />;
+  }
 
   return (
     <div

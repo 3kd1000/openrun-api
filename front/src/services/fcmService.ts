@@ -1,6 +1,7 @@
 // src/services/fcmService.ts
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import type { MessagePayload } from "firebase/messaging";
+import axios from "axios";
 import { app } from "./firebase";
 import axiosInstance from "./api/axiosInstance";
 
@@ -111,6 +112,7 @@ export const removeTokenFromServer = async (token: string): Promise<void> => {
 
 /**
  * 현재 디바이스 타입에 해당하는 FCM 토큰이 서버에 등록되어 있는지 확인
+ * - 401 에러는 아직 인증되지 않은 상태이므로 "토큰 없음"으로 처리
  */
 export const checkHasToken = async (): Promise<boolean> => {
   try {
@@ -118,6 +120,11 @@ export const checkHasToken = async (): Promise<boolean> => {
     const currentDeviceType = getDeviceType();
     return response.data.deviceTypes.includes(currentDeviceType);
   } catch (error) {
+    // 401은 인증 전 상태 (로그인 직후 토큰 미설정) - 토큰 없음으로 처리
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      console.log("[FCM] 인증 대기 중, 토큰 없음으로 처리");
+      return false;
+    }
     console.error("[FCM] 토큰 존재 여부 확인 실패:", error);
     return false;
   }

@@ -3,6 +3,7 @@ package com.example.openrunapi.domain.award.controller;
 import com.example.openrunapi.domain.award.model.dto.AwardRankingResponse;
 import com.example.openrunapi.domain.award.model.dto.AwardWinnerResponse;
 import com.example.openrunapi.domain.award.model.dto.AwardWinnersResponse;
+import com.example.openrunapi.domain.award.model.dto.CumulativeAchievementResponse;
 import com.example.openrunapi.domain.award.model.dto.SaveAwardWinnerRequest;
 import com.example.openrunapi.domain.award.model.dto.UpdateAwardWinnerRequest;
 import com.example.openrunapi.domain.award.service.AwardService;
@@ -57,6 +58,39 @@ public class AwardController {
     public ResponseEntity<AwardWinnersResponse> getCurrentWinners(@PathVariable Long clubId) {
         AwardWinnersResponse winners = awardService.getCurrentWinners(clubId);
         return ResponseEntity.ok(winners);
+    }
+
+    // ==================== 누적 업적 시스템 ====================
+
+    /**
+     * 클럽 내 전체 멤버의 누적 업적 조회
+     * 멤버별 어워드 타입별 수상 횟수와 대표 티어 반환
+     *
+     * 티어 시스템:
+     * - 1회 = 브론즈 (Tier 1)
+     * - 2회 = 실버 (Tier 2)
+     * - 3회 = 골드 (Tier 3)
+     * - 4회 = 플래티넘 (Tier 4)
+     * - 5회+ = 레인보우 (Tier 5)
+     */
+    @GetMapping("/achievements")
+    public ResponseEntity<CumulativeAchievementResponse> getCumulativeAchievements(
+            @PathVariable Long clubId
+    ) {
+        CumulativeAchievementResponse response = awardService.getCumulativeAchievements(clubId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 특정 사용자의 상세 업적 조회 (수상 이력)
+     */
+    @GetMapping("/achievements/{userId}")
+    public ResponseEntity<List<AwardWinnerResponse>> getUserAchievements(
+            @PathVariable Long clubId,
+            @PathVariable Long userId
+    ) {
+        List<AwardWinnerResponse> achievements = awardService.getUserAchievements(clubId, userId);
+        return ResponseEntity.ok(achievements);
     }
 
     // ==================== Admin 수상자 관리 ====================

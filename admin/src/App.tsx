@@ -5,6 +5,7 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import AuditLogPage from "./pages/AuditLogPage";
 import AwardWinnerPage from "./pages/AwardWinnerPage";
+import BatchPage from "./pages/BatchPage";
 import InquiryManagePage from "./pages/InquiryManagePage";
 import PushSendPage from "./pages/PushSendPage";
 import NotificationHistoryPage from "./pages/NotificationHistoryPage";
@@ -29,6 +30,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="audit-logs" element={<AuditLogPage />} />
           <Route path="award-winners" element={<AwardWinnerPage />} />
+          <Route path="batch" element={<BatchPage />} />
           <Route path="inquiries" element={<InquiryManagePage />} />
           <Route path="push-send" element={<PushSendPage />} />
           <Route path="notification-history" element={<NotificationHistoryPage />} />
