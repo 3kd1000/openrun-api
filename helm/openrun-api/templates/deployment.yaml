@@ -93,6 +93,13 @@ spec:
               name: {{ .Values.secrets.name }}
               key: ENCRYPTION_KEY
 
+        # === Internal Batch API Key (K8s CronJob 인증용) ===
+        - name: INTERNAL_BATCH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secrets.name }}
+              key: INTERNAL_BATCH_KEY
+
         # === OAuth2 Provider 설정 ===
         - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI
           value: {{ .Values.oauth2Provider.kakao.authorizationUri | quote }}

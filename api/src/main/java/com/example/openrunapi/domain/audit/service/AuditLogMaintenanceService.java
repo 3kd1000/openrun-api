@@ -5,7 +5,6 @@ import com.example.openrunapi.domain.batch.model.BatchJobHistory;
 import com.example.openrunapi.domain.batch.service.BatchJobHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +30,9 @@ public class AuditLogMaintenanceService {
     private static final int RETENTION_DAYS = 730; // 2년
 
     /**
-     * 매일 KST 03:30에 실행
-     * - 2년 이상 된 audit_log 레코드 삭제
+     * 2년 이상 된 audit_log 레코드 삭제
+     * K8s CronJob에서 호출됨 (매일 KST 03:30)
      */
-    @Scheduled(cron = "0 30 3 * * *", zone = "Asia/Seoul")
     @Transactional
     public void cleanupOldAuditLogs() {
         BatchJobHistory history = batchJobHistoryService.startJob(JOB_NAME);
