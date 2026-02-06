@@ -34,6 +34,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Actuator health 엔드포인트는 무조건 허용 (K8s liveness/readiness probe용)
                         .requestMatchers("/actuator/health/**").permitAll()
+                        // 내부 배치 API (K8s CronJob에서 호출, X-Internal-Key 헤더로 인증)
+                        .requestMatchers("/internal/**").permitAll()
                         // 인증 불필요한 API 엔드포인트
                         .requestMatchers("/api/auth/**").permitAll() // 소셜 로그인 API
                         .requestMatchers("/api/webauthn/login").permitAll() // WebAuthn 로그인 API
