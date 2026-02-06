@@ -537,10 +537,12 @@ export const isTokenValid = async (): Promise<boolean> => {
  */
 export const getCurrentToken = async (): Promise<string | null> => {
   const now = getTimestamp();
-  // 1. 로그인 세션 만료 체크
-  if (isLoginExpired()) {
+  const autoLoginEnabled = getAutoLoginEnabled();
+
+  // 1. 로그인 세션 만료 체크 (자동 로그인 비활성화 시에만)
+  if (!autoLoginEnabled && isLoginExpired()) {
     console.warn(
-      `⏰ [${now}] 로그인 세션 만료됨 (${AUTO_LOGIN_DAYS}일 경과) → 자동 로그아웃`
+      `⏰ [${now}] 로그인 세션 만료됨 (${AUTO_LOGIN_DAYS}일 경과, 자동 로그인 비활성화) → 자동 로그아웃`
     );
     await handleSessionExpiry();
     return null;

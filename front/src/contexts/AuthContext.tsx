@@ -317,12 +317,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               resolveRefresh!();
             }
 
-            // 토큰 갱신 실패 시 로그아웃 처리
+            // 토큰 갱신 실패해도 세션은 유지 (다음 기회에 재시도)
+            // login_expiry가 유효하면 언제든 토큰 재갱신 가능
             if (!tokenRefreshSuccess) {
-              console.error(`❌ [${timestamp}] 토큰 갱신 실패 → 로그아웃 처리`);
-              await handleSessionExpiry();
-              setIsAuthReady(true);
-              return;
+              console.warn(`⚠️ [${timestamp}] 토큰 갱신 실패 - 세션 유지, 다음 기회에 재시도`);
+              // handleSessionExpiry() 호출하지 않음!
+              // 다음 탭 활성화 / 사용자 활동 시 재시도됨
             }
 
             // 토큰 갱신 성공 후 userId가 없으면 자동 복원
