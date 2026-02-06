@@ -33,6 +33,7 @@ import UserGuideDetailPage from "./pages/more/UserGuideDetailPage";
 import GuideEditorPage from "./pages/more/GuideEditorPage";
 import InquiryPage from "./pages/more/InquiryPage";
 import NotificationPage from "./pages/notification/NotificationPage";
+import IntroPage from "./pages/intro/IntroPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -50,11 +51,11 @@ function App() {
   const location = useLocation();
   const { needRefresh, updateServiceWorker } = usePWAUpdate();
 
-  // "/" 경로와 "/setup-profile", "/terms"에서는 Navigation 숨김
+  // "/" 경로와 "/setup-profile", "/intro"에서는 Navigation 숨김
   const shouldShowNavigation =
     location.pathname !== "/" &&
     location.pathname !== "/setup-profile" &&
-    location.pathname !== "/setup-profile";
+    location.pathname !== "/intro";
 
   return (
     <ToastProvider>
@@ -75,6 +76,7 @@ function App() {
               {/* Public 페이지 (로그인 불필요) */}
               <Route path="/" element={<DrawGenerationPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/intro" element={<IntroPage />} />
               <Route path="/more/terms" element={<TermsOfServicePage />} />
               <Route path="/more/license" element={<LicensePage />} />
               <Route path="/clubs/explore" element={<ClubExplorePage />} />
