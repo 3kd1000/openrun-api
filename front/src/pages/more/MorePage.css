@@ -589,3 +589,202 @@
     min-height: 36px;
   }
 }
+
+/* ===== 회원 탈퇴 버튼 ===== */
+.withdraw-btn {
+  width: 100%;
+  padding: var(--space-m);
+  margin-top: var(--space-s);
+  background-color: transparent;
+  color: var(--color-text-tertiary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  min-height: 40px;
+}
+
+.withdraw-btn:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background-color: var(--color-bg-secondary);
+}
+
+/* ===== 회원 탈퇴 모달 ===== */
+.withdraw-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-l);
+}
+
+.withdraw-modal {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-l);
+  padding: var(--space-xl);
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.withdraw-modal__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-l) 0;
+  text-align: center;
+}
+
+.withdraw-modal__loading {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--color-text-secondary);
+}
+
+.withdraw-modal__error {
+  padding: var(--space-m);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-s);
+  color: var(--color-danger);
+  font-size: var(--font-size-s);
+  margin-bottom: var(--space-m);
+}
+
+.withdraw-modal__cannot {
+  text-align: left;
+}
+
+.withdraw-modal__reason {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-m) 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.withdraw-modal__clubs {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+  padding: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.withdraw-modal__clubs--delete {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.withdraw-modal__clubs-title {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-s) 0;
+}
+
+.withdraw-modal__clubs ul {
+  margin: 0;
+  padding-left: var(--space-l);
+}
+
+.withdraw-modal__clubs li {
+  font-size: var(--font-size-s);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.withdraw-modal__guide {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.withdraw-modal__can {
+  text-align: left;
+}
+
+.withdraw-modal__warning {
+  font-size: var(--font-size-base);
+  color: var(--color-danger);
+  font-weight: var(--font-weight-medium);
+  margin: 0 0 var(--space-m) 0;
+}
+
+.withdraw-modal__info {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-s);
+  padding: var(--space-m);
+  margin-bottom: var(--space-m);
+}
+
+.withdraw-modal__info p {
+  font-size: var(--font-size-s);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-xs) 0;
+  line-height: 1.5;
+}
+
+.withdraw-modal__info p:last-child {
+  margin-bottom: 0;
+}
+
+.withdraw-modal__buttons {
+  display: flex;
+  gap: var(--space-m);
+  margin-top: var(--space-l);
+}
+
+.withdraw-modal__cancel-btn {
+  flex: 1;
+  padding: var(--space-m);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: var(--border-width-thin) solid var(--color-border-secondary);
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.withdraw-modal__cancel-btn:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+}
+
+.withdraw-modal__cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.withdraw-modal__confirm-btn {
+  flex: 1;
+  padding: var(--space-m);
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--radius-s);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.withdraw-modal__confirm-btn:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+
+.withdraw-modal__confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

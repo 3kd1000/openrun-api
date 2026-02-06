@@ -213,3 +213,45 @@ export const getClubMemberProfile = async (
   );
   return response.data;
 };
+
+// ==================== 회원 탈퇴 관련 ====================
+
+/**
+ * 소유한 클럽 정보 (탈퇴 체크용)
+ */
+export interface OwnedClubInfo {
+  clubId: number;
+  clubName: string;
+  memberCount: number;
+}
+
+/**
+ * 회원 탈퇴 가능 여부 체크 응답
+ */
+export interface WithdrawalCheckResponse {
+  canWithdraw: boolean;
+  reason?: string;
+  ownedClubsWithMembers?: OwnedClubInfo[];  // 양도가 필요한 클럽 (다른 멤버 있음)
+  ownedClubsToDelete?: OwnedClubInfo[];     // 탈퇴 시 삭제될 클럽 (본인만 있음)
+}
+
+/**
+ * 회원 탈퇴 가능 여부 체크
+ * - 클럽 소유자인 경우: 다른 멤버가 있으면 탈퇴 불가 (양도 필요)
+ * - 탈퇴 시 삭제될 클럽 목록 반환
+ */
+export const checkWithdrawal = async (): Promise<WithdrawalCheckResponse> => {
+  const response = await axiosInstance.get<WithdrawalCheckResponse>('/users/me/withdrawal');
+  return response.data;
+};
+
+/**
+ * 회원 탈퇴 실행
+ * - 소유한 클럽 중 본인만 있는 클럽 삭제
+ * - 모든 클럽 멤버십 삭제
+ * - 관련 데이터 익명화 (경기 기록 등)
+ * - 사용자 계정 삭제
+ */
+export const withdrawUser = async (): Promise<void> => {
+  await axiosInstance.delete('/users/me');
+};

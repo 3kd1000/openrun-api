@@ -4,6 +4,7 @@ import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus;
 import com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -75,4 +76,11 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
            "AND sp.status = 'WAITING' " +
            "AND sp.joinedAt < :joinedAt")
     Long calculateWaitingNumber(@Param("scheduleId") Long scheduleId, @Param("joinedAt") java.time.LocalDateTime joinedAt);
+
+    /**
+     * 탈퇴한 사용자의 참가 기록 익명화 (user_id를 null로 설정)
+     */
+    @Modifying
+    @Query("UPDATE ScheduleParticipant sp SET sp.userId = null WHERE sp.userId = :userId")
+    void anonymizeByUserId(@Param("userId") Long userId);
 }

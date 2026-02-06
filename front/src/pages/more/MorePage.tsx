@@ -7,11 +7,14 @@ import type {
   UserProfile,
   OAuthProvider,
   MyClub,
+  WithdrawalCheckResponse,
 } from "../../services/api/userApi";
 import {
   getCurrentUser,
   getOAuthProviders,
   getMyClubs,
+  checkWithdrawal,
+  withdrawUser,
 } from "../../services/api/userApi";
 import {
   EditIcon,
@@ -53,6 +56,12 @@ const MorePage: React.FC = () => {
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
   const [myClubs, setMyClubs] = useState<MyClub[]>([]);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
+
+  // 회원 탈퇴 관련 state
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawalCheck, setWithdrawalCheck] = useState<WithdrawalCheckResponse | null>(null);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   // iOS Safari 브라우저 여부 (PWA가 아닌 경우에만 설치 안내 표시)
   const showIOSInstallBanner = isIOSSafariBrowser();
@@ -130,6 +139,51 @@ const MorePage: React.FC = () => {
 
   const handleProfileUpdate = (updatedUser: UserProfile) => {
     setUser(updatedUser);
+  };
+
+  // 회원 탈퇴 모달 열기 (탈퇴 가능 여부 체크)
+  const handleOpenWithdrawModal = async () => {
+    setWithdrawError(null);
+    setWithdrawalCheck(null);
+    setShowWithdrawModal(true);
+
+    try {
+      const result = await checkWithdrawal();
+      setWithdrawalCheck(result);
+    } catch (error) {
+      console.error("탈퇴 가능 여부 체크 실패:", error);
+      setWithdrawError("탈퇴 가능 여부를 확인할 수 없습니다. 다시 시도해주세요.");
+    }
+  };
+
+  // 회원 탈퇴 실행
+  const handleWithdraw = async () => {
+    if (!withdrawalCheck?.canWithdraw) return;
+
+    setIsWithdrawing(true);
+    setWithdrawError(null);
+
+    try {
+      await withdrawUser();
+
+      // Firebase 로그아웃
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error("❌ Firebase signOut 실패:", error);
+      }
+
+      // localStorage 클리어
+      clearLoginSession();
+
+      alert("회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.");
+      navigate("/login");
+    } catch (error) {
+      console.error("회원 탈퇴 실패:", error);
+      setWithdrawError("회원 탈퇴에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   // 인증 상태 확인 전에는 로딩 표시
@@ -280,9 +334,14 @@ const MorePage: React.FC = () => {
 
         {/* 로그인/로그아웃 버튼 */}
         {isLoggedIn ? (
-          <button onClick={handleLogout} className="logout-btn">
-            로그아웃
-          </button>
+          <>
+            <button onClick={handleLogout} className="logout-btn">
+              로그아웃
+            </button>
+            <button onClick={handleOpenWithdrawModal} className="withdraw-btn">
+              회원 탈퇴
+            </button>
+          </>
         ) : (
           <button onClick={handleLogin} className="login-btn">
             로그인
@@ -342,6 +401,101 @@ const MorePage: React.FC = () => {
             >
               확인
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 회원 탈퇴 확인 모달 */}
+      {showWithdrawModal && (
+        <div
+          className="withdraw-modal-overlay"
+          onClick={() => !isWithdrawing && setShowWithdrawModal(false)}
+        >
+          <div
+            className="withdraw-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="withdraw-modal__title">회원 탈퇴</h3>
+
+            {/* 로딩 중 */}
+            {!withdrawalCheck && !withdrawError && (
+              <div className="withdraw-modal__loading">
+                탈퇴 가능 여부를 확인하고 있습니다...
+              </div>
+            )}
+
+            {/* 에러 */}
+            {withdrawError && (
+              <div className="withdraw-modal__error">
+                {withdrawError}
+              </div>
+            )}
+
+            {/* 탈퇴 불가 (양도 필요한 클럽 있음) */}
+            {withdrawalCheck && !withdrawalCheck.canWithdraw && (
+              <div className="withdraw-modal__cannot">
+                <p className="withdraw-modal__reason">{withdrawalCheck.reason}</p>
+                <div className="withdraw-modal__clubs">
+                  <p className="withdraw-modal__clubs-title">소유권 양도가 필요한 클럽:</p>
+                  <ul>
+                    {withdrawalCheck.ownedClubsWithMembers?.map((club) => (
+                      <li key={club.clubId}>
+                        {club.clubName} (멤버 {club.memberCount}명)
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <p className="withdraw-modal__guide">
+                  클럽 관리 → 소유권 양도 메뉴에서 다른 멤버에게 소유권을 양도한 후 탈퇴할 수 있습니다.
+                </p>
+              </div>
+            )}
+
+            {/* 탈퇴 가능 */}
+            {withdrawalCheck?.canWithdraw && (
+              <div className="withdraw-modal__can">
+                <p className="withdraw-modal__warning">
+                  정말 탈퇴하시겠습니까? 탈퇴 후에는 복구할 수 없습니다.
+                </p>
+
+                {/* 삭제될 클럽 안내 */}
+                {withdrawalCheck.ownedClubsToDelete && withdrawalCheck.ownedClubsToDelete.length > 0 && (
+                  <div className="withdraw-modal__clubs withdraw-modal__clubs--delete">
+                    <p className="withdraw-modal__clubs-title">탈퇴 시 삭제될 클럽:</p>
+                    <ul>
+                      {withdrawalCheck.ownedClubsToDelete.map((club) => (
+                        <li key={club.clubId}>{club.clubName}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="withdraw-modal__info">
+                  <p>• 모든 클럽 멤버십이 삭제됩니다</p>
+                  <p>• 경기 기록은 익명화되어 유지됩니다</p>
+                  <p>• 작성한 게시글/댓글은 익명으로 표시됩니다</p>
+                </div>
+              </div>
+            )}
+
+            <div className="withdraw-modal__buttons">
+              <button
+                className="withdraw-modal__cancel-btn"
+                onClick={() => setShowWithdrawModal(false)}
+                disabled={isWithdrawing}
+              >
+                취소
+              </button>
+              {withdrawalCheck?.canWithdraw && (
+                <button
+                  className="withdraw-modal__confirm-btn"
+                  onClick={handleWithdraw}
+                  disabled={isWithdrawing}
+                >
+                  {isWithdrawing ? "처리 중..." : "탈퇴하기"}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

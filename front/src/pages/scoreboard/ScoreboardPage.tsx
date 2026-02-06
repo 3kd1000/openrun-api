@@ -54,6 +54,7 @@ const ScoreboardPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<"points" | "totalMatches" | "winRate">(
     "points"
   );
+  const [genderFilter, setGenderFilter] = useState<"" | "MALE" | "FEMALE">("");
 
   // Tab 2: Match search (with infinite scroll)
   const [matches, setMatches] = useState<Match[]>([]);
@@ -129,11 +130,21 @@ const ScoreboardPage: React.FC = () => {
       const startDate = new Date(selectedYear, 0, 1, 0, 0, 0).toISOString();
       const endDate = new Date(selectedYear, 11, 31, 23, 59, 59).toISOString();
 
-      const params = {
+      const params: {
+        startDate: string;
+        endDate: string;
+        sortBy: string;
+        gender?: string;
+      } = {
         startDate,
         endDate,
         sortBy,
       };
+
+      // 성별 필터가 선택된 경우에만 파라미터 추가
+      if (genderFilter) {
+        params.gender = genderFilter;
+      }
 
       const response = await axiosInstance.get<ScoreboardResponse>(
         `/clubs/${clubId}/scoreboard`,
@@ -147,7 +158,7 @@ const ScoreboardPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [clubId, selectedYear, sortBy]);
+  }, [clubId, selectedYear, sortBy, genderFilter]);
 
   // Tab 2: Fetch matches (페이징 지원)
   const fetchMatches = useCallback(
@@ -483,7 +494,7 @@ const ScoreboardPage: React.FC = () => {
       {/* Tab 1: Rankings */}
       {activeTab === "ranking" && (
         <div className="tab-content">
-          {/* 연도 및 정렬 필터 */}
+          {/* 연도, 성별 및 정렬 필터 */}
           <div className="ranking-filters">
             <div className="ranking-year-filter">
               <label>연도:</label>
@@ -510,6 +521,20 @@ const ScoreboardPage: React.FC = () => {
                     </option>
                   ));
                 })()}
+              </select>
+            </div>
+            <div className="ranking-gender-filter">
+              <label>성별:</label>
+              <select
+                value={genderFilter}
+                onChange={(e) => {
+                  setGenderFilter(e.target.value as "" | "MALE" | "FEMALE");
+                }}
+                className="gender-select"
+              >
+                <option value="">전체</option>
+                <option value="MALE">남성</option>
+                <option value="FEMALE">여성</option>
               </select>
             </div>
             <div className="ranking-sort-filter">

@@ -11,7 +11,7 @@ import { signInWithCustomToken } from "firebase/auth";
 import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
 import { syncClubList } from "../../services/api/userApi";
-import { getOpenRunSession, setOpenRunSession, hasJoinedClub } from "../../utils/openrunSession";
+import { getOpenRunSession, setOpenRunSession, hasJoinedClub, setAutoLoginEnabled as saveAutoLoginSetting } from "../../utils/openrunSession";
 
 interface UserInfo {
   id: number;
@@ -161,6 +161,8 @@ const LoginPage: React.FC = () => {
           userImageUrl: userInfo.imageUrl,
           autoLoginEnabled,
         });
+        // 자동 로그인 설정을 별도 키에도 저장 (세션 삭제와 무관하게 유지)
+        saveAutoLoginSetting(autoLoginEnabled);
 
         // 클럽 목록 동기화 (currentClubId 자동 설정)
         await syncClubList();
@@ -267,6 +269,8 @@ const LoginPage: React.FC = () => {
         userImageUrl: userInfo.imageUrl,
         autoLoginEnabled,
       });
+      // 자동 로그인 설정을 별도 키에도 저장 (세션 삭제와 무관하게 유지)
+      saveAutoLoginSetting(autoLoginEnabled);
 
       // 클럽 목록 동기화 (currentClubId 자동 설정)
       await syncClubList();
@@ -378,6 +382,8 @@ const LoginPage: React.FC = () => {
         userImageUrl: userInfo.imageUrl,
         autoLoginEnabled,
       });
+      // 자동 로그인 설정을 별도 키에도 저장 (세션 삭제와 무관하게 유지)
+      saveAutoLoginSetting(autoLoginEnabled);
 
       // 클럽 목록 동기화 (currentClubId 자동 설정)
       await syncClubList();

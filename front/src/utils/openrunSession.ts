@@ -8,6 +8,7 @@ import { normalizeClubRole, type ClubRoleOrUnknown } from "../utils/role";
  */
 
 export const OPENRUN_SESSION_KEY = "openrun_session_v1";
+export const OPENRUN_AUTO_LOGIN_KEY = "openrun_auto_login";
 
 export interface ClubSummary {
   id: number;
@@ -177,4 +178,24 @@ export function validateAndFixCurrentClub(): void {
 export function updateClubList(clubList: ClubSummary[]): void {
   setOpenRunSession({ clubList });
   validateAndFixCurrentClub();
+}
+
+/**
+ * 자동 로그인 설정 가져오기 (별도 키에 저장하여 세션 삭제와 무관하게 유지)
+ * 기본값: true (사용자 경험 개선을 위해 자동 로그인을 기본으로 함)
+ */
+export function getAutoLoginEnabled(): boolean {
+  const stored = localStorage.getItem(OPENRUN_AUTO_LOGIN_KEY);
+  // 저장된 값이 없으면 기본값 true 반환
+  if (stored === null) {
+    return true;
+  }
+  return stored === "true";
+}
+
+/**
+ * 자동 로그인 설정 저장 (별도 키에 저장)
+ */
+export function setAutoLoginEnabled(enabled: boolean): void {
+  localStorage.setItem(OPENRUN_AUTO_LOGIN_KEY, String(enabled));
 }

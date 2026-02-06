@@ -1,6 +1,8 @@
 package com.example.openrunapi.domain.audit.service;
 
 import com.example.openrunapi.domain.audit.repository.AuditLogRepository;
+import com.example.openrunapi.domain.batch.model.BatchJobHistory;
+import com.example.openrunapi.domain.batch.service.BatchJobHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +20,10 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AuditLogMaintenanceService {
 
+    public static final String JOB_NAME = "AUDIT_LOG_CLEANUP";
+
     private final AuditLogRepository auditLogRepository;
+    private final BatchJobHistoryService batchJobHistoryService;
 
     /**
      * 2년 보관 기간 (일 수)
@@ -32,23 +37,37 @@ public class AuditLogMaintenanceService {
     @Scheduled(cron = "0 30 3 * * *", zone = "Asia/Seoul")
     @Transactional
     public void cleanupOldAuditLogs() {
-        log.info("=== Audit Log TTL 정리 시작 ===");
+        BatchJobHistory history = batchJobHistoryService.startJob(JOB_NAME);
 
-        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(RETENTION_DAYS);
-        log.info("삭제 기준 날짜: {} ({}일 이전)", cutoffDate, RETENTION_DAYS);
+        try {
+            log.info("=== Audit Log TTL 정리 시작 ===");
 
-        // 삭제 대상 건수 조회
-        long countToDelete = auditLogRepository.countByCreatedAtBefore(cutoffDate);
-        log.info("삭제 대상: {} 건", countToDelete);
+            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(RETENTION_DAYS);
+            log.info("삭제 기준 날짜: {} ({}일 이전)", cutoffDate, RETENTION_DAYS);
 
-        if (countToDelete > 0) {
-            int deletedCount = auditLogRepository.deleteByCreatedAtBefore(cutoffDate);
-            log.info("삭제 완료: {} 건", deletedCount);
-        } else {
-            log.info("삭제할 데이터 없음");
+            // 삭제 대상 건수 조회
+            long countToDelete = auditLogRepository.countByCreatedAtBefore(cutoffDate);
+            log.info("삭제 대상: {} 건", countToDelete);
+
+            int deletedCount = 0;
+            if (countToDelete > 0) {
+                deletedCount = auditLogRepository.deleteByCreatedAtBefore(cutoffDate);
+                log.info("삭제 완료: {} 건", deletedCount);
+            } else {
+                log.info("삭제할 데이터 없음");
+            }
+
+            log.info("=== Audit Log TTL 정리 완료 ===");
+
+            // 성공 기록
+            String summary = String.format("{\"targetCount\":%d,\"deletedCount\":%d}", countToDelete, deletedCount);
+            batchJobHistoryService.markSuccess(history.getId(), summary);
+
+        } catch (Exception e) {
+            log.error("Audit Log 정리 실패", e);
+            batchJobHistoryService.markFailed(history.getId(), e.getMessage());
+            throw e;
         }
-
-        log.info("=== Audit Log TTL 정리 완료 ===");
     }
 
     /**

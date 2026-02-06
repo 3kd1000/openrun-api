@@ -33,4 +33,9 @@ public interface UserOAuthProviderRepository extends JpaRepository<UserOAuthProv
      * 특정 유저의 모든 OAuth 제공자 목록 조회
      */
     List<UserOAuthProvider> findByUserId(Long userId);
+
+    /**
+     * 탈퇴 시 사용자의 모든 OAuth 제공자 정보 삭제
+     */
+    void deleteByUserId(Long userId);
 }

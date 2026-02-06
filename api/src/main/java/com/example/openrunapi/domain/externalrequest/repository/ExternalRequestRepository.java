@@ -4,6 +4,9 @@ import com.example.openrunapi.domain.externalrequest.model.ExternalRequest;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequestStatus;
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequestType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -59,5 +62,12 @@ public interface ExternalRequestRepository extends JpaRepository<ExternalRequest
             Long requesterId,
             ExternalRequestType type
     );
+
+    /**
+     * 탈퇴한 사용자의 외부 요청 익명화 (requester_user_id를 null로 설정)
+     */
+    @Modifying
+    @Query("UPDATE ExternalRequest er SET er.requester = null WHERE er.requester.id = :userId")
+    void anonymizeByRequesterId(@Param("userId") Long userId);
 }
 
