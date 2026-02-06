@@ -64,4 +64,25 @@ public interface MatchRepository extends JpaRepository<Match, Long>, JpaSpecific
     @Modifying
     @Query("UPDATE Match m SET m.teamBPlayer2Id = null WHERE m.teamBPlayer2Id = :userId")
     void anonymizeTeamBPlayer2(@Param("userId") Long userId);
+
+    /**
+     * 특정 일정의 대진에 포함된 모든 userId 조회
+     * (대진 무효화 판단용)
+     */
+    @Query("SELECT DISTINCT CASE " +
+           "WHEN m.teamAPlayer1Id IS NOT NULL THEN m.teamAPlayer1Id " +
+           "WHEN m.teamAPlayer2Id IS NOT NULL THEN m.teamAPlayer2Id " +
+           "WHEN m.teamBPlayer1Id IS NOT NULL THEN m.teamBPlayer1Id " +
+           "ELSE m.teamBPlayer2Id END " +
+           "FROM Match m WHERE m.scheduleId = :scheduleId")
+    List<Long> findDistinctUserIdsByScheduleId(@Param("scheduleId") Long scheduleId);
+
+    /**
+     * 특정 일정의 대진에 특정 userId가 포함되어 있는지 확인
+     */
+    @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END FROM Match m " +
+           "WHERE m.scheduleId = :scheduleId AND (" +
+           "m.teamAPlayer1Id = :userId OR m.teamAPlayer2Id = :userId OR " +
+           "m.teamBPlayer1Id = :userId OR m.teamBPlayer2Id = :userId)")
+    boolean existsUserInDraw(@Param("scheduleId") Long scheduleId, @Param("userId") Long userId);
 }
