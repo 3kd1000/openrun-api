@@ -32,7 +32,7 @@ spec:
                     --fail \
                     --silent \
                     --show-error \
-                    "http://openrun-api-prod-service:8080/internal/batch/execute/SCHEDULE_MAINTENANCE"
+                    "http://openrun-api-production-service:8080/internal/batch/execute/SCHEDULE_MAINTENANCE"
               env:
                 - name: INTERNAL_BATCH_KEY
                   valueFrom:
@@ -71,7 +71,46 @@ spec:
                     --fail \
                     --silent \
                     --show-error \
-                    "http://openrun-api-prod-service:8080/internal/batch/execute/AUDIT_LOG_CLEANUP"
+                    "http://openrun-api-production-service:8080/internal/batch/execute/AUDIT_LOG_CLEANUP"
+              env:
+                - name: INTERNAL_BATCH_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: openrun-secrets-prod
+                      key: INTERNAL_BATCH_KEY
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-stats-collect
+  namespace: openrun
+spec:
+  # 매일 KST 00:05 (UTC 15:05) - 전날 통계 수집
+  schedule: "5 15 * * *"
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: batch-caller
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  curl -X POST \
+                    -H "X-Internal-Key: ${INTERNAL_BATCH_KEY}" \
+                    -H "Content-Type: application/json" \
+                    --fail \
+                    --silent \
+                    --show-error \
+                    "http://openrun-api-production-service:8080/internal/batch/execute/DAILY_STATS_COLLECT"
               env:
                 - name: INTERNAL_BATCH_KEY
                   valueFrom:

@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.batch.controller;
 
+import com.example.openrunapi.domain.admin.service.DailyStatsService;
 import com.example.openrunapi.domain.audit.service.AuditLogMaintenanceService;
 import com.example.openrunapi.domain.schedule.service.ScheduleMaintenanceService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class InternalBatchController {
 
     private final ScheduleMaintenanceService scheduleMaintenanceService;
     private final AuditLogMaintenanceService auditLogMaintenanceService;
+    private final DailyStatsService dailyStatsService;
 
     @Value("${openrun.internal.batch-key:}")
     private String batchKey;
@@ -73,6 +75,31 @@ public class InternalBatchController {
             return ResponseEntity.ok(Map.of("status", "success", "message", "Audit log cleanup completed"));
         } catch (Exception e) {
             log.error("[Internal Batch] 감사 로그 정리 배치 실행 실패", e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * 일별 통계 수집 배치 실행
+     * K8s CronJob: 매일 KST 00:05 (UTC 15:05)
+     */
+    @PostMapping("/execute/DAILY_STATS_COLLECT")
+    public ResponseEntity<Map<String, String>> executeDailyStatsCollect(
+            @RequestHeader(value = "X-Internal-Key", required = false) String internalKey) {
+
+        if (!validateInternalKey(internalKey)) {
+            log.warn("[Internal Batch] 인증 실패 - DAILY_STATS_COLLECT");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("status", "error", "message", "Unauthorized"));
+        }
+
+        log.info("[Internal Batch] 일별 통계 수집 배치 실행 시작");
+        try {
+            String result = dailyStatsService.collectDailyStats();
+            return ResponseEntity.ok(Map.of("status", "success", "message", result));
+        } catch (Exception e) {
+            log.error("[Internal Batch] 일별 통계 수집 배치 실행 실패", e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("status", "error", "message", e.getMessage()));
         }

@@ -22,6 +22,12 @@ const BATCH_JOBS = [
     description: "2년 이상 된 감사 로그 삭제",
     schedule: "매일 새벽 3시 30분 (KST)",
   },
+  {
+    name: "DAILY_STATS_COLLECT",
+    displayName: "일별 통계 수집",
+    description: "전날 기준 사용자/클럽 통계 수집 (DAU, WAU, MAU, 신규가입 등)",
+    schedule: "매일 자정 5분 (KST)",
+  },
 ];
 
 function BatchPage() {

@@ -1,7 +1,9 @@
 package com.example.openrunapi.domain.admin.controller;
 
+import com.example.openrunapi.domain.admin.model.dto.DailyStatsHistoryResponse;
 import com.example.openrunapi.domain.admin.model.dto.UserStatsResponse;
 import com.example.openrunapi.domain.admin.service.AdminUserService;
+import com.example.openrunapi.domain.admin.service.DailyStatsService;
 import com.example.openrunapi.domain.user.model.User;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -25,6 +27,7 @@ import java.util.Map;
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
+    private final DailyStatsService dailyStatsService;
 
     /**
      * 사용자 통계 조회 (대시보드용)
@@ -39,6 +42,23 @@ public class AdminUserController {
 
         UserStatsResponse stats = adminUserService.getUserStats();
         return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * 통계 히스토리 조회 (차트용)
+     * - 기간별 일일 통계 데이터
+     *
+     * @param period 조회 기간 (1M, 3M, 6M, 1Y) - 기본값 1M
+     */
+    @GetMapping("/stats/history")
+    public ResponseEntity<DailyStatsHistoryResponse> getStatsHistory(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "1M") String period) {
+
+        adminUserService.validateAdminAccess(userDetails.getUsername());
+
+        DailyStatsHistoryResponse history = dailyStatsService.getStatsHistory(period);
+        return ResponseEntity.ok(history);
     }
 
     /**
