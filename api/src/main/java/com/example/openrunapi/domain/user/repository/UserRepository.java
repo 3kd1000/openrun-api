@@ -36,4 +36,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT COUNT(u) FROM User u WHERE u.isGuest = false AND u.createdAt >= :since")
     long countNewUsersSince(@Param("since") LocalDateTime since);
+
+    /**
+     * 특정 날짜에 로그인한 사용자 수 (게스트 제외) - DAU 계산용
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE u.isGuest = false AND u.lastLoginAt >= :start AND u.lastLoginAt < :end")
+    long countActiveUsersBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    /**
+     * 특정 날짜에 가입한 사용자 수 (게스트 제외) - 일별 신규 가입자 계산용
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE u.isGuest = false AND u.createdAt >= :start AND u.createdAt < :end")
+    long countNewUsersBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

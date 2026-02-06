@@ -21,6 +21,7 @@ import {
   FileTextIcon,
   LinkIcon,
   MailIcon,
+  MegaphoneIcon,
   ScaleIcon,
   UsersIcon,
   UserIcon,
@@ -282,6 +283,15 @@ const MorePage: React.FC = () => {
         {/* 서비스 섹션 - 항상 표시 */}
         <div className="more-section">
           <h2>서비스</h2>
+          <div
+            className="more-item"
+            onClick={() => navigate("/intro")}
+          >
+            <span className="more-icon">
+              <MegaphoneIcon size={20} />
+            </span>
+            <span className="more-link">서비스 소개</span>
+          </div>
           <div
             className="more-item"
             onClick={() => navigate("/more/user-guide")}
