@@ -50,7 +50,8 @@ public class DailyStatsService {
             if (dailyStatsRepository.existsByRecordDate(targetDate)) {
                 String message = String.format("이미 수집된 날짜입니다: %s", targetDate);
                 log.info("[DailyStats] {}", message);
-                batchJobHistoryService.markSuccess(history.getId(), message);
+                String summary = String.format("{\"skipped\":true,\"reason\":\"already_collected\",\"date\":\"%s\"}", targetDate);
+                batchJobHistoryService.markSuccess(history.getId(), summary);
                 return message;
             }
 
@@ -87,14 +88,20 @@ public class DailyStatsService {
 
             dailyStatsRepository.save(stats);
 
-            String message = String.format(
+            String logMessage = String.format(
                     "통계 수집 완료 [%s] - 총사용자: %d, 총클럽: %d, DAU: %d, WAU: %d, MAU: %d, 신규가입: %d, 신규클럽: %d",
                     targetDate, totalUsers, totalClubs, dau, wau, mau, newUsers, newClubs
             );
-            log.info("[DailyStats] {}", message);
-            batchJobHistoryService.markSuccess(history.getId(), message);
+            log.info("[DailyStats] {}", logMessage);
 
-            return message;
+            // 배치 이력에는 JSON 형식으로 저장 (프론트엔드 파싱 호환)
+            String summary = String.format(
+                    "{\"totalUsers\":%d,\"totalClubs\":%d,\"DAU\":%d,\"WAU\":%d,\"MAU\":%d,\"newUsers\":%d,\"newClubs\":%d}",
+                    totalUsers, totalClubs, dau, wau, mau, newUsers, newClubs
+            );
+            batchJobHistoryService.markSuccess(history.getId(), summary);
+
+            return logMessage;
 
         } catch (Exception e) {
             log.error("[DailyStats] 통계 수집 실패", e);

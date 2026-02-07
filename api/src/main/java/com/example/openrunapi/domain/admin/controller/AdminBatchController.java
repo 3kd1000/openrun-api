@@ -2,6 +2,7 @@ package com.example.openrunapi.domain.admin.controller;
 
 import com.example.openrunapi.domain.admin.model.dto.BatchHistoryResponse;
 import com.example.openrunapi.domain.admin.service.AdminUserService;
+import com.example.openrunapi.domain.admin.service.DailyStatsService;
 import com.example.openrunapi.domain.audit.service.AuditLogMaintenanceService;
 import com.example.openrunapi.domain.batch.model.BatchJobHistory;
 import com.example.openrunapi.domain.batch.service.BatchJobHistoryService;
@@ -35,6 +36,7 @@ public class AdminBatchController {
     private final AdminUserService adminUserService;
     private final ScheduleMaintenanceService scheduleMaintenanceService;
     private final AuditLogMaintenanceService auditLogMaintenanceService;
+    private final DailyStatsService dailyStatsService;
 
     /**
      * 전체 배치 이력 조회 (페이징)
@@ -150,6 +152,31 @@ public class AdminBatchController {
             ));
         } catch (Exception e) {
             log.error("[Admin] 감사 로그 정리 배치 실행 실패", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "status", "error",
+                    "message", "배치 작업 실행 중 오류: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * 일별 통계 수집 배치 수동 실행
+     */
+    @PostMapping("/execute/DAILY_STATS_COLLECT")
+    public ResponseEntity<Map<String, String>> executeDailyStatsCollect(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        adminUserService.validateAdminAccess(userDetails.getUsername());
+        log.info("[Admin] 일별 통계 수집 배치 수동 실행 요청 by {}", userDetails.getUsername());
+
+        try {
+            String result = dailyStatsService.collectDailyStats();
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", result
+            ));
+        } catch (Exception e) {
+            log.error("[Admin] 일별 통계 수집 배치 실행 실패", e);
             return ResponseEntity.internalServerError().body(Map.of(
                     "status", "error",
                     "message", "배치 작업 실행 중 오류: " + e.getMessage()

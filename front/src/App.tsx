@@ -37,8 +37,6 @@ import IntroPage from "./pages/intro/IntroPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
-import { usePWAUpdate } from "./hooks/usePWAUpdate";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { AwardWinnersProvider } from "./contexts/AwardWinnersContext";
@@ -49,7 +47,6 @@ import "./App.css";
 
 function App() {
   const location = useLocation();
-  const { needRefresh, updateServiceWorker } = usePWAUpdate();
 
   // "/" 경로와 "/setup-profile", "/intro"에서는 Navigation 숨김
   const shouldShowNavigation =
@@ -278,10 +275,6 @@ function App() {
         {/* 네비게이션 바가 있을 때는 Footer 숨김 (네비게이션 바에 통합) */}
         {!shouldShowNavigation && <Footer />}
 
-        {/* PWA 주석 테스트*/}
-
-        {/* PWA 업데이트 프롬프트 주석 */}
-          {needRefresh && <PWAUpdatePrompt onUpdate={updateServiceWorker} />}
           </div>
           </AwardWinnersProvider>
           </NotificationProvider>
