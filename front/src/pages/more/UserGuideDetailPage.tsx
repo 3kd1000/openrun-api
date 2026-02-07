@@ -27,12 +27,12 @@ const guideCategoryData: Record<string, CategoryData> = {
         id: "gs-1",
         title: "앱 시작하기",
         description: "OpenRun에 오신 것을 환영합니다!",
-        imageSrc: "/assets/images/guide-getting-started-01.png",
+        imageSrc: "/getting-started/01_로그인.png",
         steps: [
           {
             number: 1,
-            text: "Google, 카카오, 네이버 계정으로 간편하게 로그인하세요.",
-            badgePosition: { top: "50%", left: "50%" },
+            text: "Google, 카카오 계정으로 간편하게 로그인하세요.",
+            badgePosition: { top: "29%", left: "21%" }
           },
         ],
       },
@@ -86,22 +86,11 @@ const UserGuideDetailPage: React.FC = () => {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const categoryData = category ? guideCategoryData[category] : null;
-
-  // 잘못된 카테고리 접근 시 가이드 메인으로 리다이렉트
-  useEffect(() => {
-    if (!categoryData) {
-      navigate("/more/user-guide", { replace: true });
-    }
-  }, [categoryData, navigate]);
-
-  if (!categoryData) {
-    return null;
-  }
-
-  const { title, slides } = categoryData;
+  const slides = categoryData?.slides ?? [];
+  const title = categoryData?.title ?? "";
   const currentSlide = slides[currentSlideIndex];
 
-  // --- Handlers ---
+  // --- Handlers (모든 훅은 early return 이전에 선언) ---
   const scrollToTop = useCallback(() => {
     if (contentRef.current) {
       contentRef.current.scrollTo({ top: 0, behavior: "smooth" });
@@ -119,6 +108,22 @@ const UserGuideDetailPage: React.FC = () => {
       setCurrentSlideIndex((prev) => prev - 1);
     }
   }, [currentSlideIndex]);
+
+  const handleBadgeClick = useCallback((stepNumber: number) => {
+    const element = document.getElementById(`step-desc-${stepNumber}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("active");
+      setTimeout(() => element.classList.remove("active"), 2000);
+    }
+  }, []);
+
+  // 잘못된 카테고리 접근 시 가이드 메인으로 리다이렉트
+  useEffect(() => {
+    if (category && !guideCategoryData[category]) {
+      navigate("/more/user-guide", { replace: true });
+    }
+  }, [category, navigate]);
 
   // Auto scroll to top when slide changes
   useEffect(() => {
@@ -142,14 +147,10 @@ const UserGuideDetailPage: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handlePrev, handleNext]);
 
-  const handleBadgeClick = (stepNumber: number) => {
-    const element = document.getElementById(`step-desc-${stepNumber}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      element.classList.add("active");
-      setTimeout(() => element.classList.remove("active"), 2000);
-    }
-  };
+  // 잘못된 카테고리면 렌더링 하지 않음
+  if (!categoryData) {
+    return null;
+  }
 
   return (
     <div className="ug-page">

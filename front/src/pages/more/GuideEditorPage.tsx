@@ -31,7 +31,7 @@ const GuideEditorPage: React.FC = () => {
       id: "editor-slide-1",
       title: "가이드 이미지 편집",
       description: "이미지를 클릭하면 해당 위치의 좌표가 복사됩니다.",
-      imageSrc: "/assets/images/guide-01-schedule-calendar.jpeg", // 편집할 이미지 경로
+      imageSrc: "/getting-started/01_로그인.png", // 편집할 이미지 경로
       steps: [
         {
           number: 1,
