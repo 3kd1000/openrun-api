@@ -82,7 +82,7 @@
   display: flex;
   gap: var(--button-gap);
   justify-content: flex-end;
-  padding-top: var(--space-l);
+  padding: var(--space-l) var(--space-l) var(--space-m) var(--space-l); /* 상하좌우 패딩 통일 */
   border-top: var(--border-width-thin) solid var(--color-border-secondary);
   margin-top: var(--space-l);
   position: sticky;
@@ -341,7 +341,7 @@
 
   .modal-actions {
     gap: var(--space-s);
-    padding-top: var(--space-s);
+    padding: var(--space-s) var(--space-m) var(--space-s) var(--space-m); /* 하단 패딩 유지 */
     margin-top: var(--space-s);
     flex-wrap: wrap;
   }

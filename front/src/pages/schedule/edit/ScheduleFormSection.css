@@ -95,6 +95,7 @@
   display: flex;
   gap: var(--space-m);
   margin-top: var(--space-xl);
+  padding-bottom: var(--space-m); /* 모달 하단 여백 */
 }
 
 .btn-secondary,

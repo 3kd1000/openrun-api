@@ -36,6 +36,17 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 사용자 활동 기록 업데이트
+     * - 앱 활성화 시 (토큰 갱신 후) 호출
+     * - DAU 집계에 사용됨
+     */
+    @PostMapping("/me/activity")
+    public ResponseEntity<Void> updateActivity(@AuthenticationPrincipal UserDetails userDetails) {
+        userService.updateActivity(userDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/me/profile")
     public ResponseEntity<UserProfileResponse> getMyProfile(@AuthenticationPrincipal UserDetails userDetails) {
         UserProfileResponse response = userService.getMyProfile(userDetails.getUsername());

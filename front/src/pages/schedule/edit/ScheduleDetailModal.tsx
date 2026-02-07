@@ -649,23 +649,16 @@ const ScheduleDetailModal: React.FC<Props> = ({
 
         {!isEditMode ? (
           <div className="schedule-detail-view">
-            {schedule.clubName && (
-              <div className="detail-item">
-                <label>클럽</label>
-                <p>{schedule.clubName}</p>
-              </div>
-            )}
+            {/* 코트명 + 코트수 한 줄로 */}
             <div className="detail-item">
               <label>코트명</label>
-              <p>{schedule.courtName}</p>
+              <p>
+                {schedule.courtName}
+                {schedule.numberOfCourts != null && schedule.numberOfCourts >= 1 && (
+                  <span className="detail-suffix"> ({schedule.numberOfCourts}면)</span>
+                )}
+              </p>
             </div>
-
-            {schedule.numberOfCourts != null && schedule.numberOfCourts >= 1 && (
-              <div className="detail-item">
-                <label>코트수</label>
-                <p>{schedule.numberOfCourts}면</p>
-              </div>
-            )}
 
             <div className="detail-item">
               <label>일정 시간</label>
@@ -677,24 +670,28 @@ const ScheduleDetailModal: React.FC<Props> = ({
               </p>
             </div>
 
+            {/* 모임타입 + 참가비용 한 줄로 (둘 중 하나라도 있으면 표시) */}
+            {(schedule.matchType || (isNotEmpty(schedule.cost) && schedule.cost !== undefined)) && (
+              <div className="detail-row">
+                {schedule.matchType && (
+                  <div className="detail-item detail-item--compact">
+                    <label>모임 타입</label>
+                    <p>{getMatchTypeLabel(schedule.matchType)}</p>
+                  </div>
+                )}
+                {isNotEmpty(schedule.cost) && schedule.cost !== undefined && (
+                  <div className="detail-item detail-item--compact">
+                    <label>참가 비용</label>
+                    <p>{schedule.cost.toLocaleString()}원</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {schedule.reservedByUserName && (
               <div className="detail-item">
                 <label>예약자</label>
                 <p>{schedule.reservedByUserName}</p>
-              </div>
-            )}
-
-            {schedule.matchType && (
-              <div className="detail-item">
-                <label>모임 타입</label>
-                <p>{getMatchTypeLabel(schedule.matchType)}</p>
-              </div>
-            )}
-
-            {isNotEmpty(schedule.cost) && schedule.cost !== undefined && (
-              <div className="detail-item">
-                <label>참가 비용</label>
-                <p>{schedule.cost.toLocaleString()}원</p>
               </div>
             )}
 

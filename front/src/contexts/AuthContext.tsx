@@ -23,7 +23,7 @@ import {
   getAutoLoginEnabled,
 } from "../utils/openrunSession";
 import { authBridge } from "../services/authBridge";
-import { getCurrentUser } from "../services/api/userApi";
+import { getCurrentUser, updateUserActivity } from "../services/api/userApi";
 
 interface AuthContextType {
   isAuthReady: boolean; // Firebase 인증 상태 복원 완료 여부
@@ -72,6 +72,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
     []
   );
+
+  /**
+   * 사용자 활동 기록 업데이트 (DAU 집계용)
+   * 하루에 한 번만 호출되도록 localStorage로 제어
+   */
+  const recordUserActivity = async () => {
+    const ACTIVITY_KEY = "last_activity_recorded";
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const lastRecorded = localStorage.getItem(ACTIVITY_KEY);
+
+    if (lastRecorded === today) {
+      return; // 오늘 이미 기록함
+    }
+
+    try {
+      await updateUserActivity();
+      localStorage.setItem(ACTIVITY_KEY, today);
+      console.log(`📊 [${getTimestamp()}] 사용자 활동 기록 완료 (DAU 집계용)`);
+    } catch (error) {
+      // 실패해도 무시 (다음 기회에 재시도)
+      console.warn(`⚠️ [${getTimestamp()}] 활동 기록 실패 (무시):`, error);
+    }
+  };
 
   /**
    * 세션에 userId가 없으면 /users/me API로 복원
@@ -175,6 +198,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           );
           console.log(`   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`);
           console.log(`   → 로그인 세션 만료: ${loginExpiry} (30일 후)`);
+
+          // 활동 기록 업데이트 (DAU 집계용)
+          await recordUserActivity();
 
           return;
         } catch (error) {
@@ -292,6 +318,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     `   → 토큰 만료 예상: ${tokenExpiryStr} (약 1시간 후)`
                   );
                   console.log(`   → 로그인 세션 만료: ${loginExpiry} (30일 후)`);
+
+                  // 활동 기록 업데이트 (DAU 집계용)
+                  await recordUserActivity();
 
                   tokenRefreshSuccess = true;
                 } catch (error) {

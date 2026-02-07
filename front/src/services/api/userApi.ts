@@ -74,6 +74,15 @@ export const getCurrentUser = async (): Promise<UserProfile> => {
 };
 
 /**
+ * 사용자 활동 기록 업데이트
+ * - 앱 활성화 시 (토큰 갱신 후) 호출
+ * - DAU 집계에 사용됨
+ */
+export const updateUserActivity = async (): Promise<void> => {
+  await axiosInstance.post('/users/me/activity');
+};
+
+/**
  * 사용자 정보 수정
  */
 export const updateUser = async (data: UpdateUserRequest): Promise<UserProfile> => {
