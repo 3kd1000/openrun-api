@@ -2,7 +2,11 @@ package com.example.openrunapi.domain.batch.controller;
 
 import com.example.openrunapi.domain.admin.service.DailyStatsService;
 import com.example.openrunapi.domain.audit.service.AuditLogMaintenanceService;
+import com.example.openrunapi.domain.batch.model.BatchJobStatus;
+import com.example.openrunapi.domain.batch.service.BatchJobHistoryService;
 import com.example.openrunapi.domain.schedule.service.ScheduleMaintenanceService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +30,8 @@ public class InternalBatchController {
     private final ScheduleMaintenanceService scheduleMaintenanceService;
     private final AuditLogMaintenanceService auditLogMaintenanceService;
     private final DailyStatsService dailyStatsService;
+    private final BatchJobHistoryService batchJobHistoryService;
+    private final ObjectMapper objectMapper;
 
     @Value("${openrun.internal.batch-key:}")
     private String batchKey;
@@ -100,6 +106,70 @@ public class InternalBatchController {
             return ResponseEntity.ok(Map.of("status", "success", "message", result));
         } catch (Exception e) {
             log.error("[Internal Batch] 일별 통계 수집 배치 실행 실패", e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * 이미지 정리 작업 결과 보고
+     * K8s CronJob에서 이미지 정리 완료 후 호출
+     *
+     * @param request 보고 데이터
+     *                - status: SUCCESS/FAILED
+     *                - beforeCount: 정리 전 이미지 수
+     *                - afterCount: 정리 후 이미지 수
+     *                - deletedCount: 삭제된 이미지 수
+     *                - durationMs: 작업 소요 시간 (ms)
+     *                - errorMessage: 에러 메시지 (실패 시)
+     */
+    @PostMapping("/report/IMAGE_CLEANUP")
+    public ResponseEntity<Map<String, String>> reportImageCleanup(
+            @RequestHeader(value = "X-Internal-Key", required = false) String internalKey,
+            @RequestBody Map<String, Object> request) {
+
+        if (!validateInternalKey(internalKey)) {
+            log.warn("[Internal Batch] 인증 실패 - IMAGE_CLEANUP report");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("status", "error", "message", "Unauthorized"));
+        }
+
+        log.info("[Internal Batch] 이미지 정리 결과 보고: {}", request);
+
+        try {
+            String statusStr = (String) request.getOrDefault("status", "SUCCESS");
+            BatchJobStatus status = "FAILED".equalsIgnoreCase(statusStr)
+                    ? BatchJobStatus.FAILED
+                    : BatchJobStatus.SUCCESS;
+
+            // 결과 요약 생성
+            Map<String, Object> summary = Map.of(
+                    "beforeCount", request.getOrDefault("beforeCount", 0),
+                    "afterCount", request.getOrDefault("afterCount", 0),
+                    "deletedCount", request.getOrDefault("deletedCount", 0)
+            );
+            String resultSummary = objectMapper.writeValueAsString(summary);
+
+            String errorMessage = (String) request.get("errorMessage");
+            Long durationMs = request.get("durationMs") != null
+                    ? ((Number) request.get("durationMs")).longValue()
+                    : null;
+
+            batchJobHistoryService.reportExternalJob(
+                    "IMAGE_CLEANUP",
+                    status,
+                    resultSummary,
+                    errorMessage,
+                    durationMs
+            );
+
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Report received"));
+        } catch (JsonProcessingException e) {
+            log.error("[Internal Batch] 결과 직렬화 실패", e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("status", "error", "message", "Failed to process result"));
+        } catch (Exception e) {
+            log.error("[Internal Batch] 이미지 정리 결과 보고 실패", e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("status", "error", "message", e.getMessage()));
         }

@@ -15,18 +15,28 @@ const BATCH_JOBS = [
     displayName: "일정 유지보수",
     description: "과거 일정의 고정/게스트모집/교류전모집 플래그 OFF + 클럽 활동 요약 업데이트",
     schedule: "매일 새벽 3시 (KST)",
+    canExecute: true,
   },
   {
     name: "AUDIT_LOG_CLEANUP",
     displayName: "감사 로그 정리",
     description: "2년 이상 된 감사 로그 삭제",
     schedule: "매일 새벽 3시 30분 (KST)",
+    canExecute: true,
   },
   {
     name: "DAILY_STATS_COLLECT",
     displayName: "일별 통계 수집",
     description: "전날 기준 사용자/클럽 통계 수집 (DAU, WAU, MAU, 신규가입 등)",
     schedule: "매일 자정 5분 (KST)",
+    canExecute: true,
+  },
+  {
+    name: "IMAGE_CLEANUP",
+    displayName: "이미지 정리",
+    description: "K8s containerd 이미지 정리 (openrun 이미지 최근 3개만 유지)",
+    schedule: "매일 새벽 3시 (KST)",
+    canExecute: false,  // 노드 레벨 작업이라 API에서 실행 불가
   },
 ];
 
@@ -141,13 +151,17 @@ function BatchPage() {
             <div key={job.name} className="batch-job-card">
               <div className="batch-job-card__header">
                 <h4>{job.displayName}</h4>
-                <button
-                  className="batch-execute-btn"
-                  onClick={() => handleExecute(job.name)}
-                  disabled={executing !== null}
-                >
-                  {executing === job.name ? "실행중..." : "즉시 실행"}
-                </button>
+                {job.canExecute ? (
+                  <button
+                    className="batch-execute-btn"
+                    onClick={() => handleExecute(job.name)}
+                    disabled={executing !== null}
+                  >
+                    {executing === job.name ? "실행중..." : "즉시 실행"}
+                  </button>
+                ) : (
+                  <span className="batch-external-badge">외부 실행</span>
+                )}
               </div>
               <p className="batch-job-card__description">{job.description}</p>
               <div className="batch-job-card__schedule">

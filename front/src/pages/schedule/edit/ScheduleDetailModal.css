@@ -91,6 +91,24 @@
   color: var(--color-text-secondary);
 }
 
+/* 두 개의 detail-item을 한 줄에 배치 */
+.detail-row {
+  display: flex;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.detail-item--compact {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* 코트수 같은 부가 정보 스타일 */
+.detail-suffix {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-normal);
+}
+
 /* ========== 모집 메시지 입력 섹션 ========== */
 .recruit-note-section {
   display: flex;
@@ -589,9 +607,9 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* 모달 액션 (border-top 제거) */
+/* 모달 액션 (border-top 제거, 하단 여백 유지) */
 .schedule-detail-view .modal-actions {
-  padding: 0;
+  padding: var(--space-m) 0; /* 상하 여백 유지, 좌우는 view에서 처리 */
   border-top: none;
 }
 
@@ -949,6 +967,7 @@
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: stretch;
+    padding: var(--space-m) var(--space-s); /* 하단 여백 유지 */
   }
 
   .schedule-detail-view .btn-cancel-participation,

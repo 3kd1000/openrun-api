@@ -94,4 +94,44 @@ public class BatchJobHistoryService {
     public List<BatchJobHistory> getRecentHistory(String jobName) {
         return batchJobHistoryRepository.findTop10ByJobNameOrderByStartedAtDesc(jobName);
     }
+
+    /**
+     * 외부 작업 결과 보고 (K8s CronJob 등에서 호출)
+     * - 시작/종료를 한 번에 기록
+     *
+     * @param jobName       작업명
+     * @param status        작업 결과 상태
+     * @param resultSummary 결과 요약 (JSON 형식)
+     * @param errorMessage  에러 메시지 (실패 시)
+     * @param durationMs    작업 소요 시간 (ms)
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BatchJobHistory reportExternalJob(
+            String jobName,
+            BatchJobStatus status,
+            String resultSummary,
+            String errorMessage,
+            Long durationMs) {
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startedAt = durationMs != null
+                ? now.minusNanos(durationMs * 1_000_000)
+                : now;
+
+        BatchJobHistory history = BatchJobHistory.builder()
+                .jobName(jobName)
+                .status(status)
+                .startedAt(startedAt)
+                .build();
+
+        if (status == BatchJobStatus.SUCCESS) {
+            history.markSuccess(resultSummary);
+        } else if (status == BatchJobStatus.FAILED) {
+            history.markFailed(errorMessage);
+        }
+
+        BatchJobHistory saved = batchJobHistoryRepository.save(history);
+        log.info("[외부 배치 보고] {} - {} ({}ms)", jobName, status, durationMs);
+        return saved;
+    }
 }

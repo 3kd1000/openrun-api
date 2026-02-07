@@ -84,6 +84,9 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt; // 마지막 로그인 시각
 
+    @Column(name = "last_active_at")
+    private LocalDateTime lastActiveAt; // 마지막 활동 시각 (토큰 갱신/앱 활성화 시 업데이트)
+
     @Column(name = "region_depth1", length = 20)
     private String regionDepth1; // 시/도 (예: 서울특별시, 경기도)
 
@@ -134,6 +137,14 @@ public class User {
     public void updateLastLogin(String provider, LocalDateTime loginTime) {
         this.lastLoginProvider = provider;
         this.lastLoginAt = loginTime;
+        this.lastActiveAt = loginTime; // 로그인 시에도 활동 시각 업데이트
+    }
+
+    /**
+     * 마지막 활동 시각 업데이트 (앱 활성화, 토큰 갱신 시)
+     */
+    public void updateLastActive(LocalDateTime activeTime) {
+        this.lastActiveAt = activeTime;
     }
 
     /**

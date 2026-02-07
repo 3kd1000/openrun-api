@@ -26,9 +26,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countNonGuestUsers();
 
     /**
-     * 특정 기간 내에 로그인한 사용자 수 (게스트 제외)
+     * 특정 기간 내에 활동한 사용자 수 (게스트 제외)
+     * lastActiveAt 기준 - 로그인 + 앱 재활성화/토큰 갱신 포함
      */
-    @Query("SELECT COUNT(u) FROM User u WHERE u.isGuest = false AND u.lastLoginAt >= :since")
+    @Query("SELECT COUNT(u) FROM User u WHERE u.isGuest = false AND u.lastActiveAt >= :since")
     long countActiveUsersSince(@Param("since") LocalDateTime since);
 
     /**
@@ -38,9 +39,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countNewUsersSince(@Param("since") LocalDateTime since);
 
     /**
-     * 특정 날짜에 로그인한 사용자 수 (게스트 제외) - DAU 계산용
+     * 특정 날짜에 활동한 사용자 수 (게스트 제외) - DAU 계산용
+     * lastActiveAt 기준 - 로그인 + 앱 재활성화/토큰 갱신 포함
      */
-    @Query("SELECT COUNT(u) FROM User u WHERE u.isGuest = false AND u.lastLoginAt >= :start AND u.lastLoginAt < :end")
+    @Query("SELECT COUNT(u) FROM User u WHERE u.isGuest = false AND u.lastActiveAt >= :start AND u.lastActiveAt < :end")
     long countActiveUsersBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     /**

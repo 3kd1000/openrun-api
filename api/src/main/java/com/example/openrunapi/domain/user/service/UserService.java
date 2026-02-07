@@ -124,6 +124,17 @@ public class UserService implements UserDetailsService {
         return new UserResponse(user);
     }
 
+    /**
+     * 사용자 활동 시각 업데이트 (앱 활성화, 토큰 갱신 시 호출)
+     * DAU 집계에 사용됨
+     */
+    @Transactional
+    public void updateActivity(String uid) {
+        User user = oauthService.findUserByProviderUid(uid)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with uid: " + uid));
+        user.updateLastActive(java.time.LocalDateTime.now());
+    }
+
     @Transactional
     public UserResponse updateUser(String uid, UpdateUserRequest request) {
         User user = oauthService.findUserByProviderUid(uid)
