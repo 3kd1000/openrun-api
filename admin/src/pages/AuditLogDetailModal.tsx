@@ -26,6 +26,38 @@ function AuditLogDetailModal({ log, onClose }: Props) {
     [log.entityType]
   );
 
+  // Schedule 관련 정보 추출
+  const scheduleInfo = useMemo(() => {
+    if (log.entityType !== "SCHEDULE" && log.entityType !== "SCHEDULE_PARTICIPANT") {
+      return null;
+    }
+
+    // 데이터 소스: after (CREATE/UPDATE) 또는 before (DELETE)
+    const data = changes.after || changes.before;
+    if (!data) return null;
+
+    const scheduledAt = data.scheduledAt as string | undefined;
+    const courtName = data.courtName as string | undefined;
+    const scheduleId = data.scheduleId as number | undefined; // SCHEDULE_PARTICIPANT인 경우
+
+    // SCHEDULE_PARTICIPANT인 경우 scheduleId 정보 추가
+    if (log.entityType === "SCHEDULE_PARTICIPANT" && scheduleId) {
+      return {
+        scheduleId,
+        scheduledAt: null,
+        courtName: null,
+      };
+    }
+
+    if (!scheduledAt && !courtName) return null;
+
+    return {
+      scheduleId: log.entityId,
+      scheduledAt: scheduledAt ? formatFullDateTime(scheduledAt) : null,
+      courtName: courtName || null,
+    };
+  }, [log.entityType, log.entityId, changes]);
+
   const getActionLabel = () => {
     switch (log.actionType) {
       case "CREATE":
@@ -108,6 +140,27 @@ function AuditLogDetailModal({ log, onClose }: Props) {
               <span>{formatFullDateTime(log.createdAt)}</span>
             </div>
           </div>
+
+          {/* Schedule 관련 정보 표시 */}
+          {scheduleInfo && (scheduleInfo.scheduledAt || scheduleInfo.courtName) && (
+            <div className="audit-detail__schedule-info">
+              <h4 className="audit-detail__section-title">일정 정보</h4>
+              <div className="schedule-info-box">
+                {scheduleInfo.scheduledAt && (
+                  <div className="schedule-info-item">
+                    <span className="schedule-info-label">모임 일시:</span>
+                    <span className="schedule-info-value">{scheduleInfo.scheduledAt}</span>
+                  </div>
+                )}
+                {scheduleInfo.courtName && (
+                  <div className="schedule-info-item">
+                    <span className="schedule-info-label">코트:</span>
+                    <span className="schedule-info-value">{scheduleInfo.courtName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {frontendUrl && (
             <div className="audit-detail__link-section">

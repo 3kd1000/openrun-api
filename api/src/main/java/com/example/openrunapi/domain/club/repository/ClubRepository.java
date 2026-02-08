@@ -27,4 +27,10 @@ public interface ClubRepository extends JpaRepository<Club, Long>, JpaSpecificat
      */
     @Query("SELECT COUNT(c) FROM Club c WHERE c.createdAt >= :since")
     long countNewClubsSince(@Param("since") LocalDateTime since);
+
+    /**
+     * 클럽 이름으로 검색 (LIKE 검색, Admin용)
+     */
+    @Query("SELECT c FROM Club c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY c.name")
+    List<Club> searchByName(@Param("keyword") String keyword);
 }

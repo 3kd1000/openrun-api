@@ -167,3 +167,37 @@
 .audit-detail__link-btn:hover {
   background-color: #1565c0;
 }
+
+/* Schedule Info Section */
+.audit-detail__schedule-info {
+  margin-bottom: 16px;
+}
+
+.schedule-info-box {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.schedule-info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.schedule-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.schedule-info-label {
+  font-weight: 600;
+  color: #1565c0;
+  min-width: 80px;
+  margin-right: 12px;
+}
+
+.schedule-info-value {
+  color: #333;
+  font-size: 0.9375rem;
+}
