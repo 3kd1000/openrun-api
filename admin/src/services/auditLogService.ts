@@ -20,6 +20,9 @@ export interface AuditLogResponse {
   clubId: number;
   clubName: string;
   createdAt: string;
+  // Schedule 관련 정보 (SCHEDULE, SCHEDULE_PARTICIPANT 타입용)
+  scheduledAt: string | null;
+  courtName: string | null;
 }
 
 export interface AuditLogChanges {

@@ -25,6 +25,10 @@ public class AuditLogResponse {
     private String clubName;  // 조인해서 가져올 경우
     private LocalDateTime createdAt;
 
+    // Schedule 관련 정보 (SCHEDULE, SCHEDULE_PARTICIPANT 타입용)
+    private LocalDateTime scheduledAt;
+    private String courtName;
+
     public static AuditLogResponse from(AuditLog auditLog) {
         return AuditLogResponse.builder()
                 .id(auditLog.getId())
@@ -50,6 +54,24 @@ public class AuditLogResponse {
                 .clubId(auditLog.getClubId())
                 .clubName(clubName)
                 .createdAt(auditLog.getCreatedAt())
+                .build();
+    }
+
+    public static AuditLogResponse from(AuditLog auditLog, String userName, String clubName,
+                                         LocalDateTime scheduledAt, String courtName) {
+        return AuditLogResponse.builder()
+                .id(auditLog.getId())
+                .userId(auditLog.getUserId())
+                .userName(userName)
+                .entityType(auditLog.getEntityType())
+                .entityId(auditLog.getEntityId())
+                .actionType(auditLog.getActionType())
+                .changes(auditLog.getChanges())
+                .clubId(auditLog.getClubId())
+                .clubName(clubName)
+                .createdAt(auditLog.getCreatedAt())
+                .scheduledAt(scheduledAt)
+                .courtName(courtName)
                 .build();
     }
 }

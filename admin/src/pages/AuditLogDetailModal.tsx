@@ -26,28 +26,19 @@ function AuditLogDetailModal({ log, onClose }: Props) {
     [log.entityType]
   );
 
-  // Schedule 관련 정보 추출 (SCHEDULE, SCHEDULE_PARTICIPANT 모두)
+  // Schedule 관련 정보 (API 응답에서 직접 사용)
   const scheduleInfo = useMemo(() => {
     if (log.entityType !== "SCHEDULE" && log.entityType !== "SCHEDULE_PARTICIPANT") {
       return null;
     }
 
-    // 데이터 소스: after (CREATE/UPDATE) 또는 before (DELETE)
-    const data = changes.after || changes.before;
-    if (!data) return null;
-
-    const scheduledAt = data.scheduledAt as string | undefined;
-    const courtName = data.courtName as string | undefined;
-    const scheduleId = data.scheduleId as number | undefined;
-
-    if (!scheduledAt && !courtName) return null;
+    if (!log.scheduledAt && !log.courtName) return null;
 
     return {
-      scheduleId: log.entityType === "SCHEDULE_PARTICIPANT" ? scheduleId : log.entityId,
-      scheduledAt: scheduledAt ? formatFullDateTime(scheduledAt) : null,
-      courtName: courtName || null,
+      scheduledAt: log.scheduledAt ? formatFullDateTime(log.scheduledAt) : null,
+      courtName: log.courtName || null,
     };
-  }, [log.entityType, log.entityId, changes]);
+  }, [log.entityType, log.scheduledAt, log.courtName]);
 
   const getActionLabel = () => {
     switch (log.actionType) {
