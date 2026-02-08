@@ -136,22 +136,34 @@ spec:
           mountPath: /app/config
           readOnly: true
 
+        # === Startup Probe (앱 시작 완료까지 대기) ===
+        # OCI Free Tier에서 Spring Boot 시작이 느리므로 충분한 시간 확보
+        # 최대 대기 시간: 10초 * 30회 = 300초 (5분)
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: {{ .Values.service.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+
         # === Health Check (Liveness Probe) ===
+        # startupProbe 성공 후에만 실행됨
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
             port: {{ .Values.service.port }}
-          initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 5
           failureThreshold: 3
 
         # === Health Check (Readiness Probe) ===
+        # startupProbe 성공 후에만 실행됨
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
             port: {{ .Values.service.port }}
-          initialDelaySeconds: 90
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3

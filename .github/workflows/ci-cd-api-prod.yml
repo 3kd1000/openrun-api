@@ -89,12 +89,12 @@ jobs:
               --set image.tag=${{ github.sha }} \
               -n openrun \
               --wait \
-              --timeout 5m
+              --timeout 8m
 
             # 강제로 Pod 재시작하여 새 이미지 Pull
             echo "=== Restarting API Deployment ==="
             kubectl rollout restart deployment/openrun-api-production -n openrun
-            kubectl rollout status deployment/openrun-api-production -n openrun --timeout=5m
+            kubectl rollout status deployment/openrun-api-production -n openrun --timeout=8m
 
             # 배포 상태 확인
             echo "=== API Production Deployment Status ==="

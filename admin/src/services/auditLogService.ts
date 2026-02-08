@@ -76,3 +76,21 @@ export function parseChanges(changesJson: string): AuditLogChanges {
     return {};
   }
 }
+
+/**
+ * 클럽 간단 정보 (필터링용)
+ */
+export interface ClubSimple {
+  id: number;
+  name: string;
+  regionDepth1: string;
+  regionDepth2: string;
+}
+
+/**
+ * 모든 클럽 조회 (Admin용, 로컬 필터링)
+ */
+export async function getAllClubs(): Promise<ClubSimple[]> {
+  const { data } = await api.get<ClubSimple[]>("/admin/clubs/all");
+  return data;
+}
