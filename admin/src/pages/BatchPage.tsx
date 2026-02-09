@@ -6,6 +6,7 @@ import {
   type BatchJobStatus,
   type PageResponse,
 } from "../services/batchHistoryService";
+import { formatDateTimeShortKST } from "../utils/dateTimeUtils";
 import "./BatchPage.css";
 
 // 배치 작업 정의
@@ -109,19 +110,6 @@ function BatchPage() {
     return `${(durationMs / 1000).toFixed(1)}s`;
   };
 
-  const formatDateTime = (dateTimeStr: string | null): string => {
-    if (!dateTimeStr) return "-";
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
   const getJobDisplayName = (jobName: string): string => {
     const job = BATCH_JOBS.find((j) => j.name === jobName);
     return job?.displayName || jobName;
@@ -211,7 +199,7 @@ function BatchPage() {
                       <tr key={item.id} className={item.status === "FAILED" ? "row-failed" : ""}>
                         <td>{getJobDisplayName(item.jobName)}</td>
                         <td>{getStatusBadge(item.status)}</td>
-                        <td>{formatDateTime(item.startedAt)}</td>
+                        <td>{formatDateTimeShortKST(item.startedAt)}</td>
                         <td>{formatDuration(item.durationMs)}</td>
                         <td className="result-cell">
                           {item.errorMessage ? (

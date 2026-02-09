@@ -23,6 +23,7 @@ export interface AuditLogResponse {
   // Schedule 관련 정보 (SCHEDULE, SCHEDULE_PARTICIPANT 타입용)
   scheduledAt: string | null;
   courtName: string | null;
+  durationMinutes: number | null;
 }
 
 export interface AuditLogChanges {
