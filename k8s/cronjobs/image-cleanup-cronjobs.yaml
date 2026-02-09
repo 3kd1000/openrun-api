@@ -26,10 +26,13 @@ spec:
           - name: cleanup
             image: alpine:3.19
             env:
+              # kube-system namespace에 별도 secret 필요:
+              # kubectl create secret generic openrun-batch-key \
+              #   --from-literal=INTERNAL_BATCH_KEY=<값> -n kube-system
               - name: INTERNAL_BATCH_KEY
                 valueFrom:
                   secretKeyRef:
-                    name: openrun-secrets-prod
+                    name: openrun-batch-key
                     key: INTERNAL_BATCH_KEY
                     optional: true
             command:

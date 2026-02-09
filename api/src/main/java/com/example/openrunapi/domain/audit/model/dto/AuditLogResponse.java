@@ -28,6 +28,7 @@ public class AuditLogResponse {
     // Schedule 관련 정보 (SCHEDULE, SCHEDULE_PARTICIPANT 타입용)
     private LocalDateTime scheduledAt;
     private String courtName;
+    private Integer durationMinutes;
 
     public static AuditLogResponse from(AuditLog auditLog) {
         return AuditLogResponse.builder()
@@ -58,7 +59,7 @@ public class AuditLogResponse {
     }
 
     public static AuditLogResponse from(AuditLog auditLog, String userName, String clubName,
-                                         LocalDateTime scheduledAt, String courtName) {
+                                         LocalDateTime scheduledAt, String courtName, Integer durationMinutes) {
         return AuditLogResponse.builder()
                 .id(auditLog.getId())
                 .userId(auditLog.getUserId())
@@ -72,6 +73,7 @@ public class AuditLogResponse {
                 .createdAt(auditLog.getCreatedAt())
                 .scheduledAt(scheduledAt)
                 .courtName(courtName)
+                .durationMinutes(durationMinutes)
                 .build();
     }
 }

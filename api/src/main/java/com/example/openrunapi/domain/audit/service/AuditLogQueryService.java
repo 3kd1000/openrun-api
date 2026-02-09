@@ -81,12 +81,14 @@ public class AuditLogQueryService {
         // Schedule 정보 조회
         LocalDateTime scheduledAt = null;
         String courtName = null;
+        Integer durationMinutes = null;
 
         if (auditLog.getEntityType() == AuditEntityType.SCHEDULE) {
             Schedule schedule = scheduleRepository.findById(auditLog.getEntityId()).orElse(null);
             if (schedule != null) {
                 scheduledAt = schedule.getScheduledAt();
                 courtName = schedule.getCourtName();
+                durationMinutes = schedule.getDurationMinutes();
             }
         } else if (auditLog.getEntityType() == AuditEntityType.SCHEDULE_PARTICIPANT) {
             Long scheduleId = extractScheduleIdFromChanges(auditLog.getChanges());
@@ -95,11 +97,12 @@ public class AuditLogQueryService {
                 if (schedule != null) {
                     scheduledAt = schedule.getScheduledAt();
                     courtName = schedule.getCourtName();
+                    durationMinutes = schedule.getDurationMinutes();
                 }
             }
         }
 
-        return AuditLogResponse.from(auditLog, userName, clubName, scheduledAt, courtName);
+        return AuditLogResponse.from(auditLog, userName, clubName, scheduledAt, courtName, durationMinutes);
     }
 
     // === Private Helper Methods ===
@@ -216,12 +219,14 @@ public class AuditLogQueryService {
                                             Map<Long, Schedule> scheduleMap) {
         LocalDateTime scheduledAt = null;
         String courtName = null;
+        Integer durationMinutes = null;
 
         if (log.getEntityType() == AuditEntityType.SCHEDULE) {
             Schedule schedule = scheduleMap.get(log.getEntityId());
             if (schedule != null) {
                 scheduledAt = schedule.getScheduledAt();
                 courtName = schedule.getCourtName();
+                durationMinutes = schedule.getDurationMinutes();
             }
         } else if (log.getEntityType() == AuditEntityType.SCHEDULE_PARTICIPANT) {
             Long scheduleId = extractScheduleIdFromChanges(log.getChanges());
@@ -230,6 +235,7 @@ public class AuditLogQueryService {
                 if (schedule != null) {
                     scheduledAt = schedule.getScheduledAt();
                     courtName = schedule.getCourtName();
+                    durationMinutes = schedule.getDurationMinutes();
                 }
             }
         }
@@ -238,6 +244,7 @@ public class AuditLogQueryService {
                 userNameMap.getOrDefault(log.getUserId(), "Unknown"),
                 clubNameMap.getOrDefault(log.getClubId(), "Unknown"),
                 scheduledAt,
-                courtName);
+                courtName,
+                durationMinutes);
     }
 }

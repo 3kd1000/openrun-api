@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { parseChanges } from "../services/auditLogService";
 import type { AuditLogResponse } from "../services/auditLogService";
-import { formatFullDateTime } from "../utils/dateUtils";
+import {
+  formatDateTimeKST,
+  formatScheduleTimeRangeKST,
+} from "../utils/dateTimeUtils";
 import {
   buildFrontendRoute,
   getFrontendLinkLabel,
@@ -35,10 +38,13 @@ function AuditLogDetailModal({ log, onClose }: Props) {
     if (!log.scheduledAt && !log.courtName) return null;
 
     return {
-      scheduledAt: log.scheduledAt ? formatFullDateTime(log.scheduledAt) : null,
+      // "2026년 2월 15일 (일) 18:00 - 20:00" 형식
+      scheduledAt: log.scheduledAt
+        ? formatScheduleTimeRangeKST(log.scheduledAt, log.durationMinutes)
+        : null,
       courtName: log.courtName || null,
     };
-  }, [log.entityType, log.scheduledAt, log.courtName]);
+  }, [log.entityType, log.scheduledAt, log.courtName, log.durationMinutes]);
 
   const getActionLabel = () => {
     switch (log.actionType) {
@@ -119,7 +125,7 @@ function AuditLogDetailModal({ log, onClose }: Props) {
             </div>
             <div className="audit-detail__row">
               <span className="audit-detail__label">Time:</span>
-              <span>{formatFullDateTime(log.createdAt)}</span>
+              <span>{formatDateTimeKST(log.createdAt)}</span>
             </div>
             {/* Schedule 관련 정보 (상단 정보에 포함) */}
             {scheduleInfo?.scheduledAt && (
