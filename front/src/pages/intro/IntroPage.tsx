@@ -239,6 +239,32 @@ const IntroPage: React.FC = () => {
           </div>
         </section>
 
+        {/* 홈화면 추가 안내 */}
+        <section className="intro-install-tip">
+          <h2>홈 화면에 추가하기</h2>
+          <p className="install-tip-desc">
+            앱 설치 없이, 홈 화면에 추가하면 주소창 없이 전체 화면으로 사용할 수 있습니다.
+          </p>
+          <div className="install-tip-steps">
+            <div className="install-tip-card">
+              <h3>iPhone (Safari)</h3>
+              <ol>
+                <li>Safari에서 OpenRun 접속</li>
+                <li>하단 <strong>공유 버튼</strong> (네모+화살표) 탭</li>
+                <li><strong>"홈 화면에 추가"</strong> 선택</li>
+              </ol>
+            </div>
+            <div className="install-tip-card">
+              <h3>Android (Chrome)</h3>
+              <ol>
+                <li>Chrome에서 OpenRun 접속</li>
+                <li>우측 상단 <strong>메뉴 (⋮)</strong> 탭</li>
+                <li><strong>"홈 화면에 추가"</strong> 선택</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
         {/* 문의 */}
         <section className="intro-contact">
           <h2>문의하기</h2>
