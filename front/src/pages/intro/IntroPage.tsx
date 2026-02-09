@@ -158,7 +158,7 @@ const IntroPage: React.FC = () => {
                 onClick={() => setSelectedVideo(index)}
               >
                 <div className="video-thumbnail">
-                  <video src={video.src} muted playsInline preload="metadata" />
+                  <video src={`${video.src}#t=0.001`} muted playsInline preload="metadata" />
                   <div className="video-play-overlay">
                     <span className="play-icon">▶</span>
                   </div>
