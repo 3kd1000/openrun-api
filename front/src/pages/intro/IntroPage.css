@@ -487,10 +487,13 @@
 .video-modal-content {
   position: relative;
   max-width: 400px;
+  max-height: 85vh;
   width: 100%;
   background: #000;
   border-radius: 16px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .video-modal-close {
@@ -517,11 +520,15 @@
 
 .video-modal-player {
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: contain;
   display: block;
 }
 
 .video-modal-content .modal-caption {
   background: #fff;
+  flex-shrink: 0;
 }
 
 /* === Mobile Responsive === */
@@ -631,9 +638,13 @@
     font-size: 18px;
   }
 
-  .modal-content,
+  .modal-content {
+    max-width: 90vw;
+  }
+
   .video-modal-content {
     max-width: 90vw;
+    max-height: 80vh;
   }
 }
 
