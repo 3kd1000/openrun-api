@@ -6,7 +6,7 @@ import {
   type BatchJobStatus,
   type PageResponse,
 } from "../services/batchHistoryService";
-import { formatDateTimeShortKST } from "../utils/dateTimeUtils";
+import { formatShortDateTime } from "../utils/dateUtils";
 import "./BatchPage.css";
 
 // 배치 작업 정의
@@ -199,7 +199,7 @@ function BatchPage() {
                       <tr key={item.id} className={item.status === "FAILED" ? "row-failed" : ""}>
                         <td>{getJobDisplayName(item.jobName)}</td>
                         <td>{getStatusBadge(item.status)}</td>
-                        <td>{formatDateTimeShortKST(item.startedAt)}</td>
+                        <td>{formatShortDateTime(item.startedAt)}</td>
                         <td>{formatDuration(item.durationMs)}</td>
                         <td className="result-cell">
                           {item.errorMessage ? (
