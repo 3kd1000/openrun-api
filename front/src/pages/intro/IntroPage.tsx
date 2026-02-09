@@ -1,9 +1,70 @@
-import React, { useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./IntroPage.css";
 
+const videos = [
+  {
+    src: "/intro/video/03_schedule_quick.mp4",
+    title: "일정 & 참가 신청",
+    description: "일정 확인부터 참가 신청까지 한 번에",
+  },
+  {
+    src: "/intro/video/01_draw_ranking.mp4",
+    title: "대진표 & 랭킹",
+    description: "대진표 자동 생성, 경기 결과 입력, 랭킹 확인",
+  },
+  {
+    src: "/intro/video/02_club.mp4",
+    title: "클럽 관리",
+    description: "클럽 관리, 멤버 초대, 공용구 관리",
+  },
+];
+
+const VideoModal: React.FC<{
+  video: { src: string; title: string; description: string };
+  onClose: () => void;
+}> = ({ video, onClose }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    videoRef.current?.play();
+  }, [video.src]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div className="video-modal" onClick={onClose}>
+      <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="video-modal-close" onClick={onClose}>
+          ✕
+        </button>
+        <video
+          ref={videoRef}
+          src={video.src}
+          controls
+          controlsList="nodownload"
+          playsInline
+          onContextMenu={(e) => e.preventDefault()}
+          className="video-modal-player"
+        />
+        <div className="modal-caption">
+          <h3>{video.title}</h3>
+          <p>{video.description}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const IntroPage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<number | null>(null);
 
   const features = [
     {
@@ -24,7 +85,7 @@ const IntroPage: React.FC = () => {
     {
       image: "/intro/04_대진생성_결과입력.png",
       title: "대진표 생성",
-      description: "한울방식 KDK, 수동 대진 방식, 경기결과 입력",
+      description: "한울방식 / 수동대진 생성, 경기결과 입력",
     },
     {
       image: "/intro/05_랭킹_기록.png",
@@ -83,6 +144,31 @@ const IntroPage: React.FC = () => {
             <p>
               아래 주요 기능을 살펴보시고, 클럽 개설이나 운영에 궁금한 점이 있으시면 편하게 문의해 주세요.
             </p>
+          </div>
+        </section>
+
+        {/* 사용 예시 영상 */}
+        <section className="intro-videos">
+          <h2>사용 예시</h2>
+          <div className="videos-grid">
+            {videos.map((video, index) => (
+              <div
+                key={index}
+                className="video-card"
+                onClick={() => setSelectedVideo(index)}
+              >
+                <div className="video-thumbnail">
+                  <video src={video.src} muted playsInline preload="metadata" />
+                  <div className="video-play-overlay">
+                    <span className="play-icon">▶</span>
+                  </div>
+                </div>
+                <div className="video-info">
+                  <h3>{video.title}</h3>
+                  <p>{video.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -225,6 +311,14 @@ const IntroPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 비디오 모달 */}
+      {selectedVideo !== null && (
+        <VideoModal
+          video={videos[selectedVideo]}
+          onClose={() => setSelectedVideo(null)}
+        />
       )}
     </div>
   );
