@@ -12,6 +12,7 @@ import type { Schedule, MatchType } from "../../../types/schedule";
 import type { Post, Comment } from "../../../types/post";
 import { ArrowLeftIcon, LinkIcon } from "../../../components/common/Icons";
 import { useToast } from "../../../contexts/ToastContext";
+import { getOpenRunSession } from "../../../utils/openrunSession";
 import "./GuestRecruitPage.css";
 
 const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
@@ -38,6 +39,13 @@ const GuestRecruitPage: React.FC = () => {
 
   const cid = clubId ? Number(clubId) : NaN;
   const sid = scheduleId ? Number(scheduleId) : NaN;
+
+  const currentUserId = useMemo(() => {
+    const session = getOpenRunSession();
+    const raw = session.userId?.toString();
+    const n = raw ? Number(raw) : NaN;
+    return Number.isFinite(n) ? n : null;
+  }, []);
 
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [myReq, setMyReq] = useState<ExternalRequestResponse | null>(null);
@@ -104,24 +112,24 @@ const GuestRecruitPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const [scheduleData] = await Promise.all([
-        scheduleService.getScheduleById(sid),
-      ]);
+      const scheduleData = await scheduleService.getScheduleById(sid);
       setSchedule(scheduleData);
 
-      try {
-        const req = await clubService.getMyGuestRecruitRequest(cid, sid);
-        setMyReq(req);
-        if (req.postId) {
-          const p = await postService.getPost(cid, req.postId);
-          setPost(p);
-          const cs = await commentService.getComments(cid, req.postId);
-          setComments(cs);
+      if (currentUserId) {
+        try {
+          const req = await clubService.getMyGuestRecruitRequest(cid, sid);
+          setMyReq(req);
+          if (req.postId) {
+            const p = await postService.getPost(cid, req.postId);
+            setPost(p);
+            const cs = await commentService.getComments(cid, req.postId);
+            setComments(cs);
+          }
+        } catch {
+          setMyReq(null);
+          setPost(null);
+          setComments([]);
         }
-      } catch {
-        setMyReq(null);
-        setPost(null);
-        setComments([]);
       }
     } catch (e) {
       console.error(e);
@@ -145,7 +153,17 @@ const GuestRecruitPage: React.FC = () => {
     }
   };
 
+  const requireLogin = () => {
+    if (currentUserId) return false;
+    if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
+      sessionStorage.setItem("returnUrl", location.pathname);
+      navigate("/login");
+    }
+    return true;
+  };
+
   const handleApply = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) return;
     try {
       setActionLoading(true);
@@ -160,6 +178,7 @@ const GuestRecruitPage: React.FC = () => {
   };
 
   const handleCancel = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) return;
     if (!confirm("신청을 취소하시겠습니까?")) return;
     try {
@@ -175,6 +194,7 @@ const GuestRecruitPage: React.FC = () => {
   };
 
   const handleCreateInquiry = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) return;
     if (!inquiryContent.trim()) return;
     try {
@@ -197,6 +217,7 @@ const GuestRecruitPage: React.FC = () => {
   };
 
   const handleCreateComment = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !post) return;
     if (!commentContent.trim()) return;
     try {
