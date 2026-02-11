@@ -30,7 +30,7 @@
       "name": "일정 보기",
       "short_name": "일정",
       "description": "테니스 일정 캘린더 보기",
-      "url": "/schedule",
+      "url": "/schedules/club",
       "icons": [
         {
           "src": "/icon-192x192-v2.png?v=20250101",
@@ -40,10 +40,10 @@
       ]
     },
     {
-      "name": "대진표",
-      "short_name": "대진표",
-      "description": "대진표 목록 보기",
-      "url": "/draw",
+      "name": "랭킹",
+      "short_name": "랭킹",
+      "description": "랭킹 목록 보기",
+      "url": "/scoreboard",
       "icons": [
         {
           "src": "/icon-192x192-v2.png?v=20250101",
