@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { scheduleService } from "../../../services/scheduleService";
 import { formatScheduleDateTime } from "../../../utils/dateUtils";
 import { clubService, type ExternalRequestResponse } from "../../../services/clubService";
@@ -9,15 +9,24 @@ import type { Schedule } from "../../../types/schedule";
 import type { Post, Comment } from "../../../types/post";
 import { ArrowLeftIcon, CopyIcon } from "../../../components/common/Icons";
 import { useToast } from "../../../contexts/ToastContext";
+import { getOpenRunSession } from "../../../utils/openrunSession";
 import "./InterclubRecruitPage.css";
 
 const InterclubRecruitPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   const { clubId, scheduleId } = useParams<{ clubId: string; scheduleId: string }>();
 
   const cid = clubId ? Number(clubId) : NaN;
   const sid = scheduleId ? Number(scheduleId) : NaN;
+
+  const currentUserId = useMemo(() => {
+    const session = getOpenRunSession();
+    const raw = session.userId?.toString();
+    const n = raw ? Number(raw) : NaN;
+    return Number.isFinite(n) ? n : null;
+  }, []);
 
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [myReq, setMyReq] = useState<ExternalRequestResponse | null>(null);
@@ -90,22 +99,24 @@ const InterclubRecruitPage: React.FC = () => {
       const scheduleData = await scheduleService.getScheduleById(sid);
       setSchedule(scheduleData);
 
-      try {
-        const req = await clubService.getMyInterclubRecruitRequest(cid, sid);
-        setMyReq(req);
-        if (req.postId) {
-          const p = await postService.getPost(cid, req.postId);
-          setPost(p);
-          const cs = await commentService.getComments(cid, req.postId);
-          setComments(cs);
-        } else {
+      if (currentUserId) {
+        try {
+          const req = await clubService.getMyInterclubRecruitRequest(cid, sid);
+          setMyReq(req);
+          if (req.postId) {
+            const p = await postService.getPost(cid, req.postId);
+            setPost(p);
+            const cs = await commentService.getComments(cid, req.postId);
+            setComments(cs);
+          } else {
+            setPost(null);
+            setComments([]);
+          }
+        } catch {
+          setMyReq(null);
           setPost(null);
           setComments([]);
         }
-      } catch {
-        setMyReq(null);
-        setPost(null);
-        setComments([]);
       }
     } catch (e) {
       console.error(e);
@@ -120,7 +131,17 @@ const InterclubRecruitPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cid, sid]);
 
+  const requireLogin = () => {
+    if (currentUserId) return false;
+    if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
+      sessionStorage.setItem("returnUrl", location.pathname);
+      navigate("/login");
+    }
+    return true;
+  };
+
   const handleApply = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) return;
     try {
       setActionLoading(true);
@@ -136,6 +157,7 @@ const InterclubRecruitPage: React.FC = () => {
   };
 
   const handleCancel = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) return;
     if (!confirm("신청을 취소할까요?")) return;
     try {
@@ -151,6 +173,7 @@ const InterclubRecruitPage: React.FC = () => {
   };
 
   const handleCreateInquiry = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) return;
     if (!inquiryContent.trim()) return;
     try {
@@ -170,6 +193,7 @@ const InterclubRecruitPage: React.FC = () => {
   };
 
   const handleCreateComment = async () => {
+    if (requireLogin()) return;
     if (!Number.isFinite(cid) || !post) return;
     if (!commentContent.trim()) return;
     try {

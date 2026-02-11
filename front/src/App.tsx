@@ -189,19 +189,11 @@ function App() {
               />
               <Route
                 path="/clubs/:clubId/guest-recruit/:scheduleId"
-                element={
-                  <ProtectedRoute>
-                    <GuestRecruitPage />
-                  </ProtectedRoute>
-                }
+                element={<GuestRecruitPage />}
               />
               <Route
                 path="/clubs/:clubId/interclub-recruit/:scheduleId"
-                element={
-                  <ProtectedRoute>
-                    <InterclubRecruitPage />
-                  </ProtectedRoute>
-                }
+                element={<InterclubRecruitPage />}
               />
               {/* Club Home (로그인/클럽 멤버 전제) */}
               <Route
