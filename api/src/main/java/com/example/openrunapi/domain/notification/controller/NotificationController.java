@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.notification.controller;
 
 import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.model.dto.DeleteNotificationsRequest;
 import com.example.openrunapi.domain.notification.model.dto.NotificationResponse;
 import com.example.openrunapi.domain.notification.model.dto.SendNotificationRequest;
 import com.example.openrunapi.domain.notification.model.dto.UnreadCountResponse;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -71,6 +73,43 @@ public class NotificationController {
         UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
         long count = notificationService.getUnreadCount(currentUser.getId());
         return ResponseEntity.ok(new UnreadCountResponse(count));
+    }
+
+    /**
+     * Delete selected notifications
+     */
+    @PostMapping("/delete")
+    public ResponseEntity<Map<String, Integer>> deleteNotifications(
+            @Valid @RequestBody DeleteNotificationsRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        int deleted = notificationService.deleteNotifications(request.getIds(), currentUser.getId());
+        return ResponseEntity.ok(Map.of("deleted", deleted));
+    }
+
+    /**
+     * Delete all read notifications
+     */
+    @DeleteMapping("/read")
+    public ResponseEntity<Map<String, Integer>> deleteReadNotifications(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        int deleted = notificationService.deleteReadNotifications(currentUser.getId());
+        return ResponseEntity.ok(Map.of("deleted", deleted));
+    }
+
+    /**
+     * Delete all notifications
+     */
+    @DeleteMapping("/all")
+    public ResponseEntity<Void> deleteAllNotifications(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        notificationService.deleteAllNotifications(currentUser.getId());
+        return ResponseEntity.ok().build();
     }
 
     /**

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../contexts/NotificationContext";
 import "./NotificationPage.css";
@@ -107,15 +107,71 @@ const NotificationPage: React.FC = () => {
     unreadCount,
     loading,
     needsPermission,
+    permissionRevoked,
     requestPushPermission,
     refreshNotifications,
     markAsRead,
     markAllAsRead,
+    deleteSelected,
+    deleteRead,
+    deleteAll,
   } = useNotification();
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     refreshNotifications();
   }, [refreshNotifications]);
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === notifications.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(notifications.map((n) => n.id)));
+    }
+  };
+
+  const exitEditMode = () => {
+    setIsEditMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`선택한 ${selectedIds.size}개의 알림을 삭제하시겠습니까?`)) return;
+    await deleteSelected(Array.from(selectedIds));
+    setSelectedIds(new Set());
+    if (notifications.length <= selectedIds.size) exitEditMode();
+  };
+
+  const handleDeleteRead = async () => {
+    const readCount = notifications.filter((n) => n.isRead).length;
+    if (readCount === 0) return;
+    if (!window.confirm(`읽은 알림 ${readCount}개를 삭제하시겠습니까?`)) return;
+    await deleteRead();
+    setSelectedIds(new Set());
+    if (readCount === notifications.length) exitEditMode();
+  };
+
+  const handleDeleteAll = async () => {
+    if (notifications.length === 0) return;
+    if (!window.confirm(`모든 알림 ${notifications.length}개를 삭제하시겠습니까?`)) return;
+    await deleteAll();
+    exitEditMode();
+  };
 
   const handleNotificationClick = (notification: {
     id: number;
@@ -123,6 +179,12 @@ const NotificationPage: React.FC = () => {
     referenceId: number | null;
     isRead: boolean;
   }) => {
+    // 편집 모드에서는 선택/해제만
+    if (isEditMode) {
+      toggleSelect(notification.id);
+      return;
+    }
+
     if (!notification.isRead) {
       markAsRead(notification.id);
     }
@@ -135,31 +197,29 @@ const NotificationPage: React.FC = () => {
         navigate("/schedules/club");
       }
     } else if (notification.type === "DRAW") {
-      // DRAW는 대진표 모달 바로 열기
       if (notification.referenceId) {
         navigate(`/schedules/club?scheduleId=${notification.referenceId}&openDraw=true`);
       } else {
         navigate("/schedules/club");
       }
     } else if (notification.type === "CLUB_INVITE" && notification.referenceId) {
-      // 클럽 초대 → 클럽 메인 페이지
       navigate(`/clubs/${notification.referenceId}`);
     } else if (notification.type === "EXTERNAL_REQUEST" && notification.referenceId) {
-      // 외부 신청 (가입/게스트/교류전) → 신청 관리 페이지 (운영진용)
       navigate(`/clubs/${notification.referenceId}/manage/external-requests`);
     } else if (notification.type === "REQUEST_RESULT" && notification.referenceId) {
-      // 신청 결과 → 클럽 메인 페이지 (신청자용)
       navigate(`/clubs/${notification.referenceId}`);
     }
   };
+
+  const readCount = notifications.filter((n) => n.isRead).length;
 
   return (
     <div className="notification-page">
       <div className="notification-page__header">
         <button
           className="notification-page__back-btn"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로 가기"
+          onClick={() => isEditMode ? exitEditMode() : navigate(-1)}
+          aria-label={isEditMode ? "편집 취소" : "뒤로 가기"}
         >
           <svg
             width="24"
@@ -175,13 +235,23 @@ const NotificationPage: React.FC = () => {
             <polyline points="12 19 5 12 12 5" />
           </svg>
         </button>
-        <h1 className="notification-page__title">알림</h1>
-        {unreadCount > 0 && (
+        <h1 className="notification-page__title">
+          {isEditMode ? `${selectedIds.size}개 선택` : "알림"}
+        </h1>
+        {!isEditMode && unreadCount > 0 && (
           <button
             className="notification-page__read-all-btn"
             onClick={markAllAsRead}
           >
             모두 읽음
+          </button>
+        )}
+        {notifications.length > 0 && (
+          <button
+            className="notification-page__edit-btn"
+            onClick={() => isEditMode ? exitEditMode() : setIsEditMode(true)}
+          >
+            {isEditMode ? "취소" : "편집"}
           </button>
         )}
       </div>
@@ -207,6 +277,22 @@ const NotificationPage: React.FC = () => {
         </div>
       )}
 
+      {permissionRevoked && (
+        <div className="notification-page__permission-banner">
+          <div className="notification-page__permission-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          </div>
+          <div className="notification-page__permission-text">
+            <p className="notification-page__permission-title">알림이 꺼져있습니다</p>
+            <p className="notification-page__permission-desc">기기 설정 &gt; 알림 &gt; OpenRun에서 알림을 다시 켜주세요.</p>
+          </div>
+        </div>
+      )}
+
       {loading && notifications.length === 0 ? (
         <div className="notification-page__empty">불러오는 중...</div>
       ) : notifications.length === 0 ? (
@@ -220,41 +306,88 @@ const NotificationPage: React.FC = () => {
           <p>알림이 없습니다</p>
         </div>
       ) : (
-        <div className="notification-page__list">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`notification-item ${
-                !notification.isRead ? "notification-item--unread" : ""
-              }`}
-              onClick={() => handleNotificationClick(notification)}
-            >
-              <div className="notification-item__icon">
-                <NotificationIcon type={notification.type} />
+        <>
+          {isEditMode && (
+            <div className="notification-page__toolbar">
+              <label className="notification-page__select-all-label">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === notifications.length && notifications.length > 0}
+                  onChange={toggleSelectAll}
+                  className="notification-item__checkbox"
+                />
+                <span>전체 선택</span>
+              </label>
+              <div className="notification-page__action-btns">
+                <button
+                  className="notification-page__action-btn notification-page__action-btn--danger"
+                  onClick={handleDeleteSelected}
+                  disabled={selectedIds.size === 0}
+                >
+                  선택 삭제{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
+                </button>
+                <button
+                  className="notification-page__action-btn"
+                  onClick={handleDeleteRead}
+                  disabled={readCount === 0}
+                >
+                  읽은 알림 삭제{readCount > 0 ? ` (${readCount})` : ""}
+                </button>
+                <button
+                  className="notification-page__action-btn notification-page__action-btn--danger"
+                  onClick={handleDeleteAll}
+                >
+                  전체 삭제
+                </button>
               </div>
-              <div className="notification-item__content">
-                <div className="notification-item__header">
-                  <span className="notification-item__type">
-                    {TYPE_LABELS[notification.type] || notification.type}
-                  </span>
-                  <span className="notification-item__time">
-                    {formatTimeAgo(notification.createdAt)}
-                  </span>
-                </div>
-                <div className="notification-item__title">
-                  {notification.title}
-                </div>
-                <div className="notification-item__body">
-                  {notification.body}
-                </div>
-              </div>
-              {!notification.isRead && (
-                <div className="notification-item__dot" />
-              )}
             </div>
-          ))}
-        </div>
+          )}
+          <div className="notification-page__list">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`notification-item ${
+                  !notification.isRead ? "notification-item--unread" : ""
+                } ${isEditMode && selectedIds.has(notification.id) ? "notification-item--selected" : ""}`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                {isEditMode && (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(notification.id)}
+                    onChange={() => toggleSelect(notification.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="notification-item__checkbox"
+                  />
+                )}
+                <div className="notification-item__icon">
+                  <NotificationIcon type={notification.type} />
+                </div>
+                <div className="notification-item__content">
+                  <div className="notification-item__header">
+                    <span className="notification-item__type">
+                      {TYPE_LABELS[notification.type] || notification.type}
+                    </span>
+                    <span className="notification-item__time">
+                      {formatTimeAgo(notification.createdAt)}
+                    </span>
+                  </div>
+                  <div className="notification-item__title">
+                    {notification.title}
+                  </div>
+                  <div className="notification-item__body">
+                    {notification.body}
+                  </div>
+                </div>
+                {!isEditMode && !notification.isRead && (
+                  <div className="notification-item__dot" />
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
+
     </div>
   );
 };
