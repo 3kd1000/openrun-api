@@ -91,4 +91,24 @@ public class NotificationService {
     public long getUnreadCount(Long userId) {
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
+
+    @Transactional
+    public int deleteNotifications(List<Long> ids, Long userId) {
+        int deleted = notificationRepository.deleteByUserIdAndIdIn(userId, ids);
+        log.info("Deleted {} notifications for user {}", deleted, userId);
+        return deleted;
+    }
+
+    @Transactional
+    public int deleteReadNotifications(Long userId) {
+        int deleted = notificationRepository.deleteReadByUserId(userId);
+        log.info("Deleted {} read notifications for user {}", deleted, userId);
+        return deleted;
+    }
+
+    @Transactional
+    public void deleteAllNotifications(Long userId) {
+        notificationRepository.deleteAllByUserId(userId);
+        log.info("Deleted all notifications for user {}", userId);
+    }
 }

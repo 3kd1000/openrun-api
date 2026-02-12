@@ -40,6 +40,29 @@ export const markAllAsRead = async (): Promise<void> => {
 };
 
 /**
+ * 선택 알림 삭제
+ */
+export const deleteNotifications = async (ids: number[]): Promise<number> => {
+  const response = await axiosInstance.post<{ deleted: number }>("/notifications/delete", { ids });
+  return response.data.deleted;
+};
+
+/**
+ * 읽은 알림 전체 삭제
+ */
+export const deleteReadNotifications = async (): Promise<number> => {
+  const response = await axiosInstance.delete<{ deleted: number }>("/notifications/read");
+  return response.data.deleted;
+};
+
+/**
+ * 전체 알림 삭제
+ */
+export const deleteAllNotifications = async (): Promise<void> => {
+  await axiosInstance.delete("/notifications/all");
+};
+
+/**
  * 미읽음 알림 수 조회
  * - 401 에러는 아직 인증되지 않은 상태이므로 0으로 처리
  */

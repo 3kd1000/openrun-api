@@ -27,8 +27,18 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> findByTypeOrderByCreatedAtDesc(NotificationType type, Pageable pageable);
     Page<Notification> findByClubIdAndTypeOrderByCreatedAtDesc(Long clubId, NotificationType type, Pageable pageable);
 
+    // 선택 삭제 (ID 목록 + 소유권 검증)
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.id IN :ids")
+    int deleteByUserIdAndIdIn(@Param("userId") Long userId, @Param("ids") List<Long> ids);
+
+    // 읽은 알림 전체 삭제
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.isRead = true")
+    int deleteReadByUserId(@Param("userId") Long userId);
+
     /**
-     * 탈퇴한 사용자의 알림 삭제 (개인정보 삭제)
+     * 탈퇴한 사용자의 알림 삭제 (개인정보 삭제) / 전체 삭제
      */
     void deleteAllByUserId(Long userId);
 }

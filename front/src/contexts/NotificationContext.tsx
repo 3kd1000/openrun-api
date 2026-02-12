@@ -21,6 +21,9 @@ import {
   fetchNotifications,
   markAsRead as markAsReadApi,
   markAllAsRead as markAllAsReadApi,
+  deleteNotifications as deleteNotificationsApi,
+  deleteReadNotifications as deleteReadNotificationsApi,
+  deleteAllNotifications as deleteAllNotificationsApi,
   getUnreadCount,
 } from "../services/notificationService";
 import type { NotificationItem } from "../services/notificationService";
@@ -31,12 +34,17 @@ interface NotificationContextType {
   loading: boolean;
   /** 푸시 알림 권한이 아직 요청되지 않은 상태 (iOS에서 배너 표시용) */
   needsPermission: boolean;
+  /** 푸시 알림 권한이 해제된 상태 (기기 설정에서 재활성화 필요) */
+  permissionRevoked: boolean;
   /** 사용자 제스처(탭/클릭) 안에서 호출해야 하는 권한 요청 함수 (iOS 필수) */
   requestPushPermission: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
   refreshUnreadCount: () => Promise<void>;
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  deleteSelected: (ids: number[]) => Promise<void>;
+  deleteRead: () => Promise<void>;
+  deleteAll: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -66,6 +74,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [needsPermission, setNeedsPermission] = useState(false);
+  const [permissionRevoked, setPermissionRevoked] = useState(false);
   const fcmTokenRef = useRef<string | null>(null);
   const fcmInitializedRef = useRef(false);
 
@@ -96,13 +105,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       const hasToken = await checkHasToken();
 
       if (hasToken) {
-        // 이미 등록된 토큰이 있음 → 배너 미표시
-        setNeedsPermission(false);
-        // 현재 브라우저에서 권한이 있으면 포그라운드 수신을 위해 초기화
-        if (isFcmSupported() && Notification.permission === "granted") {
-          await initFcmToken();
+        if (isFcmSupported() && Notification.permission === "denied") {
+          // DB에 토큰은 있지만 브라우저 알림 권한이 해제됨 → 설정 안내 필요
+          setPermissionRevoked(true);
+          setNeedsPermission(false);
+        } else {
+          setPermissionRevoked(false);
+          setNeedsPermission(false);
+          // 현재 브라우저에서 권한이 있으면 포그라운드 수신을 위해 초기화
+          if (isFcmSupported() && Notification.permission === "granted") {
+            await initFcmToken();
+          }
         }
       } else {
+        setPermissionRevoked(false);
         // 등록된 토큰 없음 → FCM 지원 + 권한 미거부 시 배너 표시
         if (isFcmSupported() && Notification.permission !== "denied") {
           setNeedsPermission(true);
@@ -215,6 +231,34 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }
   }, []);
 
+  const deleteSelected = useCallback(async (ids: number[]) => {
+    try {
+      await deleteNotificationsApi(ids);
+      await refreshNotifications();
+    } catch (error) {
+      console.error("[Notification] 선택 삭제 실패:", error);
+    }
+  }, [refreshNotifications]);
+
+  const deleteRead = useCallback(async () => {
+    try {
+      await deleteReadNotificationsApi();
+      await refreshNotifications();
+    } catch (error) {
+      console.error("[Notification] 읽은 알림 삭제 실패:", error);
+    }
+  }, [refreshNotifications]);
+
+  const deleteAll = useCallback(async () => {
+    try {
+      await deleteAllNotificationsApi();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("[Notification] 전체 삭제 실패:", error);
+    }
+  }, []);
+
   return (
     <NotificationContext.Provider
       value={{
@@ -222,11 +266,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         unreadCount,
         loading,
         needsPermission,
+        permissionRevoked,
         requestPushPermission,
         refreshNotifications,
         refreshUnreadCount,
         markAsRead,
         markAllAsRead,
+        deleteSelected,
+        deleteRead,
+        deleteAll,
       }}
     >
       {children}

@@ -31,6 +31,7 @@ import {
 } from "../../components/common/Icons";
 import { AppHeader } from "../../components/common/AppHeader";
 import ProfileEditModal from "../../components/ProfileEditModal";
+import { useNotification } from "../../contexts/NotificationContext";
 import { setOpenRunSession } from "../../utils/openrunSession";
 import "./MorePage.css";
 
@@ -63,6 +64,8 @@ const MorePage: React.FC = () => {
   const [withdrawalCheck, setWithdrawalCheck] = useState<WithdrawalCheckResponse | null>(null);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+
+  const { needsPermission, permissionRevoked, requestPushPermission } = useNotification();
 
   // iOS Safari 브라우저 여부 (PWA가 아닌 경우에만 설치 안내 표시)
   const showIOSInstallBanner = isIOSSafariBrowser();
@@ -274,6 +277,51 @@ const MorePage: React.FC = () => {
               <span className="ios-install-banner__title">앱으로 설치하기</span>
               <span className="ios-install-banner__desc">
                 푸시 알림을 받으려면 홈 화면에 추가하세요
+              </span>
+            </div>
+            <span className="ios-install-banner__arrow">›</span>
+          </div>
+        )}
+
+        {/* 푸시 알림 권한 요청 배너 (아직 허용하지 않은 경우) */}
+        {isLoggedIn && !showIOSInstallBanner && needsPermission && (
+          <div
+            className="ios-install-banner"
+            onClick={requestPushPermission}
+          >
+            <span className="ios-install-banner__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </span>
+            <div className="ios-install-banner__text">
+              <span className="ios-install-banner__title">푸시 알림 받기</span>
+              <span className="ios-install-banner__desc">
+                일정, 대진표 등 중요한 알림을 받으려면 허용해주세요
+              </span>
+            </div>
+            <span className="ios-install-banner__arrow">›</span>
+          </div>
+        )}
+
+        {/* PWA에서 알림 권한이 해제된 경우 재설정 안내 배너 */}
+        {isLoggedIn && !showIOSInstallBanner && permissionRevoked && (
+          <div
+            className="ios-install-banner"
+            onClick={() => navigate("/notifications")}
+          >
+            <span className="ios-install-banner__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </span>
+            <div className="ios-install-banner__text">
+              <span className="ios-install-banner__title">알림이 꺼져있습니다</span>
+              <span className="ios-install-banner__desc">
+                기기 설정에서 알림을 다시 켜주세요
               </span>
             </div>
             <span className="ios-install-banner__arrow">›</span>
