@@ -17,6 +17,7 @@ spec:
           restartPolicy: OnFailure
           hostNetwork: true
           hostPID: true
+          dnsPolicy: ClusterFirstWithHostNet
           nodeSelector:
             kubernetes.io/os: linux
           tolerations:

@@ -49,12 +49,13 @@ public class FcmSenderService {
         }
 
         try {
+            // data 페이로드만 사용 (notification 페이로드 제거)
+            // notification + data 동시 사용 시 백그라운드에서 알림이 2번 표시되는 문제 방지
+            // title/body를 data에 포함하여 Service Worker에서 직접 알림 표시
             Message.Builder messageBuilder = Message.builder()
                     .setToken(token)
-                    .setNotification(Notification.builder()
-                            .setTitle(title)
-                            .setBody(body)
-                            .build());
+                    .putData("title", title)
+                    .putData("body", body);
 
             if (data != null && !data.isEmpty()) {
                 messageBuilder.putAllData(data);

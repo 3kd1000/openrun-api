@@ -23,16 +23,18 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // 백그라운드 메시지 수신 처리
+// notification 페이로드 없이 data만 수신하므로 직접 알림 표시
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw] 백그라운드 메시지 수신:", payload);
 
-  const notificationTitle = payload.notification?.title || "OpenRun";
+  const data = payload.data || {};
+  const notificationTitle = data.title || "OpenRun";
   const notificationOptions = {
-    body: payload.notification?.body || "",
+    body: data.body || "",
     icon: "/icon-192x192-v2.png",
     badge: "/icon-192x192-v2.png",
-    data: payload.data || {},
-    tag: payload.data?.type || "default",
+    data: data,
+    tag: data.type || "default",
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

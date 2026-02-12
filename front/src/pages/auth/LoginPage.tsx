@@ -4,7 +4,6 @@ import {
   signInWithGooglePopup,
   auth,
   setLoginExpiry,
-  clearLoginSession,
 } from "../../services/firebase";
 import { useAuth } from "../../contexts/AuthContext";
 import { signInWithCustomToken } from "firebase/auth";
@@ -70,10 +69,11 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // 세션 데이터는 있지만 Firebase Auth 사용자가 없으면 → stale 세션 정리
+      // 세션 데이터는 있지만 Firebase Auth 사용자가 없으면 → 로그인 폼 표시 (세션 데이터는 보존)
+      // clearLoginSession()은 명시적 로그아웃 시에만 호출
+      // 다음 로그인 시 세션 데이터가 자동으로 덮어쓰기됨
       if (!user) {
-        console.warn("⚠️ 세션 데이터가 있지만 Firebase Auth 사용자 없음 → stale 세션 정리");
-        clearLoginSession();
+        console.warn("⚠️ 세션 데이터가 있지만 Firebase Auth 사용자 없음 → 로그인 폼 표시 (세션 보존)");
         setIsCheckingSession(false);
         return;
       }

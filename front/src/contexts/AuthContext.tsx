@@ -10,7 +10,6 @@ import React, {
 import type { User } from "firebase/auth";
 import {
   auth,
-  clearLoginSession,
   setLoginExpiry,
   isLoginExpired,
   restoreSessionIfValid,
@@ -98,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   /**
    * 세션에 userId가 없으면 /users/me API로 복원
-   * 토큰 갱신 후 호출되어, clearLoginSession 이후에도 userId를 자동 복구
+   * 토큰 갱신 후 호출되어, 세션에 userId가 없으면 API로 자동 복구
    */
   const restoreUserInfoIfNeeded = async () => {
     const session = getOpenRunSession();
@@ -138,11 +137,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return;
     }
 
-    const autoLoginEnabled = getAutoLoginEnabled();
-
-    // 자동 로그인 비활성화 시에만 세션 만료 체크
-    if (!autoLoginEnabled && isLoginExpired()) {
-      console.warn(`⏰ [${now}] 로그인 세션 만료 감지 (자동 로그인 비활성화) → 로그아웃`);
+    // 로그인 세션 만료 체크 (auto_login 여부와 무관하게 login_expiry 기준)
+    if (isLoginExpired()) {
+      console.warn(`⏰ [${now}] 로그인 세션 만료 감지 (login_expiry 경과) → 로그아웃`);
       await handleSessionExpiry();
       return;
     }
@@ -227,16 +224,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // 세션 만료 처리
+  // 세션 만료 처리 (clearLoginSession은 명시적 로그아웃 시에만 호출)
   const handleSessionExpiry = async () => {
     const now = getTimestamp();
     try {
       await auth.signOut();
-      console.log(`🚪 [${now}] Firebase 로그아웃 완료`);
+      console.log(`🚪 [${now}] Firebase 로그아웃 완료 (세션 데이터 보존)`);
     } catch (error) {
       console.error(`❌ [${now}] Firebase signOut 실패:`, error);
     }
-    clearLoginSession();
     setUser(null);
   };
 
@@ -253,12 +249,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (firebaseUser) {
           const loginExpiryStr = localStorage.getItem("login_expiry");
           const isNewLogin = !loginExpiryStr;
-          const autoLoginEnabled = getAutoLoginEnabled();
 
-          // 자동 로그인 비활성화 시에만 세션 만료 체크
-          if (!isNewLogin && !autoLoginEnabled && isLoginExpired()) {
+          // 로그인 세션 만료 체크 (auto_login 여부와 무관하게 login_expiry 기준)
+          if (!isNewLogin && isLoginExpired()) {
             console.warn(
-              `⏰ [${timestamp}] 로그인 세션 만료 감지 → 자동 로그아웃`
+              `⏰ [${timestamp}] 로그인 세션 만료 감지 (login_expiry 경과) → 자동 로그아웃`
             );
             await handleSessionExpiry();
             setIsAuthReady(true);

@@ -128,8 +128,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (!isFcmSupported()) return;
 
     const unsubscribe = onForegroundMessage((payload) => {
-      const title = payload.notification?.title || "알림";
-      const body = payload.notification?.body || "";
+      const data = payload.data || {};
+      const title = data.title || payload.notification?.title || "알림";
+      const body = data.body || payload.notification?.body || "";
       showToast(`${title}: ${body}`, "default", 5000);
       // 미읽음 수 갱신
       refreshUnreadCount();
