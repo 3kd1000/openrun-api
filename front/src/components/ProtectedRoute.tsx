@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { isTokenValid, clearLoginSession } from '../services/firebase';
+import { isTokenValid } from '../services/firebase';
 import './ProtectedRoute.css';
 
 interface ProtectedRouteProps {
@@ -53,14 +53,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         if (tokenValid) {
           setIsAuthenticated(true);
         } else {
-          // 토큰이 유효하지 않으면 세션 클리어 및 미로그인 처리
-          console.warn('⚠️ Firebase 토큰이 유효하지 않음 → 세션 클리어 및 로그인 페이지로 리다이렉트');
-          clearLoginSession();
+          // 토큰이 유효하지 않으면 미로그인 처리 (세션 데이터는 보존)
+          // clearLoginSession()은 명시적 로그아웃 시에만 호출
+          console.warn('⚠️ Firebase 토큰이 유효하지 않음 → 로그인 페이지로 리다이렉트 (세션 보존)');
           setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('인증 확인 실패:', error);
-        clearLoginSession();
         setIsAuthenticated(false);
       } finally {
         setIsChecking(false);
@@ -80,7 +79,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return (
       <div className="auth-checking">
         <div className="auth-checking__spinner" />
-        <p className="auth-checking__text">인증 확인 중...</p>
+        <p className="auth-checking__text">세션 복원 중...</p>
       </div>
     );
   }

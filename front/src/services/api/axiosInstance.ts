@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getCurrentToken, clearLoginSession } from '../firebase';
+import { getCurrentToken } from '../firebase';
 import { getOpenRunSession, setOpenRunSession } from '../../utils/openrunSession';
 import { authBridge } from '../authBridge';
 
@@ -116,11 +116,12 @@ axiosInstance.interceptors.response.use(
           throw new Error('토큰 갱신 실패');
         }
       } catch (refreshError) {
-        // 토큰 리프레시 실패 → 로그인 페이지로
+        // 토큰 리프레시 실패 → 로그인 페이지로 (세션 데이터는 보존)
+        // clearLoginSession()은 명시적 로그아웃 시에만 호출
+        // 네트워크 복구 시 다음 토큰 갱신 주기에서 자동 복구 가능
         processQueue(refreshError, null);
 
-        console.warn('❌ 토큰 갱신 실패 (세션 만료 또는 네트워크 오류), 로그인 페이지로 이동');
-        clearLoginSession();
+        console.warn('❌ 토큰 갱신 실패 (세션 만료 또는 네트워크 오류), 로그인 페이지로 이동 (세션 보존)');
 
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';

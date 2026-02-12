@@ -119,7 +119,6 @@ export const clearLoginSession = () => {
 export const restoreSessionIfValid = async (): Promise<boolean> => {
   const now = getTimestamp();
   const loginExpiryStr = localStorage.getItem("login_expiry");
-  const autoLoginEnabled = getAutoLoginEnabled();
 
   // login_expiry가 없으면 복원할 세션이 없음
   if (!loginExpiryStr) {
@@ -127,18 +126,18 @@ export const restoreSessionIfValid = async (): Promise<boolean> => {
     return false;
   }
 
-  // 자동 로그인이 비활성화된 상태에서만 세션 만료 체크
-  // 자동 로그인이 활성화되어 있으면 토큰 갱신으로 세션을 연장할 수 있음
-  if (!autoLoginEnabled && isLoginExpired()) {
-    console.log(`⏰ [${now}] 세션 만료됨 (자동 로그인 비활성화) → 복원 불가`);
+  // 로그인 세션 만료 체크 (auto_login 여부와 무관하게 login_expiry 기준)
+  if (isLoginExpired()) {
+    console.log(`⏰ [${now}] 세션 만료됨 (login_expiry 경과) → 복원 불가`);
     return false;
   }
 
   // Firebase 인증 상태가 복원될 때까지 대기 (PWA 재시작 시)
-  // 최대 5초까지 대기, 100ms 간격으로 체크
+  // 최대 8초까지 대기, 100ms 간격으로 체크
+  // (네트워크 지연, IndexedDB 복원 지연 등을 고려하여 넉넉하게 설정)
   let user = auth.currentUser;
   let waitCount = 0;
-  const maxWaitCount = 50; // 5초 (50 * 100ms)
+  const maxWaitCount = 80; // 8초 (80 * 100ms)
 
   while (!user && waitCount < maxWaitCount) {
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -221,13 +220,9 @@ export const setupAuthListener = (
       const loginExpiryStr = localStorage.getItem("login_expiry");
       const isNewLogin = !loginExpiryStr;
 
-      // 세션 만료 체크 (login_expiry가 있을 때만)
-      // 단, 자동 로그인이 활성화되어 있으면 토큰 갱신으로 만료 시간을 연장할 수 있으므로
-      // 만료 체크를 건너뛰고 토큰 갱신을 먼저 시도
-      const autoLoginEnabled = getAutoLoginEnabled();
-
-      if (!isNewLogin && !autoLoginEnabled && isLoginExpired()) {
-        console.warn(`⏰ [${now}] 로그인 세션 만료 감지 → 자동 로그아웃`);
+      // 로그인 세션 만료 체크 (auto_login 여부와 무관하게 login_expiry 기준)
+      if (!isNewLogin && isLoginExpired()) {
+        console.warn(`⏰ [${now}] 로그인 세션 만료 감지 (login_expiry 경과) → 자동 로그아웃`);
         await handleSessionExpiry();
         return;
       }
@@ -331,14 +326,10 @@ export const setupAuthListener = (
     }
 
     // 사용자가 있으면 세션 만료 체크
-    // 단, 토큰 갱신이 성공하면 만료 시간을 연장할 수 있으므로
-    // 자동 로그인이 활성화되어 있으면 만료 체크를 건너뛰고 토큰 갱신 시도
-    const autoLoginEnabled = getAutoLoginEnabled();
-
-    // 자동 로그인이 비활성화된 경우에만 만료 체크
-    if (!autoLoginEnabled && isLoginExpired()) {
+    // 로그인 세션 만료 체크 (auto_login 여부와 무관하게 login_expiry 기준)
+    if (isLoginExpired()) {
       console.warn(
-        `⏰ [${now}] 로그인 세션 만료 감지 (자동 로그인 비활성화) → 로그아웃`
+        `⏰ [${now}] 로그인 세션 만료 감지 (login_expiry 경과) → 로그아웃`
       );
       await handleSessionExpiry();
       return;
@@ -537,12 +528,11 @@ export const isTokenValid = async (): Promise<boolean> => {
  */
 export const getCurrentToken = async (): Promise<string | null> => {
   const now = getTimestamp();
-  const autoLoginEnabled = getAutoLoginEnabled();
 
-  // 1. 로그인 세션 만료 체크 (자동 로그인 비활성화 시에만)
-  if (!autoLoginEnabled && isLoginExpired()) {
+  // 1. 로그인 세션 만료 체크 (auto_login 여부와 무관하게 login_expiry 기준)
+  if (isLoginExpired()) {
     console.warn(
-      `⏰ [${now}] 로그인 세션 만료됨 (${AUTO_LOGIN_DAYS}일 경과, 자동 로그인 비활성화) → 자동 로그아웃`
+      `⏰ [${now}] 로그인 세션 만료됨 (login_expiry 경과) → 자동 로그아웃`
     );
     await handleSessionExpiry();
     return null;
@@ -566,15 +556,15 @@ export const getCurrentToken = async (): Promise<string | null> => {
 };
 
 /**
- * 세션 만료 처리 (Firebase 로그아웃 + localStorage 클리어)
+ * 세션 만료 처리 (Firebase 로그아웃만 수행, 세션 데이터는 보존)
+ * clearLoginSession()은 명시적 로그아웃(MorePage) 시에만 호출
  */
 const handleSessionExpiry = async () => {
   const now = getTimestamp();
   try {
     await auth.signOut();
-    console.log(`🚪 [${now}] Firebase 로그아웃 완료`);
+    console.log(`🚪 [${now}] Firebase 로그아웃 완료 (세션 데이터 보존)`);
   } catch (error) {
     console.error(`❌ [${now}] Firebase signOut 실패:`, error);
   }
-  clearLoginSession();
 };
