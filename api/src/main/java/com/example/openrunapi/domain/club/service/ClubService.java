@@ -93,6 +93,9 @@ public class ClubService {
                 .build();
         ClubPolicy savedPolicy = clubPolicyRepository.save(clubPolicy);
 
+        // 클럽 생성 감사 로그
+        auditLogService.logClubCreate(ownerUserId, savedClub);
+
         return new ClubResponse(savedClub, savedPolicy);
     }
 

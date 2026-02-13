@@ -160,6 +160,18 @@ public class AuditLogService {
     // === Club Audit ===
 
     /**
+     * Club 생성 로그
+     */
+    @Transactional
+    public void logClubCreate(Long userId, Club club) {
+        ClubAuditSnapshot after = ClubAuditSnapshot.from(club);
+        String changes = buildChangesJson(null, after);
+
+        saveAuditLog(userId, AuditEntityType.CLUB, club.getId(),
+                AuditActionType.CREATE, changes, club.getId());
+    }
+
+    /**
      * Club 수정 로그 (프로필 수정)
      */
     @Transactional
