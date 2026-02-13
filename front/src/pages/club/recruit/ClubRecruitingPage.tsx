@@ -227,7 +227,7 @@ const ClubRecruitingPage: React.FC = () => {
         >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-recruiting-page__title">클럽</h1>
+        <h1 className="club-recruiting-page__title">클럽소개</h1>
         <button
           className="club-recruiting-page__link-btn"
           type="button"
@@ -243,8 +243,8 @@ const ClubRecruitingPage: React.FC = () => {
           aria-label="초대링크 복사"
           title="초대링크 복사"
         >
-          <LinkIcon size={18} />
-          <span>링크복사</span>
+          <LinkIcon size={20} />
+          <span>초대링크복사</span>
         </button>
       </div>
 
