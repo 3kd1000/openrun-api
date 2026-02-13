@@ -201,7 +201,12 @@ public class ScheduleParticipantService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // 2. 참가 신청 내역 확인 (취소되지 않은 것만)
+        // 2. 과거 일정 취소 방지 (KST 기준)
+        if (TimeValidationUtils.isPast(schedule.getScheduledAt())) {
+            throw new IllegalStateException("이미 지난 일정의 참가신청은 취소할 수 없습니다.");
+        }
+
+        // 3. 참가 신청 내역 확인 (취소되지 않은 것만)
         ScheduleParticipant participant = participantRepository
                 .findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED)
                 .orElseThrow(() -> new EntityNotFoundException("참가 신청 내역을 찾을 수 없습니다."));
@@ -456,11 +461,19 @@ public class ScheduleParticipantService {
         List<ScheduleParticipant> currentParticipations = participantRepository
                 .findByUserIdAndStatusNot(userId, ParticipantStatus.CANCELLED);
 
-        Set<Long> currentScheduleIds = currentParticipations.stream()
-                .map(ScheduleParticipant::getScheduleId)
-                .collect(Collectors.toSet());
+        // 과거 일정은 diff 계산에서 제외 (미래 일정만 대상으로 비교)
+        Set<Long> pastScheduleIds = new HashSet<>();
+        Set<Long> currentScheduleIds = new HashSet<>();
+        for (ScheduleParticipant p : currentParticipations) {
+            Schedule schedule = scheduleRepository.findById(p.getScheduleId()).orElse(null);
+            if (schedule != null && TimeValidationUtils.isPast(schedule.getScheduledAt())) {
+                pastScheduleIds.add(p.getScheduleId());
+            } else {
+                currentScheduleIds.add(p.getScheduleId());
+            }
+        }
 
-        log.info("현재 참가 중인 일정: {}", currentScheduleIds);
+        log.info("현재 참가 중인 미래 일정: {}, 제외된 과거 일정: {}", currentScheduleIds, pastScheduleIds);
 
         // 2. 최종 선택한 일정 목록
         Set<Long> selectedScheduleIds = request.getSelectedScheduleIds() != null
