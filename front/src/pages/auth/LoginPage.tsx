@@ -86,14 +86,8 @@ const LoginPage: React.FC = () => {
     checkAndNavigate();
   }, [isAuthReady, user, navigate]);
 
-  // Kakao SDK 초기화
+  // URL에서 카카오 인가 코드 추출 (카카오 로그인 리다이렉트 후)
   useEffect(() => {
-    if (window.Kakao && !window.Kakao.isInitialized()) {
-      window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
-      console.log("Kakao SDK initialized:", window.Kakao.isInitialized());
-    }
-
-    // URL에서 인가 코드 추출 (카카오 로그인 리다이렉트 후)
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
     if (code) {
@@ -332,15 +326,11 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // 카카오 로그인 버튼 클릭
+  // 카카오 로그인 버튼 클릭 (SDK 없이 직접 OAuth URL 리다이렉트)
   const handleKakaoSignIn = () => {
-    if (window.Kakao) {
-      window.Kakao.Auth.authorize({
-        redirectUri: import.meta.env.VITE_KAKAO_REDIRECT_URI,
-      });
-    } else {
-      setError("Kakao SDK가 로드되지 않았습니다.");
-    }
+    const clientId = import.meta.env.VITE_KAKAO_APP_KEY;
+    const redirectUri = encodeURIComponent(import.meta.env.VITE_KAKAO_REDIRECT_URI);
+    window.location.href = `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
   };
 
   // WebAuthn 생체인증 로그인
