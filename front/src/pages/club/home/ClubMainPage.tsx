@@ -11,6 +11,7 @@ import {
   UsersIcon,
   SettingsIcon,
   BroadcastIcon,
+  UserPlusIcon,
   ChevronDownIcon,
   ChevronUpIcon,
 } from "../../../components/common/Icons";
@@ -620,11 +621,21 @@ const ClubMainPage: React.FC = () => {
           <button
             className="club-main-page__header-btn"
             onClick={() => navigate(`/clubs/${clubId}/recruiting`, { state: { fromClubMain: true } })}
-            title="클럽 홍보 페이지"
+            title="클럽 초대 페이지"
           >
             <BroadcastIcon size={20} />
-            <span className="club-main-page__header-btn-text">클럽홍보</span>
+            <span className="club-main-page__header-btn-text">클럽초대</span>
           </button>
+          {canManage && (
+            <button
+              className="club-main-page__header-btn"
+              onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
+              title="가입 관리"
+            >
+              <UserPlusIcon size={20} />
+              <span className="club-main-page__header-btn-text">가입관리</span>
+            </button>
+          )}
           <button
             className="club-main-page__header-btn"
             onClick={handleViewMembers}
