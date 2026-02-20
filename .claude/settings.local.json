@@ -12,7 +12,9 @@
       "Bash(npm run build:*)",
       "Bash(cat:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "mcp__stitch__generate_screen_from_text",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

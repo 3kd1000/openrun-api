@@ -1,4 +1,7 @@
 /* OpenRun - Main Entry Point Styles */
-/* 모든 토큰 및 공통 스타일을 통합 import */
 
+/* 1. Tailwind + shadcn (must be first to establish @layer order) */
+@import './styles/shadcn.css';
+
+/* 2. Existing OpenRun styles (tokens + global + components) */
 @import './styles/index.css';

@@ -65,3 +65,8 @@ openrun-ed7a1-firebase-adminsdk-fbsvc-4e67d9a55a.json
 # K8s secrets (contains real credentials)
 k8s/secrets/*.yaml
 !k8s/secrets/*.example.yaml
+
+# MCP config (may contain API key references)
+.mcp.json
+front-next/
+google_stitch_design/

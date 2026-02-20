@@ -157,15 +157,9 @@
   min-width: 0;
 }
 
-/* RegionSelector 내부 select 스타일 오버라이드 */
+/* RegionSelector 내부 간격 */
 .club-explore-page__filter-item--region .region-selector {
   gap: var(--space-s);
-}
-
-.club-explore-page__filter-item--region .region-selector__select {
-  font-size: var(--font-size-base);
-  height: 42px;
-  box-sizing: border-box;
 }
 
 .club-explore-page__filter-label {
@@ -174,28 +168,9 @@
   color: var(--color-text-secondary);
 }
 
-.club-explore-page__filter-select {
-  padding: var(--space-s) var(--space-m);
-  font-size: var(--font-size-base);
-  line-height: 1.4;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-m);
-  background-color: var(--color-white);
-  outline: none;
-  cursor: pointer;
-  width: 100%;
-  height: 42px;
-  box-sizing: border-box;
-}
-
-/* DateRangePicker 스타일 오버라이드 - 다른 필터와 높이 통일 */
+/* DateRangePicker 전체 너비 */
 .club-explore-page__filter-item--date .date-range-picker {
   width: 100%;
-}
-
-.club-explore-page__filter-item--date .date-range-picker__trigger {
-  height: 42px;
-  box-sizing: border-box;
 }
 
 /* ===== 검색 ===== */
@@ -449,20 +424,6 @@
     height: 36px;
   }
 
-  .club-explore-page__filter-select {
-    font-size: var(--font-size-m);
-    height: 36px;
-  }
-
-  .club-explore-page__filter-item--date .date-range-picker__trigger {
-    font-size: var(--font-size-m);
-    height: 36px;
-  }
-
-  .club-explore-page__filter-item--region .region-selector__select {
-    font-size: var(--font-size-m);
-    height: 36px;
-  }
 }
 
 /* ===== Mobile Large (361px ~ 425px) ===== */
@@ -507,25 +468,8 @@
     left: var(--space-s);
   }
 
-  .club-explore-page__filter-select,
-  .club-explore-page__region-select {
-    font-size: var(--font-size-s);
-    height: 36px;
-  }
-
-  .club-explore-page__filter-item--date .date-range-picker__trigger {
-    font-size: var(--font-size-s);
-    height: 32px;
-    padding: var(--space-xs) var(--space-s);
-  }
-
   .club-explore-page__filter-item--region .region-selector {
     gap: var(--space-xs);
-  }
-
-  .club-explore-page__filter-item--region .region-selector__select {
-    font-size: var(--font-size-s);
-    height: 36px;
   }
 
   .club-explore-page__club-item {
@@ -597,26 +541,8 @@
     left: var(--space-xs);
   }
 
-  .club-explore-page__filter-select {
-    font-size: var(--font-size-xs);
-    height: 32px;
-  }
-
-  .club-explore-page__filter-item--date .date-range-picker__trigger {
-    font-size: var(--font-size-xs);
-    height: 28px;
-    padding: var(--space-xs) var(--space-xs);
-  }
-
   .club-explore-page__filter-item--region .region-selector {
     gap: var(--space-xxs);
-  }
-
-  .club-explore-page__filter-item--region .region-selector__select {
-    font-size: var(--font-size-xs);
-    height: 32px;
-    padding-right: 24px;
-    background-position: right 6px center;
   }
 
   .club-explore-page__club-item {

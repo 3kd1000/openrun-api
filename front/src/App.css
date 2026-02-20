@@ -51,3 +51,18 @@
     margin: 0 auto;
   }
 }
+
+/* shadcn 교체 페이지용 공통 컨테이너 (max-width 제한) */
+.page-container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 16px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 769px) {
+  .page-container {
+    padding: 28px 24px 16px;
+  }
+}

@@ -7,7 +7,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-s) var(--space-m);
+  height: 36px; /* h-9: shadcn Input과 높이 통일 */
+  padding: 0 var(--space-m);
   font-size: var(--font-size-base);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-m);
@@ -18,18 +19,6 @@
   min-width: 0;
   width: 100%;
   overflow: hidden;
-}
-
-@media (max-width: 379px) {
-  .date-range-picker__trigger {
-    font-size: var(--font-size-s);
-  }
-}
-
-@media (max-width: 339px) {
-  .date-range-picker__trigger {
-    font-size: var(--font-size-xs);
-  }
 }
 
 .date-range-picker__trigger:hover {

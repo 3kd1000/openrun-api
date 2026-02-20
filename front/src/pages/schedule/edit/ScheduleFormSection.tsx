@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { X } from "lucide-react";
 import { clubService } from "../../../services/clubService";
 import type { UserResponse } from "../../../services/userService";
 import type { ScheduleTemplate } from "../../../types/scheduleTemplate";
@@ -9,7 +10,15 @@ import {
   parseParticipationPattern,
   createParticipationPattern,
 } from "../../../utils/participationPatternUtils";
-import "./ScheduleFormSection.css";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
+// native select에 Input과 동일한 높이/스타일 적용
+const selectClassName =
+  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 // 시간 옵션 생성 (정시만, 00시부터 23시까지)
 const generateTimeOptions = () => {
@@ -353,7 +362,11 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && <div className="error-message">{error}</div>}
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* 일정 템플릿 (코트명, 정원, 비용) - 기본 닫힘 */}
       {currentUserId && (
@@ -415,23 +428,24 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         />
       )}
 
-      <div className="form-row">
-        <div className="form-group" style={{ flex: "1.2 1 0%", minWidth: 0 }}>
-          <label>날짜 *</label>
-          <input
+      {/* 날짜 / 시간 / 기간 */}
+      <div className="flex gap-2 mb-2">
+        <div className="flex-1 min-w-0 space-y-1.5" style={{ flex: "1.2" }}>
+          <Label className="text-xs text-muted-foreground">날짜 *</Label>
+          <Input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             required
           />
         </div>
-        <div className="form-group" style={{ flex: "0.8 1 0%", minWidth: 0 }}>
-          <label>시간 *</label>
+        <div className="flex-1 min-w-0 space-y-1.5" style={{ flex: "0.8" }}>
+          <Label className="text-xs text-muted-foreground">시간 *</Label>
           <select
+            className={selectClassName}
             value={selectedTime}
             onChange={(e) => setSelectedTime(e.target.value)}
             required
-            className="time-select"
           >
             {timeOptions.map((time) => (
               <option key={time} value={time}>
@@ -440,12 +454,12 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             ))}
           </select>
         </div>
-        <div className="form-group" style={{ flex: "0.8 1 0%", minWidth: 0 }}>
-          <label>기간</label>
+        <div className="flex-1 min-w-0 space-y-1.5" style={{ flex: "0.8" }}>
+          <Label className="text-xs text-muted-foreground">기간</Label>
           <select
+            className={selectClassName}
             value={selectedDuration}
             onChange={(e) => setSelectedDuration(parseInt(e.target.value))}
-            className="duration-select"
           >
             <option value={30}>30분</option>
             <option value={60}>1시간</option>
@@ -459,71 +473,64 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         </div>
       </div>
 
-      <div className="form-group">
-        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <input
-            type="checkbox"
-            checked={participationStartEnabled}
-            onChange={(e) => {
-              setParticipationStartEnabled(e.target.checked);
-              if (!e.target.checked) {
-                setIsEditingParticipationStart(false);
-              } else if (e.target.checked && !participationStartDate) {
-                // 체크박스 활성화 시 날짜가 없으면 수정 모드로 진입
-                setIsEditingParticipationStart(true);
-              }
-            }}
-            style={{ width: "auto", margin: 0 }}
-          />
+      {/* 참가신청 시작 시간 체크박스 */}
+      <div className="mb-3 flex items-center gap-2">
+        <Checkbox
+          id="participation-start"
+          checked={participationStartEnabled}
+          onCheckedChange={(checked) => {
+            const enabled = !!checked;
+            setParticipationStartEnabled(enabled);
+            if (!enabled) {
+              setIsEditingParticipationStart(false);
+            } else if (enabled && !participationStartDate) {
+              setIsEditingParticipationStart(true);
+            }
+          }}
+        />
+        <Label
+          htmlFor="participation-start"
+          className="text-sm cursor-pointer"
+        >
           참가신청 시작 시간 설정
-        </label>
+        </Label>
       </div>
 
       {/* 참가신청 시작시간 - 체크 여부와 상관없이 항상 표시 */}
       {!isEditingParticipationStart ? (
-        <div className="form-group">
+        <div className="mb-3">
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "10px 12px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              background: participationStartEnabled ? "#f9f9f9" : "#f5f5f5",
-              opacity: participationStartEnabled ? 1 : 0.6,
-            }}
+            className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-sm ${
+              participationStartEnabled
+                ? "bg-muted/50"
+                : "bg-muted/30 opacity-60"
+            }`}
           >
-            <span style={{ fontSize: "14px", color: "#333" }}>
+            <span className="flex-1">
               {participationStartDate
                 ? getFormattedParticipationStart()
                 : "날짜와 시간을 설정해주세요"}
             </span>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setIsEditingParticipationStart(true)}
               disabled={!participationStartEnabled}
-              style={{
-                padding: "4px 12px",
-                background: participationStartEnabled ? "#4a90e2" : "#ccc",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: participationStartEnabled ? "pointer" : "not-allowed",
-                fontSize: "13px",
-                fontWeight: "500",
-              }}
             >
               수정
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
         <>
-          <div className="form-row">
-            <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-              <label>시작 날짜 *</label>
-              <input
+          {/* 시작 날짜 / 시간 / 분 */}
+          <div className="flex gap-2 mb-2">
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                시작 날짜 *
+              </Label>
+              <Input
                 type="date"
                 value={participationStartDate}
                 onChange={(e) => setParticipationStartDate(e.target.value)}
@@ -531,9 +538,10 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
                 required
               />
             </div>
-            <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-              <label>시간 *</label>
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Label className="text-xs text-muted-foreground">시간 *</Label>
               <select
+                className={selectClassName}
                 value={participationStartHour}
                 onChange={(e) =>
                   setParticipationStartHour(parseInt(e.target.value))
@@ -548,9 +556,10 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
                 ))}
               </select>
             </div>
-            <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-              <label>분 *</label>
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Label className="text-xs text-muted-foreground">분 *</Label>
               <select
+                className={selectClassName}
                 value={participationStartMinute}
                 onChange={(e) =>
                   setParticipationStartMinute(
@@ -565,34 +574,25 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
               </select>
             </div>
           </div>
-          <div className="form-group">
-            <button
-              type="button"
-              onClick={() => {
-                if (participationStartDate) {
-                  setIsEditingParticipationStart(false);
-                }
-              }}
-              style={{
-                padding: "6px 16px",
-                background: "#4caf50",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "13px",
-                fontWeight: "500",
-              }}
-            >
-              완료
-            </button>
-          </div>
+          <Button
+            type="button"
+            size="sm"
+            className="mb-3"
+            onClick={() => {
+              if (participationStartDate) {
+                setIsEditingParticipationStart(false);
+              }
+            }}
+          >
+            완료
+          </Button>
         </>
       )}
 
-      <div className="form-group">
-        <label>코트명 *</label>
-        <input
+      {/* 코트명 */}
+      <div className="mb-3 space-y-1.5">
+        <Label className="text-xs text-muted-foreground">코트명 *</Label>
+        <Input
           type="text"
           value={formData.courtName}
           onChange={(e) =>
@@ -603,10 +603,11 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         />
       </div>
 
-      <div className="form-row">
-        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-          <label>최대 정원 *</label>
-          <input
+      {/* 최대 정원 / 코트 수 / 모임 타입 */}
+      <div className="flex gap-2 mb-2">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <Label className="text-xs text-muted-foreground">최대 정원 *</Label>
+          <Input
             type="number"
             value={formData.maxCapacity}
             onChange={(e) =>
@@ -619,26 +620,27 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             required
           />
         </div>
-
-        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-          <label>코트 수</label>
-          <input
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <Label className="text-xs text-muted-foreground">코트 수</Label>
+          <Input
             type="number"
             value={formData.numberOfCourts || ""}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                numberOfCourts: e.target.value ? parseInt(e.target.value) : undefined,
+                numberOfCourts: e.target.value
+                  ? parseInt(e.target.value)
+                  : undefined,
               })
             }
             min="1"
             placeholder="자동"
           />
         </div>
-
-        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-          <label>모임 타입</label>
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <Label className="text-xs text-muted-foreground">모임 타입</Label>
           <select
+            className={selectClassName}
             value={formData.matchType || "NONE"}
             onChange={(e) => {
               const value = e.target.value;
@@ -657,10 +659,13 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-          <label>참가 비용 (선택)</label>
-          <input
+      {/* 참가 비용 / 예약자 */}
+      <div className="flex gap-2 mb-2">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <Label className="text-xs text-muted-foreground">
+            참가 비용 (선택)
+          </Label>
+          <Input
             type="number"
             value={formData.cost || ""}
             onChange={(e) =>
@@ -672,88 +677,55 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             placeholder="25000"
           />
         </div>
-
-        <div className="form-group" style={{ flex: "1", minWidth: 0 }}>
-          <label>예약자 (선택)</label>
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <Label className="text-xs text-muted-foreground">
+            예약자 (선택)
+          </Label>
           {selectedReservedBy ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span
-                style={{
-                  padding: "8px 12px",
-                  background: "#f0f0f0",
-                  borderRadius: "4px",
-                }}
-              >
-                {selectedReservedBy.name}
-              </span>
+            <div className="flex h-10 items-center gap-2 rounded-md border bg-muted/50 px-3">
+              <span className="flex-1 text-sm">{selectedReservedBy.name}</span>
               <button
                 type="button"
                 onClick={handleClearReservedBy}
-                style={{
-                  padding: "4px 8px",
-                  background: "#ff6b6b",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
+                className="text-muted-foreground hover:text-foreground"
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
           ) : (
-            <>
-              <input
-                type="text"
+            <div className="relative">
+              <Input
+                placeholder="클럽원 이름 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    e.preventDefault(); // 엔터키로 form submit 방지
+                    e.preventDefault();
                   }
                 }}
-                placeholder="클럽원 이름 검색"
               />
               {filteredMembers.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "4px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    maxHeight: "150px",
-                    overflowY: "auto",
-                    background: "white",
-                  }}
-                >
+                <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-md max-h-[150px] overflow-y-auto">
                   {filteredMembers.map((member) => (
                     <div
                       key={member.id}
                       onClick={() => handleSelectReservedBy(member)}
-                      style={{
-                        padding: "8px 12px",
-                        cursor: "pointer",
-                        borderBottom: "1px solid #eee",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "#f5f5f5")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "white")
-                      }
+                      className="cursor-pointer px-3 py-2 text-sm hover:bg-muted"
                     >
                       {member.name}
                     </div>
                   ))}
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="form-group">
-        <label>설명 (선택)</label>
-        <textarea
+      {/* 설명 */}
+      <div className="mb-3 space-y-1.5">
+        <Label className="text-xs text-muted-foreground">설명 (선택)</Label>
+        <Textarea
           value={formData.description}
           onChange={(e) =>
             setFormData({ ...formData, description: e.target.value })
@@ -763,18 +735,20 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         />
       </div>
 
-      <div className="modal-actions">
-        <button
+      {/* 하단 액션 버튼 */}
+      <div className="flex gap-3 mt-6 pb-3">
+        <Button
           type="button"
+          variant="outline"
+          className="flex-1"
           onClick={onCancel}
-          className="btn-secondary"
           disabled={loading}
         >
           취소
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="btn-primary"
+          className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
           disabled={loading || editingTemplateId !== null}
           title={
             editingTemplateId !== null
@@ -783,7 +757,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
           }
         >
           {loading ? `${submitButtonText} 중...` : submitButtonText}
-        </button>
+        </Button>
       </div>
     </form>
   );

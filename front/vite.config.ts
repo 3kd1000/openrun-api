@@ -1,10 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     VitePWA({
       registerType: "prompt",
@@ -75,6 +78,11 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   server: {
     host: true, // 모든 네트워크 인터페이스에서 접근 허용
     allowedHosts: [
@@ -91,6 +99,15 @@ export default defineConfig({
           "date-vendor": ["date-fns"],
           // 캘린더 라이브러리
           "calendar-vendor": ["react-calendar"],
+          // TanStack Query
+          "query-vendor": ["@tanstack/react-query"],
+          // shadcn/ui 관련 유틸리티
+          "ui-vendor": [
+            "class-variance-authority",
+            "clsx",
+            "tailwind-merge",
+            "lucide-react",
+          ],
         },
       },
     },

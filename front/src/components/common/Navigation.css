@@ -75,6 +75,15 @@
   white-space: nowrap;
 }
 
+/* 5탭 모드 (클럽 가입 시) */
+.navigation--five-tabs .nav-item {
+  padding: 8px 8px;
+}
+
+.navigation--five-tabs .nav-label {
+  font-size: 11px;
+}
+
 /* 사용자 섹션은 더보기 페이지로 이동 - 스타일 제거 */
 
 /*

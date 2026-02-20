@@ -4,6 +4,22 @@ import { getOpenRunSession } from "../../utils/openrunSession";
 import "./Navigation.css";
 
 // 선 스타일 SVG 아이콘 컴포넌트
+const ExploreIcon: React.FC<{ isActive: boolean }> = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+  </svg>
+);
+
 const HomeIcon: React.FC<{ isActive: boolean }> = () => (
   <svg
     width="24"
@@ -78,21 +94,27 @@ const MoreIcon: React.FC<{ isActive: boolean }> = () => (
 const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const session = getOpenRunSession();
+  const hasClubs = session.clubList && session.clubList.length > 0;
 
-  const isClubRoute =
-    location.pathname === "/clubs" ||
-    location.pathname === "/clubs/explore" ||
-    location.pathname.startsWith("/clubs/") ||
-    location.pathname === "/club" ||
-    location.pathname.startsWith("/club/");
+  // Active 상태 감지
+  const isExploreRoute = location.pathname === "/clubs/explore";
+
+  const isClubHomeRoute =
+    !isExploreRoute &&
+    (location.pathname === "/clubs" ||
+      location.pathname.startsWith("/clubs/") ||
+      location.pathname === "/club" ||
+      location.pathname.startsWith("/club/"));
 
   const isScheduleRoute = location.pathname.startsWith("/schedules/");
+  const isScoreboardRoute = location.pathname === "/scoreboard" || location.pathname.startsWith("/scoreboard/");
 
-  // 클럽 탭 클릭 시 세션에서 최신 clubId를 읽어서 이동
+  // 클럽홈 탭 클릭 시 세션에서 최신 clubId를 읽어서 이동
   const handleClubClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    const session = getOpenRunSession();
-    const currentClubId = session.currentClubId;
+    const latestSession = getOpenRunSession();
+    const currentClubId = latestSession.currentClubId;
     const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/clubs/explore";
     navigate(clubPath);
   };
@@ -101,35 +123,48 @@ const Navigation: React.FC = () => {
     path: string;
     label: string;
     icon: React.FC<{ isActive: boolean }>;
-    comingSoon?: boolean;
     onClick?: (e: React.MouseEvent) => void;
   }> = [
-    { path: "/clubs", label: "홈", icon: HomeIcon, onClick: handleClubClick },
+    { path: "/clubs/explore", label: "탐색", icon: ExploreIcon },
+    ...(hasClubs
+      ? [
+          {
+            path: `/clubs/${session.currentClubId || "explore"}`,
+            label: "클럽홈",
+            icon: HomeIcon,
+            onClick: handleClubClick,
+          },
+        ]
+      : []),
     { path: "/schedules/club", label: "일정", icon: CalendarIcon },
-    { path: "/scoreboard", label: "기록", icon: TrophyIcon },
+    { path: "/scoreboard", label: "스코어보드", icon: TrophyIcon },
     { path: "/more", label: "더보기", icon: MoreIcon },
   ];
 
   return (
-    <nav className="navigation">
+    <nav className={`navigation ${navItems.length === 5 ? "navigation--five-tabs" : ""}`}>
       {navItems.map((item) => {
         const IconComponent = item.icon;
         return (
           <NavLink
-            key={item.path}
+            key={item.label}
             to={item.path}
             onClick={item.onClick}
             className={({ isActive }) => {
               let forcedActive = isActive;
-              if (item.label === "홈") forcedActive = isClubRoute;
+              if (item.label === "탐색") forcedActive = isExploreRoute;
+              if (item.label === "클럽홈") forcedActive = isClubHomeRoute;
               if (item.label === "일정") forcedActive = isScheduleRoute;
+              if (item.label === "스코어보드") forcedActive = isScoreboardRoute;
               return `nav-item ${forcedActive ? "active" : ""}`;
             }}
           >
             {({ isActive }) => {
               let forcedActive = isActive;
-              if (item.label === "홈") forcedActive = isClubRoute;
+              if (item.label === "탐색") forcedActive = isExploreRoute;
+              if (item.label === "클럽홈") forcedActive = isClubHomeRoute;
               if (item.label === "일정") forcedActive = isScheduleRoute;
+              if (item.label === "스코어보드") forcedActive = isScoreboardRoute;
               return (
                 <>
                   <span className="nav-icon">

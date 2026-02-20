@@ -60,21 +60,34 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     }
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return "";
+  const formatDateFull = (date: Date) => {
     const year = String(date.getFullYear()).slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}.${month}.${day}`;
   };
 
+  const formatDateShort = (date: Date) => {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${month}.${day}`;
+  };
+
   const getDisplayText = () => {
     if (!startDate && !endDate) return placeholder;
     if (startDate && endDate) {
-      if (formatDate(startDate) === formatDate(endDate)) {
-        return formatDate(startDate);
+      const sameYear = startDate.getFullYear() === endDate.getFullYear();
+      const currentYear = new Date().getFullYear();
+      const isCurrentYear = sameYear && startDate.getFullYear() === currentYear;
+
+      if (formatDateFull(startDate) === formatDateFull(endDate)) {
+        return isCurrentYear ? formatDateShort(startDate) : formatDateFull(startDate);
       }
-      return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
+
+      if (isCurrentYear) {
+        return `${formatDateShort(startDate)} ~ ${formatDateShort(endDate)}`;
+      }
+      return `${formatDateFull(startDate)} ~ ${formatDateFull(endDate)}`;
     }
     return placeholder;
   };

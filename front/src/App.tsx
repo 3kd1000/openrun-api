@@ -1,6 +1,8 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import DrawGenerationPage from "./pages/draw/DrawGenerationPage";
 import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
+import ScheduleCreatePage from "./pages/schedule/create/ScheduleCreatePage";
+import ScheduleDetailPage from "./pages/schedule/detail/ScheduleDetailPage";
 import MorePage from "./pages/more/MorePage";
 import ScoreboardPage from "./pages/scoreboard/ScoreboardPage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -43,6 +45,8 @@ import { AwardWinnersProvider } from "./contexts/AwardWinnersContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ClubLayout } from "./layouts/ClubLayout";
+import { QueryProvider } from "./providers/QueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
 
 function App() {
@@ -55,6 +59,7 @@ function App() {
     location.pathname !== "/intro";
 
   return (
+    <QueryProvider>
     <ToastProvider>
       <ErrorBoundary>
         <AuthProvider>
@@ -250,6 +255,8 @@ function App() {
               >
                 <Route path="/schedules/club" element={<ScheduleListPage />} />
                 <Route path="/schedules/my" element={<ScheduleListPage />} />
+                <Route path="/schedules/new" element={<ScheduleCreatePage />} />
+                <Route path="/schedules/:scheduleId" element={<ScheduleDetailPage />} />
                 <Route path="/scoreboard" element={<ScoreboardPage />} />
               </Route>
               <Route
@@ -268,11 +275,13 @@ function App() {
         {!shouldShowNavigation && <Footer />}
 
           </div>
+          <Toaster position="top-center" richColors />
           </AwardWinnersProvider>
           </NotificationProvider>
         </AuthProvider>
       </ErrorBoundary>
     </ToastProvider>
+    </QueryProvider>
   );
 }
 
