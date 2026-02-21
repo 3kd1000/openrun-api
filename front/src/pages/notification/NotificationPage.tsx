@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import BackButton from "../../components/common/BackButton";
 import { useNotification } from "../../contexts/NotificationContext";
 import "./NotificationPage.css";
 
@@ -216,25 +217,10 @@ const NotificationPage: React.FC = () => {
   return (
     <div className="notification-page">
       <div className="notification-page__header">
-        <button
-          className="notification-page__back-btn"
+        <BackButton
           onClick={() => isEditMode ? exitEditMode() : navigate(-1)}
-          aria-label={isEditMode ? "편집 취소" : "뒤로 가기"}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-        </button>
+          ariaLabel={isEditMode ? "편집 취소" : "뒤로 가기"}
+        />
         <h1 className="notification-page__title">
           {isEditMode ? `${selectedIds.size}개 선택` : "알림"}
         </h1>

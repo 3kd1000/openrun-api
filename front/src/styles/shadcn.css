@@ -81,8 +81,8 @@
   --popover-foreground: oklch(0.145 0.014 285.823);
   --primary: oklch(0.596 0.145 163.225);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0.005 257.287);
-  --secondary-foreground: oklch(0.391 0.027 257.287);
+  --secondary: oklch(0.372 0.039 257.298);
+  --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.97 0.005 257.287);
   --muted-foreground: oklch(0.556 0.02 257.287);
   --accent: oklch(0.97 0.005 257.287);
@@ -112,5 +112,16 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

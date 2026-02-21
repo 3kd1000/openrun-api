@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getMyRecentMatches,
+  getMyClubStats,
   type MyRecentMatchResponse,
+  type MyClubStatsResponse,
 } from "../../../../../services/api/userApi";
 import {
   TrophyIcon,
@@ -31,24 +33,30 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
 }) => {
   const navigate = useNavigate();
   const [matches, setMatches] = useState<MyRecentMatchResponse[]>([]);
+  const [clubStats, setClubStats] = useState<MyClubStatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
   const myName = getOpenRunSession().userName || "나";
 
   useEffect(() => {
-    loadRecentMatches();
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId, maxItems]);
 
-  const loadRecentMatches = async () => {
+  const loadData = async () => {
     try {
       setIsLoading(true);
-      const data = await getMyRecentMatches(clubId, maxItems);
-      setMatches(data);
+      const [matchData, statsData] = await Promise.all([
+        getMyRecentMatches(clubId, maxItems),
+        getMyClubStats(clubId),
+      ]);
+      setMatches(matchData);
+      setClubStats(statsData);
     } catch (error: unknown) {
-      logError("최근 전적 조회", error);
+      logError("클럽 전적 조회", error);
       setMatches([]);
+      setClubStats(null);
     } finally {
       setIsLoading(false);
     }
@@ -121,16 +129,6 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
     setInternalExpanded(next);
   };
 
-  // 승/패 요약 계산
-  const getSummary = () => {
-    const wins = matches.filter((m) => m.result === "WIN").length;
-    const losses = matches.filter((m) => m.result === "LOSE").length;
-    const draws = matches.filter((m) => m.result === "DRAW").length;
-    return { wins, losses, draws };
-  };
-
-  const summary = getSummary();
-
   return (
     <div className="my-recent-matches-widget">
       <div className="my-recent-matches-widget__header">
@@ -140,7 +138,7 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
         >
           <TrophyIcon size={16} />
           <span className="my-recent-matches-widget__title">
-            나의 최근 전적
+            나의 클럽 전적
           </span>
           {isExpanded ? (
             <ChevronUpIcon size={14} />
@@ -165,59 +163,64 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
             </div>
           )}
 
-          {!isLoading && matches.length === 0 && (
+          {!isLoading && !clubStats?.totalMatches && matches.length === 0 && (
             <div className="my-recent-matches-widget__empty">
-              최근 경기 기록이 없습니다
+              경기 기록이 없습니다
             </div>
           )}
 
-          {!isLoading && matches.length > 0 && (
+          {!isLoading && clubStats && clubStats.totalMatches > 0 && (
             <>
-              {/* 전적 요약 */}
+              {/* 누적 전적 요약 */}
               <div className="my-recent-matches-widget__summary">
                 <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--win">
-                  {summary.wins}승
+                  {clubStats.wins}승
                 </span>
                 <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--draw">
-                  {summary.draws}무
+                  {clubStats.draws}무
                 </span>
                 <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--lose">
-                  {summary.losses}패
+                  {clubStats.losses}패
+                </span>
+                <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--total">
+                  총 {clubStats.totalMatches}경기
                 </span>
               </div>
 
-              {/* 경기 목록 */}
-              <div className="my-recent-matches-widget__list">
-                {matches.map((match) => (
-                  <div
-                    key={match.matchId}
-                    className="my-recent-matches-widget__item"
-                  >
-                    <span
-                      className={`my-recent-matches-widget__result-badge ${getResultBadgeClass(
-                        match.result
-                      )}`}
+              {/* 최근 경기 목록 */}
+              {matches.length > 0 && (
+                <div className="my-recent-matches-widget__list">
+                  {matches.map((match) => (
+                    <div
+                      key={match.matchId}
+                      className="my-recent-matches-widget__item"
                     >
-                      {getResultLabel(match.result)}
-                    </span>
-                    <span className="my-recent-matches-widget__date">
-                      {formatDate(match.playedAt)}
-                    </span>
-                    <span className="my-recent-matches-widget__players">
-                      <span className="my-recent-matches-widget__my-team">
-                        {renderMyTeam(match)}
+                      <span
+                        className={`my-recent-matches-widget__result-badge ${getResultBadgeClass(
+                          match.result
+                        )}`}
+                      >
+                        {getResultLabel(match.result)}
                       </span>
-                      <span className="my-recent-matches-widget__vs">vs</span>
-                      <span className="my-recent-matches-widget__opponent-team">
-                        {renderOpponentTeam(match)}
+                      <span className="my-recent-matches-widget__date">
+                        {formatDate(match.playedAt)}
                       </span>
-                    </span>
-                    <span className="my-recent-matches-widget__score">
-                      {match.myTeamScore}:{match.opponentTeamScore}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                      <span className="my-recent-matches-widget__players">
+                        <span className="my-recent-matches-widget__my-team">
+                          {renderMyTeam(match)}
+                        </span>
+                        <span className="my-recent-matches-widget__vs">vs</span>
+                        <span className="my-recent-matches-widget__opponent-team">
+                          {renderOpponentTeam(match)}
+                        </span>
+                      </span>
+                      <span className="my-recent-matches-widget__score">
+                        {match.myTeamScore}:{match.opponentTeamScore}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>

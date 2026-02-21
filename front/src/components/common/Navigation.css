@@ -112,21 +112,28 @@
   .nav-item {
     flex-direction: row;
     justify-content: flex-start;
-    padding: 16px 20px;
+    padding: 18px 24px;
     width: 100%;
     flex: none;
   }
 
   .nav-icon {
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     margin-bottom: 0;
-    margin-right: 12px;
+    margin-right: 14px;
   }
 
   .nav-label {
-    font-size: 16px;
+    font-size: 18px;
   }
 
-  /* 사용자 섹션은 더보기 페이지로 이동 - 스타일 제거 */
+  /* 5탭 모드에서도 데스크탑 사이즈 유지 */
+  .navigation--five-tabs .nav-label {
+    font-size: 18px;
+  }
+
+  .navigation--five-tabs .nav-item {
+    padding: 18px 24px;
+  }
 }

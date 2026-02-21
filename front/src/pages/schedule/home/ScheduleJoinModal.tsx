@@ -4,12 +4,21 @@ import { ko } from "date-fns/locale";
 import { scheduleService } from "../../../services/scheduleService";
 import { participantService } from "../../../services/participantService";
 import type { Schedule } from "../../../types/schedule";
-import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
 import { formatScheduleDateTime } from "../../../utils/dateUtils";
-import "./ScheduleJoinModal.css";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { useToast } from "../../../contexts/ToastContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
+import { Checkbox } from "../../../components/ui/checkbox";
+import { Badge } from "../../../components/ui/badge";
+import { cn } from "../../../lib/utils";
 
 const getMatchTypeLabel = (matchType: string | null | undefined): string => {
   switch (matchType) {
@@ -19,6 +28,22 @@ const getMatchTypeLabel = (matchType: string | null | undefined): string => {
     case "SINGLES": return "단식";
     default: return "";
   }
+};
+
+const getMatchTypeBadgeClass = (matchType: string | null | undefined): string => {
+  switch (matchType) {
+    case "MEN_DOUBLES": return "bg-blue-100 text-blue-700";
+    case "WOMEN_DOUBLES": return "bg-pink-100 text-pink-700";
+    case "MIXED_DOUBLES": return "bg-purple-100 text-purple-700";
+    case "SINGLES": return "bg-emerald-100 text-emerald-700";
+    default: return "";
+  }
+};
+
+const getCapacityBadgeClass = (isSelected: boolean, isFull: boolean): string => {
+  if (isSelected) return "bg-blue-100 text-blue-700";
+  if (isFull) return "bg-red-100 text-red-700";
+  return "bg-emerald-100 text-emerald-700";
 };
 
 interface Props {
@@ -33,17 +58,12 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  // 체크박스 상태 변경에 따른 인원수 추적
   const [localParticipantCounts, setLocalParticipantCounts] = useState<Map<number, number>>(new Map());
 
   const session = getOpenRunSession();
   const currentUserId = session.userId ?? null;
   const currentClubId = session.currentClubId ? parseInt(session.currentClubId) : 1;
 
-  // ESC 키로 모달 닫기
-  useEscapeKey(onClose, !saving);
-
-  // 일정 목록 로드
   useEffect(() => {
     const loadSchedules = async () => {
       if (!currentUserId) return;
@@ -52,37 +72,29 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         setLoading(true);
         setError("");
 
-        // 현재 클럽의 모든 일정 조회
         const clubSchedules = await scheduleService.getAllSchedules(currentUserId, currentClubId);
 
-        // 과거 제외, 오늘 포함 (시간 안 지난 경우)
         const futureSchedules = clubSchedules.filter((schedule) => {
           const scheduleDate = new Date(schedule.scheduledAt);
           const now = new Date();
-
-          // 오늘 또는 미래 날짜만
           return scheduleDate >= now || !isPastDate(schedule.scheduledAt);
         });
 
-        // 날짜순 정렬 (가까운 일정 위)
         futureSchedules.sort((a, b) => {
           return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
         });
 
         setSchedules(futureSchedules);
 
-        // 초기 인원수 맵 설정
         const initialCounts = new Map<number, number>();
         futureSchedules.forEach((schedule) => {
           initialCounts.set(schedule.id, schedule.currentParticipants);
         });
         setLocalParticipantCounts(initialCounts);
 
-        // 내가 참가신청한 일정 ID 조회
         const myParticipationIds = await scheduleService.getMyParticipations(currentUserId);
         const initialSelected = new Set<number>(myParticipationIds);
 
-        // 현재/미래 일정 중에서만 필터링
         const futureParticipations = new Set<number>();
         futureSchedules.forEach((schedule) => {
           if (initialSelected.has(schedule.id)) {
@@ -102,15 +114,13 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
     loadSchedules();
   }, [currentClubId, currentUserId]);
 
-  // 체크박스 토글
   const handleToggle = (scheduleId: number) => {
     setSelectedScheduleIds((prev) => {
       const newSet = new Set(prev);
       const wasSelected = newSet.has(scheduleId);
-      
+
       if (wasSelected) {
         newSet.delete(scheduleId);
-        // 체크 해제: 인원수 감소
         setLocalParticipantCounts((prevCounts) => {
           const newCounts = new Map(prevCounts);
           const currentCount = newCounts.get(scheduleId) || 0;
@@ -119,7 +129,6 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         });
       } else {
         newSet.add(scheduleId);
-        // 체크: 인원수 증가
         setLocalParticipantCounts((prevCounts) => {
           const newCounts = new Map(prevCounts);
           const currentCount = newCounts.get(scheduleId) || 0;
@@ -127,12 +136,11 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
           return newCounts;
         });
       }
-      
+
       return newSet;
     });
   };
 
-  // 저장
   const handleSave = async () => {
     if (!currentUserId) {
       showToast("로그인이 필요합니다", "warning");
@@ -147,7 +155,6 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         selectedScheduleIds: Array.from(selectedScheduleIds),
       });
 
-      // 실패한 작업이 있으면 경고
       if (response.failedOperations.length > 0) {
         const failedMessages = response.failedOperations
           .map((op) => `일정 ID ${op.scheduleId}: ${op.errorMessage}`)
@@ -155,7 +162,7 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         showToast(`일부 작업이 실패했습니다: ${failedMessages}`, "error");
       }
 
-      onSuccess(); // 부모 컴포넌트 새로고침
+      onSuccess();
       onClose();
     } catch (err: unknown) {
       console.error("배치 참가신청 실패:", err);
@@ -168,83 +175,102 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
     }
   };
 
-  // 참가신청 가능 여부 확인
   const canParticipate = (schedule: Schedule): boolean => {
-    // 참가신청 시작시간이 설정되어 있으면 확인
     if (schedule.participationStartAt) {
       const startTime = new Date(schedule.participationStartAt);
       const now = new Date();
       return now >= startTime;
     }
-    return true; // 시작시간 미설정이면 항상 가능
+    return true;
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content schedule-join-modal modal-nested-md"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-header">
-          <h2>빠른 신청</h2>
-          <button className="btn-close" onClick={onClose}>
-            &times;
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => { if (!open && !saving) onClose(); }}>
+      <DialogContent className="max-w-[700px] w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b shrink-0">
+          <DialogTitle>빠른 신청</DialogTitle>
+        </DialogHeader>
 
-        <div className="sjm-content">
-          {error && <div className="error-message">{error}</div>}
+        <div className="flex flex-col gap-4 overflow-hidden flex-1 px-6 py-4 max-[768px]:px-3 max-[768px]:py-3 max-[768px]:gap-3">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>
+          )}
 
           {loading ? (
-            <div className="sjm-loading">일정 목록을 불러오는 중...</div>
+            <div className="py-8 px-4 text-center text-muted-foreground text-sm">
+              일정 목록을 불러오는 중...
+            </div>
           ) : schedules.length === 0 ? (
-            <div className="sjm-empty">참가 가능한 일정이 없습니다.</div>
+            <div className="py-8 px-4 text-center text-muted-foreground text-sm">
+              참가 가능한 일정이 없습니다.
+            </div>
           ) : (
-            <div className="sjm-schedule-list">
+            <div className="max-h-[60vh] min-h-[200px] overflow-y-auto flex flex-col gap-2 p-0.5 md:max-h-[65vh]">
               {schedules.map((schedule) => {
                 const isAvailable = canParticipate(schedule);
                 const isSelected = selectedScheduleIds.has(schedule.id);
-                // 로컬 인원수 사용 (체크박스 상태 변경 반영)
                 const currentCount = localParticipantCounts.get(schedule.id) ?? schedule.currentParticipants;
                 const isFull = currentCount >= schedule.maxCapacity;
 
                 return (
                   <div
                     key={schedule.id}
-                    className={`sjm-schedule-item ${!isAvailable ? "sjm-schedule-item--disabled" : ""}`}
+                    className={cn(
+                      "border rounded-lg transition-all",
+                      isAvailable && "hover:border-primary hover:shadow-sm",
+                      !isAvailable && "opacity-[0.65] cursor-not-allowed bg-muted border-muted"
+                    )}
                   >
-                    <label className="sjm-checkbox-wrapper">
-                      <input
-                        type="checkbox"
+                    <label
+                      className={cn(
+                        "flex items-center gap-3 p-3 cursor-pointer w-full max-[768px]:gap-2 max-[768px]:p-2",
+                        !isAvailable && "cursor-not-allowed"
+                      )}
+                    >
+                      <Checkbox
                         checked={isSelected}
-                        onChange={() => handleToggle(schedule.id)}
+                        onCheckedChange={() => handleToggle(schedule.id)}
                         disabled={!isAvailable}
-                        className="sjm-checkbox"
                       />
-                      <div className="sjm-schedule-info">
-                        <div className="sjm-schedule-header">
-                          <div className="sjm-court-name-row">
-                            <span className="sjm-label">코트명 -</span>
-                            <span className="sjm-court-name">{schedule.courtName}</span>
-                            {getMatchTypeLabel(schedule.matchType) && (
-                              <span className={`sjm-match-type-badge sjm-match-type--${schedule.matchType?.toLowerCase()}`}>
-                                {getMatchTypeLabel(schedule.matchType)}
-                              </span>
-                            )}
+                      <div className="flex-1 flex flex-col gap-1 min-w-0">
+                        <div className="flex justify-between items-center gap-2 w-full">
+                          <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <span className="text-sm md:text-[15px] text-muted-foreground font-medium shrink-0">
+                              코트명 -
+                            </span>
+                            <span className="text-sm md:text-[15px] font-medium text-foreground truncate">
+                              {schedule.courtName}
+                            </span>
                           </div>
-                          <span
-                            className={`sjm-capacity ${
-                              isFull ? "sjm-capacity--full" : ""
-                            } ${isSelected ? "sjm-capacity--joined" : ""}`}
-                          >
-                            {currentCount}/{schedule.maxCapacity}명
-                            {isSelected && " (신청완료)"}
-                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {getMatchTypeLabel(schedule.matchType) && (
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  "text-xs",
+                                  getMatchTypeBadgeClass(schedule.matchType)
+                                )}
+                              >
+                                {getMatchTypeLabel(schedule.matchType)}
+                              </Badge>
+                            )}
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "text-xs",
+                                getCapacityBadgeClass(isSelected, isFull)
+                              )}
+                            >
+                              {currentCount}/{schedule.maxCapacity}명
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="sjm-schedule-meta">
-                          <div className="sjm-date-row">
-                            <span className="sjm-label">모임일정 -</span>
-                            <span className="sjm-date">
+                        <div className="flex flex-col gap-0.5 w-full">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm md:text-[15px] text-muted-foreground font-medium shrink-0">
+                              모임일정 -
+                            </span>
+                            <span className="text-sm md:text-[15px] text-muted-foreground">
                               {formatScheduleDateTime(
                                 schedule.scheduledAt,
                                 schedule.durationMinutes
@@ -252,15 +278,20 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
                             </span>
                           </div>
                           {schedule.participationStartAt && (
-                            <div className="sjm-participation-start-row">
-                              <span className="sjm-label">신청시작 -</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm md:text-[15px] text-muted-foreground font-medium shrink-0">
+                                신청시작 -
+                              </span>
                               <span
-                                className={`sjm-participation-start ${
-                                  !isAvailable ? "sjm-participation-start--pending" : ""
-                                }`}
+                                className={cn(
+                                  "text-sm md:text-[15px] font-semibold",
+                                  isAvailable
+                                    ? "text-green-600"
+                                    : "text-[#f57c00] font-bold"
+                                )}
                               >
                                 {isAvailable
-                                  ? `신청가능`
+                                  ? "신청가능"
                                   : format(
                                       new Date(schedule.participationStartAt),
                                       "M월 d일 (E) HH:mm",
@@ -277,28 +308,30 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
               })}
             </div>
           )}
+        </div>
 
-          <div className="modal-actions">
-            <button
-              type="button"
+        <DialogFooter className="px-6 py-4 border-t shrink-0" showCloseButton={false}>
+          <div className="flex gap-3 w-full">
+            <Button
+              variant="outline"
               onClick={onClose}
-              className="btn-secondary"
               disabled={saving}
+              className="flex-1"
             >
               취소
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="default"
               onClick={handleSave}
-              className="btn-primary"
               disabled={loading || saving}
+              className="flex-1"
             >
               {saving ? "저장 중..." : "저장"}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

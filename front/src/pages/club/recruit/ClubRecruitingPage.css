@@ -9,16 +9,7 @@
   margin-bottom: var(--space-m);
 }
 
-.club-recruiting-page__back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
+/* back-btn: shadcn Button variant="ghost" size="icon" 으로 대체 */
 
 .club-recruiting-page__title {
   font-size: var(--font-size-l);

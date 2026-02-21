@@ -16,6 +16,7 @@ import ScheduleCard from "@/components/openrun/schedule-card";
 import ClubCard from "@/components/openrun/club-card";
 import EmptyState from "@/components/openrun/empty-state";
 import { Search, CalendarSearch, Users } from "lucide-react";
+import BackButton from "../../../components/common/BackButton";
 import "./ClubExplorePage.css";
 
 type TabType = "guest" | "member";
@@ -321,11 +322,7 @@ const ClubExplorePage: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {shouldShowBack && (
-            <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5" /><polyline points="12 19 5 12 12 5" />
-              </svg>
-            </Button>
+            <BackButton onClick={handleBack} />
           )}
           <h1 className="text-lg font-semibold">탐색</h1>
         </div>

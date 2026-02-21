@@ -189,6 +189,23 @@ public class UserController {
     }
 
     /**
+     * 특정 클럽에서의 개인 통계 조회
+     *
+     * @param userDetails 현재 사용자 정보
+     * @param clubId      클럽 ID
+     * @return 해당 클럽에서의 통계 (승/무/패/총경기수)
+     */
+    @GetMapping("/me/stats")
+    public ResponseEntity<UserTotalStatsResponse> getMyClubStats(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam Long clubId
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        UserTotalStatsResponse stats = userService.getMyClubStats(currentUserResponse.getId(), clubId);
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
      * 개인 전체 경기 기록 조회 (모든 클럽, 페이징)
      *
      * @param userDetails 현재 사용자 정보

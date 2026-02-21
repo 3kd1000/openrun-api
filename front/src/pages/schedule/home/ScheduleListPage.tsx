@@ -402,6 +402,7 @@ const ScheduleListPage: React.FC = () => {
     ) {
       let attemptCount = 0;
       const maxAttempts = 10;
+      const timers: ReturnType<typeof setTimeout>[] = [];
 
       const scrollToToday = () => {
         if (todayScheduleRef.current) {
@@ -417,17 +418,19 @@ const ScheduleListPage: React.FC = () => {
       const tryScroll = () => {
         attemptCount++;
         if (!scrollToToday() && attemptCount < maxAttempts) {
-          setTimeout(tryScroll, 100);
+          timers.push(setTimeout(tryScroll, 100));
         }
       };
 
       requestAnimationFrame(() => tryScroll());
-      setTimeout(tryScroll, 100);
-      setTimeout(tryScroll, 300);
-      setTimeout(tryScroll, 500);
-      setTimeout(tryScroll, 800);
+      timers.push(setTimeout(tryScroll, 100));
+      timers.push(setTimeout(tryScroll, 300));
+      timers.push(setTimeout(tryScroll, 500));
+      timers.push(setTimeout(tryScroll, 800));
+
+      return () => timers.forEach(clearTimeout);
     }
-  }, [viewMode, schedules.length, personalSchedules.length, filterDate, location.pathname]);
+  }, [viewMode, schedules.length, personalSchedules.length, filterDate, location.pathname, firstFutureIndex]);
 
   // --- 핸들러 ---
 

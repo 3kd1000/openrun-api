@@ -91,6 +91,11 @@
   color: #dc2626;
 }
 
+.my-recent-matches-widget__summary-item--total {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
 /* 경기 목록 */
 .my-recent-matches-widget__list {
   display: flex;

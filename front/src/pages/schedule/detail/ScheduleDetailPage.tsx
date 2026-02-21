@@ -3,13 +3,13 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
-  ArrowLeft,
   Link2,
   Pin,
   Users,
   Swords,
   Pencil,
 } from "lucide-react";
+import BackButton from "../../../components/common/BackButton";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -486,9 +486,7 @@ export default function ScheduleDetailPage() {
     return (
       <div className="page-container">
         <div className="mb-4 flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleGoBack}>
-            <ArrowLeft size={18} />
-          </Button>
+          <BackButton onClick={handleGoBack} />
           <span className="text-sm font-semibold">일정 상세</span>
         </div>
         <div className="space-y-4">
@@ -507,9 +505,7 @@ export default function ScheduleDetailPage() {
     return (
       <div className="page-container">
         <div className="mb-4 flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleGoBack}>
-            <ArrowLeft size={18} />
-          </Button>
+          <BackButton onClick={handleGoBack} />
           <span className="text-sm font-semibold">일정 상세</span>
         </div>
         <div className="rounded-lg bg-red-50 p-4 text-center text-sm text-red-700">
@@ -531,13 +527,7 @@ export default function ScheduleDetailPage() {
     return (
       <div className="page-container">
         <div className="mb-4 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditMode(false)}
-          >
-            <ArrowLeft size={18} />
-          </Button>
+          <BackButton onClick={() => setIsEditMode(false)} />
           <span className="text-sm font-semibold">일정 수정</span>
         </div>
         <ScheduleFormSection
@@ -572,9 +562,7 @@ export default function ScheduleDetailPage() {
       {/* 헤더 */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleGoBack}>
-            <ArrowLeft size={18} />
-          </Button>
+          <BackButton onClick={handleGoBack} />
           <span className="text-sm font-semibold">일정 상세</span>
         </div>
         <Button variant="outline" size="sm" className="text-xs" onClick={handleCopyLink}>
@@ -759,9 +747,9 @@ export default function ScheduleDetailPage() {
       {/* 대진표 섹션 */}
       <Card className="mb-3 gap-0 py-0">
         <CardContent className="p-4">
-          <span className="text-xs text-muted-foreground">대진표</span>
+          <span className="text-xs text-muted-foreground">대진표 상태</span>
           {schedule.drawType ? (
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="mt-1 flex items-center justify-between">
               <Badge
                 className={cn(
                   "text-xs",
@@ -772,31 +760,34 @@ export default function ScheduleDetailPage() {
               >
                 {schedule.isDrawValid ? "유효" : "무효"}
               </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={() => setShowDrawViewModal(true)}
-              >
-                보기
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs text-red-600 hover:text-red-700"
-                onClick={handleDeleteDraw}
-                disabled={loading || isPastDate(schedule.scheduledAt)}
-                title={
-                  isPastDate(schedule.scheduledAt)
-                    ? "이미 지난 경기에는 대진표를 삭제할 수 없습니다."
-                    : undefined
-                }
-              >
-                삭제
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setShowDrawViewModal(true)}
+                >
+                  보기
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs text-red-600 hover:text-red-700"
+                  onClick={handleDeleteDraw}
+                  disabled={loading || isPastDate(schedule.scheduledAt)}
+                  title={
+                    isPastDate(schedule.scheduledAt)
+                      ? "이미 지난 경기에는 대진표를 삭제할 수 없습니다."
+                      : undefined
+                  }
+                >
+                  삭제
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">미생성</span>
               <Button
                 size="sm"
                 className="text-xs"
@@ -810,12 +801,12 @@ export default function ScheduleDetailPage() {
               >
                 생성
               </Button>
-              {schedule.maxCapacity < 4 && (
-                <span className="text-xs text-muted-foreground">
-                  4인 이상 모임에서 가능 (현재 {schedule.maxCapacity}명)
-                </span>
-              )}
             </div>
+          )}
+          {!schedule.drawType && schedule.maxCapacity < 4 && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              4인 이상 모임에서 가능 (현재 {schedule.maxCapacity}명)
+            </p>
           )}
         </CardContent>
       </Card>

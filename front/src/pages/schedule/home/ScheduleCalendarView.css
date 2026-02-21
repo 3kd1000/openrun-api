@@ -139,8 +139,8 @@
 /* ========== 달력 타일 (날짜 셀) ========== */
 .calendar-view .react-calendar__tile {
   position: relative;
-  height: 140px;
-  min-height: 140px;
+  height: calc((100dvh - 220px) / 6);
+  min-height: 80px;
   max-height: 140px;
   padding: var(--space-xxs) var(--space-s);
   background: none;
@@ -318,8 +318,8 @@
   }
 
   .calendar-view .react-calendar__tile {
-    height: 110px;
-    min-height: 110px;
+    height: calc((100dvh - 180px) / 6);
+    min-height: 70px;
     max-height: 110px;
     padding: 3px 2px;
     font-size: var(--font-size-xs);

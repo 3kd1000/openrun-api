@@ -35,7 +35,7 @@ export default function ClubCard({ club, onClick }: ClubCardProps) {
           )}
         </div>
 
-        {/* Info rows */}
+        {/* Info rows + Description */}
         <div className="space-y-1 text-sm text-muted-foreground">
           {region && (
             <div className="flex items-center gap-2">
@@ -47,14 +47,12 @@ export default function ClubCard({ club, onClick }: ClubCardProps) {
             <Users className="h-3.5 w-3.5 shrink-0" />
             <span>{club.memberCount ?? 0}명</span>
           </div>
+          {club.description && (
+            <p className="line-clamp-2">
+              {club.description}
+            </p>
+          )}
         </div>
-
-        {/* Description */}
-        {club.description && (
-          <p className="mt-1.5 line-clamp-1 text-xs text-muted-foreground">
-            {club.description}
-          </p>
-        )}
       </CardContent>
     </Card>
   );

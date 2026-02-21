@@ -35,8 +35,8 @@ export const WIDGET_CONFIGS: WidgetConfig[] = [
   },
   {
     id: "myRecentMatches",
-    label: "나의 최근 전적",
-    description: "나의 최근 경기 결과를 보여줍니다",
+    label: "나의 클럽 전적",
+    description: "클럽 내 누적 전적과 최근 경기를 보여줍니다",
   },
 ];
 

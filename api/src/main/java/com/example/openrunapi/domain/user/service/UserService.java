@@ -404,6 +404,20 @@ public class UserService implements UserDetailsService {
     }
 
     /**
+     * 사용자의 특정 클럽 통계 조회
+     */
+    public UserTotalStatsResponse getMyClubStats(Long userId, Long clubId) {
+        return userStatisticsRepository.findByUserIdAndClubId(userId, clubId)
+                .map(stats -> UserTotalStatsResponse.builder()
+                        .wins((long) stats.getWins())
+                        .draws((long) stats.getDraws())
+                        .losses((long) stats.getLosses())
+                        .totalMatches((long) stats.getTotalMatches())
+                        .build())
+                .orElse(UserTotalStatsResponse.empty());
+    }
+
+    /**
      * 사용자의 모든 경기 기록 조회 (클럽 무관, 페이징)
      */
     public MyAllMatchPageResponse getMyAllMatches(Long userId, int page, int size) {

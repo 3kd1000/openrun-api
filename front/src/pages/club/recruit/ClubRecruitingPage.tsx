@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axiosInstance from "../../../services/api/axiosInstance";
 import type { Club } from "../../../types/club";
-import { ArrowLeftIcon, LinkIcon } from "../../../components/common/Icons";
+import { LinkIcon } from "../../../components/common/Icons";
+import BackButton from "../../../components/common/BackButton";
 import {
   clubService,
   type ExternalRequestResponse,
@@ -203,30 +204,20 @@ const ClubRecruitingPage: React.FC = () => {
   return (
     <div className="club-recruiting-page">
       <div className="club-recruiting-page__header">
-        <button
-          className="club-recruiting-page__back-btn"
-          type="button"
+        <BackButton
           onClick={() => {
-            // location.state에서 이전 페이지 정보 확인
             const state = location.state as { fromClubMain?: boolean; from?: string; returnUrl?: string } | null;
             if (state?.returnUrl) {
-              // returnUrl이 있으면 해당 URL로 이동 (검색조건 유지)
               navigate(state.returnUrl);
             } else if (state?.from === "guest-recruit") {
-              // GuestRecruitPage에서 왔으면 뒤로가기
               navigate(-1);
             } else if (state?.fromClubMain) {
               navigate(`/clubs/${clubId}`);
             } else {
-              // 기본: 브라우저 히스토리 뒤로가기 (URL 파라미터 유지)
               navigate(-1);
             }
           }}
-          aria-label="뒤로 가기"
-          title="뒤로 가기"
-        >
-          <ArrowLeftIcon size={20} />
-        </button>
+        />
         <h1 className="club-recruiting-page__title">클럽소개</h1>
         <button
           className="club-recruiting-page__link-btn"
@@ -258,14 +249,6 @@ const ClubRecruitingPage: React.FC = () => {
             </span>
           </div>
 
-          {/* 클럽소개 */}
-          <div className="club-recruiting-page__info-item">
-            <span className="club-recruiting-page__info-label">클럽소개</span>
-            <span className={`club-recruiting-page__info-value ${!club.description ? "club-recruiting-page__info-value--muted" : ""}`}>
-              {club.description || "-"}
-            </span>
-          </div>
-
           {/* 활동지역 */}
           <div className="club-recruiting-page__info-item">
             <span className="club-recruiting-page__info-label">활동지역</span>
@@ -279,6 +262,14 @@ const ClubRecruitingPage: React.FC = () => {
             <span className="club-recruiting-page__info-label">멤버 수</span>
             <span className="club-recruiting-page__info-value">
               {club.memberCount ?? 0}명
+            </span>
+          </div>
+
+          {/* 클럽소개 */}
+          <div className="club-recruiting-page__info-item">
+            <span className="club-recruiting-page__info-label">클럽소개</span>
+            <span className={`club-recruiting-page__info-value ${!club.description ? "club-recruiting-page__info-value--muted" : ""}`}>
+              {club.description || "-"}
             </span>
           </div>
 

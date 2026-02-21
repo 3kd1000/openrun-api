@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import BackButton from "../../../components/common/BackButton";
 import { scheduleService } from "../../../services/scheduleService";
 import type { CreateScheduleRequest } from "../../../types/schedule";
 import { validateScheduleCreation } from "../../../utils/scheduleValidation";
@@ -106,9 +105,7 @@ export default function ScheduleCreatePage() {
   return (
     <div className="page-container">
       <div className="mb-4 flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={handleGoBack}>
-          <ArrowLeft size={20} />
-        </Button>
+        <BackButton onClick={handleGoBack} />
         <h1 className="text-lg font-semibold">일정 등록</h1>
       </div>
 
