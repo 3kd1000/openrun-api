@@ -12,10 +12,8 @@ import { postService } from "../../../services/postService";
 import { commentService } from "../../../services/commentService";
 import type { Post, Comment } from "../../../types/post";
 import RequestProfileDrawer from "../../../components/RequestProfileDrawer";
-import ScheduleDetailModal from "../../schedule/edit/ScheduleDetailModal";
 import { FEATURE_FLAGS } from "../../../config/featureFlags";
 import { useToast } from "../../../contexts/ToastContext";
-import "./ClubRecruitManagePage.css";
 
 const typeLabel = (t: ExternalRequestType) => {
   if (t === "JOIN") return "가입 신청";
@@ -46,6 +44,18 @@ const formatDateTime = (dateStr: string) => {
   return format(new Date(dateStr), "yyyy. M. d. HH:mm");
 };
 
+const chipClass = (active: boolean, disabled: boolean) => {
+  const base =
+    "px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition-all duration-150";
+  const activeStyle = "bg-primary text-white border-primary";
+  const inactiveStyle =
+    "bg-gray-100 text-gray-600 border-gray-200 hover:border-primary hover:text-primary";
+  const disabledStyle = "opacity-50 cursor-not-allowed";
+  return [base, active ? activeStyle : inactiveStyle, disabled ? disabledStyle : ""]
+    .join(" ")
+    .trim();
+};
+
 const ClubRecruitManagePage: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -57,7 +67,8 @@ const ClubRecruitManagePage: React.FC = () => {
   const [list, setList] = useState<ExternalRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState<ExternalRequestType | "">("");
-  const [status, setStatus] = useState<ExternalRequestStatus | "">("PENDING");
+  // 상태 필터: "" = 전체, "PENDING" = 미처리, "DONE" = 처리완료(APPROVED/REJECTED/CANCELLED)
+  const [statusFilter, setStatusFilter] = useState<"" | "PENDING" | "DONE">("");
   const [expandedRequestIds, setExpandedRequestIds] = useState<Set<number>>(
     new Set()
   );
@@ -74,9 +85,6 @@ const ClubRecruitManagePage: React.FC = () => {
   const [profileDrawer, setProfileDrawer] = useState<{
     userId: number;
   } | null>(null);
-  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
-    null
-  );
 
   const targetPostId = useMemo(() => {
     const raw = searchParams.get("postId");
@@ -92,15 +100,18 @@ const ClubRecruitManagePage: React.FC = () => {
     }
     return {
       type: type || undefined,
-      status: status || undefined,
+      // "미처리"만 API에서 필터, "전체"/"처리완료"는 전체 조회 후 클라이언트 필터
+      status: statusFilter === "PENDING" ? ("PENDING" as ExternalRequestStatus) : undefined,
     };
-  }, [type, status, targetPostId]);
+  }, [type, statusFilter, targetPostId]);
 
   const load = async () => {
     if (!Number.isFinite(cid)) return;
     try {
       setLoading(true);
       const data = await clubService.listExternalRequests(cid, params);
+      // 최신 요청 상단 정렬
+      data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setList(data);
     } catch (e) {
       console.error(e);
@@ -109,6 +120,14 @@ const ClubRecruitManagePage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // "처리완료" 필터는 클라이언트에서 적용 (API는 단일 status만 지원)
+  const filteredList = useMemo(() => {
+    if (statusFilter === "DONE") {
+      return list.filter((r) => r.status !== "PENDING");
+    }
+    return list;
+  }, [list, statusFilter]);
 
   useEffect(() => {
     void load();
@@ -213,29 +232,30 @@ const ClubRecruitManagePage: React.FC = () => {
   };
 
   return (
-    <div className="club-external-requests-page">
-      <div className="club-external-requests-page__header">
+    <div className="page-container px-3 py-2 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between py-2 mb-3">
         <button
-          className="club-external-requests-page__back-btn"
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
           onClick={() => navigate(-1)}
         >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-external-requests-page__title">외부 요청</h1>
-        <div className="club-external-requests-page__header-spacer" />
+        <span className="flex-1 text-center text-sm font-bold text-foreground">가입관리</span>
+        <div className="w-9 h-9" />
       </div>
 
-      <div className="club-external-requests-page__section">
-        <div className="club-external-requests-page__filters">
-          <div className="club-external-requests-page__filter-row">
-            <div className="club-external-requests-page__filter-label">
+      {/* Filters (sticky) */}
+      <div className="sticky top-0 z-10 bg-white border border-border rounded-xl px-4 py-2 mb-3 shadow-sm">
+        <div className="flex flex-col gap-1">
+          {/* Type filter row */}
+          <div className="flex items-center gap-2">
+            <span className="w-9 flex-none text-xs font-semibold text-gray-400">
               타입
-            </div>
-            <div className="club-external-requests-page__chips">
+            </span>
+            <div className="flex flex-wrap gap-2">
               <button
-                className={`club-external-requests-page__chip ${
-                  type === "" ? "is-active" : ""
-                }`}
+                className={chipClass(type === "", Boolean(targetPostId))}
                 onClick={() => setType("")}
                 type="button"
                 disabled={Boolean(targetPostId)}
@@ -243,30 +263,27 @@ const ClubRecruitManagePage: React.FC = () => {
                 전체
               </button>
               <button
-                className={`club-external-requests-page__chip ${
-                  type === "JOIN" ? "is-active" : ""
-                }`}
+                className={chipClass(type === "JOIN", Boolean(targetPostId))}
                 onClick={() => setType("JOIN")}
                 type="button"
                 disabled={Boolean(targetPostId)}
               >
-                가입
+                가입문의
               </button>
               <button
-                className={`club-external-requests-page__chip ${
-                  type === "GUEST" ? "is-active" : ""
-                }`}
+                className={chipClass(type === "GUEST", Boolean(targetPostId))}
                 onClick={() => setType("GUEST")}
                 type="button"
                 disabled={Boolean(targetPostId)}
               >
-                게스트
+                게스트문의
               </button>
               {FEATURE_FLAGS.INTERCLUB_ENABLED && (
                 <button
-                  className={`club-external-requests-page__chip ${
-                    type === "INTERCLUB" ? "is-active" : ""
-                  }`}
+                  className={chipClass(
+                    type === "INTERCLUB",
+                    Boolean(targetPostId)
+                  )}
                   onClick={() => setType("INTERCLUB")}
                   type="button"
                   disabled={Boolean(targetPostId)}
@@ -277,100 +294,73 @@ const ClubRecruitManagePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="club-external-requests-page__filter-row">
-            <div className="club-external-requests-page__filter-label">
+          {/* Status filter row */}
+          <div className="flex items-center gap-2">
+            <span className="w-9 flex-none text-xs font-semibold text-gray-400">
               상태
-            </div>
-            <div className="club-external-requests-page__chips">
+            </span>
+            <div className="flex gap-2">
               <button
-                className={`club-external-requests-page__chip ${
-                  status === "PENDING" ? "is-active" : ""
-                }`}
-                onClick={() => setStatus("PENDING")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                대기
-              </button>
-              <button
-                className={`club-external-requests-page__chip ${
-                  status === "APPROVED" ? "is-active" : ""
-                }`}
-                onClick={() => setStatus("APPROVED")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                승인
-              </button>
-              <button
-                className={`club-external-requests-page__chip ${
-                  status === "REJECTED" ? "is-active" : ""
-                }`}
-                onClick={() => setStatus("REJECTED")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                반려
-              </button>
-              <button
-                className={`club-external-requests-page__chip ${
-                  status === "CANCELLED" ? "is-active" : ""
-                }`}
-                onClick={() => setStatus("CANCELLED")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                취소
-              </button>
-              <button
-                className={`club-external-requests-page__chip ${
-                  status === "" ? "is-active" : ""
-                }`}
-                onClick={() => setStatus("")}
+                className={chipClass(statusFilter === "", Boolean(targetPostId))}
+                onClick={() => setStatusFilter("")}
                 type="button"
                 disabled={Boolean(targetPostId)}
               >
                 전체
               </button>
+              <button
+                className={chipClass(statusFilter === "PENDING", Boolean(targetPostId))}
+                onClick={() => setStatusFilter("PENDING")}
+                type="button"
+                disabled={Boolean(targetPostId)}
+              >
+                미처리
+              </button>
+              <button
+                className={chipClass(statusFilter === "DONE", Boolean(targetPostId))}
+                onClick={() => setStatusFilter("DONE")}
+                type="button"
+                disabled={Boolean(targetPostId)}
+              >
+                처리완료
+              </button>
             </div>
           </div>
 
           {targetPostId && (
-            <div className="club-external-requests-page__filter-hint">
+            <p className="text-xs text-gray-500 pt-0.5">
               문의글에서 이동한 상세 보기입니다. (필터 고정)
-            </div>
+            </p>
           )}
         </div>
       </div>
 
+      {/* Content */}
       {loading ? (
-        <div className="club-external-requests-page__loading">로딩 중...</div>
-      ) : list.length === 0 ? (
-        <div className="club-external-requests-page__empty">
-          처리할 요청이 없습니다.
-        </div>
+        <div className="py-8 text-sm text-gray-500">로딩 중...</div>
+      ) : filteredList.length === 0 ? (
+        <div className="py-8 text-sm text-gray-500">해당하는 요청이 없습니다.</div>
       ) : (
-        <div className="club-external-requests-page__list">
-          {list.map((r) => (
+        <div className="flex flex-col gap-3">
+          {filteredList.map((r) => (
             <div
               key={r.id}
-              className={`club-external-requests-page__card ${
-                expandedRequestIds.has(r.id) ? "is-expanded" : ""
-              }`}
+              className="bg-white rounded-xl border border-border p-4 shadow-sm"
             >
-              <div className="club-external-requests-page__card-header">
-                <div className="club-external-requests-page__card-title">
+              {/* Card Header */}
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-border">
+                <span className="font-bold text-sm text-gray-900">
                   {typeLabel(r.type)} · {statusLabel(r.status)}
-                </div>
+                </span>
               </div>
 
-              <div className="club-external-requests-page__card-body">
-                <div className="club-external-requests-page__info-row">
-                  <span className="club-external-requests-page__label">
-                    작성자
-                  </span>
+              {/* Card Body */}
+              <div className="flex flex-col gap-2">
+                {/* 작성자 */}
+                <div className="grid gap-2 items-baseline" style={{ gridTemplateColumns: "90px 1fr" }}>
+                  <span className="text-xs font-medium text-gray-400">작성자</span>
                   <button
-                    className="club-external-requests-page__author-btn"
+                    className="text-xs font-semibold text-primary underline text-left cursor-pointer hover:opacity-70 transition-opacity bg-transparent border-none p-0"
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -381,27 +371,36 @@ const ClubRecruitManagePage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="club-external-requests-page__info-row">
-                  <span className="club-external-requests-page__label">
-                    작성일시
-                  </span>
-                  <span className="club-external-requests-page__value">
+                {/* 작성일시 */}
+                <div className="grid gap-2 items-baseline" style={{ gridTemplateColumns: "90px 1fr" }}>
+                  <span className="text-xs font-medium text-gray-400">작성일시</span>
+                  <span className="text-xs font-medium text-gray-800">
                     {formatDateTime(r.createdAt)}
                   </span>
                 </div>
 
+                {/* 선택된 일정 */}
                 {r.scheduleAt && (
-                  <div className="club-external-requests-page__info-row">
-                    <span className="club-external-requests-page__label">
-                      선택된 일정
-                    </span>
+                  <div className="grid gap-2 items-baseline" style={{ gridTemplateColumns: "90px 1fr" }}>
+                    <span className="text-xs font-medium text-gray-400">선택된 일정</span>
                     <button
-                      className="club-external-requests-page__schedule-btn"
+                      className={[
+                        "text-xs font-semibold text-left bg-transparent border-none p-0 transition-opacity",
+                        r.scheduleId
+                          ? "text-primary underline cursor-pointer hover:opacity-70"
+                          : "text-gray-500 no-underline cursor-default",
+                      ].join(" ")}
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (r.scheduleId) {
-                          setSelectedScheduleId(r.scheduleId);
+                          navigate(`/schedules/${r.scheduleId}`, {
+                            state: {
+                              returnUrl:
+                                window.location.pathname +
+                                window.location.search,
+                            },
+                          });
                         }
                       }}
                       disabled={!r.scheduleId}
@@ -411,14 +410,13 @@ const ClubRecruitManagePage: React.FC = () => {
                   </div>
                 )}
 
+                {/* 코트명 · 인원 */}
                 {(r.courtName ||
                   (typeof r.currentParticipants === "number" &&
                     typeof r.maxCapacity === "number")) && (
-                  <div className="club-external-requests-page__info-row">
-                    <span className="club-external-requests-page__label">
-                      코트명 · 인원
-                    </span>
-                    <span className="club-external-requests-page__value">
+                  <div className="grid gap-2 items-baseline" style={{ gridTemplateColumns: "90px 1fr" }}>
+                    <span className="text-xs font-medium text-gray-400">코트명 · 인원</span>
+                    <span className="text-xs font-medium text-gray-800">
                       {r.courtName || "-"} ·{" "}
                       {typeof r.currentParticipants === "number" &&
                       typeof r.maxCapacity === "number"
@@ -428,19 +426,19 @@ const ClubRecruitManagePage: React.FC = () => {
                   </div>
                 )}
 
+                {/* 모임 타입 */}
                 {matchTypeLabel(r.matchType) && (
-                  <div className="club-external-requests-page__info-row">
-                    <span className="club-external-requests-page__label">
-                      모임 타입
-                    </span>
-                    <span className="club-external-requests-page__value">
+                  <div className="grid gap-2 items-baseline" style={{ gridTemplateColumns: "90px 1fr" }}>
+                    <span className="text-xs font-medium text-gray-400">모임 타입</span>
+                    <span className="text-xs font-medium text-gray-800">
                       {matchTypeLabel(r.matchType)}
                     </span>
                   </div>
                 )}
 
+                {/* 상세보기 토글 */}
                 <button
-                  className="club-external-requests-page__expand-btn"
+                  className="mt-2 w-full py-1.5 px-4 border border-border bg-white rounded-lg text-xs font-medium text-gray-500 cursor-pointer transition-all hover:bg-gray-50 hover:border-gray-400"
                   type="button"
                   onClick={() => void handleToggleCard(r)}
                 >
@@ -448,10 +446,11 @@ const ClubRecruitManagePage: React.FC = () => {
                 </button>
               </div>
 
+              {/* Action Buttons (PENDING only) */}
               {r.status === "PENDING" && (
-                <div className="club-external-requests-page__card-actions">
+                <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-border">
                   <button
-                    className="club-external-requests-page__btn-approve"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-primary text-white border border-transparent transition-all hover:opacity-90"
                     onClick={() => handleApprove(r.id)}
                     type="button"
                   >
@@ -459,7 +458,7 @@ const ClubRecruitManagePage: React.FC = () => {
                     <span>승인</span>
                   </button>
                   <button
-                    className="club-external-requests-page__btn-reject"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-red-400 text-red-500 bg-transparent transition-all hover:bg-red-50"
                     onClick={() => handleReject(r.id)}
                     type="button"
                   >
@@ -469,59 +468,63 @@ const ClubRecruitManagePage: React.FC = () => {
                 </div>
               )}
 
+              {/* Thread / Comments (expanded) */}
               {expandedRequestIds.has(r.id) && (
-                <div className="club-external-requests-page__thread">
+                <div className="mt-3 flex flex-col gap-3">
                   {!r.postId ? (
-                    <div className="club-external-requests-page__thread-empty">
+                    <div className="p-3 border border-border rounded-xl bg-gray-50 text-xs text-gray-500">
                       문의글이 아직 없습니다.
                     </div>
                   ) : threadLoadingByPostId[r.postId] &&
                     !postsById[r.postId] ? (
-                    <div className="club-external-requests-page__thread-loading">
+                    <div className="p-3 border border-border rounded-xl bg-gray-50 text-xs text-gray-500">
                       대화를 불러오는 중...
                     </div>
                   ) : (
                     <>
+                      {/* Original post */}
                       {postsById[r.postId] && (
-                        <div className="club-external-requests-page__post">
-                          <div className="club-external-requests-page__post-content">
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-900">
+                          <p className="text-sm text-gray-900 whitespace-pre-wrap">
                             {sanitizeInquiryText(postsById[r.postId].content)}
-                          </div>
-                          <div className="club-external-requests-page__post-meta">
+                          </p>
+                          <p className="mt-1.5 text-xs text-gray-500">
                             {postsById[r.postId].author?.name ??
                               postsById[r.postId].guestName ??
                               "익명"}{" "}
                             · {formatDateTime(postsById[r.postId].createdAt)}
-                          </div>
+                          </p>
                         </div>
                       )}
 
-                      <div className="club-external-requests-page__comments">
+                      {/* Comments list */}
+                      <div className="flex flex-col gap-2">
                         {(commentsByPostId[r.postId] ?? []).length === 0 ? (
-                          <div className="club-external-requests-page__thread-empty">
+                          <div className="p-3 border border-border rounded-xl bg-gray-50 text-xs text-gray-500">
                             아직 댓글이 없습니다.
                           </div>
                         ) : (
                           (commentsByPostId[r.postId] ?? []).map((c) => (
                             <div
                               key={c.id}
-                              className="club-external-requests-page__comment"
+                              className="bg-gray-50 rounded-lg p-3 border border-gray-900"
                             >
-                              <div className="club-external-requests-page__comment-content">
+                              <p className="text-sm text-gray-900">
                                 {c.content}
-                              </div>
-                              <div className="club-external-requests-page__comment-meta">
+                              </p>
+                              <p className="mt-1.5 text-xs text-gray-500">
                                 {c.author?.name ?? "익명"} ·{" "}
                                 {formatDateTime(c.createdAt)}
-                              </div>
+                              </p>
                             </div>
                           ))
                         )}
                       </div>
 
-                      <div className="club-external-requests-page__comment-box">
+                      {/* Comment input */}
+                      <div className="flex flex-col gap-2.5">
                         <textarea
-                          className="club-external-requests-page__textarea"
+                          className="w-full min-h-[72px] rounded-xl border border-gray-900 bg-white p-3 text-xs resize-y focus:outline-none focus:border-gray-900"
                           placeholder="운영진 답변을 댓글로 남겨주세요"
                           value={commentDraftByPostId[r.postId] ?? ""}
                           onChange={(e) =>
@@ -532,7 +535,7 @@ const ClubRecruitManagePage: React.FC = () => {
                           }
                         />
                         <button
-                          className="club-external-requests-page__btn-comment"
+                          className="w-full py-2.5 px-3 rounded-xl text-sm font-extrabold bg-primary text-white disabled:opacity-50 transition-opacity"
                           type="button"
                           disabled={
                             threadLoadingByPostId[r.postId] ||
@@ -559,17 +562,6 @@ const ClubRecruitManagePage: React.FC = () => {
           clubId={cid}
           userId={profileDrawer.userId}
           onClose={() => setProfileDrawer(null)}
-        />
-      )}
-
-      {selectedScheduleId && (
-        <ScheduleDetailModal
-          scheduleId={selectedScheduleId}
-          onClose={() => setSelectedScheduleId(null)}
-          onSuccess={() => {
-            setSelectedScheduleId(null);
-            void load();
-          }}
         />
       )}
     </div>

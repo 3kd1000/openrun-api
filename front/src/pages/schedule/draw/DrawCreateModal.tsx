@@ -732,14 +732,14 @@ const DrawCreateModal: React.FC<Props> = ({
 
               <div className="flex flex-col gap-3 items-stretch flex-[2] min-h-0 overflow-hidden">
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-green-600 bg-green-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">참가 확정 ({confirmedGroup.length}명)</h4>
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">참가 확정 ({confirmedGroup.length}명)</div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {confirmedGroup.map((userId) => renderPlayerCard(userId))}
                   </div>
                 </div>
 
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-yellow-400 bg-yellow-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">대기열 ({waitingGroup.length}명)</h4>
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">대기열 ({waitingGroup.length}명)</div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {waitingGroup.map((userId) => renderPlayerCard(userId, "waiting"))}
                   </div>
@@ -803,21 +803,21 @@ const DrawCreateModal: React.FC<Props> = ({
 
               <div className="flex flex-col gap-3">
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-[#007bff] bg-[#e3f2fd] min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">그룹 A ({groupA.length}명)</h4>
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">그룹 A ({groupA.length}명)</div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {groupA.map((userId) => renderPlayerCard(userId))}
                   </div>
                 </div>
 
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-[#e91e63] bg-[#fce4ec] min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">그룹 B ({groupB.length}명)</h4>
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">그룹 B ({groupB.length}명)</div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {groupB.map((userId) => renderPlayerCard(userId))}
                   </div>
                 </div>
 
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-yellow-400 bg-yellow-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">대기열 ({waitingGroup.length}명)</h4>
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">대기열 ({waitingGroup.length}명)</div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {waitingGroup.map((userId) => renderPlayerCard(userId, "waiting"))}
                   </div>
@@ -881,24 +881,24 @@ const DrawCreateModal: React.FC<Props> = ({
 
               <div className="flex flex-col gap-3">
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-[#9c27b0] bg-[#f3e5f5] min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">
                     시드 플레이어 ({seedPlayers.length}/
                     {getSeedCount(seedPlayers.length + normalPlayers.length)}명)
-                  </h4>
+                  </div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {seedPlayers.map((userId) => renderPlayerCard(userId, "seed"))}
                   </div>
                 </div>
 
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-primary bg-primary/5 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">일반 플레이어 ({normalPlayers.length}명)</h4>
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">일반 플레이어 ({normalPlayers.length}명)</div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {normalPlayers.map((userId) => renderPlayerCard(userId))}
                   </div>
                 </div>
 
                 <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-yellow-400 bg-yellow-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
-                  <h4 className="text-xs font-bold text-muted-foreground mb-2 text-center shrink-0">대기열 ({waitingGroup.length}명)</h4>
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">대기열 ({waitingGroup.length}명)</div>
                   <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
                     {waitingGroup.map((userId) => renderPlayerCard(userId, "waiting"))}
                   </div>

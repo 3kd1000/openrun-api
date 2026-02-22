@@ -10,7 +10,6 @@ import {
   ChevronUpIcon,
 } from "../../../components/common/Icons";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
-import "./ClubRulesPage.css";
 
 const ClubRulesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -90,70 +89,80 @@ const ClubRulesPage: React.FC = () => {
   }, [clubId, noticesExpanded, rulesExpanded]);
 
   return (
-    <div className="club-rules-page">
+    <div className="page-container px-3 py-2 bg-gray-50 min-h-screen">
       {/* 헤더 */}
-      <div className="club-rules-page__header">
-        <button className="club-rules-page__back-btn" onClick={handleBack}>
+      <div className="flex items-center justify-between py-2 mb-3">
+        <button
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-rules-page__title">
+        <span className="flex-1 text-center text-sm font-bold text-foreground">
           {club?.name ? `${club.name} 공지/회칙` : "공지/회칙"}
-        </h1>
-        <div className="club-rules-page__header-spacer" />
+        </span>
+        <div className="w-9 h-9" />
       </div>
 
       {/* 콘텐츠 */}
-      <div className="club-rules-page__content">
+      <div className="bg-white rounded-xl border border-gray-200 px-3 py-2">
         {loading && (
-          <div className="club-rules-page__loading">회칙을 불러오는 중...</div>
+          <div className="flex flex-col items-center justify-center min-h-[200px] text-center text-gray-400">
+            회칙을 불러오는 중...
+          </div>
         )}
 
         {error && (
-          <div className="club-rules-page__error">{error}</div>
+          <div className="flex flex-col items-center justify-center min-h-[200px] text-center text-red-500">
+            {error}
+          </div>
         )}
 
         {!loading && !error && (
           <>
             {/* 공지사항 섹션 */}
-            <div className="club-rules-page__section">
+            <div className="mb-3">
               <button
-                className="club-rules-page__section-header"
+                className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl bg-white cursor-pointer"
                 onClick={() => setNoticesExpanded((p) => !p)}
                 type="button"
               >
-                <span className="club-rules-page__section-title">
+                <span className="text-sm font-semibold text-gray-800">
                   공지사항
                 </span>
-                <span className="club-rules-page__section-meta">
-                  {notices.length}개
+                <span className="ml-auto inline-flex items-center justify-center bg-primary text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[24px]">
+                  {notices.length}
                 </span>
-                {noticesExpanded ? (
-                  <ChevronUpIcon size={18} />
-                ) : (
-                  <ChevronDownIcon size={18} />
-                )}
+                <span className="text-gray-400">
+                  {noticesExpanded ? (
+                    <ChevronUpIcon size={18} />
+                  ) : (
+                    <ChevronDownIcon size={18} />
+                  )}
+                </span>
               </button>
               {noticesExpanded && (
-                <div className="club-rules-page__section-body">
+                <div className="mt-2">
                   {notices.length === 0 ? (
-                    <div className="club-rules-page__empty">
-                      <p className="club-rules-page__empty-icon">📣</p>
-                      <p className="club-rules-page__empty-message">
-                        등록된 공지사항이 없습니다.
-                      </p>
+                    <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-gray-400">
+                      <p className="text-2xl mb-2">📣</p>
+                      <p className="text-xs">등록된 공지사항이 없습니다.</p>
                     </div>
                   ) : (
-                    <div className="club-rules-page__list">
+                    <div className="flex flex-col gap-2">
                       {notices.map((notice, index) => (
-                        <div key={notice.id} className="club-rules-page__item">
-                          <span className="club-rules-page__item-number">
+                        <div
+                          key={notice.id}
+                          className="flex gap-2 px-3 py-2 bg-gray-50 rounded-lg"
+                        >
+                          <span className="text-xs font-bold text-primary min-w-[20px]">
                             {index + 1}.
                           </span>
-                          <div className="club-rules-page__item-content">
-                            <div className="club-rules-page__item-title">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold text-gray-800 mb-0.5">
                               {notice.title}
                             </div>
-                            <div className="club-rules-page__item-body">
+                            <div className="text-xs text-gray-500 whitespace-pre-wrap leading-relaxed">
                               {notice.content}
                             </div>
                           </div>
@@ -166,40 +175,43 @@ const ClubRulesPage: React.FC = () => {
             </div>
 
             {/* 회칙 섹션 */}
-            <div className="club-rules-page__section">
+            <div className="mb-3">
               <button
-                className="club-rules-page__section-header"
+                className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl bg-white cursor-pointer"
                 onClick={() => setRulesExpanded((p) => !p)}
                 type="button"
               >
-                <span className="club-rules-page__section-title">회칙</span>
-                <span className="club-rules-page__section-meta">
-                  {rules.length}개
+                <span className="text-sm font-semibold text-gray-800">회칙</span>
+                <span className="ml-auto inline-flex items-center justify-center bg-primary text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[24px]">
+                  {rules.length}
                 </span>
-                {rulesExpanded ? (
-                  <ChevronUpIcon size={18} />
-                ) : (
-                  <ChevronDownIcon size={18} />
-                )}
+                <span className="text-gray-400">
+                  {rulesExpanded ? (
+                    <ChevronUpIcon size={18} />
+                  ) : (
+                    <ChevronDownIcon size={18} />
+                  )}
+                </span>
               </button>
               {rulesExpanded && (
-                <div className="club-rules-page__section-body">
+                <div className="mt-2">
                   {rules.length === 0 ? (
-                    <div className="club-rules-page__empty">
-                      <p className="club-rules-page__empty-icon">📜</p>
-                      <p className="club-rules-page__empty-message">
-                        등록된 회칙이 없습니다.
-                      </p>
+                    <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-gray-400">
+                      <p className="text-2xl mb-2">📜</p>
+                      <p className="text-xs">등록된 회칙이 없습니다.</p>
                     </div>
                   ) : (
-                    <div className="club-rules-page__list">
+                    <div className="flex flex-col gap-2">
                       {rules.map((rule) => (
-                        <div key={rule.id} className="club-rules-page__item club-rules-page__item--no-number">
-                          <div className="club-rules-page__item-content">
-                            <div className="club-rules-page__item-title">
+                        <div
+                          key={rule.id}
+                          className="flex px-3 py-2 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold text-gray-800 mb-0.5">
                               {rule.title}
                             </div>
-                            <div className="club-rules-page__item-body">
+                            <div className="text-xs text-gray-500 whitespace-pre-wrap leading-relaxed">
                               {rule.content}
                             </div>
                           </div>

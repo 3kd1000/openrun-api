@@ -17,7 +17,6 @@ import ClubCard from "@/components/openrun/club-card";
 import EmptyState from "@/components/openrun/empty-state";
 import { Search, CalendarSearch, Users } from "lucide-react";
 import BackButton from "../../../components/common/BackButton";
-import "./ClubExplorePage.css";
 
 type TabType = "guest" | "member";
 type RecruitType = "GUEST" | "INTERCLUB";
@@ -328,7 +327,7 @@ const ClubExplorePage: React.FC = () => {
         </div>
         {firebaseUser && (
           <Button variant="outline" size="sm" onClick={() => navigate("/clubs/new")}>
-            클럽 개설
+            클럽 만들기
           </Button>
         )}
       </div>
@@ -342,10 +341,10 @@ const ClubExplorePage: React.FC = () => {
 
         {/* 게스트모집 탭 */}
         <TabsContent value="guest">
-          <div className="club-explore-page__filters">
-            <div className="club-explore-page__filter-row">
-              <div className="club-explore-page__filter-item club-explore-page__filter-item--search">
-                <label className="club-explore-page__filter-label">클럽/코트명 검색</label>
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex gap-3">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <label className="text-xs font-medium text-muted-foreground">클럽/코트명 검색</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -361,8 +360,8 @@ const ClubExplorePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="club-explore-page__filter-item club-explore-page__filter-item--date">
-                <label className="club-explore-page__filter-label">기간선택</label>
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <label className="text-xs font-medium text-muted-foreground">기간선택</label>
                 <DateRangePicker
                   startDate={fromDate}
                   endDate={toDate}
@@ -379,9 +378,9 @@ const ClubExplorePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="club-explore-page__filter-row">
-              <div className="club-explore-page__filter-item club-explore-page__filter-item--type">
-                <label className="club-explore-page__filter-label">모임타입</label>
+            <div className="flex gap-3">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <label className="text-xs font-medium text-muted-foreground">모임타입</label>
                 <select
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   value={matchTypeFilter}
@@ -399,8 +398,8 @@ const ClubExplorePage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="club-explore-page__filter-item club-explore-page__filter-item--region">
-                <label className="club-explore-page__filter-label">지역선택</label>
+              <div className="flex flex-col gap-1 flex-[2] min-w-0">
+                <label className="text-xs font-medium text-muted-foreground">지역선택</label>
                 <RegionSelector
                   depth1={guestRegionDepth1}
                   depth2={guestRegionDepth2}
@@ -469,10 +468,10 @@ const ClubExplorePage: React.FC = () => {
 
         {/* 클럽모집 탭 */}
         <TabsContent value="member">
-          <div className="club-explore-page__filters">
-            <div className="club-explore-page__filter-row">
-              <div className="club-explore-page__filter-item club-explore-page__filter-item--search">
-                <label className="club-explore-page__filter-label">클럽명 검색</label>
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex gap-3">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <label className="text-xs font-medium text-muted-foreground">클럽명 검색</label>
                 <form onSubmit={handleClubSearch} className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -489,8 +488,8 @@ const ClubExplorePage: React.FC = () => {
                 </form>
               </div>
 
-              <div className="club-explore-page__filter-item club-explore-page__filter-item--region">
-                <label className="club-explore-page__filter-label">지역선택</label>
+              <div className="flex flex-col gap-1 flex-[2] min-w-0">
+                <label className="text-xs font-medium text-muted-foreground">지역선택</label>
                 <RegionSelector
                   depth1={clubRegionDepth1}
                   depth2={clubRegionDepth2}

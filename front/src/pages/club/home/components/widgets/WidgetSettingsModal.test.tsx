@@ -7,11 +7,6 @@ import WidgetSettingsModal, {
   DEFAULT_SELECTED_WIDGETS_REGULAR,
 } from "./WidgetSettingsModal";
 
-// useEscapeKey mock
-vi.mock("../../../../hooks/useEscapeKey", () => ({
-  useEscapeKey: vi.fn(),
-}));
-
 describe("WidgetSettingsModal", () => {
   const mockOnSave = vi.fn();
   const mockOnClose = vi.fn();
@@ -210,21 +205,6 @@ describe("WidgetSettingsModal", () => {
   });
 
   describe("모달 오버레이", () => {
-    it("오버레이 클릭 시 모달이 닫혀야 함", () => {
-      render(
-        <WidgetSettingsModal
-          selectedWidgets={["upcomingSchedules"]}
-          onSave={mockOnSave}
-          onClose={mockOnClose}
-        />
-      );
-
-      // modal-overlay 클릭
-      fireEvent.click(screen.getByRole("heading", { name: "위젯 설정" }).closest(".modal-overlay")!);
-
-      expect(mockOnClose).toHaveBeenCalled();
-    });
-
     it("모달 내부 클릭 시 닫히지 않아야 함", () => {
       render(
         <WidgetSettingsModal

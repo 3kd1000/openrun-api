@@ -15,13 +15,12 @@ import type {
 } from '../../../types/ball';
 import type { ClubMembership } from '../../../types/club';
 import type { Schedule } from '../../../types/schedule';
-import { ArrowLeftIcon, PlusIcon } from '../../../components/common/Icons';
+import { ArrowLeftIcon } from '../../../components/common/Icons';
 import { getOpenRunSession } from '../../../utils/openrunSession';
 import { normalizeClubRole } from '../../../utils/role';
 import { getErrorMessage, logError } from '../../../utils/errorHandler';
 import { formatShortDate, formatScheduleDateTime } from '../../../utils/dateUtils';
 import { useToast } from '../../../contexts/ToastContext';
-import './ClubBallManagePage.css';
 
 type TabType = 'keepers' | 'transactions';
 
@@ -85,44 +84,55 @@ const KeeperSelectorModal: React.FC<KeeperSelectorModalProps> = ({
   });
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div
-        className="modal-content keeper-selector-modal"
+        className="bg-white rounded-xl w-full max-w-sm max-h-[80vh] overflow-hidden flex flex-col shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2>보유자 지정</h2>
-          <button className="btn-close" onClick={onClose}>
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-white z-10">
+          <h2 className="text-base font-bold m-0">보유자 지정</h2>
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-full text-2xl text-muted-foreground hover:bg-muted transition-colors leading-none"
+            onClick={onClose}
+          >
             &times;
           </button>
         </div>
 
-        <div className="keeper-selector-modal__content">
+        {/* 목록 */}
+        <div className="px-4 py-3 max-h-[50vh] overflow-y-auto flex-1">
           {members.length === 0 ? (
-            <div className="keeper-selector-modal__empty">
+            <div className="py-6 text-center text-muted-foreground text-sm">
               클럽원이 없습니다.
             </div>
           ) : (
-            <div className="keeper-selector-modal__list">
+            <div className="flex flex-col gap-1">
               {members.map((member) => {
                 const isSelected = selectedIds.has(member.memberId);
                 const keeper = keepers.find((k) => k.memberId === member.memberId);
 
                 return (
-                  <div key={member.memberId} className="keeper-selector-modal__item">
-                    <label className="keeper-selector-modal__checkbox-wrapper">
+                  <div
+                    key={member.memberId}
+                    className="bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <label className="flex items-center px-3 py-3 cursor-pointer gap-3">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggle(member.memberId)}
-                        className="keeper-selector-modal__checkbox"
+                        className="w-5 h-5 m-0 cursor-pointer accent-primary flex-shrink-0"
                       />
-                      <div className="keeper-selector-modal__member-info">
-                        <span className="keeper-selector-modal__member-name">
+                      <div className="flex flex-col gap-0.5 flex-1">
+                        <span className="text-sm font-medium text-foreground">
                           {member.name}
                         </span>
                         {keeper && (
-                          <span className="keeper-selector-modal__member-quantity">
+                          <span className="text-xs text-primary font-semibold">
                             {keeper.quantity}캔 보유
                           </span>
                         )}
@@ -135,10 +145,11 @@ const KeeperSelectorModal: React.FC<KeeperSelectorModalProps> = ({
           )}
         </div>
 
-        <div className="modal-actions">
+        {/* 액션 버튼 */}
+        <div className="flex gap-2 justify-end px-4 py-3 border-t border-border sticky bottom-0 bg-white z-10">
           <button
             type="button"
-            className="btn-secondary"
+            className="btn-secondary flex-1 min-w-0"
             onClick={onClose}
             disabled={saving}
           >
@@ -146,7 +157,7 @@ const KeeperSelectorModal: React.FC<KeeperSelectorModalProps> = ({
           </button>
           <button
             type="button"
-            className="btn-primary"
+            className="btn-primary flex-1 min-w-0"
             onClick={handleSave}
             disabled={saving || !hasChanges}
           >
@@ -205,45 +216,57 @@ const ScheduleSummaryModal: React.FC<ScheduleSummaryModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div
-        className="modal-content ball-modal"
+        className="bg-white rounded-xl w-full max-w-sm max-h-[80vh] overflow-hidden flex flex-col shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2>일정 요약</h2>
-          <button className="btn-close" onClick={onClose}>
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-white z-10">
+          <h2 className="text-base font-bold m-0">일정 요약</h2>
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-full text-2xl text-muted-foreground hover:bg-muted transition-colors leading-none"
+            onClick={onClose}
+          >
             &times;
           </button>
         </div>
 
-        <div className="ball-modal__body">
-          {loading && <div style={{ textAlign: 'center', padding: '20px' }}>로딩 중...</div>}
-          {error && <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-error)' }}>{error}</div>}
+        {/* 바디 */}
+        <div className="px-4 py-3 overflow-y-auto flex-1">
+          {loading && (
+            <div className="text-center py-5 text-sm text-muted-foreground">로딩 중...</div>
+          )}
+          {error && (
+            <div className="text-center py-5 text-sm text-destructive">{error}</div>
+          )}
           {schedule && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-m)' }}>
+            <div className="flex flex-col gap-3">
               <div className="form-group">
                 <label>장소</label>
-                <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
                   {schedule.courtName}
                 </div>
               </div>
               <div className="form-group">
                 <label>일시</label>
-                <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
                   {formatScheduleDateTime(schedule.scheduledAt, schedule.durationMinutes)}
                 </div>
               </div>
               <div className="form-group">
                 <label>참가 인원</label>
-                <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
                   {schedule.currentParticipants} / {schedule.maxCapacity}명
                 </div>
               </div>
               {schedule.matchType && (
                 <div className="form-group">
                   <label>경기 형식</label>
-                  <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
                     {getMatchTypeLabel(schedule.matchType)}
                   </div>
                 </div>
@@ -251,7 +274,7 @@ const ScheduleSummaryModal: React.FC<ScheduleSummaryModalProps> = ({
               {schedule.cost !== undefined && schedule.cost > 0 && (
                 <div className="form-group">
                   <label>비용</label>
-                  <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)' }}>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm">
                     {schedule.cost.toLocaleString()}원
                   </div>
                 </div>
@@ -259,7 +282,7 @@ const ScheduleSummaryModal: React.FC<ScheduleSummaryModalProps> = ({
               {schedule.description && (
                 <div className="form-group">
                   <label>설명</label>
-                  <div style={{ padding: 'var(--space-s)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-s)', whiteSpace: 'pre-wrap' }}>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm whitespace-pre-wrap">
                     {schedule.description}
                   </div>
                 </div>
@@ -268,12 +291,13 @@ const ScheduleSummaryModal: React.FC<ScheduleSummaryModalProps> = ({
           )}
         </div>
 
-        <div className="modal-actions">
-          <button className="btn-secondary" onClick={onClose}>
+        {/* 액션 버튼 */}
+        <div className="flex gap-2 justify-end px-4 py-3 border-t border-border sticky bottom-0 bg-white z-10">
+          <button className="btn-secondary flex-1 min-w-0" onClick={onClose}>
             닫기
           </button>
           <button
-            className="btn-primary"
+            className="btn-primary flex-1 min-w-0"
             onClick={onNavigateToDetail}
             disabled={loading || !!error}
           >
@@ -337,16 +361,27 @@ const AddBallModal: React.FC<AddBallModalProps> = ({
   const isValidQuantity = quantity !== '' && !isNaN(Number(quantity)) && Number(quantity) >= 1;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div
-        className="modal-content ball-modal"
+        className="bg-white rounded-xl w-full max-w-sm max-h-[80vh] overflow-hidden flex flex-col shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2>공용구 입고</h2>
-          <button className="btn-close" onClick={onClose}>&times;</button>
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-white z-10">
+          <h2 className="text-base font-bold m-0">공용구 입고</h2>
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-full text-2xl text-muted-foreground hover:bg-muted transition-colors leading-none"
+            onClick={onClose}
+          >
+            &times;
+          </button>
         </div>
-        <div className="ball-modal__body">
+
+        {/* 바디 */}
+        <div className="px-4 py-3 overflow-y-auto flex-1">
           <div className="form-group">
             <label>보유자</label>
             <select
@@ -369,10 +404,10 @@ const AddBallModal: React.FC<AddBallModalProps> = ({
               value={quantity}
               onChange={handleQuantityChange}
               placeholder="숫자 입력"
-              className={quantityError ? 'input-error' : ''}
+              className={quantityError ? 'border-destructive!' : ''}
             />
             {quantityError && (
-              <div className="field-error-message">{quantityError}</div>
+              <div className="text-xs text-destructive mt-1">{quantityError}</div>
             )}
           </div>
           <div className="form-group">
@@ -385,12 +420,14 @@ const AddBallModal: React.FC<AddBallModalProps> = ({
             />
           </div>
         </div>
-        <div className="modal-actions">
-          <button className="btn-secondary" onClick={onClose}>
+
+        {/* 액션 버튼 */}
+        <div className="flex gap-2 justify-end px-4 py-3 border-t border-border sticky bottom-0 bg-white z-10">
+          <button className="btn-secondary flex-1 min-w-0" onClick={onClose}>
             취소
           </button>
           <button
-            className="btn-success"
+            className="btn-success flex-1 min-w-0"
             onClick={handleSubmit}
             disabled={toMemberId === '' || !isValidQuantity}
           >
@@ -470,16 +507,27 @@ const DistributeModal: React.FC<DistributeModalProps> = ({
   const isValidQuantity = quantity !== '' && !isNaN(quantityNum) && quantityNum >= 1 && quantityNum <= maxQuantity;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div
-        className="modal-content ball-modal"
+        className="bg-white rounded-xl w-full max-w-sm max-h-[80vh] overflow-hidden flex flex-col shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2>공용구 배분</h2>
-          <button className="btn-close" onClick={onClose}>&times;</button>
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-white z-10">
+          <h2 className="text-base font-bold m-0">공용구 배분</h2>
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-full text-2xl text-muted-foreground hover:bg-muted transition-colors leading-none"
+            onClick={onClose}
+          >
+            &times;
+          </button>
         </div>
-        <div className="ball-modal__body">
+
+        {/* 바디 */}
+        <div className="px-4 py-3 overflow-y-auto flex-1">
           <div className="form-group">
             <label>출발 보유자</label>
             <select
@@ -518,10 +566,10 @@ const DistributeModal: React.FC<DistributeModalProps> = ({
               value={quantity}
               onChange={handleQuantityChange}
               placeholder="숫자 입력"
-              className={quantityError ? 'input-error' : ''}
+              className={quantityError ? 'border-destructive!' : ''}
             />
             {quantityError && (
-              <div className="field-error-message">{quantityError}</div>
+              <div className="text-xs text-destructive mt-1">{quantityError}</div>
             )}
           </div>
           <div className="form-group">
@@ -533,12 +581,14 @@ const DistributeModal: React.FC<DistributeModalProps> = ({
             />
           </div>
         </div>
-        <div className="modal-actions">
-          <button className="btn-secondary" onClick={onClose}>
+
+        {/* 액션 버튼 */}
+        <div className="flex gap-2 justify-end px-4 py-3 border-t border-border sticky bottom-0 bg-white z-10">
+          <button className="btn-secondary flex-1 min-w-0" onClick={onClose}>
             취소
           </button>
           <button
-            className="btn-info"
+            className="btn-info flex-1 min-w-0"
             onClick={handleSubmit}
             disabled={
               fromMemberId === '' ||
@@ -803,6 +853,22 @@ const ClubBallManagePage: React.FC = () => {
     }
   };
 
+  // 거래 유형별 뱃지 색상
+  const getTransactionTypeBadgeClass = (type: string) => {
+    switch (type) {
+      case 'ADD':
+        return 'bg-green-100 text-green-800';
+      case 'DISTRIBUTE':
+        return 'bg-blue-100 text-blue-800';
+      case 'USE':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'ADJUST':
+        return 'bg-gray-200 text-gray-700';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
   // 보유자 (테이블 컬럼용)
   const getTransactionKeeper = (tx: BallTransactionResponse) => {
     switch (tx.type) {
@@ -849,85 +915,92 @@ const ClubBallManagePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="ball-manage-page">
-        <div className="ball-manage-page__loading">로딩 중...</div>
+      <div className="page-container px-3 py-2 min-h-screen">
+        <div className="py-10 text-center text-sm text-muted-foreground">로딩 중...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="ball-manage-page">
-        <div className="ball-manage-page__header">
-          <button className="ball-manage-page__back-btn" onClick={handleBack}>
+      <div className="page-container px-3 py-2 min-h-screen">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between py-2 mb-3">
+          <button
+            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+            onClick={handleBack}
+          >
             <ArrowLeftIcon size={20} />
           </button>
-          <h1 className="ball-manage-page__title">공용구 관리</h1>
-          <div className="ball-manage-page__header-spacer" />
+          <h1 className="flex-1 text-center text-base font-bold">공용구 관리</h1>
+          <div className="w-9 h-9" />
         </div>
-        <div className="ball-manage-page__error">{error}</div>
+        <div className="py-6 text-center text-sm text-destructive">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="ball-manage-page">
+    <div className="page-container px-3 py-2 min-h-screen">
       {/* 헤더 */}
-      <div className="ball-manage-page__header">
-        <button className="ball-manage-page__back-btn" onClick={handleBack}>
+      <div className="flex items-center justify-between py-2 mb-3">
+        <button
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="ball-manage-page__title">공용구 관리</h1>
-        <div className="ball-manage-page__header-spacer" />
+        <span className="flex-1 text-center text-sm font-bold text-foreground">공용구 관리</span>
+        <div className="w-9 h-9" />
       </div>
 
-      {/* 통계 카드 */}
+      {/* 통계 카드 (4개 - 2x2 그리드) */}
       {summary && (
-        <div className="ball-manage-page__stats">
-          <div className="ball-manage-page__stat-card">
-            <span className="ball-manage-page__stat-value">{summary.totalQuantity}</span>
-            <span className="ball-manage-page__stat-label">총 보유</span>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="bg-white rounded-xl border border-border p-3 flex flex-col items-center">
+            <span className="text-xl font-bold text-primary">{summary.totalQuantity}</span>
+            <span className="text-xs text-muted-foreground mt-0.5">총 보유</span>
           </div>
-          <div className="ball-manage-page__stat-card">
-            <span className="ball-manage-page__stat-value">{summary.ballKeeperCount}</span>
-            <span className="ball-manage-page__stat-label">보유자</span>
+          <div className="bg-white rounded-xl border border-border p-3 flex flex-col items-center">
+            <span className="text-xl font-bold text-primary">{summary.ballKeeperCount}</span>
+            <span className="text-xs text-muted-foreground mt-0.5">보유자</span>
           </div>
-          <div className="ball-manage-page__stat-card">
-            <span className="ball-manage-page__stat-value">{summary.monthlyUsed}</span>
-            <span className="ball-manage-page__stat-label">이번달 사용</span>
+          <div className="bg-white rounded-xl border border-border p-3 flex flex-col items-center">
+            <span className="text-xl font-bold text-primary">{summary.monthlyUsed}</span>
+            <span className="text-xs text-muted-foreground mt-0.5">이번달 사용</span>
           </div>
-          <div className="ball-manage-page__stat-card">
-            <span className="ball-manage-page__stat-value">{summary.monthlyAdded}</span>
-            <span className="ball-manage-page__stat-label">이번달 입고</span>
+          <div className="bg-white rounded-xl border border-border p-3 flex flex-col items-center">
+            <span className="text-xl font-bold text-primary">{summary.monthlyAdded}</span>
+            <span className="text-xs text-muted-foreground mt-0.5">이번달 입고</span>
           </div>
         </div>
       )}
 
-      {/* 관리자 액션 버튼 */}
+      {/* 관리자 액션 버튼 (일반 모드) */}
       {isAdmin && !isEditMode && (
-        <div className="ball-manage-page__actions">
+        <div className="flex gap-2 overflow-x-auto mb-3">
           <button
-            className="ball-manage-page__action-btn ball-manage-page__action-btn--add"
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold bg-green-100 text-green-800 hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             onClick={() => setShowAddModal(true)}
             disabled={!summary || summary.keepers.length === 0}
           >
-            <PlusIcon size={16} /> 입고
+            입고
           </button>
           <button
-            className="ball-manage-page__action-btn ball-manage-page__action-btn--distribute"
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             onClick={() => setShowDistributeModal(true)}
             disabled={!summary || summary.keepers.length < 2}
           >
             배분
           </button>
           <button
-            className="ball-manage-page__action-btn ball-manage-page__action-btn--keeper"
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors whitespace-nowrap"
             onClick={() => setShowKeeperModal(true)}
           >
             보유자 지정
           </button>
           <button
-            className="ball-manage-page__action-btn ball-manage-page__action-btn--adjust"
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-orange-100 text-orange-800 hover:bg-orange-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             onClick={handleEnterEditMode}
             disabled={!summary || summary.keepers.length === 0}
           >
@@ -938,16 +1011,16 @@ const ClubBallManagePage: React.FC = () => {
 
       {/* 재고관리 모드 액션 버튼 */}
       {isAdmin && isEditMode && (
-        <div className="ball-manage-page__actions">
+        <div className="flex gap-2 overflow-x-auto mb-3">
           <button
-            className="ball-manage-page__action-btn ball-manage-page__action-btn--success"
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-green-100 text-green-800 hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             onClick={handleSaveAdjustments}
             disabled={savingAdjustments || quantityErrors.size > 0}
           >
             {savingAdjustments ? '저장 중...' : '저장'}
           </button>
           <button
-            className="ball-manage-page__action-btn ball-manage-page__action-btn--cancel"
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             onClick={handleCancelEdit}
             disabled={savingAdjustments}
           >
@@ -957,15 +1030,23 @@ const ClubBallManagePage: React.FC = () => {
       )}
 
       {/* 탭 */}
-      <div className="ball-manage-page__tabs">
+      <div className="flex gap-2 bg-muted/50 p-0.5 rounded mb-3">
         <button
-          className={`ball-manage-page__tab ${activeTab === 'keepers' ? 'ball-manage-page__tab--active' : ''}`}
+          className={`flex-1 py-2 text-sm rounded transition-all ${
+            activeTab === 'keepers'
+              ? 'bg-white text-primary font-semibold shadow-sm'
+              : 'text-muted-foreground'
+          }`}
           onClick={() => setActiveTab('keepers')}
         >
           보유 현황
         </button>
         <button
-          className={`ball-manage-page__tab ${activeTab === 'transactions' ? 'ball-manage-page__tab--active' : ''}`}
+          className={`flex-1 py-2 text-sm rounded transition-all ${
+            activeTab === 'transactions'
+              ? 'bg-white text-primary font-semibold shadow-sm'
+              : 'text-muted-foreground'
+          }`}
           onClick={() => setActiveTab('transactions')}
         >
           거래 내역
@@ -973,116 +1054,125 @@ const ClubBallManagePage: React.FC = () => {
       </div>
 
       {/* 탭 콘텐츠 */}
-      <div className="ball-manage-page__content">
+      <div className="bg-white rounded-xl border border-border overflow-hidden">
+        {/* 보유 현황 탭 */}
         {activeTab === 'keepers' && summary && (
-          <div className="ball-manage-page__keepers">
+          <div className="p-3">
             {summary.keepers.length === 0 ? (
-              <div className="ball-manage-page__empty">
+              <div className="py-6 text-center text-sm text-muted-foreground">
                 아직 공용구 보유자가 없습니다.
                 {isAdmin && ' 상단의 "보유자 지정" 버튼을 눌러 보유자를 지정해주세요.'}
               </div>
             ) : isEditMode ? (
               // 재고관리 모드
-              summary.keepers.map((keeper) => {
-                const editedValue = editedQuantities.get(keeper.memberId) ?? keeper.quantity.toString();
-                const error = quantityErrors.get(keeper.memberId);
-                return (
-                  <div
-                    key={keeper.memberId}
-                    className="ball-manage-page__keeper-card ball-manage-page__keeper-card--edit"
-                  >
-                    <div className="ball-manage-page__keeper-info">
-                      <span className="ball-manage-page__keeper-name">{keeper.userName}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--space-xs)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={editedValue}
-                          onChange={(e) => handleEditQuantityChange(keeper.memberId, e.target.value)}
-                          className={error ? 'input-error' : ''}
-                          style={{
-                            width: '80px',
-                            padding: 'var(--space-xs) var(--space-s)',
-                            border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
-                            borderRadius: 'var(--radius-s)',
-                            fontSize: 'var(--font-size-base)',
-                            textAlign: 'right',
-                          }}
-                        />
-                        <span className="ball-manage-page__keeper-quantity">캔</span>
+              <div className="flex flex-col gap-2">
+                {summary.keepers.map((keeper) => {
+                  const editedValue = editedQuantities.get(keeper.memberId) ?? keeper.quantity.toString();
+                  const err = quantityErrors.get(keeper.memberId);
+                  return (
+                    <div
+                      key={keeper.memberId}
+                      className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{keeper.userName}</span>
                       </div>
-                      {error && (
-                        <div style={{ fontSize: 'var(--font-size-s)', color: 'var(--color-error)' }}>
-                          {error}
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={editedValue}
+                            onChange={(e) => handleEditQuantityChange(keeper.memberId, e.target.value)}
+                            className={`w-20 px-2 py-1 border rounded-lg text-sm text-right ${
+                              err ? 'border-destructive' : 'border-border'
+                            }`}
+                          />
+                          <span className="text-sm font-bold text-primary">캔</span>
                         </div>
-                      )}
+                        {err && (
+                          <div className="text-xs text-destructive">{err}</div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             ) : (
               // 일반 모드
-              summary.keepers.map((keeper) => (
-                <div
-                  key={keeper.memberId}
-                  className="ball-manage-page__keeper-card"
-                  onClick={() => {
-                    if (isAdmin && summary.keepers.length >= 2) {
-                      setInitialFromMemberId(keeper.memberId);
-                      setShowDistributeModal(true);
-                    }
-                  }}
-                  style={{
-                    cursor: isAdmin && summary.keepers.length >= 2 && !isEditMode ? 'pointer' : 'default',
-                  }}
-                >
-                  <div className="ball-manage-page__keeper-info">
-                    <span className="ball-manage-page__keeper-name">{keeper.userName}</span>
+              <div className="flex flex-col gap-2">
+                {summary.keepers.map((keeper) => (
+                  <div
+                    key={keeper.memberId}
+                    className={`flex items-center justify-between bg-gray-50 rounded-lg p-3 transition-all ${
+                      isAdmin && summary.keepers.length >= 2
+                        ? 'cursor-pointer hover:bg-gray-100 hover:-translate-y-0.5 hover:shadow-sm'
+                        : 'cursor-default'
+                    }`}
+                    onClick={() => {
+                      if (isAdmin && summary.keepers.length >= 2) {
+                        setInitialFromMemberId(keeper.memberId);
+                        setShowDistributeModal(true);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">{keeper.userName}</span>
+                    </div>
+                    <span className="text-base font-bold text-primary">{keeper.quantity}캔</span>
                   </div>
-                  <span className="ball-manage-page__keeper-quantity">{keeper.quantity}캔</span>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         )}
 
+        {/* 거래 내역 탭 */}
         {activeTab === 'transactions' && (
-          <div className="ball-manage-page__transactions">
+          <div className="p-3">
             {transactions.length === 0 ? (
-              <div className="ball-manage-page__empty">거래 내역이 없습니다.</div>
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                거래 내역이 없습니다.
+              </div>
             ) : (
               <>
-                {transactions.map((tx) => (
-                  <div key={tx.id} className="ball-manage-page__tx-card">
-                    <div className="ball-manage-page__tx-header">
-                      <span className="ball-manage-page__tx-date">{formatShortDate(tx.createdAt)}</span>
-                      <span className={`ball-manage-page__tx-type ball-manage-page__tx-type--${tx.type.toLowerCase()}`}>
-                        {getTransactionTypeLabel(tx.type)}
-                      </span>
-                      <span className="ball-manage-page__tx-keeper">{getTransactionKeeper(tx)}</span>
-                    </div>
-                    <div className="ball-manage-page__tx-body">
-                      {getTransactionContent(tx)}
-                      {tx.type === 'USE' && tx.scheduleId && tx.scheduleAt && (
-                        <button
-                          type="button"
-                          className="ball-manage-page__tx-schedule-link"
-                          onClick={() => handleShowScheduleSummary(tx.scheduleId!)}
+                <div className="flex flex-col gap-2">
+                  {transactions.map((tx) => (
+                    <div key={tx.id} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-muted-foreground">
+                          {formatShortDate(tx.createdAt)}
+                        </span>
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getTransactionTypeBadgeClass(tx.type)}`}
                         >
-                          , {formatShortDate(tx.scheduleAt)}
-                        </button>
-                      )}
-                      {tx.description && (
-                        <span className="ball-manage-page__tx-desc"> ({tx.description})</span>
-                      )}
+                          {getTransactionTypeLabel(tx.type)}
+                        </span>
+                        <span className="text-sm font-medium text-foreground">
+                          {getTransactionKeeper(tx)}
+                        </span>
+                      </div>
+                      <div className="text-sm text-foreground">
+                        {getTransactionContent(tx)}
+                        {tx.type === 'USE' && tx.scheduleId && tx.scheduleAt && (
+                          <button
+                            type="button"
+                            className="bg-transparent border-0 p-0 text-primary cursor-pointer text-sm underline hover:text-primary/80"
+                            onClick={() => handleShowScheduleSummary(tx.scheduleId!)}
+                          >
+                            , {formatShortDate(tx.scheduleAt)}
+                          </button>
+                        )}
+                        {tx.description && (
+                          <span className="text-muted-foreground italic"> ({tx.description})</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
                 {hasMore && (
                   <button
-                    className="ball-manage-page__load-more"
+                    className="w-full py-2 text-sm text-primary bg-transparent border-0 cursor-pointer hover:underline mt-2"
                     onClick={handleLoadMore}
                   >
                     더 보기

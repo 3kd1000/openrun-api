@@ -149,8 +149,8 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
   if (loading) {
     return (
       <div className="schedule-ball-section">
-        <div className="section-header-with-button">
-          <label>공용구</label>
+        <div className="flex justify-between items-center mb-2">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">공용구</div>
         </div>
         <div className="schedule-ball-section__loading">로딩 중...</div>
       </div>
@@ -164,8 +164,8 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
 
   return (
     <div className="schedule-ball-section">
-      <div className="section-header-with-button">
-        <label>공용구</label>
+      <div className="flex justify-between items-center mb-2">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">공용구</div>
         {canRecordUsage && !showForm && (
           <button
             className="manage-ball-button"

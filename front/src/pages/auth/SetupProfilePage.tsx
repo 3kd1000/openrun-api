@@ -16,7 +16,7 @@ import {
   validatePhoneNumber as validatePhone,
   formatPhoneNumber,
 } from "../../utils/contactUtils";
-import "./SetupProfilePage.css";
+import { cn } from "@/lib/utils";
 
 interface LocationState {
   token: string;
@@ -27,6 +27,9 @@ interface LocationState {
     imageUrl: string | null;
   };
 }
+
+const inputBaseClass =
+  "w-full p-2 md:p-3 text-xs md:text-sm min-h-10 md:min-h-11 border border-border rounded-md bg-background text-foreground transition-all leading-snug focus:outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/10 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed";
 
 const SetupProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -225,13 +228,15 @@ const SetupProfilePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="setup-profile-page">
-        <div className="setup-profile-page__container">
-          <div className="setup-profile-page__header">
-            <h1 className="setup-profile-page__title">환영합니다! 🎾</h1>
-            <p className="setup-profile-page__subtitle">
+      <div className="flex flex-col items-center justify-center min-h-screen p-2 max-[359px]:p-1 bg-secondary md:p-4">
+        <div className="bg-background rounded-xl shadow-lg w-full max-w-[600px] p-3 max-[359px]:p-2 md:p-5">
+          <div className="text-center mb-5">
+            <div className="text-lg max-[359px]:text-sm md:text-2xl font-bold text-foreground mb-2">
+              환영합니다! 🎾
+            </div>
+            <div className="text-xs max-[359px]:text-xs md:text-sm text-muted-foreground leading-relaxed">
               프로필 정보를 불러오는 중...
-            </p>
+            </div>
           </div>
         </div>
       </div>
@@ -239,38 +244,42 @@ const SetupProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="setup-profile-page">
-      <div className="setup-profile-page__container">
-        <div className="setup-profile-page__header">
-          <h1 className="setup-profile-page__title">환영합니다! 🎾</h1>
-          <p className="setup-profile-page__subtitle">
+    <div className="flex flex-col items-center justify-center min-h-screen p-2 max-[359px]:p-1 bg-secondary md:p-4">
+      <div className="bg-background rounded-xl shadow-lg w-full max-w-[600px] p-3 max-[359px]:p-2 md:p-5">
+        <div className="text-center mb-5">
+          <div className="text-lg max-[359px]:text-sm md:text-2xl font-bold text-foreground mb-2">
+            환영합니다! 🎾
+          </div>
+          <div className="text-xs max-[359px]:text-xs md:text-sm text-muted-foreground leading-relaxed">
             OpenRun에서 사용할 프로필 정보를 설정해주세요.
             <br />
             대진표 및 스코어보드에 표시되는 정보입니다.
-          </p>
+          </div>
         </div>
 
         {defaultName && (
-          <div className="setup-profile-page__default-name">
-            <span className="setup-profile-page__default-name-label">
-              현재 이름:{" "}
-            </span>
-            <span className="setup-profile-page__default-name-value">
-              {defaultName}
-            </span>
+          <div className="p-3 bg-muted rounded-md mb-4 text-sm">
+            <span className="text-muted-foreground">현재 이름: </span>
+            <span className="font-semibold text-foreground">{defaultName}</span>
           </div>
         )}
 
-        {error && <div className="setup-profile-page__error">{error}</div>}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm mb-4">
+            {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="setup-profile-page__form">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* 기본 정보 */}
-          <div className="setup-profile-page__section-title">기본 정보</div>
+          <div className="text-sm max-[359px]:text-xs md:text-base font-bold text-foreground mt-5 mb-3 pt-4 border-t border-border first:mt-0 first:pt-0 first:border-t-0">
+            기본 정보
+          </div>
 
           {/* 이름 + 성별 */}
-          <div className="setup-profile-page__grid-row">
-            <div className="setup-profile-page__form-group">
-              <label htmlFor="name" className="setup-profile-page__label">
+          <div className="grid grid-cols-[minmax(0,1fr)_160px] max-[425px]:grid-cols-[minmax(0,1fr)_140px] max-[359px]:grid-cols-1 gap-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="name" className="block text-sm font-semibold text-muted-foreground">
                 이름 *
               </label>
               <input
@@ -283,19 +292,18 @@ const SetupProfilePage: React.FC = () => {
                 maxLength={50}
                 required
                 autoFocus
-                className={`setup-profile-page__input ${
-                  nameError ? "input-error" : ""
-                }`}
+                className={cn(
+                  inputBaseClass,
+                  nameError && "border-red-600 focus:border-red-600 focus:ring-red-600/10"
+                )}
               />
               {nameError && (
-                <div className="setup-profile-page__field-error">
-                  {nameError}
-                </div>
+                <div className="text-xs text-red-600 mt-1">{nameError}</div>
               )}
             </div>
 
-            <div className="setup-profile-page__form-group">
-              <label htmlFor="gender" className="setup-profile-page__label">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="gender" className="block text-sm font-semibold text-muted-foreground">
                 성별 *
               </label>
               <select
@@ -304,7 +312,7 @@ const SetupProfilePage: React.FC = () => {
                 onChange={(e) =>
                   setGender(e.target.value as "MALE" | "FEMALE" | "PRIVATE")
                 }
-                className="setup-profile-page__select"
+                className={cn(inputBaseClass, "cursor-pointer pr-10")}
               >
                 <option value="MALE">남자</option>
                 <option value="FEMALE">여자</option>
@@ -314,10 +322,10 @@ const SetupProfilePage: React.FC = () => {
           </div>
 
           {/* 이메일 (읽기 전용) + 공개 설정 */}
-          <div className="setup-profile-page__form-group">
-            <div className="setup-profile-page__grid-row">
-              <div className="setup-profile-page__form-group">
-                <label htmlFor="email" className="setup-profile-page__label">
+          <div className="flex flex-col gap-1">
+            <div className="grid grid-cols-[minmax(0,1fr)_160px] max-[425px]:grid-cols-[minmax(0,1fr)_140px] max-[359px]:grid-cols-1 gap-3">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="email" className="block text-sm font-semibold text-muted-foreground">
                   이메일 *
                 </label>
                 <input
@@ -325,13 +333,13 @@ const SetupProfilePage: React.FC = () => {
                   id="email"
                   value={defaultEmail}
                   disabled
-                  className="setup-profile-page__input"
+                  className={inputBaseClass}
                 />
               </div>
-              <div className="setup-profile-page__form-group">
+              <div className="flex flex-col gap-1">
                 <label
                   htmlFor="emailVisibility"
-                  className="setup-profile-page__label"
+                  className="block text-sm font-semibold text-muted-foreground"
                 >
                   공개
                 </label>
@@ -341,7 +349,7 @@ const SetupProfilePage: React.FC = () => {
                   onChange={(e) =>
                     setEmailVisibility(e.target.value as ContactVisibility)
                   }
-                  className="setup-profile-page__select"
+                  className={cn(inputBaseClass, "cursor-pointer pr-10")}
                   title="비공개: 나만 볼 수 있음 / 공개: 클럽원 및 게스트 참여 시 공유"
                 >
                   <option value="PRIVATE">
@@ -353,18 +361,18 @@ const SetupProfilePage: React.FC = () => {
                 </select>
               </div>
             </div>
-            <small className="setup-profile-page__field-help">
+            <small className="text-xs text-muted-foreground mt-1">
               이메일은 변경할 수 없습니다.
             </small>
           </div>
 
           {/* 전화번호 + 공개 설정 */}
-          <div className="setup-profile-page__form-group">
-            <div className="setup-profile-page__grid-row">
-              <div className="setup-profile-page__form-group">
+          <div className="flex flex-col gap-1">
+            <div className="grid grid-cols-[minmax(0,1fr)_160px] max-[425px]:grid-cols-[minmax(0,1fr)_140px] max-[359px]:grid-cols-1 gap-3">
+              <div className="flex flex-col gap-1">
                 <label
                   htmlFor="phoneNumber"
-                  className="setup-profile-page__label"
+                  className="block text-sm font-semibold text-muted-foreground"
                 >
                   연락처(선택)
                 </label>
@@ -375,15 +383,16 @@ const SetupProfilePage: React.FC = () => {
                   onChange={handlePhoneNumberChange}
                   onBlur={() => validatePhoneNumber(phoneNumber)}
                   placeholder="01012345678"
-                  className={`setup-profile-page__input ${
-                    phoneError ? "input-error" : ""
-                  }`}
+                  className={cn(
+                    inputBaseClass,
+                    phoneError && "border-red-600 focus:border-red-600 focus:ring-red-600/10"
+                  )}
                 />
               </div>
-              <div className="setup-profile-page__form-group">
+              <div className="flex flex-col gap-1">
                 <label
                   htmlFor="phoneVisibility"
-                  className="setup-profile-page__label"
+                  className="block text-sm font-semibold text-muted-foreground"
                 >
                   공개
                 </label>
@@ -393,7 +402,7 @@ const SetupProfilePage: React.FC = () => {
                   onChange={(e) =>
                     setPhoneVisibility(e.target.value as ContactVisibility)
                   }
-                  className="setup-profile-page__select"
+                  className={cn(inputBaseClass, "cursor-pointer pr-10")}
                   title="비공개: 나만 볼 수 있음 / 공개: 클럽원 및 게스트 참여 시 공유"
                 >
                   <option value="PRIVATE">
@@ -406,23 +415,21 @@ const SetupProfilePage: React.FC = () => {
               </div>
             </div>
             {phoneError && (
-              <div className="setup-profile-page__field-error">
-                {phoneError}
-              </div>
+              <div className="text-xs text-red-600 mt-1">{phoneError}</div>
             )}
-            <small className="setup-profile-page__field-help">
+            <small className="text-xs text-muted-foreground mt-1">
               서버에는 암호화되어 저장되고, 클럽과 게스트 신청 시에만
               사용됩니다.
             </small>
           </div>
 
           {/* 생년월일 + 공개 설정 */}
-          <div className="setup-profile-page__form-group">
-            <div className="setup-profile-page__grid-row">
-              <div className="setup-profile-page__form-group">
+          <div className="flex flex-col gap-1">
+            <div className="grid grid-cols-[minmax(0,1fr)_160px] max-[425px]:grid-cols-[minmax(0,1fr)_140px] max-[359px]:grid-cols-1 gap-3">
+              <div className="flex flex-col gap-1">
                 <label
                   htmlFor="birthDate"
-                  className="setup-profile-page__label"
+                  className="block text-sm font-semibold text-muted-foreground"
                 >
                   생년월일(선택)
                 </label>
@@ -433,13 +440,13 @@ const SetupProfilePage: React.FC = () => {
                   onChange={(e) => setBirthDate(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   placeholder="950101"
                   maxLength={6}
-                  className="setup-profile-page__input"
+                  className={inputBaseClass}
                 />
               </div>
-              <div className="setup-profile-page__form-group">
+              <div className="flex flex-col gap-1">
                 <label
                   htmlFor="birthDateVisibility"
-                  className="setup-profile-page__label"
+                  className="block text-sm font-semibold text-muted-foreground"
                 >
                   공개
                 </label>
@@ -449,7 +456,7 @@ const SetupProfilePage: React.FC = () => {
                   onChange={(e) =>
                     setBirthDateVisibility(e.target.value as ContactVisibility)
                   }
-                  className="setup-profile-page__select"
+                  className={cn(inputBaseClass, "cursor-pointer pr-10")}
                   title="비공개: 나만 볼 수 있음 / 공개: 클럽원 및 게스트 참여 시 공유"
                 >
                   <option value="PRIVATE">
@@ -464,13 +471,15 @@ const SetupProfilePage: React.FC = () => {
           </div>
 
           {/* 테니스 프로필 */}
-          <div className="setup-profile-page__section-title">테니스 프로필</div>
+          <div className="text-sm max-[359px]:text-xs md:text-base font-bold text-foreground mt-5 mb-3 pt-4 border-t border-border first:mt-0 first:pt-0 first:border-t-0">
+            테니스 프로필
+          </div>
 
           {/* 테니스 시작일 */}
-          <div className="setup-profile-page__form-group">
+          <div className="flex flex-col gap-1">
             <label
               htmlFor="tennisStartedMonth"
-              className="setup-profile-page__label"
+              className="block text-sm font-semibold text-muted-foreground"
             >
               테니스 시작일 (연/월)
             </label>
@@ -480,14 +489,14 @@ const SetupProfilePage: React.FC = () => {
               value={tennisStartedMonth}
               onChange={(e) => setTennisStartedMonth(e.target.value)}
               placeholder="YYYY-MM"
-              className="setup-profile-page__input"
+              className={inputBaseClass}
             />
           </div>
 
           {/* NTRP + 선수출신 */}
-          <div className="setup-profile-page__grid-row">
-            <div className="setup-profile-page__form-group">
-              <label htmlFor="ntrp" className="setup-profile-page__label">
+          <div className="grid grid-cols-[minmax(0,1fr)_160px] max-[425px]:grid-cols-[minmax(0,1fr)_140px] max-[359px]:grid-cols-1 gap-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="ntrp" className="block text-sm font-semibold text-muted-foreground">
                 NTRP (선택)
               </label>
               <input
@@ -496,14 +505,14 @@ const SetupProfilePage: React.FC = () => {
                 value={ntrp}
                 onChange={(e) => setNtrp(e.target.value)}
                 placeholder="예: 3.5"
-                className="setup-profile-page__input"
+                className={inputBaseClass}
               />
             </div>
 
-            <div className="setup-profile-page__form-group">
+            <div className="flex flex-col gap-1">
               <label
                 htmlFor="formerPlayer"
-                className="setup-profile-page__label"
+                className="block text-sm font-semibold text-muted-foreground"
               >
                 선수출신
               </label>
@@ -511,7 +520,7 @@ const SetupProfilePage: React.FC = () => {
                 id="formerPlayer"
                 value={formerPlayer ? "true" : "false"}
                 onChange={(e) => setFormerPlayer(e.target.value === "true")}
-                className="setup-profile-page__select"
+                className={cn(inputBaseClass, "cursor-pointer pr-10")}
               >
                 <option value="false">아니오</option>
                 <option value="true">예</option>
@@ -520,10 +529,10 @@ const SetupProfilePage: React.FC = () => {
           </div>
 
           {/* 대회/리그 경력 */}
-          <div className="setup-profile-page__form-group">
+          <div className="flex flex-col gap-1">
             <label
               htmlFor="tournamentHistory"
-              className="setup-profile-page__label"
+              className="block text-sm font-semibold text-muted-foreground"
             >
               대회/리그 경력 (선택)
             </label>
@@ -533,7 +542,7 @@ const SetupProfilePage: React.FC = () => {
               onChange={(e) => setTournamentHistory(e.target.value)}
               placeholder="예: 2025 ○○ 대회 8강"
               rows={2}
-              className="setup-profile-page__textarea"
+              className={cn(inputBaseClass, "min-h-20 resize-y leading-normal")}
             />
           </div>
 
@@ -541,13 +550,13 @@ const SetupProfilePage: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting || !name.trim()}
-            className="setup-profile-page__submit-btn"
+            className="w-full p-2 max-[359px]:p-2 md:p-3 bg-primary text-primary-foreground border-none rounded-md text-sm max-[359px]:text-xs md:text-base font-semibold min-h-10 max-[359px]:min-h-10 md:min-h-12 cursor-pointer transition-all mt-4 hover:not-disabled:bg-primary/90 hover:not-disabled:-translate-y-px hover:not-disabled:shadow-sm disabled:bg-border disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "저장 중..." : "저장하고 시작하기"}
           </button>
         </form>
 
-        <p className="setup-profile-page__footer-note">
+        <p className="text-center mt-4 text-xs text-muted-foreground">
           나중에 프로필 설정에서 변경할 수 있습니다.
         </p>
       </div>

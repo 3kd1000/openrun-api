@@ -295,13 +295,24 @@ const DrawViewModal: React.FC<Props> = ({
   }
 
   return (
-    <Dialog open={true} onOpenChange={(open) => { if (!open && !isEditMode && !isEditingDraw) onClose(); }}>
+    <Dialog open={true} onOpenChange={(open) => {
+      if (!open) {
+        if (isEditMode) {
+          setIsEditMode(false);
+          setMatchScores(new Map());
+        } else if (isEditingDraw) {
+          setIsEditingDraw(false);
+        } else {
+          onClose();
+        }
+      }
+    }}>
       <DialogContent className="max-w-[700px] w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 py-2 border-b flex-shrink-0">
           <div className="flex items-center justify-between w-full pr-8">
             <DialogTitle className="flex items-center gap-2">
               <ClipboardListIcon size={24} />
-              <span>대진표</span>
+              <span>{isEditingDraw ? "대진 수정" : "대진표"}</span>
             </DialogTitle>
             {drawResult && !isEditingDraw && (
               <Button

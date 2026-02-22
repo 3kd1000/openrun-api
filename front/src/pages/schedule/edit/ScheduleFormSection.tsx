@@ -16,9 +16,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-// native select에 Input과 동일한 높이/스타일 적용
+// native select에 Input(h-9)과 동일한 높이/스타일 적용
 const selectClassName =
-  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 // 시간 옵션 생성 (정시만, 00시부터 23시까지)
 const generateTimeOptions = () => {
@@ -429,17 +429,27 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       )}
 
       {/* 날짜 / 시간 / 기간 */}
-      <div className="flex gap-2 mb-2">
-        <div className="flex-1 min-w-0 space-y-1.5" style={{ flex: "1.2" }}>
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        <div className="min-w-0 space-y-1.5">
           <Label className="text-xs text-muted-foreground">날짜 *</Label>
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            required
-          />
+          <div className="relative min-w-0">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              required
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <Input
+              type="text"
+              value={selectedDate ? format(new Date(selectedDate + "T00:00:00"), "yy.MM.dd") : ""}
+              readOnly
+              tabIndex={-1}
+              className="pointer-events-none"
+            />
+          </div>
         </div>
-        <div className="flex-1 min-w-0 space-y-1.5" style={{ flex: "0.8" }}>
+        <div className="min-w-0 space-y-1.5">
           <Label className="text-xs text-muted-foreground">시간 *</Label>
           <select
             className={selectClassName}
@@ -454,7 +464,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             ))}
           </select>
         </div>
-        <div className="flex-1 min-w-0 space-y-1.5" style={{ flex: "0.8" }}>
+        <div className="min-w-0 space-y-1.5">
           <Label className="text-xs text-muted-foreground">기간</Label>
           <select
             className={selectClassName}
@@ -663,7 +673,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       <div className="flex gap-2 mb-2">
         <div className="flex-1 min-w-0 space-y-1.5">
           <Label className="text-xs text-muted-foreground">
-            참가 비용 (선택)
+            참가 비용
           </Label>
           <Input
             type="number"
@@ -679,10 +689,10 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         </div>
         <div className="flex-1 min-w-0 space-y-1.5">
           <Label className="text-xs text-muted-foreground">
-            예약자 (선택)
+            예약자
           </Label>
           {selectedReservedBy ? (
-            <div className="flex h-10 items-center gap-2 rounded-md border bg-muted/50 px-3">
+            <div className="flex h-9 items-center gap-2 rounded-md border bg-muted/50 px-3">
               <span className="flex-1 text-sm">{selectedReservedBy.name}</span>
               <button
                 type="button"
@@ -724,7 +734,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
 
       {/* 설명 */}
       <div className="mb-3 space-y-1.5">
-        <Label className="text-xs text-muted-foreground">설명 (선택)</Label>
+        <Label className="text-xs text-muted-foreground">설명</Label>
         <Textarea
           value={formData.description}
           onChange={(e) =>

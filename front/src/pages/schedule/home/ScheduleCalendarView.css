@@ -1,26 +1,8 @@
 /**
  * ScheduleCalendarView Styles
  * react-calendar 라이브러리 DOM 오버라이드 + 애니메이션만 유지
- * 이벤트 필(pill) 스타일은 Tailwind cn()으로 이전됨
+ * 컨테이너 레이아웃 + 이벤트 필(pill) 스타일은 Tailwind cn()으로 이전됨
  */
-
-/* ========== 캘린더 뷰 컨테이너 ========== */
-.calendar-view {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0;
-  position: relative;
-  overflow: hidden;
-  touch-action: pan-y pinch-zoom;
-  padding-bottom: 40px;
-  margin-top: 0;
-}
-
-@media (max-width: 768px) {
-  .calendar-view {
-    padding-bottom: 50px;
-  }
-}
 
 /* ========== 캘린더 래퍼 (애니메이션) ========== */
 .calendar-wrapper {

@@ -531,7 +531,7 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
   return (
     <div
-      className="calendar-view"
+      className="calendar-view w-full max-w-[1200px] relative overflow-hidden pb-[50px] md:pb-10 [touch-action:pan-y_pinch-zoom]"
       ref={calendarRef}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

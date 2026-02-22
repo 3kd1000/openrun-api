@@ -695,6 +695,16 @@ export default function ScheduleDetailPage() {
             </p>
           </div>
 
+          {/* 참가신청 시작 시간 */}
+          {schedule.participationStartAt && (
+            <div>
+              <span className="text-xs text-muted-foreground">신청 시작</span>
+              <p className="text-sm font-medium">
+                {format(new Date(schedule.participationStartAt), "yy'년' M'월' d'일('E')' HH:mm", { locale: ko })}
+              </p>
+            </div>
+          )}
+
           {/* 모임타입 + 참가비용 */}
           {(schedule.matchType ||
             (isNotEmpty(schedule.cost) && schedule.cost !== undefined)) && (
@@ -913,27 +923,6 @@ export default function ScheduleDetailPage() {
           />
         </CardContent>
       </Card>
-
-      {/* 참가신청 시작 시간 안내 */}
-      {schedule.participationStartAt && (
-        <div
-          className={cn(
-            "mb-3 rounded-lg border px-4 py-3 text-sm",
-            new Date() >= new Date(schedule.participationStartAt)
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-gray-200 bg-gray-50 text-gray-600"
-          )}
-        >
-          <p>
-            참가신청 시작 시간:{" "}
-            {format(
-              new Date(schedule.participationStartAt),
-              "yyyy년 M월 d일 (E) HH:mm",
-              { locale: ko }
-            )}
-          </p>
-        </div>
-      )}
 
       {/* 에러 메시지 */}
       {error && (

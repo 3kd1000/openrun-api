@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../../components/common/BackButton";
 import { useNotification } from "../../contexts/NotificationContext";
-import "./NotificationPage.css";
+import { cn } from "@/lib/utils";
 
 const TYPE_LABELS: Record<string, string> = {
   SCHEDULE: "일정",
@@ -215,18 +215,18 @@ const NotificationPage: React.FC = () => {
   const readCount = notifications.filter((n) => n.isRead).length;
 
   return (
-    <div className="notification-page">
-      <div className="notification-page__header">
+    <div className="p-4 min-h-[calc(100vh-140px)] max-w-[600px] mx-auto md:p-5">
+      <div className="flex items-center gap-2 mb-4">
         <BackButton
           onClick={() => isEditMode ? exitEditMode() : navigate(-1)}
           ariaLabel={isEditMode ? "편집 취소" : "뒤로 가기"}
         />
-        <h1 className="notification-page__title">
+        <div className="flex-1 text-2xl font-bold text-foreground">
           {isEditMode ? `${selectedIds.size}개 선택` : "알림"}
-        </h1>
+        </div>
         {!isEditMode && unreadCount > 0 && (
           <button
-            className="notification-page__read-all-btn"
+            className="bg-transparent border-none text-primary text-sm font-medium cursor-pointer px-2 py-1 rounded-md transition-colors hover:bg-secondary"
             onClick={markAllAsRead}
           >
             모두 읽음
@@ -234,7 +234,7 @@ const NotificationPage: React.FC = () => {
         )}
         {notifications.length > 0 && (
           <button
-            className="notification-page__edit-btn"
+            className="bg-transparent border-none text-primary text-sm font-medium cursor-pointer px-2 py-1 rounded-md transition-colors hover:bg-secondary whitespace-nowrap"
             onClick={() => isEditMode ? exitEditMode() : setIsEditMode(true)}
           >
             {isEditMode ? "취소" : "편집"}
@@ -243,19 +243,19 @@ const NotificationPage: React.FC = () => {
       </div>
 
       {needsPermission && (
-        <div className="notification-page__permission-banner">
-          <div className="notification-page__permission-icon">
+        <div className="flex items-center gap-3 p-3 mb-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="shrink-0 text-primary">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
           </div>
-          <div className="notification-page__permission-text">
-            <p className="notification-page__permission-title">푸시 알림 받기</p>
-            <p className="notification-page__permission-desc">일정, 대진표 등 중요한 알림을 받으려면 알림을 허용해주세요.</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground mb-0.5">푸시 알림 받기</p>
+            <p className="text-xs text-muted-foreground leading-snug">일정, 대진표 등 중요한 알림을 받으려면 알림을 허용해주세요.</p>
           </div>
           <button
-            className="notification-page__permission-btn"
+            className="shrink-0 px-3 py-1 bg-primary text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer whitespace-nowrap active:opacity-80"
             onClick={requestPushPermission}
           >
             허용
@@ -264,63 +264,63 @@ const NotificationPage: React.FC = () => {
       )}
 
       {permissionRevoked && (
-        <div className="notification-page__permission-banner">
-          <div className="notification-page__permission-icon">
+        <div className="flex items-center gap-3 p-3 mb-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="shrink-0 text-primary">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               <line x1="1" y1="1" x2="23" y2="23" />
             </svg>
           </div>
-          <div className="notification-page__permission-text">
-            <p className="notification-page__permission-title">알림이 꺼져있습니다</p>
-            <p className="notification-page__permission-desc">기기 설정 &gt; 알림 &gt; OpenRun에서 알림을 다시 켜주세요.</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground mb-0.5">알림이 꺼져있습니다</p>
+            <p className="text-xs text-muted-foreground leading-snug">기기 설정 &gt; 알림 &gt; OpenRun에서 알림을 다시 켜주세요.</p>
           </div>
         </div>
       )}
 
       {loading && notifications.length === 0 ? (
-        <div className="notification-page__empty">불러오는 중...</div>
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">불러오는 중...</div>
       ) : notifications.length === 0 ? (
-        <div className="notification-page__empty">
-          <div className="notification-page__empty-icon">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <div className="mb-3 opacity-40">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
           </div>
-          <p>알림이 없습니다</p>
+          <p className="text-sm">알림이 없습니다</p>
         </div>
       ) : (
         <>
           {isEditMode && (
-            <div className="notification-page__toolbar">
-              <label className="notification-page__select-all-label">
+            <div className="flex items-center gap-2 p-2 border-b border-border">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={selectedIds.size === notifications.length && notifications.length > 0}
                   onChange={toggleSelectAll}
-                  className="notification-item__checkbox"
+                  className="shrink-0 w-[18px] h-[18px] m-0 cursor-pointer accent-primary self-center"
                 />
                 <span>전체 선택</span>
               </label>
-              <div className="notification-page__action-btns">
+              <div className="flex gap-1 ml-auto">
                 <button
-                  className="notification-page__action-btn notification-page__action-btn--danger"
+                  className="px-2 py-1 border border-destructive rounded-md bg-background text-destructive text-xs font-medium cursor-pointer whitespace-nowrap transition-colors hover:enabled:bg-destructive/5 disabled:opacity-40 disabled:cursor-not-allowed"
                   onClick={handleDeleteSelected}
                   disabled={selectedIds.size === 0}
                 >
                   선택 삭제{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}
                 </button>
                 <button
-                  className="notification-page__action-btn"
+                  className="px-2 py-1 border border-border rounded-md bg-background text-foreground text-xs font-medium cursor-pointer whitespace-nowrap transition-colors hover:enabled:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
                   onClick={handleDeleteRead}
                   disabled={readCount === 0}
                 >
                   읽은 알림 삭제{readCount > 0 ? ` (${readCount})` : ""}
                 </button>
                 <button
-                  className="notification-page__action-btn notification-page__action-btn--danger"
+                  className="px-2 py-1 border border-destructive rounded-md bg-background text-destructive text-xs font-medium cursor-pointer whitespace-nowrap transition-colors hover:bg-destructive/5"
                   onClick={handleDeleteAll}
                 >
                   전체 삭제
@@ -328,13 +328,15 @@ const NotificationPage: React.FC = () => {
               </div>
             </div>
           )}
-          <div className="notification-page__list">
+          <div className="flex flex-col">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`notification-item ${
-                  !notification.isRead ? "notification-item--unread" : ""
-                } ${isEditMode && selectedIds.has(notification.id) ? "notification-item--selected" : ""}`}
+                className={cn(
+                  "flex items-center gap-3 px-2 py-3 border-b border-border cursor-pointer transition-colors relative hover:bg-secondary",
+                  !notification.isRead && "bg-blue-50 hover:bg-blue-100",
+                  isEditMode && selectedIds.has(notification.id) && "bg-blue-50"
+                )}
                 onClick={() => handleNotificationClick(notification)}
               >
                 {isEditMode && (
@@ -343,30 +345,33 @@ const NotificationPage: React.FC = () => {
                     checked={selectedIds.has(notification.id)}
                     onChange={() => toggleSelect(notification.id)}
                     onClick={(e) => e.stopPropagation()}
-                    className="notification-item__checkbox"
+                    className="shrink-0 w-[18px] h-[18px] m-0 cursor-pointer accent-primary self-center"
                   />
                 )}
-                <div className="notification-item__icon">
+                <div className={cn(
+                  "shrink-0 w-9 h-9 rounded-full flex items-center justify-center",
+                  notification.isRead ? "bg-secondary text-muted-foreground" : "bg-blue-100 text-primary"
+                )}>
                   <NotificationIcon type={notification.type} />
                 </div>
-                <div className="notification-item__content">
-                  <div className="notification-item__header">
-                    <span className="notification-item__type">
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center mb-0.5">
+                    <span className="text-xs text-primary font-medium">
                       {TYPE_LABELS[notification.type] || notification.type}
                     </span>
-                    <span className="notification-item__time">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {formatTimeAgo(notification.createdAt)}
                     </span>
                   </div>
-                  <div className="notification-item__title">
+                  <div className="text-sm font-semibold text-foreground mb-0.5 truncate">
                     {notification.title}
                   </div>
-                  <div className="notification-item__body">
+                  <div className="text-xs text-muted-foreground truncate">
                     {notification.body}
                   </div>
                 </div>
                 {!isEditMode && !notification.isRead && (
-                  <div className="notification-item__dot" />
+                  <div className="shrink-0 w-2 h-2 rounded-full bg-primary" />
                 )}
               </div>
             ))}

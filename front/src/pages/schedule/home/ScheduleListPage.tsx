@@ -32,8 +32,6 @@ import {
   getOpenRunUiSettings,
   setOpenRunUiSettings,
 } from "../../../utils/openrunUiSettings";
-import "./ScheduleListPage.css";
-
 type ViewMode = "calendar" | "list";
 type ScheduleMode = "club" | "personal";
 type CapacityFilter = "all" | "available" | "full" | "participated";
@@ -584,7 +582,7 @@ const ScheduleListPage: React.FC = () => {
   return (
     <div className="mx-auto w-full max-w-3xl">
       {/* Sticky Header */}
-      <div className="schedule-sticky-header sticky z-[99] bg-background px-4 pb-3 pt-2 shadow-sm">
+      <div className="sticky top-[48px] max-[768px]:top-[42px] max-[425px]:top-[40px] max-[359px]:top-[36px] z-[99] bg-background px-4 pb-3 pt-2 shadow-sm">
         {/* 모드 탭: 클럽일정 / 개인일정 */}
         <Tabs value={scheduleMode} onValueChange={handleModeChange} className="mb-3">
           <TabsList className="w-full">

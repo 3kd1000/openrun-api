@@ -14,7 +14,6 @@ import {
 } from "../../../../../components/common/Icons";
 import { logError } from "../../../../../utils/errorHandler";
 import { getOpenRunSession } from "../../../../../utils/openrunSession";
-import "./MyRecentMatchesWidget.css";
 
 interface MyRecentMatchesWidgetProps {
   clubId: number;
@@ -62,16 +61,16 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
     }
   };
 
-  const getResultBadgeClass = (result: string) => {
+  const getResultBadgeColor = (result: string) => {
     switch (result) {
       case "WIN":
-        return "my-recent-matches-widget__result-badge--win";
+        return "bg-green-100 text-green-700";
       case "LOSE":
-        return "my-recent-matches-widget__result-badge--lose";
+        return "bg-red-100 text-red-600";
       case "DRAW":
-        return "my-recent-matches-widget__result-badge--draw";
+        return "bg-gray-100 text-gray-500";
       default:
-        return "";
+        return "bg-gray-100 text-gray-500";
     }
   };
 
@@ -99,7 +98,7 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
   // 내 팀 표시 (나 + 파트너)
   const renderMyTeam = (match: MyRecentMatchResponse) => {
     const parts: React.ReactNode[] = [
-      <span key="me" className="my-recent-matches-widget__player--me">{myName}</span>
+      <span key="me" className="font-bold text-primary">{myName}</span>
     ];
     if (match.myPartnerName) {
       parts.push(<span key="sep1">, </span>);
@@ -130,14 +129,14 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
   };
 
   return (
-    <div className="my-recent-matches-widget">
-      <div className="my-recent-matches-widget__header">
+    <div className="border border-border rounded-xl bg-white p-4">
+      <div className="flex items-center justify-between">
         <button
-          className="my-recent-matches-widget__header-left"
+          className="flex items-center gap-2 bg-transparent border-none py-2 cursor-pointer text-foreground hover:text-primary transition-colors"
           onClick={handleToggleExpand}
         >
           <TrophyIcon size={16} />
-          <span className="my-recent-matches-widget__title">
+          <span className="text-sm font-semibold">
             나의 클럽 전적
           </span>
           {isExpanded ? (
@@ -147,7 +146,7 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
           )}
         </button>
         <button
-          className="my-recent-matches-widget__view-all"
+          className="flex items-center gap-2 bg-transparent border-none py-2 px-3 text-muted-foreground text-sm cursor-pointer hover:text-primary transition-colors"
           onClick={handleViewAll}
         >
           전체보기
@@ -156,15 +155,15 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
       </div>
 
       {isExpanded && (
-        <div className="my-recent-matches-widget__content">
+        <div className="mt-3">
           {isLoading && (
-            <div className="my-recent-matches-widget__loading">
+            <div className="py-3 text-center text-muted-foreground text-sm">
               불러오는 중...
             </div>
           )}
 
           {!isLoading && !clubStats?.totalMatches && matches.length === 0 && (
-            <div className="my-recent-matches-widget__empty">
+            <div className="py-3 text-center text-muted-foreground text-sm">
               경기 기록이 없습니다
             </div>
           )}
@@ -172,49 +171,47 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
           {!isLoading && clubStats && clubStats.totalMatches > 0 && (
             <>
               {/* 누적 전적 요약 */}
-              <div className="my-recent-matches-widget__summary">
-                <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--win">
+              <div className="flex items-center justify-center gap-4 py-3 bg-muted/50 rounded-lg mb-3">
+                <span className="text-sm font-semibold text-green-700">
                   {clubStats.wins}승
                 </span>
-                <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--draw">
+                <span className="text-sm font-semibold text-muted-foreground">
                   {clubStats.draws}무
                 </span>
-                <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--lose">
+                <span className="text-sm font-semibold text-red-600">
                   {clubStats.losses}패
                 </span>
-                <span className="my-recent-matches-widget__summary-item my-recent-matches-widget__summary-item--total">
+                <span className="text-sm font-medium text-muted-foreground">
                   총 {clubStats.totalMatches}경기
                 </span>
               </div>
 
               {/* 최근 경기 목록 */}
               {matches.length > 0 && (
-                <div className="my-recent-matches-widget__list">
+                <div className="flex flex-col gap-2">
                   {matches.map((match) => (
                     <div
                       key={match.matchId}
-                      className="my-recent-matches-widget__item"
+                      className="flex items-center gap-3 py-3 px-4 bg-muted/50 rounded-lg text-sm min-h-[44px]"
                     >
                       <span
-                        className={`my-recent-matches-widget__result-badge ${getResultBadgeClass(
-                          match.result
-                        )}`}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${getResultBadgeColor(match.result)}`}
                       >
                         {getResultLabel(match.result)}
                       </span>
-                      <span className="my-recent-matches-widget__date">
+                      <span className="text-muted-foreground text-xs min-w-[40px]">
                         {formatDate(match.playedAt)}
                       </span>
-                      <span className="my-recent-matches-widget__players">
-                        <span className="my-recent-matches-widget__my-team">
+                      <span className="flex-1 flex items-center gap-0.5 text-foreground whitespace-nowrap overflow-hidden text-ellipsis text-xs">
+                        <span className="inline">
                           {renderMyTeam(match)}
                         </span>
-                        <span className="my-recent-matches-widget__vs">vs</span>
-                        <span className="my-recent-matches-widget__opponent-team">
+                        <span className="text-muted-foreground text-xs mx-0.5">vs</span>
+                        <span className="inline">
                           {renderOpponentTeam(match)}
                         </span>
                       </span>
-                      <span className="my-recent-matches-widget__score">
+                      <span className="text-foreground font-medium whitespace-nowrap">
                         {match.myTeamScore}:{match.opponentTeamScore}
                       </span>
                     </div>

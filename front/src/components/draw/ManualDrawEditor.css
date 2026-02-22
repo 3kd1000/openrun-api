@@ -31,12 +31,9 @@
 }
 
 .mde__round-label {
-  font-size: var(--font-size-m);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
-  background: var(--color-bg-tertiary);
-  padding: var(--space-xs) var(--space-m);
-  border-radius: var(--radius-s);
 }
 
 /* ========== 게임 그리드 ========== */
@@ -50,20 +47,19 @@
 .mde__game-slot {
   padding: var(--space-m);
   border-radius: var(--radius-m);
-  border: 2px dashed var(--color-border-primary);
-  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-secondary);
+  background: var(--color-bg-primary);
   transition: var(--transition-all);
 }
 
 .mde__game-slot--empty {
-  border-color: var(--color-warning);
-  background: var(--color-warning-bg);
+  border-style: dashed;
+  border-color: var(--color-border-primary);
 }
 
 .mde__game-slot--complete {
   border-color: var(--color-success);
-  border-style: solid;
-  background: var(--color-success-bg);
+  border-left: 3px solid var(--color-success);
 }
 
 .mde__game-header {
@@ -96,17 +92,19 @@
 }
 
 .mde__btn-edit {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.mde__btn-edit:hover {
   background: var(--color-primary);
   color: white;
 }
 
-.mde__btn-edit:hover {
-  background: var(--color-primary-hover);
-}
-
 .mde__btn-clear {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
+  background: transparent;
+  color: var(--color-text-tertiary);
   border: 1px solid var(--color-border-secondary);
 }
 
@@ -120,8 +118,7 @@
 .mde__game-teams {
   display: flex;
   align-items: center;
-  gap: var(--space-s);
-  flex-wrap: wrap;
+  gap: var(--space-xs);
 }
 
 .mde__team {
@@ -141,22 +138,18 @@
 }
 
 .mde__team-label {
-  font-size: var(--font-size-xs);
+  font-size: 11px;
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
-  background: var(--color-primary-light);
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
 
 .mde__team--b .mde__team-label {
   color: var(--color-info);
-  background: var(--color-info-bg);
 }
 
 .mde__team-players {
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-m);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   overflow: hidden;
@@ -165,7 +158,7 @@
 }
 
 .mde__vs {
-  font-size: var(--font-size-xs);
+  font-size: 11px;
   font-weight: var(--font-weight-bold);
   color: var(--color-text-tertiary);
   flex-shrink: 0;
@@ -230,9 +223,9 @@
   flex-direction: column;
   gap: var(--space-m);
   padding: var(--space-l);
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-primary);
   border-radius: var(--radius-l);
-  border: 2px solid var(--color-primary);
+  border: 1px solid var(--color-border-primary);
 }
 
 .mde__editor-header {
@@ -415,26 +408,39 @@
 
 /* ========== 모바일 반응형 ========== */
 @media (max-width: 768px) {
+  .mde {
+    gap: var(--space-s);
+  }
+
+  .mde__rounds {
+    gap: var(--space-m);
+  }
+
   .mde__games-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-s);
+  }
+
+  .mde__game-slot {
+    padding: var(--space-s);
+  }
+
+  .mde__game-header {
+    margin-bottom: var(--space-xs);
   }
 
   .mde__game-teams {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-xs);
-  }
-
-  .mde__team {
-    justify-content: flex-start;
+    /* 모바일에서도 좌우 배치 유지 */
+    flex-direction: row;
+    align-items: center;
   }
 
   .mde__team--b {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 
-  .mde__vs {
-    text-align: center;
+  .mde__team-players {
+    font-size: var(--font-size-s);
   }
 
   .mde__preview {
@@ -449,6 +455,10 @@
   .mde__pill {
     padding: var(--space-xs) var(--space-s);
     font-size: var(--font-size-xs);
+  }
+
+  .mde__editor {
+    padding: var(--space-m);
   }
 
   .mde__footer,

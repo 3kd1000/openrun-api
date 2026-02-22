@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useEscapeKey } from "../../../../../hooks/useEscapeKey";
-import "./WidgetSettingsModal.css";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 // 위젯 메타데이터 정의 (확장 용이)
 export interface WidgetConfig {
@@ -78,8 +84,6 @@ const WidgetSettingsModal: React.FC<Props> = ({
 }) => {
   const [localSelected, setLocalSelected] = useState<string[]>(selectedWidgets);
 
-  useEscapeKey(onClose);
-
   // 외부에서 selectedWidgets가 변경되면 동기화
   useEffect(() => {
     setLocalSelected(selectedWidgets);
@@ -113,24 +117,18 @@ const WidgetSettingsModal: React.FC<Props> = ({
   const isMaxSelected = localSelected.length >= maxWidgets;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content widget-settings-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-header">
-          <h2>위젯 설정</h2>
-          <button className="btn-close" onClick={onClose}>
-            &times;
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>위젯 설정</DialogTitle>
+        </DialogHeader>
 
-        <div className="widget-settings-modal__body">
-          <p className="widget-settings-modal__hint">
+        <div className="flex flex-col gap-4 py-2">
+          <p className="text-xs text-muted-foreground text-center">
             홈 화면에 표시할 위젯을 선택하세요 (최대 {maxWidgets}개)
           </p>
 
-          <div className="widget-settings-modal__list">
+          <div className="flex flex-col gap-3">
             {availableWidgets.map((widget) => {
               const isSelected = localSelected.includes(widget.id);
               const isDisabled = !isSelected && isMaxSelected;
@@ -138,26 +136,27 @@ const WidgetSettingsModal: React.FC<Props> = ({
               return (
                 <label
                   key={widget.id}
-                  className={`widget-settings-modal__item ${
-                    isDisabled ? "disabled" : ""
-                  } ${isSelected ? "selected" : ""}`}
+                  className={`flex items-start gap-4 p-4 border rounded-lg cursor-pointer transition-all ${
+                    isSelected ? "border-primary bg-primary/5" : "border-border bg-white"
+                  } ${isDisabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary hover:bg-primary/5"}`}
                 >
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => handleToggle(widget.id)}
                     disabled={isDisabled}
+                    className="w-[18px] h-[18px] mt-0.5 shrink-0 accent-primary cursor-inherit"
                   />
-                  <div className="widget-settings-modal__item-content">
-                    <span className="widget-settings-modal__item-label">
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
                       {widget.label}
                       {widget.adminOnly && (
-                        <span className="widget-settings-modal__admin-badge">
+                        <span className="text-xs font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
                           운영진
                         </span>
                       )}
                     </span>
-                    <span className="widget-settings-modal__item-desc">
+                    <span className="text-xs text-muted-foreground">
                       {widget.description}
                     </span>
                   </div>
@@ -166,26 +165,21 @@ const WidgetSettingsModal: React.FC<Props> = ({
             })}
           </div>
 
-          <p className="widget-settings-modal__count">
+          <p className="text-xs text-muted-foreground text-center font-medium">
             {localSelected.length} / {maxWidgets}개 선택됨
           </p>
         </div>
 
-        <div className="modal-actions">
-          <button type="button" className="btn-secondary" onClick={onClose}>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
             취소
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleSave}
-            disabled={localSelected.length === 0}
-          >
+          </Button>
+          <Button onClick={handleSave} disabled={localSelected.length === 0}>
             저장
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

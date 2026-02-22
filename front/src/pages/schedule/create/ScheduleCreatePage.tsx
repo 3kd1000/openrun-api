@@ -106,7 +106,7 @@ export default function ScheduleCreatePage() {
     <div className="page-container">
       <div className="mb-4 flex items-center gap-2">
         <BackButton onClick={handleGoBack} />
-        <h1 className="text-lg font-semibold">일정 등록</h1>
+        <span className="text-sm font-semibold">일정 등록</span>
       </div>
 
       <ScheduleFormSection

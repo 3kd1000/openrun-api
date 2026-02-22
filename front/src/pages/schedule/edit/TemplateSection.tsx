@@ -6,7 +6,7 @@ import type {
   CreateScheduleTemplateRequest,
 } from "../../../types/scheduleTemplate";
 import Toast from "../../../components/common/Toast";
-import "./TemplateSection.css";
+import { cn } from "../../../lib/utils";
 
 interface TemplateSectionProps {
   /** 템플릿 타입 (SCHEDULE 또는 PARTICIPATION_START) */
@@ -274,15 +274,19 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
     editingTemplateId !== null && editingTemplateId !== undefined;
 
   return (
-    <div className="template-section">
-      <div className="template-header">
-        <h4>{title}</h4>
-        <div className="template-header-actions">
-          <span className="template-count">{templates.length} / 5</span>
+    <div className="mb-3 p-2.5 md:p-2 bg-muted rounded-lg border border-border">
+      <div className="flex justify-between items-center mb-2 md:mb-1.5">
+        <div className="text-sm md:text-[13px] font-semibold text-foreground flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+          {title}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-xs md:text-[11px] text-muted-foreground bg-background px-2 py-0.5 rounded-[10px] border border-border">
+            {templates.length} / 5
+          </span>
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="btn-toggle-collapse"
+            className="py-0.5 px-1.5 md:px-[5px] bg-transparent border border-border rounded text-muted-foreground text-[11px] md:text-[10px] cursor-pointer transition-all min-w-7 md:min-w-6 hover:bg-muted hover:border-primary hover:text-primary"
             aria-label={collapsed ? "펼치기" : "접기"}
           >
             {collapsed ? "▼" : "▲"}
@@ -290,20 +294,30 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
         </div>
       </div>
 
-      {error && <div className="template-error">{error}</div>}
+      {error && (
+        <div className="py-2 px-3 bg-red-50 text-red-800 rounded text-[13px] mb-3">
+          {error}
+        </div>
+      )}
 
       {/* 템플릿 pill-style 선택 (닫힘 상태에서도 표시) */}
-      <div className="template-pills">
+      <div className="flex flex-wrap gap-1.5 min-h-0">
         {templates.length === 0 ? (
-          <p className="template-empty">저장된 템플릿이 없습니다.</p>
+          <p className="text-muted-foreground text-[13px] md:text-xs italic m-0">
+            저장된 템플릿이 없습니다.
+          </p>
         ) : (
           templates.map((template) => (
-            <div key={template.id} className="template-pill-wrapper">
+            <div key={template.id} className="flex flex-col gap-1">
               <button
                 type="button"
-                className={`template-pill ${
-                  selectedTemplateId === template.id ? "selected" : ""
-                } ${editingTemplateId === template.id ? "editing" : ""}`}
+                className={cn(
+                  "py-1.5 px-3 md:py-[5px] md:px-2.5 border-[1.5px] border-border bg-background rounded-2xl md:rounded-[14px] text-[13px] md:text-xs font-medium text-muted-foreground cursor-pointer transition-all whitespace-nowrap hover:border-primary hover:bg-primary/5 hover:text-primary",
+                  selectedTemplateId === template.id &&
+                    "border-2 border-primary bg-primary text-primary-foreground",
+                  editingTemplateId === template.id &&
+                    "border-2 border-amber-500 bg-amber-50 text-amber-800"
+                )}
                 onClick={() => handleSelectTemplate(template.id)}
               >
                 {template.templateName}
@@ -311,11 +325,11 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
 
               {/* 선택된 템플릿에 대해 수정/삭제 버튼 표시 (열림 상태에서만) */}
               {!collapsed && selectedTemplateId === template.id && (
-                <div className="template-actions">
+                <div className="flex gap-1.5 mt-1">
                   {editingTemplateId === template.id ? (
                     <button
                       type="button"
-                      className="btn-cancel-edit"
+                      className="py-1 px-3 text-xs border-none rounded cursor-pointer transition-all font-medium bg-muted-foreground text-background hover:bg-muted-foreground/90"
                       onClick={handleCancelEdit}
                     >
                       취소
@@ -323,7 +337,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
                   ) : (
                     <button
                       type="button"
-                      className="btn-edit"
+                      className="py-1 px-3 text-xs border-none rounded cursor-pointer transition-all font-medium bg-primary text-primary-foreground hover:bg-primary/90"
                       onClick={() => handleEditTemplate(template.id)}
                     >
                       수정
@@ -331,7 +345,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
                   )}
                   <button
                     type="button"
-                    className="btn-delete"
+                    className="py-1 px-3 text-xs border-none rounded cursor-pointer transition-all font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     onClick={() => handleDeleteTemplate(template.id)}
                   >
                     삭제
@@ -345,9 +359,11 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
 
       {/* 템플릿 저장 섹션 (열림 상태에서만 표시) */}
       {!collapsed && saveFormData && (
-        <div className="template-save-section">
-          <label>{isEditMode ? "템플릿 수정" : "새 템플릿 저장"}</label>
-          <div className="template-save-controls">
+        <div className="p-3 md:p-2.5 bg-background rounded-md border border-dashed border-border mt-2">
+          <div className="block text-sm md:text-[13px] font-semibold text-foreground mb-2">
+            {isEditMode ? "템플릿 수정" : "새 템플릿 저장"}
+          </div>
+          <div className="flex gap-2 items-center max-[425px]:flex-col max-[425px]:gap-1.5">
             <input
               type="text"
               value={saveFormData.templateName}
@@ -358,18 +374,19 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
               }}
               placeholder="템플릿 이름 (최대 5자)"
               maxLength={5}
+              className="flex-1 py-2 px-3 md:py-1.5 md:px-2.5 border border-border rounded text-base bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed max-[425px]:w-full"
             />
             <button
               type="button"
               onClick={isEditMode ? handleUpdateTemplate : handleCreateTemplate}
               disabled={loading || (!isEditMode && templates.length >= 5)}
-              className="btn-save-template"
+              className="py-2 px-4 md:py-1.5 md:px-3 bg-emerald-500 text-white border-none rounded text-sm md:text-[13px] font-medium cursor-pointer transition-all whitespace-nowrap hover:bg-emerald-600 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed max-[425px]:w-full"
             >
               {loading ? "저장 중..." : isEditMode ? "수정" : "저장"}
             </button>
           </div>
           {!isEditMode && templates.length >= 5 && (
-            <p className="template-limit-message">
+            <p className="mt-2 text-xs text-destructive">
               템플릿은 최대 5개까지 저장할 수 있습니다.
             </p>
           )}

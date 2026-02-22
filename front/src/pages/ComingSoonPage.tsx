@@ -1,5 +1,4 @@
 import React from "react";
-import "./ComingSoonPage.css";
 
 interface Props {
   title: string;
@@ -7,10 +6,10 @@ interface Props {
 
 const ComingSoonPage: React.FC<Props> = ({ title }) => {
   return (
-    <div className="coming-soon-page">
-      <div className="coming-soon-content">
-        <h1>{title}</h1>
-        <p>준비 중인 기능입니다.</p>
+    <div className="flex justify-center items-center min-h-[calc(100vh-140px)] p-4">
+      <div className="text-center max-w-[425px]">
+        <div className="text-2xl font-bold text-foreground mb-3">{title}</div>
+        <p className="text-base text-muted-foreground">준비 중인 기능입니다.</p>
       </div>
     </div>
   );

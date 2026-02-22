@@ -7,8 +7,8 @@ import { getErrorMessage, logError } from '../../../utils/errorHandler';
 import { canManageClub, normalizeClubRole } from '../../../utils/role';
 import { getOpenRunSession } from '../../../utils/openrunSession';
 import MemberProfileDrawer from '../../../components/MemberProfileDrawer';
+import UserNameWithBadge from '../../../components/common/UserNameWithBadge';
 import { useToast } from '../../../contexts/ToastContext';
-import './ClubMembersPage.css';
 
 // 신규 API 응답 형식: GET /clubs/{clubId}/membership
 interface ClubMembershipResponse {
@@ -155,12 +155,12 @@ const ClubMembersPage: React.FC = () => {
 
   const getRoleIcon = (role: string, size: number = 16) => {
     if (role === 'OWNER') {
-      return <CrownIcon size={size} color="#FFD700" />;
+      return <span className="text-primary"><CrownIcon size={size} /></span>;
     }
     if (role === 'ADMIN') {
-      return <StarIcon size={size} color="#4A90D9" />;
+      return <span className="text-primary/60"><StarIcon size={size} /></span>;
     }
-    return <UserIcon size={size} color="var(--color-text-tertiary)" />;
+    return <span className="text-muted-foreground"><UserIcon size={size} /></span>;
   };
 
   const getRoleName = (role: string) => {
@@ -172,6 +172,28 @@ const ClubMembersPage: React.FC = () => {
     }
     // legacy MEMBER, REGULAR
     return '정회원';
+  };
+
+  // 역할에 따른 배지 색상 클래스
+  const getRoleBadgeClass = (role: string) => {
+    if (role === 'OWNER') {
+      return 'text-primary font-medium';
+    }
+    if (role === 'ADMIN') {
+      return 'text-primary/70 font-medium';
+    }
+    return 'text-muted-foreground';
+  };
+
+  // 역할에 따른 아이콘 컨테이너 배경색
+  const getRoleIconBgClass = (role: string) => {
+    if (role === 'OWNER') {
+      return 'bg-primary/10';
+    }
+    if (role === 'ADMIN') {
+      return 'bg-primary/5';
+    }
+    return 'bg-muted';
   };
 
   // 멤버를 역할순으로 정렬 (OWNER > ADMIN > REGULAR/MEMBER)
@@ -186,19 +208,22 @@ const ClubMembersPage: React.FC = () => {
   });
 
   return (
-    <div className="club-members-page">
+    <div className="page-container p-3 sm:p-4 lg:p-5 bg-gray-50 min-h-screen">
       {/* 헤더 */}
-      <div className="club-members-page__header">
-        <button className="club-members-page__back-btn" onClick={handleBack}>
+      <div className="flex items-center justify-between py-2 mb-3">
+        <button
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-members-page__title">
+        <span className="flex-1 text-center text-sm font-bold text-foreground">
           {club?.name ? `${club.name} 클럽원` : '클럽원 명단'}
-        </h1>
-        <div className="club-members-page__header-spacer" />
-        {canEditRoles && !loading && !error && (
+        </span>
+        {/* 편집 버튼이 없을 때도 레이아웃 균형 유지 */}
+        {canEditRoles && !loading && !error ? (
           <button
-            className="club-members-page__edit-btn"
+            className="flex items-center gap-1 border border-gray-300 bg-white rounded-full px-3 py-2 text-sm font-semibold text-gray-700 cursor-pointer transition-all hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => (isEditMode ? void handleSaveRoles() : setIsEditMode(true))}
             disabled={saving}
             type="button"
@@ -212,54 +237,67 @@ const ClubMembersPage: React.FC = () => {
               </>
             )}
           </button>
+        ) : (
+          <div className="w-9" />
         )}
       </div>
 
       {/* 멤버 수 요약 */}
       {!loading && !error && (
-        <div className="club-members-page__summary">
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-gray-200 mb-3 text-sm text-gray-500">
           <UserIcon size={16} />
           <span>총 {members.length}명</span>
         </div>
       )}
 
       {/* 콘텐츠 */}
-      <div className="club-members-page__content">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {loading && (
-          <div className="club-members-page__loading">멤버 목록을 불러오는 중...</div>
+          <div className="px-4 py-8 text-center text-sm text-gray-400">
+            멤버 목록을 불러오는 중...
+          </div>
         )}
 
         {error && (
-          <div className="club-members-page__error">{error}</div>
+          <div className="px-4 py-8 text-center text-sm text-red-500">
+            {error}
+          </div>
         )}
 
         {!loading && !error && members.length === 0 && (
-          <div className="club-members-page__empty">
-            <p className="club-members-page__empty-icon">👥</p>
-            <p className="club-members-page__empty-message">아직 멤버가 없습니다.</p>
+          <div className="px-4 py-8 text-center">
+            <p className="text-3xl mb-3">👥</p>
+            <p className="text-sm text-gray-400 m-0">아직 멤버가 없습니다.</p>
           </div>
         )}
 
         {!loading && !error && sortedMembers.length > 0 && (
-          <div className="club-members-page__list">
+          <div className="flex flex-col">
             {sortedMembers.map((member) => (
               <div
                 key={member.memberId}
-                className="club-members-page__item"
+                className="flex items-center gap-3 px-3 py-3 border-b border-gray-100 last:border-b-0 min-h-[44px] transition-colors"
                 onClick={() => !isEditMode && setSelectedUserId(member.userId)}
                 style={{ cursor: isEditMode ? 'default' : 'pointer' }}
               >
-                <div className="club-members-page__item-role-icon">
+                {/* 역할 아이콘 */}
+                <div
+                  className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${getRoleIconBgClass(member.role)}`}
+                >
                   {getRoleIcon(member.role, 24)}
                 </div>
-                <div className="club-members-page__item-info">
-                  <div className="club-members-page__item-name">
-                    {member.name}
+
+                {/* 멤버 정보 */}
+                <div className="flex-1 min-w-0">
+                  {/* 이름 + 어워드 뱃지 */}
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 mb-0.5">
+                    <UserNameWithBadge userId={member.userId} userName={member.name} showPrimaryOnly />
                   </div>
-                  <div className="club-members-page__item-role">
+                  {/* 역할 */}
+                  <div className={`text-xs ${getRoleBadgeClass(member.role)}`}>
                     {isEditMode && member.role !== "OWNER" ? (
                       <select
-                        className="club-members-page__role-select"
+                        className="mt-1 border border-gray-300 bg-white rounded-lg px-2 py-1 text-xs text-gray-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400"
                         value={roleDraftByUserId[member.userId] ?? member.role}
                         onChange={(e) =>
                           setRoleDraftByUserId((prev) => ({
@@ -276,17 +314,23 @@ const ClubMembersPage: React.FC = () => {
                       getRoleName(member.role)
                     )}
                   </div>
-                  <div className="club-members-page__item-sub-info">
+                  {/* 부가 정보 (테니스 시작시기, 가입일) */}
+                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
                     {formatTennisStarted(member.tennisStartedAt) && (
-                      <span>{formatTennisStarted(member.tennisStartedAt)} 시작</span>
+                      <>
+                        <span className="whitespace-nowrap">{formatTennisStarted(member.tennisStartedAt)} 시작</span>
+                        <span className="text-gray-300">·</span>
+                      </>
                     )}
-                    <span>가입 {formatJoinedAt(member.joinedAt)}</span>
+                    <span className="whitespace-nowrap">가입 {formatJoinedAt(member.joinedAt)}</span>
                   </div>
                 </div>
-                <div className="club-members-page__item-actions">
+
+                {/* 액션 영역 */}
+                <div className="flex items-center gap-1">
                   {isEditMode && isOwner && member.role !== "OWNER" && (
                     <button
-                      className="club-members-page__item-kick"
+                      className="flex items-center justify-center w-9 h-9 rounded-lg border-none bg-transparent text-gray-400 cursor-pointer transition-all hover:bg-red-50 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleKickMember(member.memberId, member.name);

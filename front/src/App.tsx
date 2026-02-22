@@ -18,7 +18,6 @@ import ClubManageInfoPage from "./pages/club/manage/ClubManageInfoPage";
 import ClubManagePolicyPage from "./pages/club/manage/ClubManagePolicyPage";
 import ClubManageAwardPage from "./pages/club/manage/ClubManageAwardPage";
 import ClubCreateOnboardingPage from "./pages/club/create/ClubCreateOnboardingPage";
-import ClubNoticesManagePage from "./pages/club/manage/ClubNoticeManagePage";
 import ClubEntryRedirectPage from "./pages/club/home/ClubEntryRedirectPage";
 import GuestRecruitPage from "./pages/club/recruit/GuestRecruitPage";
 import InterclubRecruitPage from "./pages/club/recruit/InterclubRecruitPage";
@@ -55,6 +54,7 @@ function App() {
   // "/" 경로와 "/setup-profile", "/intro"에서는 Navigation 숨김
   const shouldShowNavigation =
     location.pathname !== "/" &&
+    location.pathname !== "/login" &&
     location.pathname !== "/setup-profile" &&
     location.pathname !== "/intro";
 
@@ -181,14 +181,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ClubBallManagePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/clubs/:clubId/notices/manage"
-                element={
-                  <ProtectedRoute>
-                    <ClubNoticesManagePage />
                   </ProtectedRoute>
                 }
               />

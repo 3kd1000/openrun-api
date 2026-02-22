@@ -360,7 +360,7 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
                               className="mde__btn-edit"
                               onClick={() => handleEditGame(game.gameNo)}
                             >
-                              편집
+                              수정
                             </button>
                             {complete && (
                               <button
@@ -368,7 +368,7 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
                                 className="mde__btn-clear"
                                 onClick={() => handleClearGame(game.gameNo)}
                               >
-                                초기화
+                                삭제
                               </button>
                             )}
                           </div>
@@ -377,7 +377,6 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
                           {complete ? (
                             <>
                               <div className="mde__team mde__team--a">
-                                <span className="mde__team-label">A</span>
                                 <span className="mde__team-players">
                                   {game.teamAUserIds
                                     .map((id) => (id ? userIdToName.get(id) : "?"))
@@ -386,7 +385,6 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
                               </div>
                               <div className="mde__vs">vs</div>
                               <div className="mde__team mde__team--b">
-                                <span className="mde__team-label">B</span>
                                 <span className="mde__team-players">
                                   {game.teamBUserIds
                                     .map((id) => (id ? userIdToName.get(id) : "?"))

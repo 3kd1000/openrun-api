@@ -6,15 +6,12 @@ import type { Club } from "../../../types/club";
 import { useAuth } from "../../../contexts/AuthContext";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
 import {
-  CompassIcon,
   MegaphoneIcon,
   UsersIcon,
   SettingsIcon,
-  BroadcastIcon,
   UserPlusIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
 } from "../../../components/common/Icons";
+import { MailOpen } from "lucide-react";
 import {
   canManageClub,
   normalizeClubRole,
@@ -38,7 +35,7 @@ import MyRecentMatchesWidget from "./components/widgets/MyRecentMatchesWidget";
 import WidgetSettingsModal, {
   getDefaultSelectedWidgets,
 } from "./components/widgets/WidgetSettingsModal";
-import "./ClubMainPage.css";
+import { cn } from "@/lib/utils";
 import { clubService } from "../../../services/clubService";
 import { syncClubList } from "../../../services/api/userApi";
 
@@ -75,27 +72,6 @@ const ClubMainPage: React.FC = () => {
     return normalizeClubRole(session.currentClubRole);
   });
   const canManage = canManageClub(myRole);
-
-  // 메뉴 접힘/펼침 상태 (localStorage에 저장)
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem("openrun_menu_collapsed") === "true";
-    } catch {
-      return false;
-    }
-  });
-
-  const toggleMenuCollapsed = () => {
-    setIsMenuCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("openrun_menu_collapsed", String(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-  };
 
   // URL 기준 clubId를 session에 동기화 (클럽 내 라우팅 표준화)
   // 단, clubList에 있는 유효한 클럽만 세션에 저장
@@ -488,10 +464,6 @@ const ClubMainPage: React.FC = () => {
 
 
   // 헤더 아이콘 핸들러
-  const handleExploreClubs = () => {
-    navigate("/clubs/explore", { state: { fromClubId: clubId } });
-  };
-
   const handleViewMembers = () => {
     navigate(`/clubs/${clubId}/members`);
   };
@@ -573,8 +545,10 @@ const ClubMainPage: React.FC = () => {
   // 로딩 중
   if (isLoadingClub) {
     return (
-      <div className="club-main-page">
-        <div className="club-main-page__loading">로딩 중...</div>
+      <div className="page-container">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground">
+          로딩 중...
+        </div>
       </div>
     );
   }
@@ -582,14 +556,14 @@ const ClubMainPage: React.FC = () => {
   // 소속 클럽 없음
   if (!club && !clubId) {
     return (
-      <div className="club-main-page">
-        <div className="club-main-page__empty">
-          <p className="club-main-page__empty-icon">👥</p>
-          <p className="club-main-page__empty-message">
+      <div className="page-container">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground">
+          <p className="text-2xl mb-4">👥</p>
+          <p className="text-lg mb-6">
             소속된 클럽이 없습니다.
           </p>
           <button
-            className="club-main-page__empty-button"
+            className="px-6 py-3 bg-primary text-white border-none rounded-lg text-base cursor-pointer transition-colors hover:bg-primary/90"
             onClick={() => navigate("/clubs/explore")}
           >
             클럽 찾아보기
@@ -600,93 +574,76 @@ const ClubMainPage: React.FC = () => {
   }
 
   return (
-    <div className="club-main-page">
-      {/* 클럽 헤더 액션 버튼 */}
-      <div className={`club-main-page__header ${isMenuCollapsed ? "collapsed" : ""}`}>
-        <div className="club-main-page__header-actions">
-          <button
-            className="club-main-page__header-btn"
-            onClick={handleViewRules}
-            title="공지/회칙"
-          >
-            <MegaphoneIcon size={20} />
-            <span className="club-main-page__header-btn-text">공지/회칙</span>
-            {contentUnreadCount > 0 && (
-              <span
-                className="club-main-page__notice-dot"
-                aria-label="읽지 않은 공지/회칙 있음"
-              />
-            )}
-          </button>
-          <button
-            className="club-main-page__header-btn"
-            onClick={() => navigate(`/clubs/${clubId}/recruiting`, { state: { fromClubMain: true } })}
-            title="클럽 초대 페이지"
-          >
-            <BroadcastIcon size={20} />
-            <span className="club-main-page__header-btn-text">클럽초대</span>
-          </button>
-          {canManage && (
-            <button
-              className="club-main-page__header-btn"
-              onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
-              title="가입 관리"
-            >
-              <UserPlusIcon size={20} />
-              <span className="club-main-page__header-btn-text">가입관리</span>
-            </button>
-          )}
-          <button
-            className="club-main-page__header-btn"
-            onClick={handleViewMembers}
-            title="클럽원"
-          >
-            <UsersIcon size={20} />
-            <span className="club-main-page__header-btn-text">클럽원</span>
-          </button>
-          <button
-            className="club-main-page__header-btn"
-            onClick={handleExploreClubs}
-            title="클럽 탐색"
-          >
-            <CompassIcon size={20} />
-            <span className="club-main-page__header-btn-text">클럽탐색</span>
-          </button>
-          {canManage && (
-            <button
-              className="club-main-page__header-btn"
-              onClick={handleManageClub}
-              title="클럽 관리"
-            >
-              <SettingsIcon size={20} />
-              <span className="club-main-page__header-btn-text">클럽관리</span>
-            </button>
-          )}
-        </div>
+    <div className="page-container">
+      {/* 클럽 헤더 액션 버튼 - 한 줄 배치 */}
+      <div className="flex items-stretch justify-around p-1.5 bg-white rounded-xl mb-4 border border-border">
         <button
-          className="club-main-page__header-toggle"
-          onClick={toggleMenuCollapsed}
-          title={isMenuCollapsed ? "메뉴 펼치기" : "메뉴 접기"}
-          type="button"
+          className="relative flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
+          onClick={handleViewRules}
+          title="공지/회칙"
         >
-          {isMenuCollapsed ? <ChevronDownIcon size={16} /> : <ChevronUpIcon size={16} />}
+          <MegaphoneIcon size={20} />
+          <span className="text-[11px] leading-none whitespace-nowrap">공지/회칙</span>
+          {contentUnreadCount > 0 && (
+            <span
+              className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"
+              aria-label="읽지 않은 공지/회칙 있음"
+            />
+          )}
         </button>
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
+          onClick={() => navigate(`/clubs/${clubId}/recruiting`, { state: { fromClubMain: true } })}
+          title="클럽 초대 페이지"
+        >
+          <MailOpen size={20} />
+          <span className="text-[11px] leading-none whitespace-nowrap">클럽초대</span>
+        </button>
+        {canManage && (
+          <button
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
+            onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
+            title="가입 관리"
+          >
+            <UserPlusIcon size={20} />
+            <span className="text-[11px] leading-none whitespace-nowrap">가입관리</span>
+          </button>
+        )}
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
+          onClick={handleViewMembers}
+          title="클럽원"
+        >
+          <UsersIcon size={20} />
+          <span className="text-[11px] leading-none whitespace-nowrap">클럽원</span>
+        </button>
+        {canManage && (
+          <button
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
+            onClick={handleManageClub}
+            title="클럽 관리"
+          >
+            <SettingsIcon size={20} />
+            <span className="text-[11px] leading-none whitespace-nowrap">클럽관리</span>
+          </button>
+        )}
       </div>
 
       {/* 위젯 영역 */}
-      <div className="club-main-page__widgets">
-        <div className="club-main-page__widgets-toolbar">
+      <div className="flex flex-col gap-4 mb-4">
+        <div className="flex items-center justify-end gap-2 px-0.5">
           <button
-            className="club-main-page__widgets-settings-btn"
+            className="px-3 py-1 rounded-md border border-border bg-white text-muted-foreground text-xs cursor-pointer transition-all hover:border-primary hover:text-primary hover:bg-primary/5"
             onClick={() => setShowWidgetSettingsModal(true)}
             type="button"
           >
             위젯편집
           </button>
           <button
-            className={`club-main-page__widgets-edit-btn ${
-              isWidgetEditMode ? "active" : ""
-            }`}
+            className={cn(
+              "px-3 py-1 rounded-md border border-border bg-white text-muted-foreground text-xs cursor-pointer transition-all hover:border-primary hover:text-primary",
+              isWidgetEditMode && "border-primary text-primary bg-primary/5"
+            )}
             onClick={() => setIsWidgetEditMode((prev) => !prev)}
             type="button"
           >
@@ -699,33 +656,30 @@ const ClubMainPage: React.FC = () => {
             .filter((widgetId) => selectedWidgets.includes(widgetId))
             .map((widgetId) => {
               const widgetContent = renderWidget(widgetId);
-              // 운영진이 아니면 externalRequests 위젯은 렌더링하지 않음
               if (!widgetContent) return null;
 
               return (
                 <div
                   key={widgetId}
-                  className={`club-main-page__widget-item ${
-                    draggingWidgetId === widgetId ? "dragging" : ""
-                  }`}
+                  className={cn("relative", draggingWidgetId === widgetId && "opacity-85")}
                   ref={(el) => {
                     widgetRefMap.current.set(widgetId, el);
                   }}
                 >
                   {isWidgetEditMode && (
                     <button
-                      className="club-main-page__widget-drag-handle"
-                    type="button"
-                    aria-label="위젯 순서 변경"
-                    onPointerDown={(e) => handleDragStart(widgetId, e)}
-                  >
-                    ⋮⋮
-                  </button>
-                )}
-                {widgetContent}
-              </div>
-            );
-          })}
+                      className="absolute top-2 right-2 z-10 w-10 h-10 rounded-xl border border-border bg-white/90 text-muted-foreground text-lg flex items-center justify-center cursor-grab touch-none active:cursor-grabbing active:scale-[0.98]"
+                      type="button"
+                      aria-label="위젯 순서 변경"
+                      onPointerDown={(e) => handleDragStart(widgetId, e)}
+                    >
+                      ⋮⋮
+                    </button>
+                  )}
+                  {widgetContent}
+                </div>
+              );
+            })}
       </div>
 
       {/* 위젯 설정 모달 */}

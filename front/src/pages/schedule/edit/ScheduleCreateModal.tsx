@@ -7,7 +7,6 @@ import { validateScheduleCreation } from "../../../utils/scheduleValidation";
 import ScheduleFormSection, {
   type ScheduleFormData,
 } from "./ScheduleFormSection";
-import "./ScheduleCreateModal.css";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 
 interface Props {
@@ -106,7 +105,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content modal-sm" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>일정 생성</h2>
           <button className="btn-close" onClick={onClose}>
