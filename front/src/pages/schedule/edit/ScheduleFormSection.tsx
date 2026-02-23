@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import RegionSelector from "../../../components/common/RegionSelector";
 
 // native select에 Input(h-9)과 동일한 높이/스타일 적용
 const selectClassName =
@@ -31,7 +32,7 @@ const generateTimeOptions = () => {
 };
 
 export interface ScheduleFormData {
-  clubId: number;
+  clubId?: number;
   scheduledAt: string;
   durationMinutes: number;
   courtName: string;
@@ -42,11 +43,14 @@ export interface ScheduleFormData {
   reservedByUserId?: number;
   participationStartAt: string | null;
   matchType?: MatchType;
+  courtAddress?: string;
+  region?: string;
 }
 
 interface ScheduleFormSectionProps {
   mode: "create" | "update";
   currentUserId: number | null;
+  isPublicSchedule?: boolean;
   initialData?: {
     clubId?: number;
     scheduledAt?: string;
@@ -59,6 +63,8 @@ interface ScheduleFormSectionProps {
     reservedByUserId?: number;
     participationStartAt?: string | null;
     matchType?: MatchType;
+    courtAddress?: string;
+    region?: string;
   };
   onSubmit: (data: ScheduleFormData) => Promise<void>;
   onCancel: () => void;
@@ -70,6 +76,7 @@ interface ScheduleFormSectionProps {
 export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
   mode,
   currentUserId,
+  isPublicSchedule = false,
   initialData,
   onSubmit,
   onCancel,
@@ -92,17 +99,30 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
     initialData?.durationMinutes || 120
   );
   const [formData, setFormData] = useState<ScheduleFormData>({
-    clubId: initialData?.clubId || 1,
+    clubId: initialData?.clubId || (isPublicSchedule ? undefined : 1),
     scheduledAt: initialData?.scheduledAt || "",
     durationMinutes: initialData?.durationMinutes || 120,
     courtName: initialData?.courtName || "",
-    maxCapacity: initialData?.maxCapacity || 4,
+    maxCapacity: initialData?.maxCapacity || (isPublicSchedule ? 8 : 4),
     numberOfCourts: initialData?.numberOfCourts || undefined,
     cost: initialData?.cost,
     description: initialData?.description || "",
     reservedByUserId: initialData?.reservedByUserId,
     participationStartAt: initialData?.participationStartAt || null,
     matchType: initialData?.matchType,
+    courtAddress: initialData?.courtAddress || "",
+    region: initialData?.region || "",
+  });
+
+  // 지역 드롭다운 state (공개일정용: "서울특별시 강남구" → depth1/depth2 분리)
+  const [regionDepth1, setRegionDepth1] = useState(() => {
+    const r = initialData?.region || "";
+    return r.split(" ")[0] || "";
+  });
+  const [regionDepth2, setRegionDepth2] = useState(() => {
+    const r = initialData?.region || "";
+    const parts = r.split(" ");
+    return parts.length > 1 ? parts.slice(1).join(" ") : "";
   });
 
   // 클럽 회원 관련 state
@@ -154,8 +174,9 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
     }
   }, [initialData?.participationStartAt, defaultDate]);
 
-  // 클럽 회원 목록 조회
+  // 클럽 회원 목록 조회 (공개일정에서는 스킵)
   useEffect(() => {
+    if (isPublicSchedule) return;
     const fetchClubMembers = async () => {
       try {
         const currentClubId = initialData?.clubId || 1;
@@ -176,7 +197,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       }
     };
     fetchClubMembers();
-  }, [initialData?.clubId, initialData?.reservedByUserId]);
+  }, [initialData?.clubId, initialData?.reservedByUserId, isPublicSchedule]);
 
   // 참가신청 시작시간을 HH:mm 형식으로 변환 (24시간제)
   const getParticipationStartTime = (): string => {
@@ -353,6 +374,8 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
       reservedByUserId: formData.reservedByUserId,
       participationStartAt,
       matchType: formData.matchType,
+      courtAddress: formData.courtAddress,
+      region: [regionDepth1, regionDepth2].filter(Boolean).join(" ") || undefined,
     };
 
     await onSubmit(submitData);
@@ -395,8 +418,8 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         />
       )}
 
-      {/* 참가신청 시작시간 템플릿 - 항상 표시, 기본 닫힘 */}
-      {currentUserId && (
+      {/* 참가신청 시작시간 템플릿 - 공개일정에서는 숨김 */}
+      {currentUserId && !isPublicSchedule && (
         <TemplateSection
           templateType="PARTICIPATION_START"
           currentUserId={currentUserId}
@@ -438,7 +461,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               required
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
             />
             <Input
               type="text"
@@ -446,6 +469,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
               readOnly
               tabIndex={-1}
               className="pointer-events-none"
+              placeholder="날짜 선택"
             />
           </div>
         </div>
@@ -483,7 +507,8 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
         </div>
       </div>
 
-      {/* 참가신청 시작 시간 체크박스 */}
+      {/* 참가신청 시작 시간 체크박스 - 공개일정에서는 숨김 */}
+      {!isPublicSchedule && (
       <div className="mb-3 flex items-center gap-2">
         <Checkbox
           id="participation-start"
@@ -505,98 +530,101 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
           참가신청 시작 시간 설정
         </Label>
       </div>
+      )}
 
-      {/* 참가신청 시작시간 - 체크 여부와 상관없이 항상 표시 */}
-      {!isEditingParticipationStart ? (
-        <div className="mb-3">
-          <div
-            className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-sm ${
-              participationStartEnabled
-                ? "bg-muted/50"
-                : "bg-muted/30 opacity-60"
-            }`}
-          >
-            <span className="flex-1">
-              {participationStartDate
-                ? getFormattedParticipationStart()
-                : "날짜와 시간을 설정해주세요"}
-            </span>
+      {/* 참가신청 시작시간 - 공개일정에서는 숨김 */}
+      {!isPublicSchedule && (
+        !isEditingParticipationStart ? (
+          <div className="mb-3">
+            <div
+              className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-sm ${
+                participationStartEnabled
+                  ? "bg-muted/50"
+                  : "bg-muted/30 opacity-60"
+              }`}
+            >
+              <span className="flex-1">
+                {participationStartDate
+                  ? getFormattedParticipationStart()
+                  : "날짜와 시간을 설정해주세요"}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditingParticipationStart(true)}
+                disabled={!participationStartEnabled}
+              >
+                수정
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* 시작 날짜 / 시간 / 분 */}
+            <div className="flex gap-2 mb-2">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  시작 날짜 *
+                </Label>
+                <Input
+                  type="date"
+                  value={participationStartDate}
+                  onChange={(e) => setParticipationStartDate(e.target.value)}
+                  disabled={!participationStartEnabled}
+                  required
+                />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Label className="text-xs text-muted-foreground">시간 *</Label>
+                <select
+                  className={selectClassName}
+                  value={participationStartHour}
+                  onChange={(e) =>
+                    setParticipationStartHour(parseInt(e.target.value))
+                  }
+                  disabled={!participationStartEnabled}
+                  required
+                >
+                  {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                    <option key={hour} value={hour}>
+                      {String(hour).padStart(2, "0")}시
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Label className="text-xs text-muted-foreground">분 *</Label>
+                <select
+                  className={selectClassName}
+                  value={participationStartMinute}
+                  onChange={(e) =>
+                    setParticipationStartMinute(
+                      parseInt(e.target.value) as 0 | 30
+                    )
+                  }
+                  disabled={!participationStartEnabled}
+                  required
+                >
+                  <option value={0}>00분</option>
+                  <option value={30}>30분</option>
+                </select>
+              </div>
+            </div>
             <Button
               type="button"
-              variant="outline"
               size="sm"
-              onClick={() => setIsEditingParticipationStart(true)}
-              disabled={!participationStartEnabled}
+              className="mb-3"
+              onClick={() => {
+                if (participationStartDate) {
+                  setIsEditingParticipationStart(false);
+                }
+              }}
             >
-              수정
+              완료
             </Button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* 시작 날짜 / 시간 / 분 */}
-          <div className="flex gap-2 mb-2">
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <Label className="text-xs text-muted-foreground">
-                시작 날짜 *
-              </Label>
-              <Input
-                type="date"
-                value={participationStartDate}
-                onChange={(e) => setParticipationStartDate(e.target.value)}
-                disabled={!participationStartEnabled}
-                required
-              />
-            </div>
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <Label className="text-xs text-muted-foreground">시간 *</Label>
-              <select
-                className={selectClassName}
-                value={participationStartHour}
-                onChange={(e) =>
-                  setParticipationStartHour(parseInt(e.target.value))
-                }
-                disabled={!participationStartEnabled}
-                required
-              >
-                {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                  <option key={hour} value={hour}>
-                    {String(hour).padStart(2, "0")}시
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <Label className="text-xs text-muted-foreground">분 *</Label>
-              <select
-                className={selectClassName}
-                value={participationStartMinute}
-                onChange={(e) =>
-                  setParticipationStartMinute(
-                    parseInt(e.target.value) as 0 | 30
-                  )
-                }
-                disabled={!participationStartEnabled}
-                required
-              >
-                <option value={0}>00분</option>
-                <option value={30}>30분</option>
-              </select>
-            </div>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            className="mb-3"
-            onClick={() => {
-              if (participationStartDate) {
-                setIsEditingParticipationStart(false);
-              }
-            }}
-          >
-            완료
-          </Button>
-        </>
+          </>
+        )
       )}
 
       {/* 코트명 */}
@@ -608,10 +636,36 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
           onChange={(e) =>
             setFormData({ ...formData, courtName: e.target.value })
           }
-          placeholder="예: 골드 3번 코트"
+          placeholder={isPublicSchedule ? "예: 서울숲 테니스장" : "예: 골드 3번 코트"}
           required
         />
       </div>
+
+      {/* 코트 주소 / 지역 - 공개일정만 */}
+      {isPublicSchedule && (
+        <>
+          <div className="mb-3 space-y-1.5">
+            <Label className="text-xs text-muted-foreground">코트 주소</Label>
+            <Input
+              type="text"
+              value={formData.courtAddress || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, courtAddress: e.target.value })
+              }
+              placeholder="예: 서울시 성동구 서울숲2길 32"
+            />
+          </div>
+          <div className="mb-3 space-y-1.5">
+            <Label className="text-xs text-muted-foreground">지역</Label>
+            <RegionSelector
+              depth1={regionDepth1}
+              depth2={regionDepth2}
+              onChangeDepth1={setRegionDepth1}
+              onChangeDepth2={setRegionDepth2}
+            />
+          </div>
+        </>
+      )}
 
       {/* 최대 정원 / 코트 수 / 모임 타입 */}
       <div className="flex gap-2 mb-2">
@@ -687,6 +741,8 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             placeholder="25000"
           />
         </div>
+        {/* 예약자 - 클럽일정만 */}
+        {!isPublicSchedule && (
         <div className="flex-1 min-w-0 space-y-1.5">
           <Label className="text-xs text-muted-foreground">
             예약자
@@ -730,6 +786,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* 설명 */}

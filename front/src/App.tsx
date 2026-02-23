@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import DrawGenerationPage from "./pages/draw/DrawGenerationPage";
 import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
 import ScheduleCreatePage from "./pages/schedule/create/ScheduleCreatePage";
+import PublicScheduleCreatePage from "./pages/schedule/create/PublicScheduleCreatePage";
 import ScheduleDetailPage from "./pages/schedule/detail/ScheduleDetailPage";
 import MorePage from "./pages/more/MorePage";
 import ScoreboardPage from "./pages/scoreboard/ScoreboardPage";
@@ -255,6 +256,15 @@ function App() {
               {import.meta.env.DEV && (
                 <Route path="/more/guide-editor" element={<GuideEditorPage />} />
               )}
+              {/* 공개일정 생성 (클럽 불필요, ProtectedRoute) */}
+              <Route
+                path="/schedules/public/new"
+                element={
+                  <ProtectedRoute>
+                    <PublicScheduleCreatePage />
+                  </ProtectedRoute>
+                }
+              />
               {/* Protected 페이지 (로그인 필수) - ClubLayout 사용 */}
               <Route
                 element={

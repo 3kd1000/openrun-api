@@ -21,7 +21,7 @@ const TIER_RING: Record<TierName, string> = {
 };
 
 interface UserNameWithBadgeProps {
-  userId: number;
+  userId: number | null;
   userName: string;
   className?: string;
   showBadge?: boolean;
@@ -58,6 +58,11 @@ const UserNameWithBadge: React.FC<UserNameWithBadgeProps> = ({
       </span>
     );
   };
+
+  // 게스트(userId=null)이면 뱃지 없이 이름만 표시
+  if (userId == null) {
+    return <span className={className}>{userName}</span>;
+  }
 
   // 대표 뱃지만 표시 모드
   if (showPrimaryOnly && showBadge) {

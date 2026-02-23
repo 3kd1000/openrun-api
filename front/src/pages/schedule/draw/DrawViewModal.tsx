@@ -172,6 +172,10 @@ const DrawViewModal: React.FC<Props> = ({
         });
 
       if (updateItems.length > 0) {
+        if (schedule.clubId == null) {
+          setError("공개일정에서는 경기 결과를 저장할 수 없습니다.");
+          return;
+        }
         const batchRequest: BatchUpdateMatchRequest = {
           matches: updateItems,
         };
@@ -216,6 +220,10 @@ const DrawViewModal: React.FC<Props> = ({
       setSaving(true);
       setError("");
 
+      if (schedule.clubId == null) {
+        setError("공개일정에서는 경기 결과를 초기화할 수 없습니다.");
+        return;
+      }
       await drawService.deleteMatchResult(schedule.clubId, matchId);
       await loadDraw();
 
@@ -242,15 +250,19 @@ const DrawViewModal: React.FC<Props> = ({
       setError("");
 
       const allUserIds = new Set<number>();
+      const allGuestNames = new Set<string>();
       manualGames.forEach((g) => {
         g.teamAUserIds.forEach((id) => allUserIds.add(id));
         g.teamBUserIds.forEach((id) => allUserIds.add(id));
+        g.teamAGuestNames?.forEach((name) => allGuestNames.add(name));
+        g.teamBGuestNames?.forEach((name) => allGuestNames.add(name));
       });
 
       const requestWithIds: CreateDrawRequestWithIds = {
         drawType: "MANUAL",
-        numberOfTotalPlayer: allUserIds.size,
+        numberOfTotalPlayer: allUserIds.size + allGuestNames.size,
         userIds: Array.from(allUserIds),
+        guestNames: allGuestNames.size > 0 ? Array.from(allGuestNames) : undefined,
         manualGames,
       };
 
@@ -277,6 +289,9 @@ const DrawViewModal: React.FC<Props> = ({
 
   // 일정이 미래인지 확인 (미래 일정은 결과 입력 불가)
   const isFutureSchedule = !isPastDate(schedule.scheduledAt);
+
+  // 공개일정 여부 (경기 결과 저장 불가)
+  const isPublicSchedule = schedule.clubId == null;
 
   // 대진 수정 가능 여부: 경기 결과가 입력되지 않은 경우에만
   const canEditDraw = !hasAnyResult && drawResult !== null;
@@ -424,7 +439,9 @@ const DrawViewModal: React.FC<Props> = ({
               )}
               <div
                 title={
-                  isFutureSchedule
+                  isPublicSchedule
+                    ? "공개일정에서는 경기 결과를 입력할 수 없습니다"
+                    : isFutureSchedule
                     ? "경기 일정이 지난 후에만 결과를 입력할 수 있습니다"
                     : ""
                 }
@@ -432,7 +449,7 @@ const DrawViewModal: React.FC<Props> = ({
                 <Button
                   variant={isEditMode ? "default" : "secondary"}
                   onClick={handleToggleEditMode}
-                  disabled={!drawResult || saving || isFutureSchedule}
+                  disabled={!drawResult || saving || isFutureSchedule || isPublicSchedule}
                   className="w-full"
                 >
                   {saving ? "저장 중..." : isEditMode ? "입력완료" : "결과입력"}

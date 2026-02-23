@@ -585,9 +585,9 @@ const ScoreboardPage: React.FC = () => {
             </div>
           ) : rankings.length === 0 ? (
             <div className="text-center py-[60px] px-4 text-muted-foreground">
-              <p className="text-5xl mb-3 max-md:text-4xl">
+              <div className="flex justify-center mb-3">
                 <TrophyIcon size={64} color="var(--color-text-secondary)" />
-              </p>
+              </div>
               <p>아직 경기 기록이 없습니다.</p>
               <p className="text-muted-foreground/60 text-sm">경기를 등록하면 랭킹이 표시됩니다!</p>
             </div>
@@ -683,7 +683,7 @@ const ScoreboardPage: React.FC = () => {
               </div>
             ) : matches.length === 0 ? (
               <div className="text-center py-[60px] px-4 text-muted-foreground">
-                <div className="text-5xl mb-3 max-md:text-4xl">
+                <div className="flex justify-center mb-3">
                   <SearchIcon size={64} color="var(--color-text-secondary)" />
                 </div>
                 <p className="text-base font-semibold text-foreground mb-1">
@@ -828,7 +828,7 @@ const ScoreboardPage: React.FC = () => {
             </div>
           ) : awardRankings.length === 0 ? (
             <div className="text-center py-[60px] px-4 text-muted-foreground">
-              <div className="text-5xl mb-3 max-md:text-4xl">
+              <div className="flex justify-center mb-3">
                 <StarIcon size={64} color="var(--color-text-secondary)" />
               </div>
               <p className="text-base font-semibold text-foreground mb-1">수상 기록이 없습니다</p>
@@ -929,7 +929,7 @@ const ScoreboardPage: React.FC = () => {
               <div className="min-h-[200px]">
                 {personalMatches.length === 0 ? (
                   <div className="text-center py-[60px] px-4 text-muted-foreground">
-                    <div className="text-5xl mb-3 max-md:text-4xl">
+                    <div className="flex justify-center mb-3">
                       <UserIcon size={64} color="var(--color-text-secondary)" />
                     </div>
                     <p className="text-base font-semibold text-foreground mb-1">아직 경기 기록이 없습니다</p>

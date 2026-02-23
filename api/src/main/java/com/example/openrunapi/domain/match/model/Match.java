@@ -51,12 +51,26 @@ public class Match {
     @Column(name = "team_a_player2_id")
     private Long teamAPlayer2Id;
 
+    // Team A guest names (for guest participants)
+    @Column(name = "team_a_player1_guest_name", length = 50)
+    private String teamAPlayer1GuestName;
+
+    @Column(name = "team_a_player2_guest_name", length = 50)
+    private String teamAPlayer2GuestName;
+
     // Team B (nullable for withdrawn users)
     @Column(name = "team_b_player1_id")
     private Long teamBPlayer1Id;
 
     @Column(name = "team_b_player2_id")
     private Long teamBPlayer2Id;
+
+    // Team B guest names (for guest participants)
+    @Column(name = "team_b_player1_guest_name", length = 50)
+    private String teamBPlayer1GuestName;
+
+    @Column(name = "team_b_player2_guest_name", length = 50)
+    private String teamBPlayer2GuestName;
 
     // 경기 결과
     @Column(name = "team_a_score")

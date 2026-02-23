@@ -73,5 +73,49 @@ export const participantService = {
       { params: { userId } }
     );
     return response.data;
-  }
+  },
+
+  // 게스트 참가자 추가
+  addGuestParticipant: async (scheduleId: number, guestName: string, userId: number): Promise<Participant> => {
+    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/guests`, { guestName }, {
+      params: { userId }
+    });
+    return response.data;
+  },
+
+  // 게스트 참가자 삭제
+  removeGuestParticipant: async (scheduleId: number, participantId: number, userId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/participants/guests/${participantId}`, {
+      params: { userId }
+    });
+  },
+
+  // 게스트 이름 변경
+  updateGuestName: async (scheduleId: number, participantId: number, guestName: string, userId: number): Promise<void> => {
+    await axiosInstance.patch(`/schedules/${scheduleId}/participants/guests/${participantId}/name`, { guestName }, {
+      params: { userId }
+    });
+  },
+
+  // 공개일정 참가 신청
+  requestJoinPublicSchedule: async (scheduleId: number, userId: number): Promise<Participant> => {
+    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/request`, null, {
+      params: { userId }
+    });
+    return response.data;
+  },
+
+  // 참가자 승인 (호스트)
+  approveParticipant: async (scheduleId: number, participantId: number, userId: number): Promise<void> => {
+    await axiosInstance.patch(`/schedules/${scheduleId}/participants/${participantId}/approve`, null, {
+      params: { userId }
+    });
+  },
+
+  // 참가자 거절 (호스트)
+  rejectParticipant: async (scheduleId: number, participantId: number, userId: number): Promise<void> => {
+    await axiosInstance.patch(`/schedules/${scheduleId}/participants/${participantId}/reject`, null, {
+      params: { userId }
+    });
+  },
 };

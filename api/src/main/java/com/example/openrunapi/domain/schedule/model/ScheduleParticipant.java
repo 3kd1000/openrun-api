@@ -25,7 +25,7 @@ public class ScheduleParticipant {
     @Column(name = "schedule_id", nullable = false)
     private Long scheduleId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private Long userId;
 
     /**
@@ -33,6 +33,9 @@ public class ScheduleParticipant {
      * - true면 스케줄 참가자 목록 UI에서 '게스트'로 표시 가능
      * - 랭킹/스코어보드 집계에서 제외하는 용도로도 활용 가능
      */
+    @Column(name = "guest_name", length = 50)
+    private String guestName;
+
     @Column(name = "as_guest", nullable = false)
     private boolean asGuest = false;
 
@@ -48,9 +51,10 @@ public class ScheduleParticipant {
     private LocalDateTime joinedAt;
 
     @Builder
-    public ScheduleParticipant(Long scheduleId, Long userId, ParticipantStatus status, Integer position, Boolean asGuest) {
+    public ScheduleParticipant(Long scheduleId, Long userId, String guestName, ParticipantStatus status, Integer position, Boolean asGuest) {
         this.scheduleId = scheduleId;
         this.userId = userId;
+        this.guestName = guestName;
         this.status = status;
         this.position = position;
         this.asGuest = Boolean.TRUE.equals(asGuest);
@@ -80,9 +84,37 @@ public class ScheduleParticipant {
         return this.status == ParticipantStatus.WAITING;
     }
 
+    public void pending() {
+        this.status = ParticipantStatus.PENDING;
+    }
+
+    public void reject() {
+        this.status = ParticipantStatus.REJECTED;
+    }
+
+    public boolean isPending() {
+        return this.status == ParticipantStatus.PENDING;
+    }
+
+    public boolean isRejected() {
+        return this.status == ParticipantStatus.REJECTED;
+    }
+
+    public boolean isGuest() {
+        return this.userId == null && this.guestName != null;
+    }
+
+    public void updateGuestName(String guestName) {
+        if (this.userId == null) {
+            this.guestName = guestName;
+        }
+    }
+
     public enum ParticipantStatus {
         CONFIRMED,  // 확정
         WAITING,    // 대기
-        CANCELLED   // 취소
+        CANCELLED,  // 취소
+        PENDING,    // 승인 대기 (공개일정 전용)
+        REJECTED    // 거절됨 (공개일정 전용)
     }
 }

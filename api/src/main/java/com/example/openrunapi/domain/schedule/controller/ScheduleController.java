@@ -15,6 +15,12 @@ import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleGuestRecru
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubRecruitRequest;
 import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleCursorResponse;
+import com.example.openrunapi.domain.schedule.model.dto.CreatePublicScheduleRequest;
+import com.example.openrunapi.domain.schedule.model.dto.PublicScheduleResponse;
+import com.example.openrunapi.domain.schedule.model.dto.AddGuestParticipantRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateGuestNameRequest;
+import com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse;
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
 import com.example.openrunapi.common.service.PermissionService;
@@ -27,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -287,14 +294,34 @@ public class ScheduleController {
      */
     private CreateDrawRequest convertToCreateDrawRequest(
             CreateDrawRequestWithIds request) {
-        // userId를 userName으로 변환
-        List<String> userNames = scheduleService.convertUserIdsToNames(request.getUserIds());
-        List<String> seedUserNames = request.getSeedUserIds() != null 
-                ? scheduleService.convertUserIdsToNames(request.getSeedUserIds()) : null;
-        List<String> groupAUserNames = request.getGroupAUserIds() != null 
-                ? scheduleService.convertUserIdsToNames(request.getGroupAUserIds()) : null;
-        List<String> groupBUserNames = request.getGroupBUserIds() != null 
-                ? scheduleService.convertUserIdsToNames(request.getGroupBUserIds()) : null;
+        List<String> guestNames = request.getGuestNames() != null ? request.getGuestNames() : List.of();
+
+        // userId를 userName으로 변환 + 게스트 이름 합산
+        List<String> userNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getUserIds()));
+        userNames.addAll(guestNames);
+
+        // SEED 타입: 시드 회원 이름 + 시드 게스트 이름
+        List<String> seedUserNames = null;
+        if (request.getSeedUserIds() != null) {
+            seedUserNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getSeedUserIds()));
+            if (request.getSeedGuestNames() != null) {
+                seedUserNames.addAll(request.getSeedGuestNames());
+            }
+        }
+
+        // AB 타입: 그룹별 회원 이름 + 그룹별 게스트 이름
+        List<String> groupAUserNames = null;
+        List<String> groupBUserNames = null;
+        if (request.getGroupAUserIds() != null && request.getGroupBUserIds() != null) {
+            groupAUserNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getGroupAUserIds()));
+            groupBUserNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getGroupBUserIds()));
+            if (request.getGroupAGuestNames() != null) {
+                groupAUserNames.addAll(request.getGroupAGuestNames());
+            }
+            if (request.getGroupBGuestNames() != null) {
+                groupBUserNames.addAll(request.getGroupBGuestNames());
+            }
+        }
 
         return new CreateDrawRequest(
                 userNames,
@@ -321,6 +348,126 @@ public class ScheduleController {
     @DeleteMapping("/{scheduleId}/draw")
     public ResponseEntity<Void> deleteDrawForSchedule(@PathVariable Long scheduleId) {
         scheduleService.deleteDrawForSchedule(scheduleId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // === 공개 일정 ===
+
+    /**
+     * 공개 일정 생성 (클럽 없이, 호스트가 직접 생성)
+     * POST /api/schedules/public
+     */
+    @PostMapping("/public")
+    public ResponseEntity<ScheduleResponse> createPublicSchedule(
+            @Valid @RequestBody CreatePublicScheduleRequest request,
+            @RequestParam Long userId) {
+        ScheduleResponse response = scheduleService.createPublicSchedule(request, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 공개 일정 목록 조회 (지역/matchType 필터 지원)
+     * GET /api/schedules/public?region=서울&matchType=MENS_DOUBLES&limit=20
+     */
+    @GetMapping("/public")
+    public ResponseEntity<List<PublicScheduleResponse>> getPublicSchedules(
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String matchType,
+            @RequestParam(required = false, defaultValue = "20") Integer limit) {
+        MatchType mt = null;
+        if (matchType != null && !matchType.isEmpty()) {
+            try {
+                mt = MatchType.valueOf(matchType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // 잘못된 matchType은 무시
+            }
+        }
+        List<PublicScheduleResponse> list = scheduleService.getPublicSchedules(region, mt, limit);
+        return ResponseEntity.ok(list);
+    }
+
+    // === 게스트 참가자 관리 ===
+
+    /**
+     * 게스트(비회원) 참가자 추가 (운영진/호스트 전용)
+     * POST /api/schedules/{scheduleId}/participants/guests
+     */
+    @PostMapping("/{scheduleId}/participants/guests")
+    public ResponseEntity<ParticipantResponse> addGuestParticipant(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody AddGuestParticipantRequest request,
+            @RequestParam Long userId) {
+        ParticipantResponse response = participantService.addGuestParticipant(
+                scheduleId, request.getGuestName(), userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 게스트 참가자 삭제 (운영진/호스트 전용)
+     * DELETE /api/schedules/{scheduleId}/participants/guests/{participantId}
+     */
+    @DeleteMapping("/{scheduleId}/participants/guests/{participantId}")
+    public ResponseEntity<Void> removeGuestParticipant(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @RequestParam Long userId) {
+        participantService.removeGuestParticipant(scheduleId, participantId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 게스트 참가자 이름 변경 (운영진/호스트 전용)
+     * PATCH /api/schedules/{scheduleId}/participants/guests/{participantId}/name
+     */
+    @PatchMapping("/{scheduleId}/participants/guests/{participantId}/name")
+    public ResponseEntity<ParticipantResponse> updateGuestName(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @Valid @RequestBody UpdateGuestNameRequest request,
+            @RequestParam Long userId) {
+        ParticipantResponse response = participantService.updateGuestName(
+                scheduleId, participantId, request.getGuestName(), userId);
+        return ResponseEntity.ok(response);
+    }
+
+    // === 공개 일정 참가 신청/승인/거절 ===
+
+    /**
+     * 공개 일정 참가 신청 (로그인 사용자)
+     * POST /api/schedules/{scheduleId}/participants/request
+     */
+    @PostMapping("/{scheduleId}/participants/request")
+    public ResponseEntity<ParticipantResponse> requestJoinPublicSchedule(
+            @PathVariable Long scheduleId,
+            @RequestParam Long userId) {
+        ParticipantResponse response = participantService.requestJoinPublicSchedule(scheduleId, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 공개 일정 참가 승인 (호스트 전용)
+     * PATCH /api/schedules/{scheduleId}/participants/{participantId}/approve
+     */
+    @PatchMapping("/{scheduleId}/participants/{participantId}/approve")
+    public ResponseEntity<ParticipantResponse> approveParticipant(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @RequestParam Long userId) {
+        ParticipantResponse response = participantService.approveParticipant(
+                scheduleId, participantId, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 공개 일정 참가 거절 (호스트 전용)
+     * PATCH /api/schedules/{scheduleId}/participants/{participantId}/reject
+     */
+    @PatchMapping("/{scheduleId}/participants/{participantId}/reject")
+    public ResponseEntity<Void> rejectParticipant(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @RequestParam Long userId) {
+        participantService.rejectParticipant(scheduleId, participantId, userId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -93,6 +93,9 @@ public class User {
     @Column(name = "region_depth2", length = 20)
     private String regionDepth2; // 시/군/구 (예: 강남구, 수원시)
 
+    @Column(name = "nickname", length = 30)
+    private String nickname; // 공개 맥락 표시명
+
     @Builder
     public User(String email, String name, String imageUrl, Boolean isGuest) {
         this.email = email;
@@ -175,6 +178,17 @@ public class User {
     /**
      * 지역 표시용 문자열 반환
      */
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    /**
+     * 공개 맥락 표시명 (닉네임 → 실명 fallback)
+     */
+    public String getPublicDisplayName() {
+        return this.nickname != null ? this.nickname : this.name;
+    }
+
     public String getRegionDisplay() {
         if (regionDepth1 != null && !regionDepth1.isEmpty()) {
             if (regionDepth2 != null && !regionDepth2.isEmpty()) {

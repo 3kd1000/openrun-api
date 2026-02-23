@@ -47,13 +47,13 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     @Query("SELECT sp FROM ScheduleParticipant sp WHERE sp.userId = :userId AND sp.status != :status")
     List<ScheduleParticipant> findByUserIdAndStatusNot(@Param("userId") Long userId, @Param("status") ParticipantStatus status);
 
-    // 특정 일정의 취소되지 않은 참가자 + userName JOIN 조회
+    // 특정 일정의 취소되지 않은 참가자 + userName JOIN 조회 (게스트 포함)
     @Query("""
         SELECT new com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse(
-            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
+            sp.id, sp.scheduleId, sp.userId, COALESCE(u.name, sp.guestName), sp.guestName, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
         )
         FROM ScheduleParticipant sp
-        JOIN User u ON sp.userId = u.id
+        LEFT JOIN User u ON sp.userId = u.id
         WHERE sp.scheduleId = :scheduleId AND sp.status != :status
         ORDER BY sp.position ASC
     """)
@@ -62,10 +62,10 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     // 특정 사용자의 특정 일정 참가 신청 내역 + userName JOIN 조회
     @Query("""
         SELECT new com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse(
-            sp.id, sp.scheduleId, sp.userId, u.name, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
+            sp.id, sp.scheduleId, sp.userId, COALESCE(u.name, sp.guestName), sp.guestName, CAST(sp.status AS string), sp.position, sp.joinedAt, sp.asGuest
         )
         FROM ScheduleParticipant sp
-        JOIN User u ON sp.userId = u.id
+        LEFT JOIN User u ON sp.userId = u.id
         WHERE sp.scheduleId = :scheduleId AND sp.userId = :userId AND sp.status != :status
     """)
     Optional<ParticipantResponse> findActiveParticipationWithUserName(@Param("scheduleId") Long scheduleId, @Param("userId") Long userId, @Param("status") ParticipantStatus status);
@@ -83,4 +83,16 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     @Modifying
     @Query("UPDATE ScheduleParticipant sp SET sp.userId = null WHERE sp.userId = :userId")
     void anonymizeByUserId(@Param("userId") Long userId);
+
+    /**
+     * 특정 일정의 게스트(비회원) 참가자 조회
+     */
+    @Query("SELECT sp FROM ScheduleParticipant sp WHERE sp.scheduleId = :scheduleId AND sp.userId IS NULL AND sp.guestName IS NOT NULL AND sp.status != 'CANCELLED' ORDER BY sp.position ASC")
+    List<ScheduleParticipant> findGuestParticipantsByScheduleId(@Param("scheduleId") Long scheduleId);
+
+    /**
+     * 특정 일정에 동일한 guestName이 이미 존재하는지 확인 (취소 제외)
+     */
+    @Query("SELECT CASE WHEN COUNT(sp) > 0 THEN true ELSE false END FROM ScheduleParticipant sp WHERE sp.scheduleId = :scheduleId AND sp.guestName = :guestName AND sp.status != 'CANCELLED'")
+    boolean existsByScheduleIdAndGuestName(@Param("scheduleId") Long scheduleId, @Param("guestName") String guestName);
 }

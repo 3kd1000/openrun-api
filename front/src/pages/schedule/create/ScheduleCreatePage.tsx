@@ -74,7 +74,7 @@ export default function ScheduleCreatePage() {
 
     try {
       const requestData: CreateScheduleRequest = {
-        clubId: data.clubId,
+        clubId: data.clubId!,
         scheduledAt: data.scheduledAt,
         durationMinutes: data.durationMinutes,
         courtName: data.courtName,

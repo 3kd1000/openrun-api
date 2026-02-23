@@ -16,18 +16,22 @@ public class ParticipantResponse {
     private final Long scheduleId;
     private final Long userId;
     private final String userName;
+    private final String guestName;
+    private final boolean isRegistered;
     private final String status;
     private final Integer position;
     private final LocalDateTime joinedAt;
     private final boolean asGuest;
     private final List<String> awardTypes;  // 수상 타입 목록 (ATTENDANCE, POINTS, BOOKING)
 
-    // JPQL용 생성자 (awardTypes 없이)
-    public ParticipantResponse(Long id, Long scheduleId, Long userId, String userName, String status, Integer position, LocalDateTime joinedAt, boolean asGuest) {
+    // JPQL용 생성자 (awardTypes 없이, guestName 포함)
+    public ParticipantResponse(Long id, Long scheduleId, Long userId, String userName, String guestName, String status, Integer position, LocalDateTime joinedAt, boolean asGuest) {
         this.id = id;
         this.scheduleId = scheduleId;
         this.userId = userId;
         this.userName = userName;
+        this.guestName = guestName;
+        this.isRegistered = (userId != null);
         this.status = status;
         this.position = position;
         this.joinedAt = joinedAt;
@@ -41,6 +45,8 @@ public class ParticipantResponse {
         this.scheduleId = participant.getScheduleId();
         this.userId = participant.getUserId();
         this.userName = userName;
+        this.guestName = participant.getGuestName();
+        this.isRegistered = (participant.getUserId() != null);
         this.status = participant.getStatus().name();
         this.position = participant.getPosition();
         this.joinedAt = participant.getJoinedAt();
@@ -55,6 +61,8 @@ public class ParticipantResponse {
                 .scheduleId(this.scheduleId)
                 .userId(this.userId)
                 .userName(this.userName)
+                .guestName(this.guestName)
+                .isRegistered(this.isRegistered)
                 .status(this.status)
                 .position(this.position)
                 .joinedAt(this.joinedAt)

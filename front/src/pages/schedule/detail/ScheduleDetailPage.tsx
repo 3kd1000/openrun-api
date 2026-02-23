@@ -104,6 +104,8 @@ export default function ScheduleDetailPage() {
   const canDelete = schedule?.canManageSchedule ?? false;
   const isLoadingRef = useRef(false);
 
+  const isHost = schedule?.createdByUserId != null && schedule.createdByUserId === currentUserId;
+
   // 데이터 로드
   const loadScheduleAndParticipants = useCallback(async () => {
     if (isLoadingRef.current || !scheduleId) return;
@@ -132,7 +134,7 @@ export default function ScheduleDetailPage() {
       setSelectedDate(format(scheduledAt, "yyyy-MM-dd"));
       setSelectedTime(format(scheduledAt, "HH:mm"));
       setFormData({
-        clubId: scheduleData.clubId,
+        clubId: scheduleData.clubId ?? 0,
         courtName: scheduleData.courtName,
         maxCapacity: scheduleData.maxCapacity,
         cost: scheduleData.cost || undefined,
@@ -156,6 +158,10 @@ export default function ScheduleDetailPage() {
   // 참가자 관리 모달용 클럽 회원 조회
   useEffect(() => {
     if (!showParticipantManagementModal) return;
+    if (schedule?.clubId === null) {
+      setClubMembers([]);
+      return;
+    }
     const fetchClubMembers = async () => {
       try {
         const sess = getOpenRunSession();
@@ -167,7 +173,7 @@ export default function ScheduleDetailPage() {
       }
     };
     fetchClubMembers();
-  }, [showParticipantManagementModal]);
+  }, [showParticipantManagementModal, schedule]);
 
   const handleGoBack = () => {
     navigate(returnUrl);
@@ -326,9 +332,14 @@ export default function ScheduleDetailPage() {
     try {
       setLoading(true);
       setError("");
-      await participantService.joinSchedule(schedule.id, currentUserId);
+      if (schedule.clubId === null) {
+        await participantService.requestJoinPublicSchedule(schedule.id, currentUserId);
+        showToast("참가 신청이 완료되었습니다. 호스트 승인을 기다려주세요.", "success");
+      } else {
+        await participantService.joinSchedule(schedule.id, currentUserId);
+        showToast("참가 신청이 완료되었습니다", "success");
+      }
       await loadScheduleAndParticipants();
-      showToast("참가 신청이 완료되었습니다", "success");
     } catch (err: unknown) {
       console.error("참가 신청 실패:", err);
       const errorMessage = (
@@ -402,9 +413,39 @@ export default function ScheduleDetailPage() {
     }
   };
 
+  // 참가자 승인 (호스트)
+  const handleApprove = async (participantId: number) => {
+    if (!currentUserId || !schedule) return;
+    try {
+      setLoading(true);
+      await participantService.approveParticipant(schedule.id, participantId, currentUserId);
+      await loadScheduleAndParticipants();
+    } catch (err) {
+      console.error("승인 실패:", err);
+      setError("참가자 승인에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 참가자 거절 (호스트)
+  const handleReject = async (participantId: number) => {
+    if (!currentUserId || !schedule) return;
+    try {
+      setLoading(true);
+      await participantService.rejectParticipant(schedule.id, participantId, currentUserId);
+      await loadScheduleAndParticipants();
+    } catch (err) {
+      console.error("거절 실패:", err);
+      setError("참가자 거절에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 편집 모드 저장
   const handleEditSubmit = async (data: {
-    clubId: number;
+    clubId?: number;
     scheduledAt: string;
     durationMinutes: number;
     courtName: string;
@@ -445,7 +486,7 @@ export default function ScheduleDetailPage() {
 
     try {
       const requestData: CreateScheduleRequest = {
-        clubId: data.clubId,
+        clubId: data.clubId!,
         scheduledAt: data.scheduledAt,
         durationMinutes: data.durationMinutes,
         courtName: data.courtName,
@@ -479,6 +520,9 @@ export default function ScheduleDetailPage() {
   );
   const waitingParticipants = participants.filter(
     (p) => p.status === "WAITING"
+  );
+  const pendingParticipants = participants.filter(
+    (p) => p.status === "PENDING"
   );
 
   // 로딩 상태
@@ -534,7 +578,7 @@ export default function ScheduleDetailPage() {
           mode="update"
           currentUserId={currentUserId}
           initialData={{
-            clubId: schedule.clubId,
+            clubId: schedule.clubId ?? 0,
             scheduledAt: `${selectedDate}T${selectedTime}:00`,
             durationMinutes: schedule.durationMinutes || 120,
             courtName: formData.courtName,
@@ -683,6 +727,14 @@ export default function ScheduleDetailPage() {
                 )}
             </p>
           </div>
+
+          {/* 주소 (공개 일정에서 courtAddress가 있는 경우) */}
+          {schedule.courtAddress && (
+            <div>
+              <span className="text-xs text-muted-foreground">주소</span>
+              <p className="text-sm font-medium">{schedule.courtAddress}</p>
+            </div>
+          )}
 
           {/* 일정 시간 */}
           <div>
@@ -858,7 +910,7 @@ export default function ScheduleDetailPage() {
                       userName={p.userName}
                       awardTypes={p.awardTypes}
                     />
-                    {p.asGuest && (
+                    {(p.asGuest || p.userId === null) && (
                       <Badge
                         variant="outline"
                         className="ml-1 text-[10px] text-gray-500"
@@ -866,7 +918,7 @@ export default function ScheduleDetailPage() {
                         게스트
                       </Badge>
                     )}
-                    {p.userId === currentUserId && (
+                    {p.userId != null && p.userId === currentUserId && (
                       <span className="ml-1 text-xs text-primary">(나)</span>
                     )}
                   </div>
@@ -889,7 +941,7 @@ export default function ScheduleDetailPage() {
                       userName={p.userName}
                       awardTypes={p.awardTypes}
                     />
-                    {p.asGuest && (
+                    {(p.asGuest || p.userId === null) && (
                       <Badge
                         variant="outline"
                         className="ml-1 text-[10px] text-gray-500"
@@ -897,8 +949,46 @@ export default function ScheduleDetailPage() {
                         게스트
                       </Badge>
                     )}
-                    {p.userId === currentUserId && (
+                    {p.userId != null && p.userId === currentUserId && (
                       <span className="ml-1 text-xs text-primary">(나)</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 승인 대기 섹션 (공개 일정) */}
+          {pendingParticipants.length > 0 && (
+            <div className={cn((confirmedParticipants.length > 0 || waitingParticipants.length > 0) && "mt-3 border-t pt-3")}>
+              <div className="mb-3 text-xs font-semibold text-amber-600">
+                승인 대기 ({pendingParticipants.length}명)
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                {pendingParticipants.map((p) => (
+                  <div key={p.id} className="flex items-center gap-1 text-sm text-amber-700">
+                    <span>{p.userName}</span>
+                    {isHost && (
+                      <div className="flex gap-1 ml-auto">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto px-1.5 py-0.5 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                          onClick={() => handleApprove(p.id)}
+                          disabled={loading}
+                        >
+                          승인
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto px-1.5 py-0.5 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleReject(p.id)}
+                          disabled={loading}
+                        >
+                          거절
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -914,15 +1004,17 @@ export default function ScheduleDetailPage() {
         </CardContent>
       </Card>
 
-      {/* 공용구 섹션 */}
-      <Card className="mb-3 gap-0 py-0 overflow-hidden">
-        <CardContent className="p-4">
-          <ScheduleBallUsageSection
-            clubId={schedule.clubId}
-            scheduleId={schedule.id}
-          />
-        </CardContent>
-      </Card>
+      {/* 공용구 섹션 (클럽 일정에서만 표시) */}
+      {schedule.clubId != null && (
+        <Card className="mb-3 gap-0 py-0 overflow-hidden">
+          <CardContent className="p-4">
+            <ScheduleBallUsageSection
+              clubId={schedule.clubId}
+              scheduleId={schedule.id}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* 에러 메시지 */}
       {error && (

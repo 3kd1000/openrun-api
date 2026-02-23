@@ -29,7 +29,7 @@ public class Schedule {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "club_id", nullable = false)
+    @Column(name = "club_id")
     private Long clubId;
 
     @Column(name = "court_name", length = 100, nullable = false)
@@ -91,6 +91,15 @@ public class Schedule {
     @Column(name = "number_of_courts")
     private Integer numberOfCourts;
 
+    @Column(name = "court_address", length = 200)
+    private String courtAddress;
+
+    @Column(name = "region", length = 50)
+    private String region;
+
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -103,7 +112,7 @@ public class Schedule {
     public Schedule(Long clubId, String courtName, LocalDateTime scheduledAt,
                     Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
                     LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes,
-                    Integer numberOfCourts) {
+                    Integer numberOfCourts, String courtAddress, String region, Long createdByUserId) {
         this.clubId = clubId;
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
@@ -115,6 +124,9 @@ public class Schedule {
         this.matchType = matchType;
         this.durationMinutes = durationMinutes != null ? durationMinutes : 120;
         this.numberOfCourts = numberOfCourts;
+        this.courtAddress = courtAddress;
+        this.region = region;
+        this.createdByUserId = createdByUserId;
     }
 
     public void update(String courtName, LocalDateTime scheduledAt,
@@ -206,5 +218,18 @@ public class Schedule {
     public void updateInterclubRecruit(Boolean open, String note) {
         if (open != null) this.interclubRecruitOpen = open;
         if (note != null) this.interclubRecruitNote = note;
+    }
+
+    public void updatePublicFields(String courtAddress, String region) {
+        this.courtAddress = courtAddress;
+        this.region = region;
+    }
+
+    public boolean isPublicSchedule() {
+        return this.clubId == null;
+    }
+
+    public boolean isClubSchedule() {
+        return this.clubId != null;
     }
 }

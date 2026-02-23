@@ -1,5 +1,5 @@
 import axiosInstance from './api/axiosInstance';
-import type { Schedule, CreateScheduleRequest } from '../types/schedule';
+import type { Schedule, CreateScheduleRequest, CreatePublicScheduleRequest, PublicScheduleResponse } from '../types/schedule';
 
 // 커서 기반 페이지네이션 응답 타입
 export interface ScheduleCursorResponse {
@@ -149,6 +149,22 @@ export const scheduleService = {
   ): Promise<ScheduleCursorResponse> => {
     const response = await axiosInstance.get('/schedules/cursor', {
       params: { userId, clubId, pivotDate, direction, size }
+    });
+    return response.data;
+  },
+
+  // 공개일정 생성
+  createPublicSchedule: async (data: CreatePublicScheduleRequest, userId: number): Promise<Schedule> => {
+    const response = await axiosInstance.post('/schedules/public', data, {
+      params: { userId }
+    });
+    return response.data;
+  },
+
+  // 공개일정 목록 조회
+  getPublicSchedules: async (region?: string, matchType?: string, limit?: number): Promise<PublicScheduleResponse[]> => {
+    const response = await axiosInstance.get('/schedules/public', {
+      params: { region: region || undefined, matchType: matchType || undefined, limit: limit || undefined }
     });
     return response.data;
   },

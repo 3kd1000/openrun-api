@@ -18,6 +18,9 @@ public class ScheduleResponse {
     private final Long clubId;
     private final String clubName;
     private final String courtName;
+    private final String courtAddress;
+    private final String region;
+    private final Long createdByUserId;
     private final LocalDateTime scheduledAt;
     private final Integer maxCapacity;
     private final Integer currentParticipants;
@@ -49,12 +52,14 @@ public class ScheduleResponse {
         this.id = schedule.getId();
         this.clubId = schedule.getClubId();
 
-        // 클럽명 조회 (항상 수행)
-        this.clubName = clubRepository.findById(schedule.getClubId())
-                .map(Club::getName)
-                .orElse(null);
+        // 클럽명 조회 (clubId가 null이 아닌 경우에만 수행)
+        this.clubName = schedule.getClubId() != null ?
+                clubRepository.findById(schedule.getClubId()).map(Club::getName).orElse(null) : null;
 
         this.courtName = schedule.getCourtName();
+        this.courtAddress = schedule.getCourtAddress();
+        this.region = schedule.getRegion();
+        this.createdByUserId = schedule.getCreatedByUserId();
         this.scheduledAt = schedule.getScheduledAt();
         this.maxCapacity = schedule.getMaxCapacity();
         this.currentParticipants = schedule.getCurrentParticipants();
@@ -86,9 +91,13 @@ public class ScheduleResponse {
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
 
-        // 권한 체크 (permissionService와 requestUserId가 제공된 경우에만)
+        // 권한 체크 (공개 일정과 클럽 일정 구분)
         if (permissionService != null && requestUserId != null) {
-            this.canManageSchedule = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
+            if (schedule.isPublicSchedule()) {
+                this.canManageSchedule = requestUserId.equals(schedule.getCreatedByUserId());
+            } else {
+                this.canManageSchedule = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
+            }
         } else {
             this.canManageSchedule = null;
         }
