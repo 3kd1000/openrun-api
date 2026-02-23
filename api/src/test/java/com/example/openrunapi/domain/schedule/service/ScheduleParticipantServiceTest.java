@@ -160,6 +160,7 @@ class ScheduleParticipantServiceTest {
     void joinSchedule_whenAlreadyJoined_shouldThrowException() {
         // given
         given(scheduleRepository.findById(SCHEDULE_ID)).willReturn(Optional.of(schedule));
+        given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
 
         ScheduleParticipant existingParticipant = ScheduleParticipant.builder()
                 .scheduleId(SCHEDULE_ID)

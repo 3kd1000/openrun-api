@@ -30,6 +30,7 @@ import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
+import com.example.openrunapi.domain.user.model.dto.UserPublicProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.WithdrawalCheckResponse;
 import com.example.openrunapi.domain.user.repository.UserStatisticsRepository;
 import com.example.openrunapi.domain.club.model.Club;
@@ -473,6 +474,18 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(userId)
                 .map(User::getName)
                 .orElse("알 수 없음");
+    }
+
+    /**
+     * 사용자 공개 프로필 조회 (다른 사용자가 볼 수 있는 정보)
+     */
+    public UserPublicProfileResponse getUserPublicProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        long publicScheduleCount = scheduleRepository.countPublicSchedulesByCreator(userId);
+
+        return UserPublicProfileResponse.from(user, publicScheduleCount);
     }
 
     // ==================== 회원 탈퇴 관련 메서드 ====================

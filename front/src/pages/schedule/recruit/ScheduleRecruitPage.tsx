@@ -14,8 +14,9 @@ import {
   MapPinIcon,
   CalendarIcon,
 } from "../../../components/common/Icons";
-import { Link2, Users } from "lucide-react";
+import { Link2, MessageCircle, Users } from "lucide-react";
 import BackButton from "../../../components/common/BackButton";
+import { userService, type UserPublicProfile } from "../../../services/userService";
 import { Button } from "@/components/ui/button";
 import { useToast } from "../../../contexts/ToastContext";
 import { getOpenRunSession } from "../../../utils/openrunSession";
@@ -55,6 +56,7 @@ const ScheduleRecruitPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hostProfile, setHostProfile] = useState<UserPublicProfile | null>(null);
   const [inquiryContent, setInquiryContent] = useState("");
   const [commentContent, setCommentContent] = useState("");
 
@@ -153,7 +155,17 @@ const ScheduleRecruitPage: React.FC = () => {
           setComments([]);
         }
       }
-      // 공개일정: 향후 공개일정 참가 API 연결
+      // 공개일정: 호스트 프로필 조회
+      if (scheduleData.clubId === null && scheduleData.createdByUserId) {
+        try {
+          const profile = await userService.getUserPublicProfile(
+            scheduleData.createdByUserId
+          );
+          setHostProfile(profile);
+        } catch {
+          setHostProfile(null);
+        }
+      }
     } catch (e) {
       console.error(e);
       setError("모집 정보를 불러오지 못했습니다.");
@@ -426,7 +438,7 @@ const ScheduleRecruitPage: React.FC = () => {
               <div className="text-center">
                 <button
                   className="w-full rounded-xl py-3.5 text-base font-bold bg-primary text-white cursor-pointer transition-all hover:bg-primary/90 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => navigate(`/schedules/${sid}`, { state: { returnUrl: location.pathname } })}
+                  onClick={() => navigate(`/schedules/${sid}`, { replace: true, state: { returnUrl: location.pathname } })}
                   type="button"
                 >
                   일정 상세 보기
@@ -446,6 +458,54 @@ const ScheduleRecruitPage: React.FC = () => {
           <div className={`w-full p-4 ${isPublic ? "bg-sky-50 border border-sky-200" : "bg-sky-50 border border-sky-200"} rounded-lg text-sm text-foreground whitespace-pre-wrap leading-relaxed`}>
             {recruitNote}
           </div>
+        </div>
+      )}
+
+      {/* 호스트 정보 (공개일정) */}
+      {isPublic && hostProfile && (
+        <div className="border border-border rounded-2xl bg-white p-6 mt-4">
+          <div className="text-sm font-bold text-primary mb-4">호스트 정보</div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">이름</span>
+              <span className="text-sm font-medium text-foreground">
+                {hostProfile.displayName}
+              </span>
+            </div>
+            {hostProfile.region && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">지역</span>
+                <span className="text-sm font-medium text-foreground">
+                  {hostProfile.region}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">공개일정 개설</span>
+              <span className="text-sm font-medium text-foreground">
+                {hostProfile.publicScheduleCount}회
+              </span>
+            </div>
+          </div>
+          {/* 메시지 보내기 버튼 */}
+          {currentUserId && currentUserId !== hostProfile.id && (
+            <button
+              className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold border-[1.5px] border-primary bg-transparent text-primary cursor-pointer transition-all hover:bg-primary/5 hover:-translate-y-px"
+              onClick={() =>
+                navigate(`/messages/${hostProfile.id}`, {
+                  state: {
+                    referenceType: "PUBLIC_SCHEDULE",
+                    referenceId: sid,
+                    returnUrl: location.pathname,
+                  },
+                })
+              }
+              type="button"
+            >
+              <MessageCircle size={16} />
+              호스트에게 메시지 보내기
+            </button>
+          )}
         </div>
       )}
 

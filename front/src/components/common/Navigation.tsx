@@ -107,6 +107,7 @@ const Navigation: React.FC = () => {
 
   const isScheduleRoute = location.pathname.startsWith("/schedules/");
   const isScoreboardRoute = location.pathname === "/scoreboard" || location.pathname.startsWith("/scoreboard/");
+  const isMoreRoute = location.pathname === "/more" || location.pathname.startsWith("/more/") || location.pathname.startsWith("/messages");
 
   // 클럽홈 탭 클릭 시 세션에서 최신 clubId를 읽어서 이동
   const handleClubClick = (e: React.MouseEvent) => {
@@ -178,6 +179,7 @@ const Navigation: React.FC = () => {
               if (item.label === "클럽") forcedActive = isClubHomeRoute;
               if (item.label === "일정") forcedActive = isScheduleRoute;
               if (item.label === "기록") forcedActive = isScoreboardRoute;
+              if (item.label === "더보기") forcedActive = isMoreRoute;
               return [
                 // Mobile: column layout, centered
                 "flex flex-col items-center justify-center no-underline transition-colors duration-300 flex-1",
@@ -200,6 +202,7 @@ const Navigation: React.FC = () => {
               if (item.label === "클럽") forcedActive = isClubHomeRoute;
               if (item.label === "일정") forcedActive = isScheduleRoute;
               if (item.label === "기록") forcedActive = isScoreboardRoute;
+              if (item.label === "더보기") forcedActive = isMoreRoute;
               void forcedActive;
               return (
                 <>

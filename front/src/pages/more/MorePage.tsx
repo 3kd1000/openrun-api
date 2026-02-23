@@ -28,6 +28,7 @@ import {
   BookOpenIcon,
   Share2Icon,
   PhoneIcon,
+  MessageCircleIcon,
 } from "../../components/common/Icons";
 import { AppHeader } from "../../components/common/AppHeader";
 import { useNotification } from "../../contexts/NotificationContext";
@@ -389,6 +390,17 @@ const MorePage: React.FC = () => {
               오픈소스 라이센스
             </div>
           </div>
+          {isLoggedIn && (
+            <div
+              className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
+              onClick={() => navigate("/messages")}
+            >
+              <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
+                <MessageCircleIcon size={20} />
+              </span>
+              <span className="flex-1 text-sm text-foreground no-underline font-medium">메시지</span>
+            </div>
+          )}
           <div
             className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
             onClick={() => navigate("/more/inquiry")}

@@ -529,9 +529,9 @@ export default function ScheduleDetailPage() {
   if (loading && !schedule) {
     return (
       <div className="page-container">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="relative mb-4 flex items-center py-1">
           <BackButton onClick={handleGoBack} />
-          <span className="text-sm font-semibold">일정 상세</span>
+          <span className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold pointer-events-none">일정 상세</span>
         </div>
         <div className="space-y-4">
           <Skeleton className="h-6 w-3/4" />
@@ -548,9 +548,9 @@ export default function ScheduleDetailPage() {
   if (!schedule) {
     return (
       <div className="page-container">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="relative mb-4 flex items-center py-1">
           <BackButton onClick={handleGoBack} />
-          <span className="text-sm font-semibold">일정 상세</span>
+          <span className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold pointer-events-none">일정 상세</span>
         </div>
         <div className="rounded-lg bg-red-50 p-4 text-center text-sm text-red-700">
           {error || "일정 정보를 불러오는데 실패했습니다."}
@@ -604,12 +604,10 @@ export default function ScheduleDetailPage() {
   return (
     <div className="page-container">
       {/* 헤더 */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BackButton onClick={handleGoBack} />
-          <span className="text-sm font-semibold">일정 상세</span>
-        </div>
-        <Button variant="outline" size="sm" className="text-xs" onClick={handleCopyLink}>
+      <div className="relative mb-4 flex items-center py-1">
+        <BackButton onClick={handleGoBack} />
+        <span className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold pointer-events-none">일정 상세</span>
+        <Button variant="outline" size="sm" className="text-xs ml-auto" onClick={handleCopyLink}>
           <Link2 size={14} className="mr-1" />
           링크복사
         </Button>

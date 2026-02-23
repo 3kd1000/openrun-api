@@ -37,6 +37,14 @@ export interface MyAllMatchPageResponse {
   hasMore: boolean;
 }
 
+export interface UserPublicProfile {
+  id: number;
+  displayName: string;
+  region: string | null;
+  publicScheduleCount: number;
+  createdAt: string;
+}
+
 export const userService = {
   // 게스트 사용자 목록 조회 (게스트1~16)
   getGuestUsers: async (): Promise<UserResponse[]> => {
@@ -55,6 +63,12 @@ export const userService = {
     const response = await axiosInstance.get<MyAllMatchPageResponse>('/users/me/matches/all', {
       params: { page, size }
     });
+    return response.data;
+  },
+
+  // 사용자 공개 프로필 조회
+  getUserPublicProfile: async (userId: number): Promise<UserPublicProfile> => {
+    const response = await axiosInstance.get<UserPublicProfile>(`/users/${userId}/public-profile`);
     return response.data;
   }
 };

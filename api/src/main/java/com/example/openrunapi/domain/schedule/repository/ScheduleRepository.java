@@ -126,4 +126,10 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long>, JpaSp
      */
     @Query("SELECT s FROM Schedule s WHERE s.clubId IS NULL AND s.createdByUserId = :userId ORDER BY s.scheduledAt DESC")
     List<Schedule> findPublicSchedulesByCreator(@Param("userId") Long userId);
+
+    /**
+     * 특정 사용자가 생성한 공개 일정 수 조회
+     */
+    @Query("SELECT COUNT(s) FROM Schedule s WHERE s.clubId IS NULL AND s.createdByUserId = :userId")
+    long countPublicSchedulesByCreator(@Param("userId") Long userId);
 }

@@ -9,6 +9,7 @@ import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
 import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.model.dto.UserPublicProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
 import com.example.openrunapi.domain.user.model.dto.WithdrawalCheckResponse;
@@ -226,5 +227,17 @@ public class UserController {
                 size
         );
         return ResponseEntity.ok(matches);
+    }
+
+    /**
+     * 사용자 공개 프로필 조회 (다른 사용자가 볼 수 있는 정보)
+     * - 표시명, 지역, 공개일정 개설 수, 가입일
+     */
+    @GetMapping("/{userId}/public-profile")
+    public ResponseEntity<UserPublicProfileResponse> getUserPublicProfile(
+            @PathVariable Long userId
+    ) {
+        UserPublicProfileResponse response = userService.getUserPublicProfile(userId);
+        return ResponseEntity.ok(response);
     }
 }

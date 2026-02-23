@@ -49,7 +49,11 @@ public class NotificationService {
                     .build();
 
             notificationRepository.save(notification);
-            fcmSenderService.sendToUser(userId, title, body, data);
+            try {
+                fcmSenderService.sendToUser(userId, title, body, data);
+            } catch (Exception e) {
+                log.warn("Failed to send FCM to user {}: {}", userId, e.getMessage());
+            }
         }
 
         log.info("Sent notification to {} users (clubId={}): {}", userIds.size(), clubId, title);
@@ -89,7 +93,8 @@ public class NotificationService {
     }
 
     public long getUnreadCount(Long userId) {
-        return notificationRepository.countByUserIdAndIsReadFalse(userId);
+        // MESSAGE 타입은 메시지함 아이콘에서 별도로 표시하므로 벨 배지에서 제외
+        return notificationRepository.countByUserIdAndIsReadFalseAndTypeNot(userId, NotificationType.MESSAGE);
     }
 
     @Transactional

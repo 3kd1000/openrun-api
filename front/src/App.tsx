@@ -39,6 +39,8 @@ import InquiryPage from "./pages/more/InquiryPage";
 import ProfileEditPage from "./pages/more/ProfileEditPage";
 import NotificationPage from "./pages/notification/NotificationPage";
 import IntroPage from "./pages/intro/IntroPage";
+import MessageListPage from "./pages/message/MessageListPage";
+import MessageDetailPage from "./pages/message/MessageDetailPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -46,6 +48,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { AwardWinnersProvider } from "./contexts/AwardWinnersContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { MessageProvider } from "./contexts/MessageContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ClubLayout } from "./layouts/ClubLayout";
 import { QueryProvider } from "./providers/QueryProvider";
@@ -68,6 +71,7 @@ function App() {
       <ErrorBoundary>
         <AuthProvider>
           <NotificationProvider>
+          <MessageProvider>
           <AwardWinnersProvider>
           <div className="App">
         {/* <DevUserSwitcher /> */}
@@ -262,6 +266,23 @@ function App() {
               {import.meta.env.DEV && (
                 <Route path="/more/guide-editor" element={<GuideEditorPage />} />
               )}
+              {/* 메시지 (DM) */}
+              <Route
+                path="/messages"
+                element={
+                  <ProtectedRoute>
+                    <MessageListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/messages/:partnerId"
+                element={
+                  <ProtectedRoute>
+                    <MessageDetailPage />
+                  </ProtectedRoute>
+                }
+              />
               {/* 공개일정 생성 (클럽 불필요, ProtectedRoute) */}
               <Route
                 path="/schedules/public/new"
@@ -303,6 +324,7 @@ function App() {
           </div>
           <Toaster position="top-center" richColors />
           </AwardWinnersProvider>
+          </MessageProvider>
           </NotificationProvider>
         </AuthProvider>
       </ErrorBoundary>
