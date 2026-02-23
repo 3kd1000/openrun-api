@@ -1,7 +1,6 @@
 import React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { getOpenRunSession } from "../../utils/openrunSession";
-import "./Navigation.css";
 
 // 선 스타일 SVG 아이콘 컴포넌트
 const SearchIcon: React.FC<{ isActive: boolean }> = () => (
@@ -140,8 +139,32 @@ const Navigation: React.FC = () => {
     { path: "/more", label: "더보기", icon: MoreIcon },
   ];
 
+  const isFiveTabs = navItems.length === 5;
+
   return (
-    <nav className={`navigation ${navItems.length === 5 ? "navigation--five-tabs" : ""}`}>
+    <nav
+      className={[
+        // Mobile: fixed bottom bar
+        "fixed bottom-0 left-0 right-0 flex justify-around items-center",
+        "bg-white border-t border-gray-200 shadow-[0_-2px_8px_rgba(0,0,0,0.1)]",
+        "z-[1000] h-[68px] rounded-t-2xl",
+        // Desktop: fixed left sidebar (hover:hover and pointer:fine = non-touch)
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:flex-col",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:justify-start",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:top-0",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:right-auto",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:bottom-0",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:w-[200px]",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:h-screen",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:pt-5",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:border-t-0",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:border-r",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:border-gray-200",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:shadow-[2px_0_8px_rgba(0,0,0,0.1)]",
+        "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:rounded-none",
+      ].join(" ")}
+      style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
+    >
       {navItems.map((item) => {
         const IconComponent = item.icon;
         return (
@@ -152,24 +175,52 @@ const Navigation: React.FC = () => {
             className={({ isActive }) => {
               let forcedActive = isActive;
               if (item.label === "탐색") forcedActive = isExploreRoute;
-              if (item.label === "클럽홈") forcedActive = isClubHomeRoute;
+              if (item.label === "클럽") forcedActive = isClubHomeRoute;
               if (item.label === "일정") forcedActive = isScheduleRoute;
-              if (item.label === "스코어보드") forcedActive = isScoreboardRoute;
-              return `nav-item ${forcedActive ? "active" : ""}`;
+              if (item.label === "기록") forcedActive = isScoreboardRoute;
+              return [
+                // Mobile: column layout, centered
+                "flex flex-col items-center justify-center no-underline transition-colors duration-300 flex-1",
+                isFiveTabs ? "px-2 py-2" : "px-4 py-2",
+                forcedActive ? "text-primary font-semibold" : "text-gray-400",
+                "hover:text-primary",
+                // Desktop
+                "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:flex-row",
+                "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:justify-start",
+                "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:px-6",
+                "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:py-[18px]",
+                "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:w-full",
+                "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:flex-none",
+              ].join(" ");
             }}
           >
             {({ isActive }) => {
               let forcedActive = isActive;
               if (item.label === "탐색") forcedActive = isExploreRoute;
-              if (item.label === "클럽홈") forcedActive = isClubHomeRoute;
+              if (item.label === "클럽") forcedActive = isClubHomeRoute;
               if (item.label === "일정") forcedActive = isScheduleRoute;
-              if (item.label === "스코어보드") forcedActive = isScoreboardRoute;
+              if (item.label === "기록") forcedActive = isScoreboardRoute;
+              void forcedActive;
               return (
                 <>
-                  <span className="nav-icon">
+                  <span
+                    className={[
+                      "flex items-center justify-center mb-1 w-6 h-6 relative",
+                      "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:mb-0",
+                      "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:mr-[14px]",
+                      "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:w-7",
+                      "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:h-7",
+                    ].join(" ")}
+                  >
                     <IconComponent isActive={forcedActive} />
                   </span>
-                  <span className="nav-label">
+                  <span
+                    className={[
+                      "text-[12px] whitespace-nowrap",
+                      isFiveTabs ? "text-[11px]" : "",
+                      "[@media_(min-width:769px)_and_(hover:hover)_and_(pointer:fine)]:text-[18px]",
+                    ].join(" ")}
+                  >
                     {item.label}
                   </span>
                 </>

@@ -8,7 +8,7 @@ import { getOpenRunSession } from "../../utils/openrunSession";
 import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
 import { awardService, type AwardPeriodOption } from "../../services/awardService";
 import UserNameWithBadge from "../../components/common/UserNameWithBadge";
-import "./ScoreboardPage.css";
+import { cn } from "../../lib/utils";
 
 interface RankingEntry {
   rank: number;
@@ -99,7 +99,7 @@ const ScoreboardPage: React.FC = () => {
   // 선수 이름 렌더링 (본인 이름은 Bold 처리)
   const renderPlayerName = (name: string) => {
     if (currentUserName && name === currentUserName) {
-      return <strong className="my-name">{name}</strong>;
+      return <strong className="font-bold text-primary">{name}</strong>;
     }
     return name;
   };
@@ -453,28 +453,43 @@ const ScoreboardPage: React.FC = () => {
   }, [activeTab, awardRankings.length, fetchAwardData]);
 
   return (
-    <div className="scoreboard-page">
+    <div className="w-full px-3 md:pb-4">
       {/* Tab Navigation */}
-      <div className="tab-navigation">
+      <div className="flex mb-4 border-b border-border">
         {/* 클럽 가입 시에만 랭킹/경기 기록 탭 표시 */}
         {hasClub && (
           <>
             <button
-              className={`tab-button ${activeTab === "ranking" ? "active" : ""}`}
+              className={cn(
+                "flex items-center justify-center gap-1 px-4 py-3 bg-transparent border-b-2 border-transparent text-sm font-semibold text-muted-foreground cursor-pointer transition-all -mb-[2px] min-h-[44px]",
+                "hover:text-foreground/70",
+                "max-md:flex-1 max-md:px-1 max-md:py-2 max-md:text-xs max-md:min-h-[40px] max-md:gap-0.5",
+                activeTab === "ranking" && "text-primary border-b-primary"
+              )}
               onClick={() => setActiveTab("ranking")}
             >
               <TrophyIcon size={20} />
               <span>랭킹</span>
             </button>
             <button
-              className={`tab-button ${activeTab === "matches" ? "active" : ""}`}
+              className={cn(
+                "flex items-center justify-center gap-1 px-4 py-3 bg-transparent border-b-2 border-transparent text-sm font-semibold text-muted-foreground cursor-pointer transition-all -mb-[2px] min-h-[44px]",
+                "hover:text-foreground/70",
+                "max-md:flex-1 max-md:px-1 max-md:py-2 max-md:text-xs max-md:min-h-[40px] max-md:gap-0.5",
+                activeTab === "matches" && "text-primary border-b-primary"
+              )}
               onClick={() => setActiveTab("matches")}
             >
               <ClipboardListIcon size={20} />
               <span>경기기록</span>
             </button>
             <button
-              className={`tab-button ${activeTab === "awards" ? "active" : ""}`}
+              className={cn(
+                "flex items-center justify-center gap-1 px-4 py-3 bg-transparent border-b-2 border-transparent text-sm font-semibold text-muted-foreground cursor-pointer transition-all -mb-[2px] min-h-[44px]",
+                "hover:text-foreground/70",
+                "max-md:flex-1 max-md:px-1 max-md:py-2 max-md:text-xs max-md:min-h-[40px] max-md:gap-0.5",
+                activeTab === "awards" && "text-primary border-b-primary"
+              )}
               onClick={() => setActiveTab("awards")}
             >
               <StarIcon size={20} />
@@ -483,7 +498,12 @@ const ScoreboardPage: React.FC = () => {
           </>
         )}
         <button
-          className={`tab-button ${activeTab === "personal" ? "active" : ""}`}
+          className={cn(
+            "flex items-center justify-center gap-1 px-4 py-3 bg-transparent border-b-2 border-transparent text-sm font-semibold text-muted-foreground cursor-pointer transition-all -mb-[2px] min-h-[44px]",
+            "hover:text-foreground/70",
+            "max-md:flex-1 max-md:px-1 max-md:py-2 max-md:text-xs max-md:min-h-[40px] max-md:gap-0.5",
+            activeTab === "personal" && "text-primary border-b-primary"
+          )}
           onClick={() => setActiveTab("personal")}
         >
           <UserIcon size={20} />
@@ -493,18 +513,18 @@ const ScoreboardPage: React.FC = () => {
 
       {/* Tab 1: Rankings */}
       {activeTab === "ranking" && (
-        <div className="tab-content">
+        <div className="min-h-[200px]">
           {/* 연도, 성별 및 정렬 필터 */}
-          <div className="ranking-filters">
-            <div className="ranking-year-filter">
-              <label>연도:</label>
+          <div className="flex flex-wrap gap-3 mb-4 p-3 bg-white rounded-lg border border-border max-md:p-2 max-md:mb-3 max-md:gap-2">
+            <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">
+              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:text-xs">연도:</label>
               <select
                 value={selectedYear}
                 onChange={(e) => {
                   const year = parseInt(e.target.value);
                   setSelectedYear(year);
                 }}
-                className="year-select"
+                className="px-3 py-2 border border-border rounded text-sm cursor-pointer max-md:flex-1 max-md:px-2 max-md:py-1 max-md:text-xs max-md:min-w-0"
               >
                 {(() => {
                   const currentYear = new Date().getFullYear();
@@ -523,22 +543,22 @@ const ScoreboardPage: React.FC = () => {
                 })()}
               </select>
             </div>
-            <div className="ranking-gender-filter">
-              <label>성별:</label>
+            <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">
+              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:text-xs">성별:</label>
               <select
                 value={genderFilter}
                 onChange={(e) => {
                   setGenderFilter(e.target.value as "" | "MALE" | "FEMALE");
                 }}
-                className="gender-select"
+                className="px-3 py-2 border border-border rounded text-sm cursor-pointer max-md:flex-1 max-md:px-2 max-md:py-1 max-md:text-xs max-md:min-w-0"
               >
                 <option value="">전체</option>
                 <option value="MALE">남성</option>
                 <option value="FEMALE">여성</option>
               </select>
             </div>
-            <div className="ranking-sort-filter">
-              <label>정렬:</label>
+            <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">
+              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:text-xs">정렬:</label>
               <select
                 value={sortBy}
                 onChange={(e) => {
@@ -546,7 +566,7 @@ const ScoreboardPage: React.FC = () => {
                     e.target.value as "points" | "totalMatches" | "winRate"
                   );
                 }}
-                className="sort-select"
+                className="px-3 py-2 border border-border rounded text-sm cursor-pointer max-md:flex-1 max-md:px-2 max-md:py-1 max-md:text-xs max-md:min-w-0"
               >
                 <option value="points">승점</option>
                 <option value="totalMatches">경기수</option>
@@ -556,47 +576,47 @@ const ScoreboardPage: React.FC = () => {
           </div>
 
           {loading ? (
-            <div className="empty-state">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
               <p>로딩 중...</p>
             </div>
           ) : error ? (
-            <div className="empty-state">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
               <p>❌ {error}</p>
             </div>
           ) : rankings.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-icon">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
+              <p className="text-5xl mb-3 max-md:text-4xl">
                 <TrophyIcon size={64} color="var(--color-text-secondary)" />
               </p>
               <p>아직 경기 기록이 없습니다.</p>
-              <p className="empty-hint">경기를 등록하면 랭킹이 표시됩니다!</p>
+              <p className="text-muted-foreground/60 text-sm">경기를 등록하면 랭킹이 표시됩니다!</p>
             </div>
           ) : (
-            <div className="scoreboard-table-container">
-              <table className="scoreboard-table">
-                <thead>
+            <div className="overflow-x-auto rounded-lg shadow-md border border-border">
+              <table className="w-full border-collapse bg-white text-[13px] text-foreground max-md:text-xs">
+                <thead className="bg-primary text-white sticky top-0 z-10">
                   <tr>
-                    <th>순위</th>
-                    <th>이름</th>
-                    <th>경기수</th>
-                    <th>승점</th>
-                    <th>승률</th>
-                    <th>승</th>
-                    <th>무</th>
-                    <th>패</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap border-r border-white/20 last:border-r-0 max-md:px-[3px] max-md:py-1">순위</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap border-r border-white/20 last:border-r-0 max-md:px-[3px] max-md:py-1">이름</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap border-r border-white/20 last:border-r-0 max-md:px-[3px] max-md:py-1">경기수</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap border-r border-white/20 last:border-r-0 max-md:px-[3px] max-md:py-1">승점</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap border-r border-white/20 last:border-r-0 max-md:px-[3px] max-md:py-1">승률</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap border-r border-white/20 last:border-r-0 max-md:px-[3px] max-md:py-1">승</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap border-r border-white/20 last:border-r-0 max-md:px-[3px] max-md:py-1">무</th>
+                    <th className="py-2 px-2 text-center font-semibold whitespace-nowrap last:border-r-0 max-md:px-[3px] max-md:py-1">패</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rankings.map((entry) => (
-                    <tr key={entry.userId}>
-                      <td className="rank">{entry.rank}</td>
-                      <td className="name"><UserNameWithBadge userId={entry.userId} userName={entry.userName} /></td>
-                      <td>{entry.totalMatches}</td>
-                      <td className="points">{entry.points}</td>
-                      <td>{entry.winRate}%</td>
-                      <td className="wins">{entry.wins}</td>
-                      <td>{entry.draws}</td>
-                      <td>{entry.losses}</td>
+                    <tr key={entry.userId} className="border-b border-border/50 transition-colors hover:bg-muted">
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap border-r border-border/50 font-bold text-primary text-base max-md:text-sm">{entry.rank}</td>
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap border-r border-border/50 font-semibold text-foreground"><UserNameWithBadge userId={entry.userId} userName={entry.userName} /></td>
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap border-r border-border/50 font-medium text-foreground">{entry.totalMatches}</td>
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap border-r border-border/50 font-bold text-[#ff6600]">{entry.points}</td>
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap border-r border-border/50 font-medium text-foreground">{entry.winRate}%</td>
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap border-r border-border/50 text-[#17a2b8] font-semibold">{entry.wins}</td>
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap border-r border-border/50 font-medium text-foreground">{entry.draws}</td>
+                      <td className="py-1.5 px-1 text-center whitespace-nowrap font-medium text-foreground">{entry.losses}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -608,21 +628,21 @@ const ScoreboardPage: React.FC = () => {
 
       {/* Tab 2: Match Search */}
       {activeTab === "matches" && (
-        <div className="tab-content">
+        <div className="min-h-[200px]">
           {/* 검색 필터 */}
-          <div className="filter-section">
-            <div className="player-name-input-row">
+          <div className="bg-white rounded-lg border border-border p-4 mb-3 max-md:p-3">
+            <div className="mb-3">
               <input
                 type="text"
                 placeholder="선수 이름 검색 (쉼표로 구분: 홍길동, 김철수)"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                className="search-input"
+                className="w-full px-3 py-2 border border-border rounded text-sm"
               />
             </div>
-            <form onSubmit={handleSearch} className="filter-actions-row">
-              <div className="date-range-filter">
-                <label>기간:</label>
+            <form onSubmit={handleSearch} className="flex gap-2 items-center max-md:gap-1 max-[359px]:flex-wrap">
+              <div className="flex items-center gap-2 shrink-0 max-md:flex-1 max-md:min-w-0 max-md:gap-1 max-[359px]:basis-full max-[359px]:order-1">
+                <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:text-xs">기간:</label>
                 <select
                   value={dateRange}
                   onChange={(e) =>
@@ -630,6 +650,7 @@ const ScoreboardPage: React.FC = () => {
                       e.target.value as "all" | "3months" | "6months" | "1year"
                     )
                   }
+                  className="px-3 py-2 border border-border rounded text-sm cursor-pointer max-md:flex-1 max-md:px-2 max-md:py-1 max-md:text-xs max-md:min-w-0"
                 >
                   <option value="all">전체</option>
                   <option value="3months">3개월</option>
@@ -637,13 +658,13 @@ const ScoreboardPage: React.FC = () => {
                   <option value="1year">1년</option>
                 </select>
               </div>
-              <button type="submit" className="search-button">
+              <button type="submit" className="px-4 py-2 bg-primary text-white rounded text-sm font-semibold cursor-pointer transition-colors shrink-0 hover:bg-primary/90 max-md:flex-1 max-md:min-w-0 max-[359px]:order-2">
                 검색
               </button>
               <button
                 type="button"
                 onClick={handleReset}
-                className="reset-button"
+                className="px-4 py-2 bg-gray-100 text-muted-foreground rounded text-sm font-semibold cursor-pointer transition-colors shrink-0 hover:bg-gray-200 max-md:flex-1 max-md:min-w-0 max-[359px]:order-2"
               >
                 초기화
               </button>
@@ -651,26 +672,26 @@ const ScoreboardPage: React.FC = () => {
           </div>
 
           {/* 경기 목록 */}
-          <div className="match-list-container">
+          <div className="min-h-[200px]">
             {matchesLoading ? (
-              <div className="empty-state">
+              <div className="text-center py-[60px] px-4 text-muted-foreground">
                 <p>로딩 중...</p>
               </div>
             ) : matchesError ? (
-              <div className="empty-state">
+              <div className="text-center py-[60px] px-4 text-muted-foreground">
                 <p>❌ {matchesError}</p>
               </div>
             ) : matches.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">
+              <div className="text-center py-[60px] px-4 text-muted-foreground">
+                <div className="text-5xl mb-3 max-md:text-4xl">
                   <SearchIcon size={64} color="var(--color-text-secondary)" />
                 </div>
-                <h3>
+                <p className="text-base font-semibold text-foreground mb-1">
                   {playerName || dateRange !== "all"
                     ? "검색 결과가 없습니다"
                     : "경기 기록 검색"}
-                </h3>
-                <p>
+                </p>
+                <p className="text-sm">
                   {playerName || dateRange !== "all"
                     ? "선수 이름이나 기간을 변경하여 다시 검색해보세요"
                     : "선수 이름을 입력하고 검색 버튼을 눌러 경기 기록을 조회하세요"}
@@ -679,10 +700,10 @@ const ScoreboardPage: React.FC = () => {
             ) : (
               <>
                 {/* 총 건수 표시 */}
-                <div className="match-list-header">
-                  <span className="match-count">총 {totalElements}건</span>
+                <div className="flex justify-between items-center py-2 mb-2 text-muted-foreground text-sm">
+                  <span className="font-medium">총 {totalElements}건</span>
                 </div>
-                <div className="match-list">
+                <div className="flex flex-col gap-2 max-md:gap-1">
                   {matches.map((match) => {
                     const future = isFutureMatch(match);
                     const completed = isCompletedMatch(match);
@@ -690,39 +711,37 @@ const ScoreboardPage: React.FC = () => {
                     return (
                       <div
                         key={match.id}
-                        className={`match-card ${
-                        future
-                          ? "future-match"
-                          : completed
-                          ? "completed-match"
-                          : "pending-match"
-                      }`}
-                    >
-                      <div className="match-header-row">
-                        <div className="match-date">
+                        className={cn(
+                          "relative border rounded-lg p-4 bg-white transition-colors text-xs md:text-sm max-md:p-3",
+                          future && "border-primary hover:border-primary/80 hover:bg-primary/5",
+                          completed && "border-[#28a745] hover:border-[#28a745]/80 hover:bg-[#28a745]/5",
+                          !future && !completed && "border-[#ffc107] hover:border-[#ffc107]/80 hover:bg-[#ffc107]/5"
+                        )}
+                      >
+                      <div className="flex items-center justify-between mb-2 pb-2 border-b border-border max-md:mb-1 max-md:pb-1">
+                        <div className="text-primary font-semibold flex-1 flex items-center gap-1">
                           <CalendarIcon size={16} />
                           <span>{format(new Date(match.playedAt), "yyyy-MM-dd HH:mm")}</span>
                         </div>
                         {future && (
-                          <div className="match-status-badge future">예정</div>
+                          <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-primary text-white ml-1">예정</span>
                         )}
                         {completed && (
-                          <div className="match-status-badge completed">
-                            완료
-                          </div>
+                          <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-[#28a745] text-white ml-1">완료</span>
                         )}
                       </div>
-                      <div className="match-teams-inline">
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded max-md:gap-0.5 max-md:p-1">
                         <div
-                          className={`team-inline team-a ${
-                            completed && match.result === "TEAM_A_WIN"
-                              ? "winner"
-                              : completed && match.result === "TEAM_B_WIN"
-                              ? "loser"
-                              : ""
-                          }`}
+                          className={cn(
+                            "flex-1 flex items-center gap-1 px-2 py-1 rounded bg-white transition-colors max-md:px-1 max-md:py-0.5 max-md:gap-0.5 max-md:min-w-0",
+                            completed && match.result === "TEAM_A_WIN" && "bg-[#f0fff4] border-l-[3px] border-l-[#28a745]",
+                            completed && match.result === "TEAM_B_WIN" && "bg-[#fff5f5] border-l-[3px] border-l-destructive opacity-90"
+                          )}
                         >
-                          <span className="players-inline">
+                          <span className={cn(
+                            "flex-1 font-medium whitespace-nowrap overflow-hidden text-ellipsis min-w-0",
+                            completed && match.result === "TEAM_A_WIN" && "text-[#28a745] font-bold"
+                          )}>
                             <UserNameWithBadge userId={match.teamAPlayer1Id} userName={match.teamAPlayer1Name} />
                             {match.teamAPlayer2Id && match.teamAPlayer2Name &&
                               <> <UserNameWithBadge userId={match.teamAPlayer2Id} userName={match.teamAPlayer2Name} /></>}
@@ -730,29 +749,30 @@ const ScoreboardPage: React.FC = () => {
                           {completed &&
                             match.teamAScore !== undefined &&
                             match.teamBScore !== undefined && (
-                              <span className="score-inline">
+                              <span className="font-bold text-muted-foreground px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-gray-200 rounded max-md:min-w-[20px]">
                                 {match.teamAScore}
                               </span>
                             )}
                         </div>
-                        <div className="vs-inline">VS</div>
+                        <div className="text-muted-foreground px-1 font-bold max-[359px]:px-0.5 shrink-0">VS</div>
                         <div
-                          className={`team-inline team-b ${
-                            completed && match.result === "TEAM_B_WIN"
-                              ? "winner"
-                              : completed && match.result === "TEAM_A_WIN"
-                              ? "loser"
-                              : ""
-                          }`}
+                          className={cn(
+                            "flex-1 flex items-center gap-1 px-2 py-1 rounded bg-white transition-colors max-md:px-1 max-md:py-0.5 max-md:gap-0.5 max-md:min-w-0",
+                            completed && match.result === "TEAM_B_WIN" && "bg-[#f0fff4] border-l-[3px] border-l-[#28a745]",
+                            completed && match.result === "TEAM_A_WIN" && "bg-[#fff5f5] border-l-[3px] border-l-destructive opacity-90"
+                          )}
                         >
                           {completed &&
                             match.teamAScore !== undefined &&
                             match.teamBScore !== undefined && (
-                              <span className="score-inline">
+                              <span className="font-bold text-muted-foreground px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-gray-200 rounded max-md:min-w-[20px]">
                                 {match.teamBScore}
                               </span>
                             )}
-                          <span className="players-inline">
+                          <span className={cn(
+                            "flex-1 font-medium whitespace-nowrap overflow-hidden text-ellipsis min-w-0",
+                            completed && match.result === "TEAM_B_WIN" && "text-[#28a745] font-bold"
+                          )}>
                             <UserNameWithBadge userId={match.teamBPlayer1Id} userName={match.teamBPlayer1Name} />
                             {match.teamBPlayer2Id && match.teamBPlayer2Name &&
                               <> <UserNameWithBadge userId={match.teamBPlayer2Id} userName={match.teamBPlayer2Name} /></>}
@@ -764,12 +784,12 @@ const ScoreboardPage: React.FC = () => {
                 })}
                 </div>
                 {/* 인피니티 스크롤 로딩 표시 */}
-                <div ref={loadMoreRef} className="load-more-trigger">
+                <div ref={loadMoreRef} className="flex justify-center py-4 min-h-[60px]">
                   {isLoadingMore && (
-                    <div className="load-more-spinner">불러오는 중...</div>
+                    <div className="text-muted-foreground text-sm">불러오는 중...</div>
                   )}
                   {!hasMore && matches.length > 0 && (
-                    <div className="load-more-end">모든 경기를 불러왔습니다</div>
+                    <div className="text-muted-foreground/60 text-sm">모든 경기를 불러왔습니다</div>
                   )}
                 </div>
               </>
@@ -780,14 +800,14 @@ const ScoreboardPage: React.FC = () => {
 
       {/* Tab 3: Awards */}
       {activeTab === "awards" && (
-        <div className="tab-content">
+        <div className="min-h-[200px]">
           {/* 기간 선택 */}
-          <div className="award-period-filter">
-            <label>기간:</label>
+          <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-white rounded-lg border border-border max-md:px-2 max-md:py-1 max-md:mb-2">
+            <label className="text-xs font-semibold text-muted-foreground whitespace-nowrap">기간:</label>
             <select
               value={selectedPeriodIndex}
               onChange={(e) => handlePeriodChange(parseInt(e.target.value))}
-              className="period-select"
+              className="flex-1 px-2 py-1 border border-border rounded text-xs cursor-pointer max-w-[180px] max-md:max-w-none disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={awardLoading}
             >
               {periodOptions.map((option, index) => (
@@ -799,42 +819,45 @@ const ScoreboardPage: React.FC = () => {
           </div>
 
           {awardLoading ? (
-            <div className="empty-state">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
               <p>로딩 중...</p>
             </div>
           ) : awardError ? (
-            <div className="empty-state">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
               <p>{awardError}</p>
             </div>
           ) : awardRankings.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
+              <div className="text-5xl mb-3 max-md:text-4xl">
                 <StarIcon size={64} color="var(--color-text-secondary)" />
               </div>
-              <h3>수상 기록이 없습니다</h3>
-              <p>해당 기간의 수상 기록이 아직 등록되지 않았습니다</p>
+              <p className="text-base font-semibold text-foreground mb-1">수상 기록이 없습니다</p>
+              <p className="text-sm">해당 기간의 수상 기록이 아직 등록되지 않았습니다</p>
             </div>
           ) : (
-            <div className="award-list">
+            <div className="flex flex-col gap-2 max-md:gap-1">
               {awardRankings.map((award) => (
-                <div key={award.type} className="award-card">
-                  <div className="award-card__header">
-                    <span className="award-card__type">
+                <div key={award.type} className="bg-white border border-border rounded-lg overflow-hidden">
+                  <div className="px-3 py-1.5 bg-gradient-to-br from-primary to-primary/80 text-white max-md:px-2 max-md:py-1">
+                    <span className="text-sm font-bold max-md:text-xs">
                       {awardService.getAwardTypeName(award.type)}
                     </span>
                   </div>
                   {award.rankings.length === 0 ? (
-                    <div className="award-card__empty">
+                    <div className="p-4 text-center text-muted-foreground text-xs">
                       기록이 없습니다
                     </div>
                   ) : (
-                    <div className="award-card__rankings">
+                    <div className="p-0.5">
                       {award.rankings.map((entry, index) => (
                         <div
                           key={entry.userId}
-                          className={`award-card__entry ${index === 0 ? "winner" : ""}`}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 border-b border-border/50 last:border-b-0 max-md:px-2 max-md:py-1 max-md:gap-1",
+                            index === 0 && "bg-gradient-to-r from-[#fffbf0] to-transparent"
+                          )}
                         >
-                          <span className="award-card__rank">
+                          <span className="flex items-center justify-center min-w-[28px]">
                             {index === 0 ? (
                               <MedalIcon size={24} rank={1} />
                             ) : index === 1 ? (
@@ -843,8 +866,16 @@ const ScoreboardPage: React.FC = () => {
                               <MedalIcon size={18} rank={3} />
                             )}
                           </span>
-                          <span className="award-card__name"><UserNameWithBadge userId={entry.userId} userName={entry.userName} /></span>
-                          <span className="award-card__value">
+                          <span className={cn(
+                            "flex-1 text-sm font-medium text-foreground max-md:text-xs",
+                            index === 0 && "text-[13px] font-bold max-md:text-sm"
+                          )}>
+                            <UserNameWithBadge userId={entry.userId} userName={entry.userName} />
+                          </span>
+                          <span className={cn(
+                            "text-sm font-bold text-primary whitespace-nowrap max-md:text-xs",
+                            index === 0 && "text-[13px] text-[#ffc107] max-md:text-sm"
+                          )}>
                             {entry.value}{awardService.getAwardTypeUnit(award.type)}
                           </span>
                         </div>
@@ -860,96 +891,100 @@ const ScoreboardPage: React.FC = () => {
 
       {/* Tab 4: Personal Record */}
       {activeTab === "personal" && (
-        <div className="tab-content">
+        <div className="min-h-[200px]">
           {personalLoading ? (
-            <div className="empty-state">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
               <p>로딩 중...</p>
             </div>
           ) : personalError ? (
-            <div className="empty-state">
+            <div className="text-center py-[60px] px-4 text-muted-foreground">
               <p>{personalError}</p>
             </div>
           ) : (
             <>
               {/* 통계 박스 */}
               {personalStats && (
-                <div className="personal-stats-container">
-                  <div className="personal-stats-box">
-                    <div className="stat-item win">
-                      <span className="stat-value">{personalStats.wins}</span>
-                      <span className="stat-label">승</span>
+                <div className="bg-white rounded-lg border border-border p-4 mb-4 text-center max-md:p-3 max-md:mb-3">
+                  <div className="flex justify-center gap-3 mb-3 max-md:gap-2">
+                    <div className="flex flex-row items-center justify-center gap-1 px-5 py-3 rounded-lg min-w-[80px] bg-[#e8f5e9] border border-[#28a745] max-md:px-3 max-md:py-2 max-md:min-w-[60px] max-md:flex-1">
+                      <span className="text-2xl font-bold leading-tight text-[#28a745] max-md:text-xl">{personalStats.wins}</span>
+                      <span className="text-sm font-semibold text-muted-foreground max-md:text-xs">승</span>
                     </div>
-                    <div className="stat-item draw">
-                      <span className="stat-value">{personalStats.draws}</span>
-                      <span className="stat-label">무</span>
+                    <div className="flex flex-row items-center justify-center gap-1 px-5 py-3 rounded-lg min-w-[80px] bg-gray-200 border border-border max-md:px-3 max-md:py-2 max-md:min-w-[60px] max-md:flex-1">
+                      <span className="text-2xl font-bold leading-tight text-muted-foreground max-md:text-xl">{personalStats.draws}</span>
+                      <span className="text-sm font-semibold text-muted-foreground max-md:text-xs">무</span>
                     </div>
-                    <div className="stat-item loss">
-                      <span className="stat-value">{personalStats.losses}</span>
-                      <span className="stat-label">패</span>
+                    <div className="flex flex-row items-center justify-center gap-1 px-5 py-3 rounded-lg min-w-[80px] bg-[#fff5f5] border border-destructive max-md:px-3 max-md:py-2 max-md:min-w-[60px] max-md:flex-1">
+                      <span className="text-2xl font-bold leading-tight text-destructive max-md:text-xl">{personalStats.losses}</span>
+                      <span className="text-sm font-semibold text-muted-foreground max-md:text-xs">패</span>
                     </div>
                   </div>
-                  <div className="personal-stats-total">
+                  <div className="text-sm text-muted-foreground/60 font-medium max-md:text-xs">
                     총 {personalStats.totalMatches}경기
                   </div>
                 </div>
               )}
 
               {/* 경기 목록 */}
-              <div className="match-list-container">
+              <div className="min-h-[200px]">
                 {personalMatches.length === 0 ? (
-                  <div className="empty-state">
-                    <div className="empty-icon">
+                  <div className="text-center py-[60px] px-4 text-muted-foreground">
+                    <div className="text-5xl mb-3 max-md:text-4xl">
                       <UserIcon size={64} color="var(--color-text-secondary)" />
                     </div>
-                    <h3>아직 경기 기록이 없습니다</h3>
-                    <p>경기에 참여하면 여기에 기록이 표시됩니다</p>
+                    <p className="text-base font-semibold text-foreground mb-1">아직 경기 기록이 없습니다</p>
+                    <p className="text-sm">경기에 참여하면 여기에 기록이 표시됩니다</p>
                   </div>
                 ) : (
                   <>
-                    <div className="match-list-header">
-                      <span className="match-count">총 {personalTotalElements}건</span>
+                    <div className="flex justify-between items-center py-2 mb-2 text-muted-foreground text-sm">
+                      <span className="font-medium">총 {personalTotalElements}건</span>
                     </div>
-                    <div className="match-list">
+                    <div className="flex flex-col gap-2 max-md:gap-1">
                       {personalMatches.map((match) => (
                         <div
                           key={match.matchId}
-                          className="match-card completed-match"
+                          className="relative border border-[#28a745] rounded-lg p-4 bg-white transition-colors text-xs md:text-sm max-md:p-3 hover:border-[#28a745]/80 hover:bg-[#28a745]/5"
                         >
-                          <div className="match-header-row">
-                            <div className="match-date">
+                          <div className="flex items-center justify-between mb-2 pb-2 border-b border-border max-md:mb-1 max-md:pb-1">
+                            <div className="text-primary font-semibold flex-1 flex items-center gap-1">
                               <CalendarIcon size={16} />
                               <span>{format(new Date(match.playedAt), "yyyy-MM-dd HH:mm")}</span>
                             </div>
-                            <div className="match-club-badge">{match.clubName}</div>
+                            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap overflow-hidden text-ellipsis max-w-[140px] max-md:text-[10px] max-md:px-1 max-md:max-w-[120px]">
+                              {match.clubName}
+                            </span>
                           </div>
-                          <div className="match-teams-inline">
+                          <div className="flex items-center gap-2 p-2 bg-muted rounded max-md:gap-0.5 max-md:p-1">
                             <div
-                              className={`team-inline team-a ${
-                                match.result === "TEAM_A_WIN"
-                                  ? "winner"
-                                  : match.result === "TEAM_B_WIN"
-                                  ? "loser"
-                                  : ""
-                              }`}
+                              className={cn(
+                                "flex-1 flex items-center gap-1 px-2 py-1 rounded bg-white transition-colors max-md:px-1 max-md:py-0.5 max-md:gap-0.5 max-md:min-w-0",
+                                match.result === "TEAM_A_WIN" && "bg-[#f0fff4] border-l-[3px] border-l-[#28a745]",
+                                match.result === "TEAM_B_WIN" && "bg-[#fff5f5] border-l-[3px] border-l-destructive opacity-90"
+                              )}
                             >
-                              <span className="players-inline">
+                              <span className={cn(
+                                "flex-1 font-medium whitespace-nowrap overflow-hidden text-ellipsis min-w-0",
+                                match.result === "TEAM_A_WIN" && "text-[#28a745] font-bold"
+                              )}>
                                 {renderPlayerName(match.teamAPlayer1Name)}
                                 {match.teamAPlayer2Name && <> {renderPlayerName(match.teamAPlayer2Name)}</>}
                               </span>
-                              <span className="score-inline">{match.teamAScore}</span>
+                              <span className="font-bold text-muted-foreground px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-gray-200 rounded max-md:min-w-[20px]">{match.teamAScore}</span>
                             </div>
-                            <div className="vs-inline">VS</div>
+                            <div className="text-muted-foreground px-1 font-bold max-[359px]:px-0.5 shrink-0">VS</div>
                             <div
-                              className={`team-inline team-b ${
-                                match.result === "TEAM_B_WIN"
-                                  ? "winner"
-                                  : match.result === "TEAM_A_WIN"
-                                  ? "loser"
-                                  : ""
-                              }`}
+                              className={cn(
+                                "flex-1 flex items-center gap-1 px-2 py-1 rounded bg-white transition-colors max-md:px-1 max-md:py-0.5 max-md:gap-0.5 max-md:min-w-0",
+                                match.result === "TEAM_B_WIN" && "bg-[#f0fff4] border-l-[3px] border-l-[#28a745]",
+                                match.result === "TEAM_A_WIN" && "bg-[#fff5f5] border-l-[3px] border-l-destructive opacity-90"
+                              )}
                             >
-                              <span className="score-inline">{match.teamBScore}</span>
-                              <span className="players-inline">
+                              <span className="font-bold text-muted-foreground px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-gray-200 rounded max-md:min-w-[20px]">{match.teamBScore}</span>
+                              <span className={cn(
+                                "flex-1 font-medium whitespace-nowrap overflow-hidden text-ellipsis min-w-0",
+                                match.result === "TEAM_B_WIN" && "text-[#28a745] font-bold"
+                              )}>
                                 {renderPlayerName(match.teamBPlayer1Name)}
                                 {match.teamBPlayer2Name && <> {renderPlayerName(match.teamBPlayer2Name)}</>}
                               </span>
@@ -959,12 +994,12 @@ const ScoreboardPage: React.FC = () => {
                       ))}
                     </div>
                     {/* 인피니티 스크롤 로딩 표시 */}
-                    <div ref={personalLoadMoreRef} className="load-more-trigger">
+                    <div ref={personalLoadMoreRef} className="flex justify-center py-4 min-h-[60px]">
                       {isLoadingPersonalMore && (
-                        <div className="load-more-spinner">불러오는 중...</div>
+                        <div className="text-muted-foreground text-sm">불러오는 중...</div>
                       )}
                       {!personalHasMore && personalMatches.length > 0 && (
-                        <div className="load-more-end">모든 경기를 불러왔습니다</div>
+                        <div className="text-muted-foreground/60 text-sm">모든 경기를 불러왔습니다</div>
                       )}
                     </div>
                   </>

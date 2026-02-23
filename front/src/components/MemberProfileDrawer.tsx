@@ -5,7 +5,7 @@ import { getRoleLabel, normalizeClubRole } from "../utils/role";
 import { formatPhoneNumber } from "../utils/contactUtils";
 import { awardService, type AwardWinnerResponse } from "../services/awardService";
 import type { AwardType } from "../types/club";
-import "./MemberProfileDrawer.css";
+import { cn } from "../lib/utils";
 
 interface MemberProfileDrawerProps {
   clubId: number;
@@ -31,7 +31,6 @@ const formatPeriodLabel = (periodStart: string, periodEnd: string): string => {
   const startMonth = startDate.getMonth() + 1;
   const endMonth = endDate.getMonth() + 1;
 
-  // 상반기: 1-6월, 하반기: 7-12월
   if (startMonth === 1 && endMonth === 6) {
     return `${year}년 상반기`;
   } else if (startMonth === 7 && endMonth === 12) {
@@ -39,7 +38,6 @@ const formatPeriodLabel = (periodStart: string, periodEnd: string): string => {
   } else if (startMonth === 1 && endMonth === 12) {
     return `${year}년`;
   }
-  // 기타 커스텀 기간
   return `${year}년 ${startMonth}~${endMonth}월`;
 };
 
@@ -47,7 +45,7 @@ const formatPeriodLabel = (periodStart: string, periodEnd: string): string => {
 interface GroupedAward {
   type: AwardType;
   count: number;
-  periods: string[];  // ["2025년 상반기", "2024년 하반기"]
+  periods: string[];
   tierName: string;
 }
 
@@ -74,6 +72,36 @@ const groupAwardsByType = (awards: AwardWinnerResponse[]): GroupedAward[] => {
   }));
 };
 
+// Achievement tag tier styles (requires inline style for gradient/border-image)
+const getAchievementTagStyle = (tierName: string): React.CSSProperties => {
+  switch (tierName) {
+    case "bronze":
+      return { borderLeftColor: "#CD7F32" };
+    case "silver":
+      return { borderLeftColor: "#C0C0C0" };
+    case "gold":
+      return {
+        borderLeftColor: "#FFD700",
+        background: "linear-gradient(135deg, rgba(255,215,0,0.08), var(--color-bg-secondary))",
+      };
+    case "platinum":
+      return {
+        borderLeftColor: "#E5E4E2",
+        background: "linear-gradient(135deg, rgba(229,228,226,0.12), var(--color-bg-secondary))",
+      };
+    case "rainbow":
+      return {
+        borderLeftWidth: "4px",
+        borderImage:
+          "linear-gradient(180deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#9400d3) 1",
+        background:
+          "linear-gradient(90deg,rgba(255,0,0,0.03),rgba(255,127,0,0.03),rgba(255,255,0,0.03),rgba(0,255,0,0.03),rgba(0,0,255,0.03),var(--color-bg-secondary))",
+      };
+    default:
+      return { borderLeftColor: "#CD7F32" };
+  }
+};
+
 const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
   clubId,
   userId,
@@ -92,7 +120,6 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
         setLoading(true);
         setError(null);
 
-        // 프로필과 수상 이력 동시 조회
         const [profileData, awardsData] = await Promise.all([
           getClubMemberProfile(clubId, userId),
           awardService.getUserAchievements(clubId, userId).catch(() => []),
@@ -154,7 +181,6 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
   const formatMonthOnly = (dateString: string | null): string => {
     if (!dateString) return "-";
     try {
-      // YYYY-MM-DD 형식에서 YYYY년 MM월만 표시
       const [year, month] = dateString.split("-");
       return `${year}년 ${month}월`;
     } catch {
@@ -164,71 +190,132 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
 
   const formatBirthDate = (birthDate: string | null): string => {
     if (!birthDate) return "비공개";
-    // YYMMDD 형식 -> YY년 MM월 DD일
     if (birthDate.length === 6) {
       const yy = birthDate.slice(0, 2);
       const mm = birthDate.slice(2, 4);
       const dd = birthDate.slice(4, 6);
-      // 50 이상이면 1900년대, 미만이면 2000년대
       const year = parseInt(yy) >= 50 ? `19${yy}` : `20${yy}`;
       return `${year}년 ${parseInt(mm)}월 ${parseInt(dd)}일`;
     }
     return birthDate;
   };
 
+  // Reusable profile item classes
+  const profileItemClass =
+    "grid [grid-template-columns:120px_1fr] gap-4 py-2 border-b border-border last:border-b-0 max-[425px]:[grid-template-columns:80px_1fr] max-[425px]:gap-2 max-[425px]:py-1 max-[359px]:[grid-template-columns:1fr] max-[359px]:gap-1 max-[359px]:py-1";
+  const profileLabelClass =
+    "text-xs font-semibold text-muted-foreground leading-[1.5] max-[359px]:mb-1";
+  const profileValueClass =
+    "text-sm text-foreground leading-[1.5] break-words max-[425px]:text-xs";
+
   return (
-    <div className="drawer-backdrop" onClick={handleBackdropClick}>
-      <div className="member-profile-drawer">
-        <div className="drawer-header">
-          <h2>멤버 프로필</h2>
+    <div
+      className={cn(
+        "fixed inset-0 bg-black/50 z-[1000] animate-[fadeIn_0.2s_ease-out]",
+        "max-[425px]:flex max-[425px]:items-end"
+      )}
+      onClick={handleBackdropClick}
+    >
+      <div
+        className={cn(
+          // Desktop: right-side drawer
+          "fixed top-0 right-0 bottom-0 w-full max-w-[420px] bg-background shadow-lg overflow-y-auto animate-[slideInRight_0.3s_ease-out]",
+          // Tablet
+          "max-[768px]:max-w-[380px]",
+          // Mobile: bottom sheet
+          "max-[425px]:relative max-[425px]:top-auto max-[425px]:right-auto max-[425px]:bottom-auto max-[425px]:max-w-full max-[425px]:max-h-[85vh] max-[425px]:rounded-t-md max-[425px]:rounded-b-none max-[425px]:animate-[slideInUp_0.3s_ease-out]",
+          // Small mobile
+          "max-[359px]:max-h-[90vh]"
+        )}
+      >
+        {/* Header */}
+        <div
+          className={cn(
+            "sticky top-0 bg-background px-6 py-5 border-b border-border flex items-center justify-between z-[1]",
+            "max-[768px]:px-4 max-[768px]:py-4",
+            "max-[425px]:px-4 max-[425px]:py-4",
+            "max-[359px]:px-3 max-[359px]:py-3"
+          )}
+        >
+          <h2
+            className={cn(
+              "m-0 text-xl font-bold text-foreground",
+              "max-[768px]:text-lg",
+              "max-[425px]:text-base",
+              "max-[359px]:text-sm"
+            )}
+          >
+            멤버 프로필
+          </h2>
           <button className="btn-close" onClick={onClose}>
             ✕
           </button>
         </div>
 
-        <div className="drawer-body">
+        {/* Body */}
+        <div
+          className={cn(
+            "px-6 py-5 pb-[max(var(--space-xl),env(safe-area-inset-bottom,var(--space-l)))]",
+            "max-[768px]:px-4 max-[768px]:py-4",
+            "max-[425px]:px-4 max-[425px]:py-4 max-[425px]:pb-[max(var(--space-xl),calc(env(safe-area-inset-bottom,0px)+var(--space-l)))]",
+            "max-[359px]:px-3 max-[359px]:py-3 max-[359px]:pb-[max(var(--space-xl),calc(env(safe-area-inset-bottom,0px)+var(--space-m)))]"
+          )}
+        >
           {loading && (
-            <div className="drawer-loading">프로필을 불러오는 중...</div>
+            <div className="py-8 text-center text-muted-foreground text-sm">
+              프로필을 불러오는 중...
+            </div>
           )}
 
-          {error && <div className="drawer-error">{error}</div>}
+          {error && (
+            <div className="p-3 mb-4 bg-[#fee] border border-[#fcc] rounded-sm text-[#c33] text-xs">
+              {error}
+            </div>
+          )}
 
           {!loading && !error && profile && (
             <>
               {/* 기본 정보 */}
-              <div className="profile-section">
-                <h3 className="section-title">기본 정보</h3>
-                <div className="profile-item">
-                  <span className="profile-label">이름</span>
-                  <span className="profile-value">{profile.name}</span>
+              <div className="mb-6 last:mb-0">
+                <h3
+                  className={cn(
+                    "m-0 mb-3 text-sm font-bold text-foreground",
+                    "max-[425px]:text-xs"
+                  )}
+                >
+                  기본 정보
+                </h3>
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>이름</span>
+                  <span className={profileValueClass}>{profile.name}</span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">이메일</span>
-                  <span className="profile-value">
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>이메일</span>
+                  <span className={profileValueClass}>
                     {profile.email || "비공개"}
                   </span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">전화번호</span>
-                  <span className="profile-value">
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>전화번호</span>
+                  <span className={profileValueClass}>
                     {profile.phoneNumber ? formatPhoneNumber(profile.phoneNumber) : "비공개"}
                   </span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">성별</span>
-                  <span className="profile-value">
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>성별</span>
+                  <span className={profileValueClass}>
                     {getGenderLabel(profile.gender)}
                   </span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">생년월일</span>
-                  <span className="profile-value">
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>생년월일</span>
+                  <span className={profileValueClass}>
                     {formatBirthDate(profile.birthDate)}
                   </span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">지역</span>
-                  <span className="profile-value">
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>지역</span>
+                  <span className={profileValueClass}>
                     {profile.regionDepth1 && profile.regionDepth2
                       ? `${profile.regionDepth1} ${profile.regionDepth2}`
                       : profile.regionDepth1 || "-"}
@@ -236,35 +323,44 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
                 </div>
               </div>
 
-              {/* 클럽 정보 (업적 포함) */}
-              <div className="profile-section">
-                <h3 className="section-title">클럽 정보</h3>
-                <div className="profile-item">
-                  <span className="profile-label">역할</span>
-                  <span className="profile-value">
+              {/* 클럽 정보 */}
+              <div className="mb-6 last:mb-0">
+                <h3
+                  className={cn(
+                    "m-0 mb-3 text-sm font-bold text-foreground pt-4",
+                    "max-[425px]:text-xs"
+                  )}
+                >
+                  클럽 정보
+                </h3>
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>역할</span>
+                  <span className={profileValueClass}>
                     {getRoleLabel(normalizeClubRole(profile.role))}
                   </span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">가입일</span>
-                  <span className="profile-value">
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>가입일</span>
+                  <span className={profileValueClass}>
                     {formatDate(profile.joinedAt)}
                   </span>
                 </div>
 
-                {/* 클럽 업적 - 수상 이력 포함 */}
+                {/* 클럽 업적 */}
                 {awardHistory.length > 0 && (
-                  <div className="profile-item profile-item--achievement">
-                    <span className="profile-label">클럽 업적</span>
-                    <div className="profile-value achievement-value">
+                  <div className={cn(profileItemClass, "items-start")}>
+                    <span className={cn(profileLabelClass, "pt-1")}>클럽 업적</span>
+                    <div className={cn(profileValueClass, "flex flex-col gap-1")}>
                       {awardHistory.map(({ type, count, periods, tierName }) => (
-                        <div key={type} className={`achievement-tag achievement-tag--${tierName}`}>
-                          <span className="achievement-tag__title">
-                            {getAwardTypeLabel(type)} {count}회 - 
+                        <div
+                          key={type}
+                          className="inline-block px-2 py-0.5 rounded-sm text-xs font-medium bg-muted text-foreground border-l-[3px]"
+                          style={getAchievementTagStyle(tierName)}
+                        >
+                          <span>
+                            {getAwardTypeLabel(type)} {count}회 -{" "}
                           </span>
-                          <span className="achievement-tag__periods">
-                            {periods.join(", ")}
-                          </span>
+                          <span>{periods.join(", ")}</span>
                         </div>
                       ))}
                     </div>
@@ -273,34 +369,40 @@ const MemberProfileDrawer: React.FC<MemberProfileDrawerProps> = ({
               </div>
 
               {/* 테니스 프로필 */}
-              <div className="profile-section">
-                <h3 className="section-title">테니스 프로필</h3>
-                <div className="profile-item">
-                  <span className="profile-label">테니스 시작시기</span>
-                  <span className="profile-value">
+              <div className="mb-6 last:mb-0">
+                <h3
+                  className={cn(
+                    "m-0 mb-3 text-sm font-bold text-foreground pt-4",
+                    "max-[425px]:text-xs"
+                  )}
+                >
+                  테니스 프로필
+                </h3>
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>테니스 시작시기</span>
+                  <span className={profileValueClass}>
                     {formatMonthOnly(profile.tennisStartedAt)}
                   </span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">NTRP</span>
-                  <span className="profile-value">{profile.ntrp || "-"}</span>
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>NTRP</span>
+                  <span className={profileValueClass}>{profile.ntrp || "-"}</span>
                 </div>
-                <div className="profile-item">
-                  <span className="profile-label">선출여부</span>
-                  <span className="profile-value">
+                <div className={profileItemClass}>
+                  <span className={profileLabelClass}>선출여부</span>
+                  <span className={profileValueClass}>
                     {profile.formerPlayer ? "O" : "X"}
                   </span>
                 </div>
                 {profile.tournamentHistory && (
-                  <div className="profile-item profile-item--full">
-                    <span className="profile-label">입상 경력</span>
-                    <span className="profile-value profile-value--multiline">
+                  <div className="grid [grid-template-columns:1fr] gap-2 py-2 border-b border-border last:border-b-0">
+                    <span className={profileLabelClass}>입상 경력</span>
+                    <span className={cn(profileValueClass, "whitespace-pre-wrap mt-1")}>
                       {profile.tournamentHistory}
                     </span>
                   </div>
                 )}
               </div>
-
             </>
           )}
         </div>

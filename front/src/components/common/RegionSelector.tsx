@@ -1,6 +1,5 @@
 import React from "react";
 import { regionData, getDepth2ListByName } from "../../data/regions";
-import "./RegionSelector.css";
 
 interface RegionSelectorProps {
   depth1: string;  // 시/도 이름 (예: "서울특별시")
@@ -28,10 +27,27 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({
     onChangeDepth2("");  // depth1 변경 시 depth2 초기화
   };
 
+  // Custom chevron SVG as data URL
+  const chevronBg = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`;
+
+  const selectClassName = [
+    "flex-1 min-w-0 h-9 pl-4 pr-9 text-base leading-9",
+    "border border-border rounded-md bg-white outline-none cursor-pointer appearance-none",
+    "focus:border-primary",
+    "disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60",
+  ].join(" ");
+
+  const selectStyle: React.CSSProperties = {
+    backgroundImage: chevronBg,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 12px center",
+  };
+
   return (
-    <div className="region-selector">
+    <div className="flex gap-2">
       <select
-        className="region-selector__select"
+        className={selectClassName}
+        style={selectStyle}
         value={depth1}
         onChange={handleDepth1Change}
         disabled={disabled}
@@ -51,7 +67,8 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({
       {/* depth2가 있는 시/도인 경우에만 두 번째 select 표시 */}
       {(hasDepth2 || showAllOption) && (
         <select
-          className="region-selector__select"
+          className={selectClassName}
+          style={selectStyle}
           value={depth2}
           onChange={(e) => onChangeDepth2(e.target.value)}
           disabled={disabled || (!depth1 && !showAllOption)}

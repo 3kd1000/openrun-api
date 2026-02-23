@@ -1,5 +1,4 @@
 import React from "react";
-import "./AuthLoadingScreen.css";
 
 interface AuthLoadingScreenProps {
   message?: string;
@@ -14,16 +13,22 @@ const AuthLoadingScreen: React.FC<AuthLoadingScreenProps> = ({
   message = "로그인 정보 확인 중...",
 }) => {
   return (
-    <div className="auth-loading-screen">
-      <div className="auth-loading-screen__content">
-        <div className="auth-loading-screen__logo">
-          <span className="auth-loading-screen__logo-icon">🎾</span>
-          <h1 className="auth-loading-screen__title">OpenRun</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5">
+      <div className="text-center animate-[fadeIn_0.3s_ease-out]">
+        <div className="mb-10">
+          <span className="text-[64px] max-[425px]:text-[48px] min-[426px]:max-[768px]:text-[56px] block mb-4 animate-bounce">
+            🎾
+          </span>
+          <h1 className="text-[32px] max-[425px]:text-[24px] min-[426px]:max-[768px]:text-[28px] font-bold text-white m-0 tracking-[2px] [text-shadow:0_2px_4px_rgba(0,0,0,0.2)]">
+            OpenRun
+          </h1>
         </div>
-        <div className="auth-loading-screen__spinner-container">
-          <div className="auth-loading-screen__spinner" />
+        <div className="mb-6">
+          <div className="w-10 h-10 max-[425px]:w-8 max-[425px]:h-8 mx-auto border-[3px] border-white/30 border-t-white rounded-full animate-spin" />
         </div>
-        <p className="auth-loading-screen__message">{message}</p>
+        <p className="text-base max-[425px]:text-sm text-white/90 m-0 font-medium">
+          {message}
+        </p>
       </div>
     </div>
   );

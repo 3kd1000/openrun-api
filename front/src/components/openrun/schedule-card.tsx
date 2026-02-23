@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Users, Banknote } from "lucide-react";
+import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -67,7 +67,7 @@ export default function ScheduleCard({ schedule, onClick }: ScheduleCardProps) {
             <MapPin className="h-3.5 w-3.5 shrink-0" />
             <span>{schedule.courtName}</span>
             {schedule.clubRegion && (
-              <span className="text-xs text-muted-foreground/70">
+              <span className="text-xs">
                 · {schedule.clubRegion}
               </span>
             )}
@@ -81,8 +81,8 @@ export default function ScheduleCard({ schedule, onClick }: ScheduleCardProps) {
             </div>
             {schedule.cost > 0 && (
               <div className="flex items-center gap-1">
-                <Banknote className="h-3.5 w-3.5 shrink-0" />
-                <span className="font-medium text-foreground">
+                <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[11px] font-semibold">₩</span>
+                <span>
                   {schedule.cost.toLocaleString()}원
                 </span>
               </div>
@@ -95,7 +95,7 @@ export default function ScheduleCard({ schedule, onClick }: ScheduleCardProps) {
 
         {/* Note */}
         {schedule.note && (
-          <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+          <p className="mt-3 mb-0 line-clamp-2 text-xs text-muted-foreground">
             {schedule.note}
           </p>
         )}

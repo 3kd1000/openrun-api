@@ -1,6 +1,5 @@
 import React from "react";
 import type { MyClub } from "../services/api/userApi";
-import "./ClubSelector.css";
 
 interface ClubSelectorProps {
   selectedClubId: number | null;
@@ -30,10 +29,26 @@ export const ClubSelector: React.FC<ClubSelectorProps> = ({
     onClubChange(clubId);
   };
 
+  const selectClassName = [
+    "px-2 py-1 text-base font-bold border-0 border-b border-gray-300 rounded-none bg-white",
+    "cursor-pointer min-h-[36px] text-center text-gray-900 transition-all",
+    "focus:outline-none focus:border-b-primary focus:shadow-none",
+    "disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-gray-50",
+    "hover:enabled:border-b-primary",
+    // Tablet
+    "min-[426px]:max-[768px]:text-[length:var(--font-size-m)] min-[426px]:max-[768px]:min-h-[34px]",
+    // Mobile Large
+    "min-[360px]:max-[425px]:text-[length:var(--font-size-m)] min-[360px]:max-[425px]:min-h-[32px]",
+    // Mobile Small
+    "max-[359px]:text-[length:var(--font-size-s)] max-[359px]:px-1 max-[359px]:py-1 max-[359px]:min-h-[28px]",
+    // Desktop
+    "min-[769px]:text-[length:var(--font-size-l)] min-[769px]:min-h-[40px] min-[769px]:px-4 min-[769px]:py-2",
+  ].join(" ");
+
   if (isLoading) {
     return (
-      <div className={`club-selector ${className}`}>
-        <select className="club-selector__select" disabled>
+      <div className={`flex justify-center w-full ${className}`}>
+        <select className={selectClassName} disabled>
           <option>로딩 중...</option>
         </select>
       </div>
@@ -42,8 +57,8 @@ export const ClubSelector: React.FC<ClubSelectorProps> = ({
 
   if (clubs.length === 0) {
     return (
-      <div className={`club-selector ${className}`}>
-        <select className="club-selector__select" disabled>
+      <div className={`flex justify-center w-full ${className}`}>
+        <select className={selectClassName} disabled>
           <option>가입한 클럽이 없습니다</option>
         </select>
       </div>
@@ -51,9 +66,9 @@ export const ClubSelector: React.FC<ClubSelectorProps> = ({
   }
 
   return (
-    <div className={`club-selector ${className}`}>
+    <div className={`flex justify-center w-full ${className}`}>
       <select
-        className="club-selector__select"
+        className={selectClassName}
         value={selectedClubId ?? ""}
         onChange={handleChange}
       >

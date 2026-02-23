@@ -6,7 +6,6 @@ import { AppHeader } from "../components/common/AppHeader";
 import { getOpenRunSession, setOpenRunSession } from "../utils/openrunSession";
 import { useAuth } from "../contexts/AuthContext";
 import { normalizeClubRole } from "../utils/role";
-import "./ClubLayout.css";
 
 /**
  * ClubLayout
@@ -100,16 +99,18 @@ export const ClubLayout: React.FC = () => {
   }, [clubIdParam, selectedClubId]);
 
   return (
-    <div className="club-layout" key={refreshKey}>
-      <AppHeader>
-        <ClubSelector
-          selectedClubId={selectedClubId}
-          onClubChange={handleClubChange}
-          clubs={clubs}
-          isLoading={isLoading}
-        />
-      </AppHeader>
-      <div className="club-layout__content">
+    <div className="flex flex-col" key={refreshKey}>
+      <div className="shrink-0 sticky top-0 z-[100]">
+        <AppHeader>
+          <ClubSelector
+            selectedClubId={selectedClubId}
+            onClubChange={handleClubChange}
+            clubs={clubs}
+            isLoading={isLoading}
+          />
+        </AppHeader>
+      </div>
+      <div className="flex-1">
         <Outlet context={{ selectedClubId, clubs, isLoading }} />
       </div>
     </div>
