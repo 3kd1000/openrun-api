@@ -182,7 +182,7 @@ const ParticipantManagementModal: React.FC<Props> = ({
 
   return (
     <Dialog open={true} onOpenChange={(open) => { if (!open && !loading) handleClose(); }}>
-      <DialogContent className="max-w-[600px] w-[95vw] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-[600px] w-[95vw] max-h-[85dvh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle>참가자 수정</DialogTitle>
         </DialogHeader>
@@ -275,7 +275,7 @@ const ParticipantManagementModal: React.FC<Props> = ({
           )}
 
           {/* 게스트 참가자 */}
-          <div className="flex flex-col gap-2 min-h-[180px] shrink-0 pt-3 border-t">
+          <div className="flex flex-col gap-2 shrink-0 pt-3 border-t">
             <span className="text-sm font-medium text-foreground shrink-0">게스트 참가자</span>
 
             {/* 기존 게스트 목록 */}

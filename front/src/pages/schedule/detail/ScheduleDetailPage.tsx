@@ -980,23 +980,23 @@ export default function ScheduleDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-1">
                 {pendingParticipants.map((p) => (
-                  <div key={p.id} className="flex items-center gap-1 text-sm text-amber-700">
+                  <div key={p.id} className="flex items-center gap-1 text-sm text-foreground">
                     <span>{p.userName}</span>
                     {isHost && (
                       <div className="flex gap-1 ml-auto">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="h-auto px-1.5 py-0.5 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                          className="h-auto px-1.5 py-0.5 text-xs text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700"
                           onClick={() => handleApprove(p.id)}
                           disabled={loading}
                         >
                           승인
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="h-auto px-1.5 py-0.5 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-auto px-1.5 py-0.5 text-xs text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
                           onClick={() => handleReject(p.id)}
                           disabled={loading}
                         >
@@ -1041,8 +1041,7 @@ export default function ScheduleDetailPage() {
       <div className="flex gap-2">
         {currentUserId && myParticipation ? (
           <Button
-            variant="outline"
-            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="flex-1 bg-red-500 text-white hover:bg-red-600 border-red-500"
             onClick={handleCancel}
             disabled={loading || isPastDate(schedule.scheduledAt)}
             title={
@@ -1073,7 +1072,7 @@ export default function ScheduleDetailPage() {
 
         <Button
           variant="outline"
-          className="flex-1 text-red-500 hover:bg-red-50 hover:text-red-600"
+          className="flex-1 border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-800"
           onClick={handleDelete}
           disabled={loading || !canDelete}
           title={
@@ -1086,8 +1085,7 @@ export default function ScheduleDetailPage() {
         </Button>
 
         <Button
-          variant="outline"
-          className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
+          className="flex-1 bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500"
           onClick={() => {
             if (isPastDate(schedule.scheduledAt)) {
               setError("과거 날짜에는 일정을 수정할 수 없습니다.");
