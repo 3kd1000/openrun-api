@@ -145,6 +145,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     const unsubscribe = onForegroundMessage((payload) => {
       const data = payload.data || {};
+      // MESSAGE 타입은 메시지 Context에서 처리하므로 여기서는 무시
+      if (data.type === "MESSAGE") return;
       const title = data.title || payload.notification?.title || "알림";
       const body = data.body || payload.notification?.body || "";
       showToast(`${title}: ${body}`, "default", 5000);

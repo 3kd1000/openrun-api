@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { messageService } from "../../services/messageService";
+import { userService } from "../../services/userService";
 import type { ConversationResponse } from "../../types/message";
 import BackButton from "../../components/common/BackButton";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Headphones } from "lucide-react";
 
 const formatTimeAgo = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -26,18 +27,26 @@ const MessageListPage: React.FC = () => {
     []
   );
   const [loading, setLoading] = useState(true);
+  const [operatorId, setOperatorId] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await messageService.getConversations();
-        // 최근 메시지 순으로 정렬
-        data.sort(
-          (a, b) =>
-            new Date(b.lastMessageAt).getTime() -
-            new Date(a.lastMessageAt).getTime()
-        );
-        setConversations(data);
+        const [data, operator] = await Promise.allSettled([
+          messageService.getConversations(),
+          userService.getOperatorProfile(),
+        ]);
+        if (data.status === "fulfilled") {
+          data.value.sort(
+            (a, b) =>
+              new Date(b.lastMessageAt).getTime() -
+              new Date(a.lastMessageAt).getTime()
+          );
+          setConversations(data.value);
+        }
+        if (operator.status === "fulfilled") {
+          setOperatorId(operator.value.id);
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -56,6 +65,23 @@ const MessageListPage: React.FC = () => {
           메시지
         </span>
       </div>
+
+      {/* 운영자 문의 고정 카드 */}
+      {operatorId && (
+        <button
+          type="button"
+          className="flex items-center gap-3 p-4 border border-primary/30 rounded-xl bg-primary/5 cursor-pointer transition-colors hover:bg-primary/10 text-left w-full mb-2"
+          onClick={() => navigate(`/messages/${operatorId}`)}
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <Headphones size={18} className="text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-primary">운영자에게 문의하기</div>
+            <p className="text-xs text-muted-foreground">클럽 설정, 기능 사용법 등 궁금한 점을 물어보세요</p>
+          </div>
+        </button>
+      )}
 
       {loading ? (
         <div className="py-6 text-muted-foreground text-center">로딩 중...</div>

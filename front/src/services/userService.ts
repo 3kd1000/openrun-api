@@ -70,5 +70,11 @@ export const userService = {
   getUserPublicProfile: async (userId: number): Promise<UserPublicProfile> => {
     const response = await axiosInstance.get<UserPublicProfile>(`/users/${userId}/public-profile`);
     return response.data;
-  }
+  },
+
+  // 운영자 공개 프로필 조회 (인증 불필요)
+  getOperatorProfile: async (): Promise<UserPublicProfile> => {
+    const response = await axiosInstance.get<UserPublicProfile>("/users/operator-profile");
+    return response.data;
+  },
 };

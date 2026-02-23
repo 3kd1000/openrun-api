@@ -240,4 +240,14 @@ public class UserController {
         UserPublicProfileResponse response = userService.getUserPublicProfile(userId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 운영자 공개 프로필 조회 (인증 불필요)
+     * - system_admins 테이블 첫 번째 항목의 운영자 userId를 사용
+     */
+    @GetMapping("/operator-profile")
+    public ResponseEntity<UserPublicProfileResponse> getOperatorProfile() {
+        UserPublicProfileResponse response = userService.getOperatorProfile();
+        return ResponseEntity.ok(response);
+    }
 }

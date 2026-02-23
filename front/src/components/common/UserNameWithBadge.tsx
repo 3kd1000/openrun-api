@@ -50,7 +50,7 @@ const UserNameWithBadge: React.FC<UserNameWithBadgeProps> = ({
     return (
       <span
         key={type}
-        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-secondary text-white text-[11px] font-semibold whitespace-nowrap ${ringClass}`}
+        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-secondary text-white text-[11px] leading-none font-semibold whitespace-nowrap ${ringClass}`}
         title={tierName ? `${label} (${getTierLabel(tierName)})` : label}
       >
         <Icon size={12} />

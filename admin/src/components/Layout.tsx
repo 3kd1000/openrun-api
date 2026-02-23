@@ -73,6 +73,9 @@ function Layout() {
           <NavLink to="/notification-history" className={({ isActive }) => isActive ? "active" : ""} onClick={handleNavClick}>
             알림 이력
           </NavLink>
+          <NavLink to="/dm" className={({ isActive }) => isActive ? "active" : ""} onClick={handleNavClick}>
+            DM 관리
+          </NavLink>
         </nav>
         <div className="admin-sidebar__footer">
           {adminUser && (

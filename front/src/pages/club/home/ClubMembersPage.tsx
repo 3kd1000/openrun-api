@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '../../../services/api/axiosInstance';
 import { Button } from '../../../components/ui/button';
 import { ArrowLeftIcon, CrownIcon, StarIcon, UserIcon, SettingsIcon, XIcon, ChevronRightIcon } from '../../../components/common/Icons';
@@ -43,9 +44,7 @@ const formatJoinedAt = (dateStr: string): string => {
 const ClubMembersPage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
-  const [members, setMembers] = useState<ClubMembershipResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = useState(false);
   const [roleDraftByUserId, setRoleDraftByUserId] = useState<Record<number, ClubMembershipResponse["role"]>>({});
   const [saving, setSaving] = useState(false);
@@ -56,43 +55,34 @@ const ClubMembersPage: React.FC = () => {
   const myRole = normalizeClubRole(session.currentClubRole);
   const canManage = canManageClub(myRole);
   const isOwner = myRole === 'OWNER';
-  // 역할 변경은 OWNER 전용이지만, 프론트에서는 우선 canManage(ADMIN+)에서 버튼 노출 후
-  // 서버에서 최종 권한(OWNER)으로 한 번 더 막는다.
   const canEditRoles = canManage;
+
+  // React Query로 멤버 목록 캐싱 (staleTime 1분)
+  const { data: members = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ["club", clubId, "members"] as const,
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/clubs/${clubId}/membership`, {
+        params: { status: 'ACTIVE' },
+      });
+      return res.data as ClubMembershipResponse[];
+    },
+    enabled: !!clubId,
+    staleTime: 1 * 60 * 1000, // 1분: 이 시간 내 재방문 시 API 호출 없이 캐시 반환
+  });
+
+  const error = queryError ? getErrorMessage(queryError) : null;
+
+  // 멤버 데이터가 변경될 때 역할 초안 동기화
+  useEffect(() => {
+    setRoleDraftByUserId(
+      Object.fromEntries(members.map((m) => [m.userId, m.role]))
+    );
+  }, [members]);
 
   const dirtyCount = useMemo(() => {
     const currentByUserId = new Map(members.map((m) => [m.userId, m.role]));
     return Object.entries(roleDraftByUserId).filter(([uid, role]) => currentByUserId.get(Number(uid)) !== role).length;
   }, [members, roleDraftByUserId]);
-
-  useEffect(() => {
-    if (clubId) {
-      loadData();
-    }
-  }, [clubId]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const membersResponse = await axiosInstance.get(`/clubs/${clubId}/membership`, {
-        params: { status: 'ACTIVE' }
-      });
-
-      setMembers(membersResponse.data);
-      setRoleDraftByUserId(
-        Object.fromEntries(
-          (membersResponse.data as ClubMembershipResponse[]).map((m) => [m.userId, m.role])
-        )
-      );
-    } catch (error: unknown) {
-      logError('클럽원 목록 조회', error);
-      setError(getErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBack = () => {
     navigate(`/clubs/${clubId}`);
@@ -117,7 +107,8 @@ const ClubMembersPage: React.FC = () => {
     try {
       setSaving(true);
       await axiosInstance.patch(`/clubs/${clubId}/members/roles`, { items });
-      await loadData();
+      // 캐시 무효화 후 재요청
+      await queryClient.invalidateQueries({ queryKey: ["club", clubId, "members"] });
       setIsEditMode(false);
       showToast("저장되었습니다", "success");
     } catch (e: unknown) {
@@ -136,7 +127,8 @@ const ClubMembersPage: React.FC = () => {
       setKickingUserId(memberId);
       await axiosInstance.delete(`/clubs/${clubId}/members/${memberId}`);
       showToast("제명되었습니다", "success");
-      await loadData();
+      // 캐시 무효화 후 재요청
+      await queryClient.invalidateQueries({ queryKey: ["club", clubId, "members"] });
     } catch (e: unknown) {
       logError("클럽원 제명", e);
       showToast(getErrorMessage(e), "error");

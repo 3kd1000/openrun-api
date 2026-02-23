@@ -12,9 +12,11 @@ import {
   ScaleIcon,
   TrophyIcon,
 } from "../../../components/common/Icons";
+import { Headphones } from "lucide-react";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { normalizeClubRole } from "../../../utils/role";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
+import { userService } from "../../../services/userService";
 const MenuItem: React.FC<{
   icon: React.ReactNode;
   label: string;
@@ -42,6 +44,7 @@ const ClubManagePage: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [operatorId, setOperatorId] = useState<number | null>(null);
 
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
@@ -57,7 +60,13 @@ const ClubManagePage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      await axiosInstance.get(`/clubs/${clubId}`);
+      const [, operator] = await Promise.allSettled([
+        axiosInstance.get(`/clubs/${clubId}`),
+        userService.getOperatorProfile(),
+      ]);
+      if (operator.status === "fulfilled") {
+        setOperatorId(operator.value.id);
+      }
     } catch (error: unknown) {
       logError("클럽 관리 데이터 조회", error);
       setError(getErrorMessage(error));
@@ -149,6 +158,24 @@ const ClubManagePage: React.FC = () => {
               <MenuItem icon={<CrownIcon size={18} />} label="클럽장 권한 양도" onClick={() => navigate(`/clubs/${clubId}/manage/transfer-ownership`)} danger last />
             </div>
           </div>
+        )}
+
+        {/* 운영자 문의 */}
+        {operatorId && (
+          <button
+            type="button"
+            className="w-full flex items-center gap-3 p-4 rounded-xl border border-primary/30 bg-primary/5 cursor-pointer transition-colors hover:bg-primary/10 text-left"
+            onClick={() => navigate(`/messages/${operatorId}`)}
+          >
+            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+              <Headphones size={16} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-primary">운영자에게 문의하기</div>
+              <p className="text-xs text-muted-foreground">설정 방법, 기능 안내 등 도움이 필요하면 DM을 보내세요</p>
+            </div>
+            <ChevronRightIcon size={16} className="text-primary/50" />
+          </button>
         )}
       </div>
     </div>

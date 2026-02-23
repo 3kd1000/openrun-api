@@ -70,6 +70,18 @@ const MessageDetailPage: React.FC = () => {
     return msg.senderId === pid ? msg.senderName : msg.receiverName;
   }, [messages, pid]);
 
+  // location.state 우선, 없으면 messages 배열에서 추출
+  const referenceInfo = useMemo(() => {
+    if (state?.referenceType && state.referenceId) {
+      return { type: state.referenceType, id: state.referenceId };
+    }
+    const refMsg = messages.find(m => m.referenceType && m.referenceId);
+    if (refMsg?.referenceType && refMsg.referenceId) {
+      return { type: refMsg.referenceType, id: refMsg.referenceId };
+    }
+    return null;
+  }, [state, messages]);
+
   const load = async () => {
     if (!Number.isFinite(pid)) return;
     try {
@@ -188,11 +200,18 @@ const MessageDetailPage: React.FC = () => {
         </span>
       </div>
 
-      {/* 참조 정보 배너 */}
-      {state?.referenceType === "PUBLIC_SCHEDULE" && state.referenceId && (
-        <div className="mx-0 mb-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg text-xs text-primary shrink-0">
-          공개일정 #{state.referenceId} 관련 대화
-        </div>
+      {/* 참조 정보 배너 - 클릭 시 일정 상세로 이동 */}
+      {referenceInfo?.type === "PUBLIC_SCHEDULE" && (
+        <button
+          type="button"
+          className="mx-0 mb-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg text-xs text-primary shrink-0 w-full text-left flex items-center justify-between cursor-pointer hover:bg-primary/10 transition-colors"
+          onClick={() => navigate(`/schedules/${referenceInfo.id}/recruit`, {
+            state: { returnUrl: `/messages/${partnerId}` },
+          })}
+        >
+          <span>공개일정 #{referenceInfo.id} 관련 대화</span>
+          <span className="text-primary/60">일정 보기 →</span>
+        </button>
       )}
 
       {/* 메시지 목록 */}

@@ -32,6 +32,8 @@ import com.example.openrunapi.domain.user.model.dto.MyAllMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
 import com.example.openrunapi.domain.user.model.dto.UserPublicProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.WithdrawalCheckResponse;
+import com.example.openrunapi.domain.user.model.SystemAdmin;
+import com.example.openrunapi.domain.user.repository.SystemAdminRepository;
 import com.example.openrunapi.domain.user.repository.UserStatisticsRepository;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.service.ClubService;
@@ -73,6 +75,7 @@ public class UserService implements UserDetailsService {
     private final CommentRepository commentRepository;
     private final NotificationRepository notificationRepository;
     private final ClubService clubService;
+    private final SystemAdminRepository systemAdminRepository;
 
     @Override
     @Transactional
@@ -486,6 +489,16 @@ public class UserService implements UserDetailsService {
         long publicScheduleCount = scheduleRepository.countPublicSchedulesByCreator(userId);
 
         return UserPublicProfileResponse.from(user, publicScheduleCount);
+    }
+
+    /**
+     * 운영자 공개 프로필 조회 (system_admins 첫 번째 항목의 유저)
+     */
+    public UserPublicProfileResponse getOperatorProfile() {
+        return systemAdminRepository.findAll().stream()
+                .findFirst()
+                .map(admin -> getUserPublicProfile(admin.getUserId()))
+                .orElseThrow(() -> new UsernameNotFoundException("운영자 계정이 존재하지 않습니다."));
     }
 
     // ==================== 회원 탈퇴 관련 메서드 ====================

@@ -7,9 +7,11 @@ import {
 } from "../../../components/common/Icons";
 import BackButton from "../../../components/common/BackButton";
 import { clubService } from "../../../services/clubService";
+import { userService } from "../../../services/userService";
 import axiosInstance from "../../../services/api/axiosInstance";
 import type { Club } from "../../../types/club";
 import { useToast } from "../../../contexts/ToastContext";
+import { Headphones } from "lucide-react";
 
 const ClubCreateOnboardingPage: React.FC = () => {
   const { showToast } = useToast();
@@ -22,13 +24,22 @@ const ClubCreateOnboardingPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [operatorId, setOperatorId] = useState<number | null>(null);
 
   const fetchClubPolicy = useCallback(async () => {
     if (!id) return;
     try {
       setLoading(true);
-      const res = await axiosInstance.get<Club>(`/clubs/${id}`);
-      setRecruitmentNote(res.data.memberRecruitmentNote ?? "");
+      const [clubRes, operator] = await Promise.allSettled([
+        axiosInstance.get<Club>(`/clubs/${id}`),
+        userService.getOperatorProfile(),
+      ]);
+      if (clubRes.status === "fulfilled") {
+        setRecruitmentNote(clubRes.value.data.memberRecruitmentNote ?? "");
+      }
+      if (operator.status === "fulfilled") {
+        setOperatorId(operator.value.id);
+      }
     } catch (e) {
       console.error("Failed to fetch club policy:", e);
     } finally {
@@ -178,6 +189,24 @@ const ClubCreateOnboardingPage: React.FC = () => {
           <ChevronRightIcon size={18} />
         </button>
       </div>
+
+      {/* 운영자 문의 */}
+      {operatorId && (
+        <button
+          type="button"
+          className="w-full flex items-center gap-3 p-4 rounded-xl border border-primary/30 bg-primary/5 cursor-pointer transition-colors hover:bg-primary/10 text-left mt-4"
+          onClick={() => navigate(`/messages/${operatorId}`)}
+        >
+          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <Headphones size={16} className="text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-primary">운영자에게 문의하기</div>
+            <p className="text-xs text-muted-foreground">클럽 설정이 막히면 편하게 DM 주세요!</p>
+          </div>
+          <ChevronRightIcon size={16} className="text-primary/50" />
+        </button>
+      )}
     </div>
   );
 };

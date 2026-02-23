@@ -5,15 +5,19 @@ import com.example.openrunapi.domain.admin.model.dto.UserStatsResponse;
 import com.example.openrunapi.domain.admin.service.AdminUserService;
 import com.example.openrunapi.domain.admin.service.DailyStatsService;
 import com.example.openrunapi.domain.user.model.User;
+import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +32,7 @@ public class AdminUserController {
 
     private final AdminUserService adminUserService;
     private final DailyStatsService dailyStatsService;
+    private final UserRepository userRepository;
 
     /**
      * 사용자 통계 조회 (대시보드용)
@@ -109,6 +114,25 @@ public class AdminUserController {
                 "userName", updatedUser.getName(),
                 "message", "생년월일이 업데이트되었습니다."
         ));
+    }
+
+    /**
+     * 사용자 이름 검색 (DM 발송 대상 선택용)
+     * - 이름에 keyword가 포함된 실사용자(비게스트) 최대 20명 반환
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<UserResponse>> searchUsers(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String keyword) {
+
+        adminUserService.validateAdminAccess(userDetails.getUsername());
+
+        List<UserResponse> results = userRepository
+                .searchByNameKeyword(keyword.trim(), PageRequest.of(0, 20))
+                .stream()
+                .map(UserResponse::new)
+                .toList();
+        return ResponseEntity.ok(results);
     }
 
     /**

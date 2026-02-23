@@ -484,6 +484,7 @@ public class AwardService {
         Optional<AwardWinner> savedWinner = awardWinnerRepository
                 .findByClubIdAndAwardTypeAndPeriodStartAndPeriodEnd(clubId, type, startDate, endDate);
 
+        // 클럽 관리에서 직접 지정한 수상자만 표시 (실시간 집계 폴백 제거)
         if (savedWinner.isPresent()) {
             AwardWinner winner = savedWinner.get();
             String userName = userRepository.findById(winner.getUserId())
@@ -495,25 +496,6 @@ public class AwardService {
                     .type(type)
                     .userId(winner.getUserId())
                     .userName(userName)
-                    .value(winner.getValue())
-                    .build());
-            return;
-        }
-
-        // 2. 저장된 수상자가 없으면 실시간 집계
-        List<AwardRankingEntry> rankings = switch (type) {
-            case ATTENDANCE -> getAttendanceRanking(clubId, startDate, endDate, 1);
-            case POINTS -> getPointsRanking(clubId, startDate, endDate, 1);
-            case BOOKING -> getBookingRanking(clubId, startDate, endDate, 1);
-        };
-
-        if (!rankings.isEmpty()) {
-            AwardRankingEntry winner = rankings.get(0);
-            winnerUserIds.add(winner.getUserId());
-            winners.add(AwardWinnersResponse.WinnerDetail.builder()
-                    .type(type)
-                    .userId(winner.getUserId())
-                    .userName(winner.getUserName())
                     .value(winner.getValue())
                     .build());
         }

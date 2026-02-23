@@ -1,53 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { clubService } from "../../../services/clubService";
-import type { ClubNotice, ClubRule } from "../../../types/club";
 import { getClubSettings, setClubSettings } from "../../../utils/openrunClubSettings";
 import {
   ArrowLeftIcon,
   ChevronDownIcon,
   ChevronUpIcon,
 } from "../../../components/common/Icons";
-import { getErrorMessage, logError } from "../../../utils/errorHandler";
+import { getErrorMessage } from "../../../utils/errorHandler";
 
 const ClubRulesPage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
-  const [rules, setRules] = useState<ClubRule[]>([]);
-  const [notices, setNotices] = useState<ClubNotice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [noticesExpanded, setNoticesExpanded] = useState(true);
   const [rulesExpanded, setRulesExpanded] = useState(true);
 
-  useEffect(() => {
-    if (clubId) {
-      loadData();
-    }
-  }, [clubId]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+  // React Query로 공지/회칙 캐싱 (staleTime 2분)
+  const { data, isLoading, error: queryError } = useQuery({
+    queryKey: ["club", clubId, "rules-and-notices"] as const,
+    queryFn: async () => {
       const [rulesData, noticesData] = await Promise.all([
         clubService.getClubRules(Number(clubId)),
         clubService.getClubNotices(Number(clubId)),
       ]);
+      return {
+        rules: rulesData.sort((a, b) => a.displayOrder - b.displayOrder),
+        notices: noticesData.sort((a, b) => a.displayOrder - b.displayOrder),
+      };
+    },
+    enabled: !!clubId,
+    staleTime: 2 * 60 * 1000, // 2분: 이 시간 내 재방문 시 API 호출 없이 캐시 반환
+  });
 
-      setRules(rulesData.sort((a, b) => a.displayOrder - b.displayOrder));
-      setNotices(noticesData.sort((a, b) => a.displayOrder - b.displayOrder));
-    } catch (error: unknown) {
-      logError("공지/회칙 조회", error);
-      setError(getErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const rules = data?.rules ?? [];
+  const notices = data?.notices ?? [];
+  const loading = isLoading;
+  const error = queryError ? getErrorMessage(queryError) : null;
 
-  // 공지/회칙 진입 시 최신 공지+회칙까지 읽음 처리
+  // 공지/회칙 진입 시 읽음 처리 (데이터 fetch와 별도)
   useEffect(() => {
     if (!clubId) return;
     Promise.all([
