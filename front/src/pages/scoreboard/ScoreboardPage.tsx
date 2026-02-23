@@ -517,7 +517,7 @@ const ScoreboardPage: React.FC = () => {
           {/* 연도, 성별 및 정렬 필터 */}
           <div className="flex flex-wrap gap-3 mb-4 p-3 bg-white rounded-lg border border-border max-md:p-2 max-md:mb-3 max-md:gap-2">
             <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">
-              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:text-xs">연도:</label>
+              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:hidden">연도:</label>
               <select
                 value={selectedYear}
                 onChange={(e) => {
@@ -544,7 +544,7 @@ const ScoreboardPage: React.FC = () => {
               </select>
             </div>
             <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">
-              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:text-xs">성별:</label>
+              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:hidden">성별:</label>
               <select
                 value={genderFilter}
                 onChange={(e) => {
@@ -558,7 +558,7 @@ const ScoreboardPage: React.FC = () => {
               </select>
             </div>
             <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">
-              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:text-xs">정렬:</label>
+              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:hidden">정렬:</label>
               <select
                 value={sortBy}
                 onChange={(e) => {
