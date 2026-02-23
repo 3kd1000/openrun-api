@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { format } from "date-fns";
 import BackButton from "../../../components/common/BackButton";
 import { scheduleService } from "../../../services/scheduleService";
 import type { CreateScheduleRequest } from "../../../types/schedule";
@@ -23,10 +22,6 @@ export default function ScheduleCreatePage() {
   const clubIdParam = searchParams.get("clubId");
   const dateParam = searchParams.get("date");
 
-  const now = new Date();
-  const defaultDate = dateParam || format(now, "yyyy-MM-dd");
-  const defaultTime = "06:00";
-
   const currentClubId = clubIdParam
     ? parseInt(clubIdParam)
     : session.currentClubId
@@ -35,7 +30,7 @@ export default function ScheduleCreatePage() {
 
   const initialData = {
     clubId: currentClubId,
-    scheduledAt: `${defaultDate}T${defaultTime}:00`,
+    ...(dateParam ? { scheduledAt: `${dateParam}T06:00:00` } : {}),
     courtName: "",
     maxCapacity: 4,
     cost: undefined,

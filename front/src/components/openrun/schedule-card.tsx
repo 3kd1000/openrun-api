@@ -40,16 +40,27 @@ export default function ScheduleCard({ schedule, onClick }: ScheduleCardProps) {
       onClick={onClick}
     >
       <CardContent className="p-4">
-        {/* Header: Club name + Match type badge */}
+        {/* Header: Club name + Badges */}
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-semibold text-foreground">
             {schedule.clubName}
           </span>
-          {matchLabel && (
-            <Badge variant="secondary" className={matchColor}>
-              {matchLabel}
-            </Badge>
-          )}
+          <div className="flex items-center gap-1">
+            {schedule.clubId === null ? (
+              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+                공개
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                클럽
+              </Badge>
+            )}
+            {matchLabel && (
+              <Badge variant="secondary" className={matchColor}>
+                {matchLabel}
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Info rows */}

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
 import BackButton from "../../../components/common/BackButton";
 import { scheduleService } from "../../../services/scheduleService";
 import { getOpenRunSession } from "../../../utils/openrunSession";
@@ -18,14 +17,8 @@ export default function PublicScheduleCreatePage() {
   const session = getOpenRunSession();
   const currentUserId = session.userId ?? null;
 
-  const now = new Date();
-  const defaultDate = format(now, "yyyy-MM-dd");
-  const defaultTime = "06:00";
-
   const initialData = {
-    scheduledAt: `${defaultDate}T${defaultTime}:00`,
     courtName: "",
-    maxCapacity: 8,
     cost: undefined,
     description: "",
     courtAddress: "",

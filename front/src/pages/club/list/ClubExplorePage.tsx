@@ -384,7 +384,7 @@ const ClubExplorePage: React.FC = () => {
 
   const handleGuestItemClick = (item: PublicRecruitSchedule) => {
     const returnUrl = `/clubs/explore?${searchParams.toString()}`;
-    navigate(`/clubs/${item.clubId}/guest-recruit/${item.scheduleId}`, { state: { returnUrl } });
+    navigate(`/schedules/${item.scheduleId}/recruit`, { state: { returnUrl } });
   };
 
   const handleClubSearch = (e: React.FormEvent) => {
@@ -559,7 +559,7 @@ const ClubExplorePage: React.FC = () => {
                       key={item.key}
                       schedule={{
                         scheduleId: item.data.id,
-                        clubId: 0,
+                        clubId: null,
                         clubName: `${item.data.hostDisplayName}`,
                         clubRegion: item.data.region ?? "",
                         recruitType: "GUEST",
@@ -572,7 +572,10 @@ const ClubExplorePage: React.FC = () => {
                         cost: item.data.cost ?? 0,
                         note: item.data.courtAddress ?? null,
                       }}
-                      onClick={() => navigate(`/schedules/${item.data.id}`)}
+                      onClick={() => {
+                        const returnUrl = `/clubs/explore?${searchParams.toString()}`;
+                        navigate(`/schedules/${item.data.id}/recruit`, { state: { returnUrl } });
+                      }}
                     />
                   )
                 )}

@@ -84,14 +84,19 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
   error,
   submitButtonText = mode === "create" ? "생성" : "저장",
 }) => {
-  // 초기 날짜 및 시간 분리
+  // 초기 날짜 및 시간 분리 (기본값: 다음 정시, 23시 이후면 내일)
   const now = new Date();
+  const nextHour = now.getHours() + 1;
+  const defaultDateFallback = nextHour >= 24
+    ? format(new Date(now.getTime() + 24 * 60 * 60 * 1000), "yyyy-MM-dd")
+    : format(now, "yyyy-MM-dd");
+  const defaultTimeFallback = `${String(nextHour >= 24 ? 0 : nextHour).padStart(2, "0")}:00`;
   const defaultDate = initialData?.scheduledAt
     ? initialData.scheduledAt.split("T")[0]
-    : format(now, "yyyy-MM-dd");
+    : defaultDateFallback;
   const defaultTime = initialData?.scheduledAt
-    ? initialData.scheduledAt.split("T")[1]?.substring(0, 5) || "06:00"
-    : "06:00";
+    ? initialData.scheduledAt.split("T")[1]?.substring(0, 5) || defaultTimeFallback
+    : defaultTimeFallback;
 
   const [selectedDate, setSelectedDate] = useState(defaultDate);
   const [selectedTime, setSelectedTime] = useState(defaultTime);
@@ -103,7 +108,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
     scheduledAt: initialData?.scheduledAt || "",
     durationMinutes: initialData?.durationMinutes || 120,
     courtName: initialData?.courtName || "",
-    maxCapacity: initialData?.maxCapacity || (isPublicSchedule ? 8 : 4),
+    maxCapacity: initialData?.maxCapacity || 4,
     numberOfCourts: initialData?.numberOfCourts || undefined,
     cost: initialData?.cost,
     description: initialData?.description || "",

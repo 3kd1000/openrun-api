@@ -89,7 +89,7 @@ export interface ScheduleCursorResponse {
 
 export interface PublicRecruitSchedule {
   scheduleId: number;
-  clubId: number;
+  clubId: number | null;
   clubName: string;
   clubRegion: string;
   recruitType: "GUEST" | "INTERCLUB";

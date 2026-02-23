@@ -23,6 +23,7 @@ import ClubCreateOnboardingPage from "./pages/club/create/ClubCreateOnboardingPa
 import ClubEntryRedirectPage from "./pages/club/home/ClubEntryRedirectPage";
 import GuestRecruitPage from "./pages/club/recruit/GuestRecruitPage";
 import InterclubRecruitPage from "./pages/club/recruit/InterclubRecruitPage";
+import ScheduleRecruitPage from "./pages/schedule/recruit/ScheduleRecruitPage";
 import ClubRecruitManagePage from "./pages/club/manage/ClubRecruitManagePage";
 import ClubNoticeManagePage from "./pages/club/manage/ClubNoticeManagePage";
 import ClubTransferOwnershipPage from "./pages/club/manage/ClubTransferOwnershipPage";
@@ -202,6 +203,11 @@ function App() {
               <Route
                 path="/clubs/:clubId/interclub-recruit/:scheduleId"
                 element={<InterclubRecruitPage />}
+              />
+              {/* 통합 모집 페이지 (클럽/공개 공용) */}
+              <Route
+                path="/schedules/:scheduleId/recruit"
+                element={<ScheduleRecruitPage />}
               />
               {/* Club Home (로그인/클럽 멤버 전제) */}
               <Route

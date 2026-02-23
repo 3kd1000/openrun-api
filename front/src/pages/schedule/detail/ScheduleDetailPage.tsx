@@ -615,8 +615,8 @@ export default function ScheduleDetailPage() {
         </Button>
       </div>
 
-      {/* 관리자 토글 버튼 */}
-      {canDelete && (
+      {/* 관리자 토글 버튼 (클럽일정만) */}
+      {canDelete && schedule.clubId !== null && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           <Button
             variant="outline"
@@ -714,6 +714,22 @@ export default function ScheduleDetailPage() {
       {/* 일정 정보 카드 */}
       <Card className="mb-3 gap-0 py-0">
         <CardContent className="space-y-3 p-4">
+          {/* 일정 구분 배지 */}
+          <div className="flex items-center gap-2">
+            {schedule.clubId !== null ? (
+              <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                클럽일정
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+                공개일정
+              </Badge>
+            )}
+            {schedule.clubName && (
+              <span className="text-sm text-muted-foreground">{schedule.clubName}</span>
+            )}
+          </div>
+
           {/* 코트명 + 코트수 */}
           <div>
             <span className="text-xs text-muted-foreground">코트명</span>
