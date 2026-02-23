@@ -1,6 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
-import "./AwardWinnerPage.css";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Club {
   id: number;
@@ -244,63 +266,82 @@ function AwardWinnerPage() {
   };
 
   return (
-    <div className="award-winner-page">
-      <h1>어워드 수상자 관리</h1>
-      <p className="page-description">
-        과거 기간의 어워드 수상자를 수동으로 입력합니다.
-        서비스 개설 전의 수상 기록을 보정하는 용도로 사용합니다.
-      </p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">어워드 수상자 관리</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          과거 기간의 어워드 수상자를 수동으로 입력합니다.
+          서비스 개설 전의 수상 기록을 보정하는 용도로 사용합니다.
+        </p>
+      </div>
 
       {message && (
-        <div className={`message message--${message.type}`}>
-          {message.text}
-        </div>
+        message.type === "success" ? (
+          <div className="bg-green-50 text-green-800 border border-green-200 rounded-md px-4 py-3 text-sm">
+            {message.text}
+          </div>
+        ) : (
+          <div className="bg-red-50 text-red-800 border border-red-200 rounded-md px-4 py-3 text-sm">
+            {message.text}
+          </div>
+        )
       )}
 
       {/* 클럽 선택 */}
-      <div className="form-section">
-        <label>클럽 선택</label>
-        <select
-          value={selectedClubId || ""}
-          onChange={(e) => setSelectedClubId(e.target.value ? parseInt(e.target.value) : null)}
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-foreground">클럽 선택</label>
+        <Select
+          value={selectedClubId?.toString() ?? ""}
+          onValueChange={(val) => setSelectedClubId(val ? parseInt(val) : null)}
           disabled={clubsLoading}
         >
-          <option value="">클럽을 선택하세요</option>
-          {clubs?.map((club) => (
-            <option key={club.id} value={club.id}>
-              {club.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full sm:w-auto sm:min-w-[300px]">
+            <SelectValue placeholder="클럽을 선택하세요" />
+          </SelectTrigger>
+          <SelectContent>
+            {clubs?.map((club) => (
+              <SelectItem key={club.id} value={club.id.toString()}>
+                {club.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {selectedClubId && (
         <>
           {/* 기간 선택 */}
-          <div className="form-section">
-            <label>기간 선택</label>
-            <select
-              value={selectedPeriodIndex}
-              onChange={(e) => setSelectedPeriodIndex(parseInt(e.target.value))}
-            >
-              {periodOptions?.map((option, index) => (
-                <option key={index} value={index}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {selectedClub && (
-              <span className="period-info">
-                정산 주기: {selectedClub.awardPeriod === "YEARLY" ? "연간" : "반기"}
-              </span>
-            )}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-foreground">기간 선택</label>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Select
+                value={selectedPeriodIndex.toString()}
+                onValueChange={(val) => setSelectedPeriodIndex(parseInt(val))}
+              >
+                <SelectTrigger className="w-full sm:w-auto sm:min-w-[300px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {periodOptions?.map((option, index) => (
+                    <SelectItem key={index} value={index.toString()}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedClub && (
+                <span className="text-muted-foreground text-xs">
+                  정산 주기: {selectedClub.awardPeriod === "YEARLY" ? "연간" : "반기"}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* 수상자 입력 폼 */}
           {winnersLoading || membersLoading ? (
-            <div className="loading">로딩 중...</div>
+            <div className="py-10 text-center text-muted-foreground">로딩 중...</div>
           ) : (
-            <div className="award-forms">
+            <div className="flex flex-col gap-4">
               {(["ATTENDANCE", "POINTS", "BOOKING"] as AwardType[])
                 .filter((awardType) => {
                   if (!selectedClub) return true;
@@ -311,83 +352,96 @@ function AwardWinnerPage() {
                   }
                 })
                 .map((awardType) => (
-                <div key={awardType} className="award-form">
-                  <h3>{AWARD_TYPE_LABELS[awardType]}</h3>
-                  <div className="award-form__row">
-                    <select
-                      value={selectedWinners[awardType] || ""}
-                      onChange={(e) =>
-                        setSelectedWinners({
-                          ...selectedWinners,
-                          [awardType]: e.target.value ? parseInt(e.target.value) : null,
-                        })
-                      }
-                    >
-                      <option value="">수상자 선택</option>
-                      {members?.map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.name}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      placeholder="기록값 (선택)"
-                      value={selectedValues[awardType]}
-                      onChange={(e) =>
-                        setSelectedValues({
-                          ...selectedValues,
-                          [awardType]: e.target.value,
-                        })
-                      }
-                    />
-                    <button
-                      onClick={() => handleSave(awardType)}
-                      disabled={saving || !selectedWinners[awardType]}
-                    >
-                      저장
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  <Card key={awardType}>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">{AWARD_TYPE_LABELS[awardType]}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-3 items-center">
+                        <Select
+                          value={selectedWinners[awardType]?.toString() ?? ""}
+                          onValueChange={(val) =>
+                            setSelectedWinners({
+                              ...selectedWinners,
+                              [awardType]: val ? parseInt(val) : null,
+                            })
+                          }
+                        >
+                          <SelectTrigger className="flex-1 min-w-[180px]">
+                            <SelectValue placeholder="수상자 선택" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {members?.map((member) => (
+                              <SelectItem key={member.id} value={member.id.toString()}>
+                                {member.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          placeholder="기록값 (선택)"
+                          value={selectedValues[awardType]}
+                          onChange={(e) =>
+                            setSelectedValues({
+                              ...selectedValues,
+                              [awardType]: e.target.value,
+                            })
+                          }
+                          className="w-28"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => handleSave(awardType)}
+                          disabled={saving || !selectedWinners[awardType]}
+                        >
+                          저장
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
           )}
 
           {/* 현재 기간 수상자 목록 */}
           {winners?.length > 0 && (
-            <div className="winners-list">
-              <h3>현재 기간 수상자</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>어워드</th>
-                    <th>수상자</th>
-                    <th>기록</th>
-                    <th>입력 방식</th>
-                    <th>등록일</th>
-                    <th>액션</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {winners?.map((winner) => (
-                    <tr key={winner.id}>
-                      <td>{AWARD_TYPE_LABELS[winner.awardType]}</td>
-                      <td>{winner.userName}</td>
-                      <td>{winner.value ?? "-"}</td>
-                      <td>{winner.isManual ? "수동" : "자동"}</td>
-                      <td>{new Date(winner.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        <button
-                          className="delete-btn"
-                          onClick={() => handleDelete(winner)}
-                        >
-                          삭제
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">현재 기간 수상자</h3>
+              <div className="overflow-x-auto rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>어워드</TableHead>
+                      <TableHead>수상자</TableHead>
+                      <TableHead>기록</TableHead>
+                      <TableHead>입력 방식</TableHead>
+                      <TableHead>등록일</TableHead>
+                      <TableHead>액션</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {winners?.map((winner) => (
+                      <TableRow key={winner.id}>
+                        <TableCell>{AWARD_TYPE_LABELS[winner.awardType]}</TableCell>
+                        <TableCell>{winner.userName}</TableCell>
+                        <TableCell>{winner.value ?? "-"}</TableCell>
+                        <TableCell>{winner.isManual ? "수동" : "자동"}</TableCell>
+                        <TableCell>{new Date(winner.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(winner)}
+                          >
+                            삭제
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </>

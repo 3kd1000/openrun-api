@@ -32,6 +32,7 @@ build/
 lib/
 libs/
 !front/src/lib/
+!admin/src/lib/
 
 # IDEs
 .idea/

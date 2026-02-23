@@ -1,11 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import adminMessageService, {
+  type ClubOwnerInfo,
   type Conversation,
   type Message,
   type UserSearchResult,
 } from "../services/adminMessageService";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { ArrowLeft } from "lucide-react";
 
 const formatTime = (dateStr: string) => {
   try {
@@ -14,6 +21,9 @@ const formatTime = (dateStr: string) => {
     return dateStr;
   }
 };
+
+// 새 DM 검색 모드
+type SearchMode = "user" | "club";
 
 function DmPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -24,12 +34,21 @@ function DmPage() {
   const [sending, setSending] = useState(false);
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [showThread, setShowThread] = useState(false); // 모바일 패널 토글
 
   // 새 DM 시작
   const [newDmMode, setNewDmMode] = useState(false);
+  const [searchMode, setSearchMode] = useState<SearchMode>("user");
+
+  // 이름 검색 모드
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+
+  // 클럽장 찾기 모드
+  const [clubOwners, setClubOwners] = useState<ClubOwnerInfo[]>([]);
+  const [clubOwnerKeyword, setClubOwnerKeyword] = useState("");
+  const [loadingClubOwners, setLoadingClubOwners] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -58,10 +77,13 @@ function DmPage() {
     setSelectedUserId(partnerId);
     setSelectedUserName(partnerName);
     setNewDmMode(false);
+    setShowThread(true); // 모바일에서 스레드 패널로 전환
     setLoadingMsgs(true);
     try {
       const data = await adminMessageService.getConversationWith(partnerId);
       setMessages(data);
+      // 읽음 처리 후 대화 목록의 unreadCount 갱신
+      void loadConversations();
     } catch (e) {
       console.error("메시지 로드 실패:", e);
     } finally {
@@ -74,7 +96,7 @@ function DmPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 유저 검색
+  // 이름 검색 (디바운스)
   useEffect(() => {
     if (!searchKeyword.trim() || searchKeyword.trim().length < 1) {
       setSearchResults([]);
@@ -94,6 +116,33 @@ function DmPage() {
     return () => clearTimeout(timer);
   }, [searchKeyword]);
 
+  // 클럽장 목록 - 클럽장 찾기 탭으로 전환 시 한 번 로드
+  const loadClubOwners = async () => {
+    if (clubOwners.length > 0) return; // 이미 로드됨
+    setLoadingClubOwners(true);
+    try {
+      const data = await adminMessageService.getClubOwners();
+      setClubOwners(data);
+    } catch (e) {
+      console.error("클럽 오너 목록 로드 실패:", e);
+    } finally {
+      setLoadingClubOwners(false);
+    }
+  };
+
+  // 클럽장 목록 로컬 필터링
+  const filteredClubOwners = useMemo(() => {
+    if (!clubOwnerKeyword.trim()) return clubOwners;
+    const kw = clubOwnerKeyword.trim().toLowerCase();
+    return clubOwners.filter(
+      (c) =>
+        c.clubName.toLowerCase().includes(kw) ||
+        c.ownerName.toLowerCase().includes(kw) ||
+        c.regionDepth1.toLowerCase().includes(kw) ||
+        c.regionDepth2.toLowerCase().includes(kw)
+    );
+  }, [clubOwners, clubOwnerKeyword]);
+
   // 메시지 발송
   const handleSend = async () => {
     if (!content.trim() || !selectedUserId || sending) return;
@@ -102,7 +151,6 @@ function DmPage() {
       const msg = await adminMessageService.sendMessage(selectedUserId, content.trim());
       setMessages((prev) => [...prev, msg]);
       setContent("");
-      // 대화 목록도 갱신
       void loadConversations();
     } catch (e) {
       console.error("메시지 발송 실패:", e);
@@ -119,205 +167,315 @@ function DmPage() {
     }
   };
 
-  // 검색 결과에서 대화 시작
+  // 이름 검색 결과에서 대화 시작
   const startDmWith = (user: UserSearchResult) => {
     setSearchKeyword("");
     setSearchResults([]);
     void selectConversation(user.id, user.name);
   };
 
+  // 클럽장 선택에서 대화 시작
+  const startDmWithOwner = (owner: ClubOwnerInfo) => {
+    if (!owner.ownerUserId) return;
+    setClubOwnerKeyword("");
+    void selectConversation(owner.ownerUserId, owner.ownerName);
+  };
+
+  // 새 DM 패널 열기
+  const openNewDmPanel = () => {
+    setNewDmMode(true);
+    setSelectedUserId(null);
+    setMessages([]);
+    setSearchKeyword("");
+    setSearchResults([]);
+    setClubOwnerKeyword("");
+    setSearchMode("user");
+    setShowThread(true);
+  };
+
+  // 검색 모드 전환
+  const switchSearchMode = (mode: SearchMode) => {
+    setSearchMode(mode);
+    if (mode === "club") {
+      void loadClubOwners();
+    }
+  };
+
   return (
-    <div className="dm-page">
-      <div className="dm-page__header">
-        <h2>DM 관리</h2>
-        <button
-          className="dm-new-btn"
-          onClick={() => {
-            setNewDmMode(true);
-            setSelectedUserId(null);
-            setMessages([]);
-            setSearchKeyword("");
-            setSearchResults([]);
-          }}
-        >
+    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] gap-4">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">DM 관리</h2>
+        <Button size="sm" onClick={openNewDmPanel}>
           + 새 DM 시작
-        </button>
+        </Button>
       </div>
 
-      <div className="dm-page__body">
-        {/* 좌측: 대화 목록 */}
-        <div className="dm-conv-list">
-          {loadingConvs ? (
-            <div className="dm-loading">로딩 중...</div>
-          ) : conversations.length === 0 ? (
-            <div className="dm-empty">대화가 없습니다</div>
-          ) : (
-            conversations.map((conv) => (
-              <button
-                key={conv.partnerId}
-                className={`dm-conv-item ${selectedUserId === conv.partnerId && !newDmMode ? "active" : ""}`}
-                onClick={() => void selectConversation(conv.partnerId, conv.partnerName)}
-              >
-                <div className="dm-conv-item__avatar">
-                  {conv.partnerName.charAt(0)}
-                </div>
-                <div className="dm-conv-item__info">
-                  <div className="dm-conv-item__name">
-                    {conv.partnerName}
-                    {conv.unreadCount > 0 && (
-                      <span className="dm-conv-item__badge">{conv.unreadCount}</span>
-                    )}
-                  </div>
-                  <div className="dm-conv-item__last">{conv.lastMessage}</div>
-                  <div className="dm-conv-item__time">{formatTime(conv.lastMessageAt)}</div>
-                </div>
-              </button>
-            ))
+      {/* 바디 */}
+      <div className="flex flex-1 min-h-0 border border-border rounded-xl overflow-hidden bg-card">
+        {/* 좌측: 대화 목록 (모바일에서 showThread가 true이면 숨김) */}
+        <div
+          className={cn(
+            "w-64 shrink-0 border-r border-border flex flex-col",
+            showThread ? "hidden md:flex" : "flex"
           )}
+        >
+          <ScrollArea className="flex-1">
+            {loadingConvs ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">로딩 중...</div>
+            ) : conversations.length === 0 ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">대화가 없습니다</div>
+            ) : (
+              conversations.map((conv) => (
+                <button
+                  key={conv.partnerId}
+                  className={cn(
+                    "flex items-center gap-2.5 w-full px-3.5 py-3 text-left border-b border-border/50 transition-colors hover:bg-muted",
+                    selectedUserId === conv.partnerId && !newDmMode && "bg-muted"
+                  )}
+                  onClick={() => void selectConversation(conv.partnerId, conv.partnerName)}
+                >
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center shrink-0">
+                    {conv.partnerName.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-foreground truncate">{conv.partnerName}</span>
+                      {conv.unreadCount > 0 && (
+                        <span className="bg-primary text-primary-foreground text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full shrink-0">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</div>
+                    <div className="text-[0.65rem] text-muted-foreground/70 mt-0.5">{formatTime(conv.lastMessageAt)}</div>
+                  </div>
+                </button>
+              ))
+            )}
+          </ScrollArea>
         </div>
 
-        {/* 우측: 메시지 스레드 또는 새 DM */}
-        <div className="dm-thread">
+        {/* 우측: 메시지 스레드 또는 새 DM (모바일에서 showThread가 false이면 숨김) */}
+        <div
+          className={cn(
+            "flex-1 flex flex-col min-w-0",
+            showThread ? "flex" : "hidden md:flex"
+          )}
+        >
           {newDmMode ? (
-            /* 새 DM 시작 - 사용자 검색 */
-            <div className="dm-thread__new">
-              <div className="dm-thread__new-title">새 DM 시작</div>
-              <div className="dm-search-wrapper">
-                <input
-                  className="dm-search-input"
-                  type="text"
-                  placeholder="이름으로 검색..."
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  autoFocus
-                />
-                {searching && <div className="dm-search-hint">검색 중...</div>}
-                {searchResults.length > 0 && (
-                  <div className="dm-search-results">
-                    {searchResults.map((user) => (
-                      <button
-                        key={user.id}
-                        className="dm-search-result-item"
-                        onClick={() => startDmWith(user)}
-                      >
-                        <span className="dm-search-result-name">{user.name}</span>
-                        {(user.regionDepth1 || user.regionDepth2) && (
-                          <span className="dm-search-result-region">
-                            {[user.regionDepth1, user.regionDepth2].filter(Boolean).join(" ")}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {!searching && searchKeyword.trim() && searchResults.length === 0 && (
-                  <div className="dm-search-hint">검색 결과 없음</div>
-                )}
+            <div className="flex flex-col h-full">
+              {/* 헤더 (모바일 back 버튼 포함) */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden h-7 w-7"
+                  onClick={() => setShowThread(false)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <span className="font-bold text-[0.9375rem]">새 DM 시작</span>
               </div>
+
+              {/* 검색 모드 탭 */}
+              <div className="flex gap-1 px-4 pt-4">
+                <button
+                  className={cn(
+                    "flex-1 py-1.5 text-sm font-medium rounded-md transition-colors",
+                    searchMode === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => switchSearchMode("user")}
+                >
+                  이름으로 찾기
+                </button>
+                <button
+                  className={cn(
+                    "flex-1 py-1.5 text-sm font-medium rounded-md transition-colors",
+                    searchMode === "club"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => switchSearchMode("club")}
+                >
+                  클럽장 찾기
+                </button>
+              </div>
+
+              {/* 이름으로 찾기 */}
+              {searchMode === "user" && (
+                <div className="p-4 flex-1 overflow-y-auto">
+                  <Input
+                    type="text"
+                    placeholder="이름으로 검색..."
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    autoFocus
+                  />
+                  {searching && (
+                    <div className="mt-2 text-xs text-muted-foreground">검색 중...</div>
+                  )}
+                  {searchResults.length > 0 && (
+                    <div className="mt-2 border border-border rounded-lg overflow-hidden">
+                      {searchResults.map((user) => (
+                        <button
+                          key={user.id}
+                          className="flex items-center justify-between gap-2 w-full px-3.5 py-2.5 border-b border-border/50 last:border-b-0 bg-card hover:bg-muted text-left transition-colors"
+                          onClick={() => startDmWith(user)}
+                        >
+                          <span className="text-sm font-semibold text-foreground">{user.name}</span>
+                          {(user.regionDepth1 || user.regionDepth2) && (
+                            <span className="text-xs text-muted-foreground">
+                              {[user.regionDepth1, user.regionDepth2].filter(Boolean).join(" ")}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!searching && searchKeyword.trim() && searchResults.length === 0 && (
+                    <div className="mt-2 text-xs text-muted-foreground">검색 결과 없음</div>
+                  )}
+                </div>
+              )}
+
+              {/* 클럽장 찾기 */}
+              {searchMode === "club" && (
+                <div className="p-4 flex flex-col gap-3 flex-1 min-h-0">
+                  <Input
+                    type="text"
+                    placeholder="클럽명, 클럽장 이름, 지역으로 검색..."
+                    value={clubOwnerKeyword}
+                    onChange={(e) => setClubOwnerKeyword(e.target.value)}
+                    autoFocus
+                  />
+                  <ScrollArea className="flex-1">
+                    {loadingClubOwners ? (
+                      <div className="text-center text-sm text-muted-foreground py-8">로딩 중...</div>
+                    ) : filteredClubOwners.length === 0 ? (
+                      <div className="text-center text-sm text-muted-foreground py-8">
+                        {clubOwnerKeyword ? "검색 결과 없음" : "클럽이 없습니다"}
+                      </div>
+                    ) : (
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        {filteredClubOwners.map((c) => (
+                          <button
+                            key={c.clubId}
+                            className={cn(
+                              "flex items-center justify-between w-full px-3.5 py-3 border-b border-border/50 last:border-b-0 text-left transition-colors",
+                              c.ownerUserId
+                                ? "bg-card hover:bg-muted"
+                                : "bg-muted/30 cursor-not-allowed opacity-60"
+                            )}
+                            onClick={() => startDmWithOwner(c)}
+                            disabled={!c.ownerUserId}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-semibold text-foreground truncate">{c.clubName}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                클럽장: {c.ownerName}
+                                {(c.regionDepth1 || c.regionDepth2) && (
+                                  <span className="ml-2">
+                                    {[c.regionDepth1, c.regionDepth2].filter(Boolean).join(" ")}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
+              )}
             </div>
           ) : selectedUserId ? (
-            /* 선택된 대화 스레드 */
             <>
-              <div className="dm-thread__header">
-                {selectedUserName}
+              {/* 스레드 헤더 (모바일 back 버튼 포함) */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden h-7 w-7"
+                  onClick={() => setShowThread(false)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <span className="font-bold text-[0.9375rem]">{selectedUserName}</span>
               </div>
-              <div className="dm-thread__messages">
+
+              {/* 메시지 목록 */}
+              <ScrollArea className="flex-1 px-4 py-4">
                 {loadingMsgs ? (
-                  <div className="dm-loading">메시지 로딩 중...</div>
+                  <div className="text-center text-sm text-muted-foreground py-8">메시지 로딩 중...</div>
                 ) : messages.length === 0 ? (
-                  <div className="dm-empty">아직 메시지가 없습니다. 첫 메시지를 보내보세요.</div>
+                  <div className="text-center text-sm text-muted-foreground py-8">
+                    아직 메시지가 없습니다. 첫 메시지를 보내보세요.
+                  </div>
                 ) : (
-                  messages.map((msg) => {
-                    // 운영자가 보낸 메시지 = receiverId가 상대방
-                    const isSentByOperator = msg.receiverId === selectedUserId;
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`dm-msg ${isSentByOperator ? "dm-msg--mine" : "dm-msg--other"}`}
-                      >
-                        <div className="dm-msg__bubble">{msg.content}</div>
-                        <div className="dm-msg__time">{formatTime(msg.createdAt)}</div>
-                      </div>
-                    );
-                  })
+                  <div className="flex flex-col gap-2">
+                    {messages.map((msg) => {
+                      const isSentByOperator = msg.receiverId === selectedUserId;
+                      return (
+                        <div
+                          key={msg.id}
+                          className={cn(
+                            "flex flex-col max-w-[70%]",
+                            isSentByOperator ? "self-end items-end" : "self-start items-start"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "px-3 py-2 rounded-2xl text-sm leading-snug whitespace-pre-wrap break-words",
+                              isSentByOperator
+                                ? "bg-primary text-primary-foreground rounded-br-sm"
+                                : "bg-muted text-foreground rounded-bl-sm"
+                            )}
+                          >
+                            {msg.content}
+                          </div>
+                          <div className="text-[0.65rem] text-muted-foreground mt-1">
+                            {formatTime(msg.createdAt)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
                 )}
-                <div ref={messagesEndRef} />
-              </div>
-              <div className="dm-thread__input">
-                <textarea
-                  className="dm-textarea"
+              </ScrollArea>
+
+              {/* 입력창 */}
+              <div className="flex gap-2 items-end p-3 border-t border-border">
+                <Textarea
                   placeholder={`${selectedUserName}에게 메시지 보내기`}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   onKeyDown={handleKeyDown}
                   rows={2}
                   disabled={sending}
+                  className="flex-1 resize-none text-sm"
                 />
-                <button
-                  className="dm-send-btn"
+                <Button
                   onClick={handleSend}
                   disabled={sending || !content.trim()}
+                  className="shrink-0"
                 >
                   {sending ? "발송 중..." : "발송"}
-                </button>
+                </Button>
               </div>
             </>
           ) : (
-            <div className="dm-thread__placeholder">
-              좌측에서 대화를 선택하거나<br />새 DM을 시작하세요.
+            <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground text-center leading-relaxed">
+              좌측에서 대화를 선택하거나
+              <br />
+              새 DM을 시작하세요.
             </div>
           )}
         </div>
       </div>
-
-      <style>{`
-        .dm-page { display: flex; flex-direction: column; height: 100%; padding: 24px; gap: 16px; }
-        .dm-page__header { display: flex; align-items: center; justify-content: space-between; }
-        .dm-page__header h2 { font-size: 1.25rem; font-weight: 700; margin: 0; }
-        .dm-new-btn { padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.875rem; }
-        .dm-new-btn:hover { background: #43A047; }
-        .dm-page__body { display: flex; gap: 16px; flex: 1; min-height: 0; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: white; }
-        .dm-conv-list { width: 260px; border-right: 1px solid #e5e7eb; overflow-y: auto; flex-shrink: 0; }
-        .dm-loading, .dm-empty { padding: 24px; color: #6b7280; font-size: 0.875rem; text-align: center; }
-        .dm-conv-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border: none; background: transparent; cursor: pointer; text-align: left; border-bottom: 1px solid #f3f4f6; transition: background 0.15s; }
-        .dm-conv-item:hover { background: #f9fafb; }
-        .dm-conv-item.active { background: #f0fdf4; }
-        .dm-conv-item__avatar { width: 36px; height: 36px; border-radius: 50%; background: #d1fae5; color: #065f46; font-weight: 700; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .dm-conv-item__info { flex: 1; min-width: 0; }
-        .dm-conv-item__name { font-size: 0.875rem; font-weight: 600; color: #111827; display: flex; align-items: center; gap: 6px; }
-        .dm-conv-item__badge { background: #4CAF50; color: white; font-size: 0.7rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
-        .dm-conv-item__last { font-size: 0.75rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
-        .dm-conv-item__time { font-size: 0.7rem; color: #9ca3af; margin-top: 2px; }
-        .dm-thread { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .dm-thread__header { padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-weight: 700; font-size: 0.9375rem; }
-        .dm-thread__messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
-        .dm-thread__input { padding: 12px 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 8px; align-items: flex-end; }
-        .dm-textarea { flex: 1; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 0.875rem; resize: none; font-family: inherit; outline: none; }
-        .dm-textarea:focus { border-color: #4CAF50; }
-        .dm-send-btn { padding: 8px 18px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.875rem; white-space: nowrap; }
-        .dm-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .dm-send-btn:hover:not(:disabled) { background: #43A047; }
-        .dm-msg { display: flex; flex-direction: column; max-width: 70%; }
-        .dm-msg--mine { align-self: flex-end; align-items: flex-end; }
-        .dm-msg--other { align-self: flex-start; align-items: flex-start; }
-        .dm-msg__bubble { padding: 8px 12px; border-radius: 16px; font-size: 0.875rem; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
-        .dm-msg--mine .dm-msg__bubble { background: #4CAF50; color: white; border-bottom-right-radius: 4px; }
-        .dm-msg--other .dm-msg__bubble { background: #f3f4f6; color: #111827; border-bottom-left-radius: 4px; }
-        .dm-msg__time { font-size: 0.7rem; color: #9ca3af; margin-top: 2px; }
-        .dm-thread__placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.875rem; text-align: center; line-height: 1.6; }
-        .dm-thread__new { padding: 24px; }
-        .dm-thread__new-title { font-weight: 700; font-size: 0.9375rem; margin-bottom: 16px; }
-        .dm-search-wrapper { position: relative; }
-        .dm-search-input { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem; outline: none; box-sizing: border-box; }
-        .dm-search-input:focus { border-color: #4CAF50; }
-        .dm-search-hint { padding: 8px 4px; font-size: 0.8125rem; color: #9ca3af; }
-        .dm-search-results { border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 8px; overflow: hidden; }
-        .dm-search-result-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 10px 14px; border: none; background: white; cursor: pointer; text-align: left; border-bottom: 1px solid #f3f4f6; }
-        .dm-search-result-item:last-child { border-bottom: none; }
-        .dm-search-result-item:hover { background: #f9fafb; }
-        .dm-search-result-name { font-size: 0.875rem; font-weight: 600; color: #111827; }
-        .dm-search-result-region { font-size: 0.75rem; color: #6b7280; }
-      `}</style>
     </div>
   );
 }

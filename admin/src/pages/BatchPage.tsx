@@ -7,7 +7,28 @@ import {
   type PageResponse,
 } from "../services/batchHistoryService";
 import { formatShortDateTime } from "../utils/dateUtils";
-import "./BatchPage.css";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // 배치 작업 정의
 const BATCH_JOBS = [
@@ -37,7 +58,7 @@ const BATCH_JOBS = [
     displayName: "이미지 정리",
     description: "K8s containerd 이미지 정리 (openrun 이미지 최근 3개만 유지)",
     schedule: "매일 새벽 3시 (KST)",
-    canExecute: false,  // 노드 레벨 작업이라 API에서 실행 불가
+    canExecute: false, // 노드 레벨 작업이라 API에서 실행 불가
   },
 ];
 
@@ -70,9 +91,6 @@ function BatchPage() {
   const handleExecute = async (jobName: string) => {
     if (executing) return;
 
-    const confirmed = window.confirm(`"${getJobDisplayName(jobName)}" 배치를 즉시 실행하시겠습니까?`);
-    if (!confirmed) return;
-
     try {
       setExecuting(jobName);
       const result = await executeBatchJob(jobName);
@@ -94,13 +112,25 @@ function BatchPage() {
   const getStatusBadge = (status: BatchJobStatus) => {
     switch (status) {
       case "SUCCESS":
-        return <span className="batch-status batch-status--success">성공</span>;
+        return (
+          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0">
+            성공
+          </Badge>
+        );
       case "FAILED":
-        return <span className="batch-status batch-status--failed">실패</span>;
+        return (
+          <Badge variant="destructive">
+            실패
+          </Badge>
+        );
       case "RUNNING":
-        return <span className="batch-status batch-status--running">실행중</span>;
+        return (
+          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0">
+            실행중
+          </Badge>
+        );
       default:
-        return <span className="batch-status">{status}</span>;
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -125,125 +155,180 @@ function BatchPage() {
   };
 
   return (
-    <div className="batch-page">
-      <h2>배치 작업 관리</h2>
-      <p className="batch-page__description">
-        정기적으로 실행되는 배치 작업을 관리하고 수동 실행할 수 있습니다.
-      </p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">배치 작업 관리</h2>
+        <p className="text-muted-foreground mt-1">
+          정기적으로 실행되는 배치 작업을 관리하고 수동 실행할 수 있습니다.
+        </p>
+      </div>
 
       {/* 배치 작업 목록 */}
-      <section className="batch-jobs-section">
-        <h3>배치 작업 목록</h3>
-        <div className="batch-jobs-grid">
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground">배치 작업 목록</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {BATCH_JOBS.map((job) => (
-            <div key={job.name} className="batch-job-card">
-              <div className="batch-job-card__header">
-                <h4>{job.displayName}</h4>
-                {job.canExecute ? (
-                  <button
-                    className="batch-execute-btn"
-                    onClick={() => handleExecute(job.name)}
-                    disabled={executing !== null}
-                  >
-                    {executing === job.name ? "실행중..." : "즉시 실행"}
-                  </button>
-                ) : (
-                  <span className="batch-external-badge">외부 실행</span>
-                )}
-              </div>
-              <p className="batch-job-card__description">{job.description}</p>
-              <div className="batch-job-card__schedule">
-                <span className="schedule-label">예약:</span> {job.schedule}
-              </div>
-            </div>
+            <Card key={job.name}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-base font-semibold">{job.displayName}</CardTitle>
+                  {job.canExecute ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          disabled={executing !== null}
+                          className="shrink-0"
+                        >
+                          {executing === job.name ? "실행중..." : "즉시 실행"}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>배치 즉시 실행</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            "{job.displayName}" 배치를 즉시 실행하시겠습니까?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>취소</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleExecute(job.name)}>
+                            실행
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
+                      외부 실행
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-sm text-muted-foreground">{job.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">예약:</span> {job.schedule}
+                </p>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </section>
 
       {/* 실행 이력 */}
-      <section className="batch-history-section">
-        <div className="batch-history-header">
-          <h3>실행 이력</h3>
-          <button className="batch-refresh-btn" onClick={() => loadHistory(currentPage)} disabled={loading}>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-foreground">실행 이력</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadHistory(currentPage)}
+            disabled={loading}
+          >
             새로고침
-          </button>
+          </Button>
         </div>
 
-        {loading && <div className="batch-loading">로딩 중...</div>}
+        {loading && (
+          <div className="py-8 text-center text-muted-foreground">로딩 중...</div>
+        )}
 
-        {error && <div className="batch-error">{error}</div>}
+        {error && (
+          <div className="py-8 text-center text-destructive">{error}</div>
+        )}
 
         {!loading && history && (
-          <>
-            <table className="batch-history-table">
-              <thead>
-                <tr>
-                  <th>작업명</th>
-                  <th>상태</th>
-                  <th>시작 시각</th>
-                  <th>소요 시간</th>
-                  <th>결과</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.content.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="batch-empty">
-                      실행 이력이 없습니다.
-                    </td>
-                  </tr>
-                ) : (
-                  history.content.map((item) => {
-                    const summary = parseResultSummary(item.resultSummary);
-                    return (
-                      <tr key={item.id} className={item.status === "FAILED" ? "row-failed" : ""}>
-                        <td>{getJobDisplayName(item.jobName)}</td>
-                        <td>{getStatusBadge(item.status)}</td>
-                        <td>{formatShortDateTime(item.startedAt)}</td>
-                        <td>{formatDuration(item.durationMs)}</td>
-                        <td className="result-cell">
-                          {item.errorMessage ? (
-                            <span className="error-text">{item.errorMessage}</span>
-                          ) : summary ? (
-                            <div className="summary-items">
-                              {Object.entries(summary).map(([key, value]) => (
-                                <span key={key} className="summary-item">
-                                  {key}: {value}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+          <div className="space-y-4">
+            <div className="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>작업명</TableHead>
+                    <TableHead>상태</TableHead>
+                    <TableHead>시작 시각</TableHead>
+                    <TableHead>소요 시간</TableHead>
+                    <TableHead>결과</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {history.content.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
+                        실행 이력이 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    history.content.map((item) => {
+                      const summary = parseResultSummary(item.resultSummary);
+                      return (
+                        <TableRow
+                          key={item.id}
+                          className={item.status === "FAILED" ? "bg-red-50" : ""}
+                        >
+                          <TableCell className="font-medium">
+                            {getJobDisplayName(item.jobName)}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(item.status)}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {formatShortDateTime(item.startedAt)}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {formatDuration(item.durationMs)}
+                          </TableCell>
+                          <TableCell className="max-w-[300px]">
+                            {item.errorMessage ? (
+                              <span className="text-xs text-red-800 break-all">
+                                {item.errorMessage}
+                              </span>
+                            ) : summary ? (
+                              <div className="flex flex-wrap gap-1">
+                                {Object.entries(summary).map(([key, value]) => (
+                                  <span
+                                    key={key}
+                                    className="bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded"
+                                  >
+                                    {key}: {value}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
             {/* 페이지네이션 */}
             {history.totalPages > 1 && (
-              <div className="batch-pagination">
-                <button
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => loadHistory(currentPage - 1)}
                   disabled={currentPage === 0}
                 >
                   이전
-                </button>
-                <span className="page-info">
+                </Button>
+                <span className="text-sm text-muted-foreground">
                   {currentPage + 1} / {history.totalPages}
                 </span>
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => loadHistory(currentPage + 1)}
                   disabled={currentPage >= history.totalPages - 1}
                 >
                   다음
-                </button>
+                </Button>
               </div>
             )}
-          </>
+          </div>
         )}
       </section>
     </div>

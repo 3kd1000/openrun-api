@@ -6,7 +6,9 @@ import {
 } from "../services/inquiryService";
 import type { InquiryResponse, CommentResponse } from "../services/inquiryService";
 import { formatShortDateTime } from "../utils/dateUtils";
-import "./InquiryManagePage.css";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 function InquiryManagePage() {
   const [inquiries, setInquiries] = useState<InquiryResponse[]>([]);
@@ -85,118 +87,124 @@ function InquiryManagePage() {
   };
 
   return (
-    <div className="inquiry-manage-page">
-      <h2>문의 관리</h2>
-      <p className="inquiry-manage-page__description">
-        사용자가 접수한 서비스 문의를 확인하고 답변합니다.
-      </p>
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-semibold">문의 관리</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          사용자가 접수한 서비스 문의를 확인하고 답변합니다.
+        </p>
+      </div>
 
-      {error && <div className="inquiry-manage-page__error">{error}</div>}
+      {error && (
+        <div className="bg-red-50 text-red-800 border border-red-200 rounded-md px-4 py-3 text-sm">
+          {error}
+        </div>
+      )}
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-muted-foreground text-sm">Loading...</p>
       ) : inquiries.length === 0 ? (
-        <div className="inquiry-manage-page__empty">
-          <p>접수된 문의가 없습니다.</p>
+        <div className="text-center py-10 border rounded-lg bg-muted/30">
+          <p className="text-muted-foreground text-sm">접수된 문의가 없습니다.</p>
         </div>
       ) : (
         <>
-          <div className="inquiry-manage-page__info">
-            총 {inquiries.length}건
-          </div>
-          <div className="inquiry-manage-page__list">
+          <p className="text-muted-foreground text-xs">총 {inquiries.length}건</p>
+          <div className="flex flex-col gap-3">
             {inquiries.map((inquiry) => (
               <div
                 key={inquiry.id}
-                className={`inquiry-card ${
-                  expandedId === inquiry.id ? "is-expanded" : ""
-                }`}
+                className="border rounded-lg overflow-hidden bg-card transition-colors hover:border-primary"
               >
-                <div
-                  className="inquiry-card__header"
+                {/* 카드 헤더 (클릭 가능) */}
+                <button
+                  className="w-full p-4 flex justify-between items-start gap-4 text-left"
                   onClick={() => handleRowClick(inquiry)}
                 >
-                  <div className="inquiry-card__main">
-                    <div className="inquiry-card__author">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm mb-1">
                       {inquiry.author?.name || "알 수 없음"}
                     </div>
-                    <div className="inquiry-card__content">
+                    <div className="text-sm text-muted-foreground line-clamp-2">
                       {inquiry.content.length > 100
                         ? inquiry.content.substring(0, 100) + "..."
                         : inquiry.content}
                     </div>
                   </div>
-                  <div className="inquiry-card__meta">
-                    <span className="inquiry-card__date">
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-xs text-muted-foreground">
                       {formatShortDateTime(inquiry.createdAt)}
                     </span>
                     {inquiry.commentCount > 0 ? (
-                      <span className="inquiry-card__badge inquiry-card__badge--replied">
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                         답변 {inquiry.commentCount}
-                      </span>
+                      </Badge>
                     ) : (
-                      <span className="inquiry-card__badge inquiry-card__badge--pending">
-                        대기중
-                      </span>
+                      <Badge variant="secondary">대기중</Badge>
                     )}
                   </div>
-                </div>
+                </button>
 
                 {/* 확장 영역 */}
                 {expandedId === inquiry.id && (
-                  <div className="inquiry-card__detail">
+                  <div className="border-t bg-muted/30 p-4 space-y-4">
                     {/* 원본 문의 */}
-                    <div className="inquiry-card__original">
-                      <div className="inquiry-card__original-label">문의 내용</div>
-                      <div className="inquiry-card__original-content">
-                        {inquiry.content}
+                    <div>
+                      <p className="text-xs font-semibold text-primary mb-1">문의 내용</p>
+                      <div className="bg-background rounded-md p-4">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {inquiry.content}
+                        </p>
                       </div>
                     </div>
 
                     {/* 댓글 목록 */}
-                    <div className="inquiry-card__comments">
-                      <div className="inquiry-card__comments-label">답변 내역</div>
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">답변 내역</p>
                       {loadingComments ? (
-                        <p className="inquiry-card__comments-loading">로딩 중...</p>
+                        <p className="text-sm text-muted-foreground text-center py-3">로딩 중...</p>
                       ) : comments.length === 0 ? (
-                        <p className="inquiry-card__comments-empty">
+                        <p className="text-sm text-muted-foreground text-center py-3">
                           아직 답변이 없습니다.
                         </p>
                       ) : (
-                        comments.map((comment) => (
-                          <div key={comment.id} className="inquiry-comment">
-                            <div className="inquiry-comment__header">
-                              <span className="inquiry-comment__author">
-                                {comment.author?.name || "운영팀"}
-                              </span>
-                              <span className="inquiry-comment__date">
-                                {formatShortDateTime(comment.createdAt)}
-                              </span>
+                        <div className="space-y-2">
+                          {comments.map((comment) => (
+                            <div key={comment.id} className="bg-background rounded-md p-4">
+                              <div className="flex justify-between mb-1">
+                                <span className="text-xs font-semibold text-muted-foreground">
+                                  {comment.author?.name || "운영팀"}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatShortDateTime(comment.createdAt)}
+                                </span>
+                              </div>
+                              <p className="text-sm leading-snug whitespace-pre-wrap">
+                                {comment.content}
+                              </p>
                             </div>
-                            <div className="inquiry-comment__content">
-                              {comment.content}
-                            </div>
-                          </div>
-                        ))
+                          ))}
+                        </div>
                       )}
                     </div>
 
                     {/* 답변 입력 */}
-                    <div className="inquiry-card__reply">
-                      <textarea
-                        className="inquiry-card__reply-input"
+                    <div className="flex flex-col gap-2">
+                      <Textarea
+                        rows={3}
+                        className="w-full"
                         placeholder="답변을 입력하세요..."
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
-                        rows={3}
                       />
-                      <button
-                        className="btn-primary"
+                      <Button
+                        size="sm"
+                        className="self-end"
                         onClick={handleSubmitReply}
                         disabled={!replyContent.trim() || submitting}
                       >
                         {submitting ? "전송 중..." : "답변 전송"}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}

@@ -9,7 +9,32 @@ import type {
 } from "../services/auditLogService";
 import AuditLogDetailModal from "./AuditLogDetailModal";
 import { formatShortDateTime } from "../utils/dateUtils";
-import "./AuditLogPage.css";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
+
+function getActionBadge(actionType: string) {
+  if (actionType === "CREATE") return <Badge>CREATE</Badge>;
+  if (actionType === "DELETE") return <Badge variant="destructive">DELETE</Badge>;
+  return <Badge variant="secondary">UPDATE</Badge>;
+}
 
 function AuditLogPage() {
   const [logs, setLogs] = useState<AuditLogResponse[]>([]);
@@ -133,7 +158,6 @@ function AuditLogPage() {
     let start = Math.max(0, page - 2);
     const end = Math.min(totalPages - 1, start + maxVisible - 1);
 
-    // 끝에 도달하면 시작점 조정
     if (end - start < maxVisible - 1) {
       start = Math.max(0, end - maxVisible + 1);
     }
@@ -145,16 +169,19 @@ function AuditLogPage() {
   };
 
   return (
-    <div className="audit-log-page">
-      <h2>Audit Logs</h2>
-      <p className="audit-log-page__description">
-        Schedule, Club, ClubMember 변경 이력을 조회합니다.
-      </p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold">Audit Logs</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Schedule, Club, ClubMember 변경 이력을 조회합니다.
+        </p>
+      </div>
 
-      <div className="audit-log-page__filters">
+      {/* 필터 */}
+      <div className="flex flex-wrap gap-2 items-end">
         {/* 클럽 검색 (로컬 필터링) */}
-        <div className="club-search-wrapper">
-          <input
+        <div className="relative min-w-[200px]">
+          <Input
             ref={clubInputRef}
             type="text"
             placeholder="클럽명, 지역으로 검색..."
@@ -167,147 +194,182 @@ function AuditLogPage() {
               }
             }}
             onFocus={() => setShowSuggestions(true)}
-            className={selectedClub ? "club-selected" : ""}
+            className={cn(selectedClub && "pr-8 border-primary")}
           />
           {selectedClub && (
             <button
               type="button"
-              className="club-clear-btn"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               onClick={handleClearClub}
               title="선택 해제"
             >
-              ✕
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
           {showSuggestions && filteredClubs.length > 0 && (
-            <div ref={suggestionsRef} className="club-suggestions">
+            <div
+              ref={suggestionsRef}
+              className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-md overflow-hidden max-h-48 overflow-y-auto"
+            >
               {filteredClubs.slice(0, 10).map((club) => (
-                <div
+                <button
                   key={club.id}
-                  className="club-suggestion-item"
-                  onClick={() => handleClubSelect(club)}
+                  type="button"
+                  className="flex items-center justify-between w-full px-3 py-2 text-left text-sm hover:bg-muted border-b border-border/50 last:border-b-0"
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevent input blur before selection
+                    handleClubSelect(club);
+                  }}
                 >
-                  <span className="club-suggestion-name">{club.name}</span>
+                  <span className="font-medium">{club.name}</span>
                   {(club.regionDepth1 || club.regionDepth2) && (
-                    <span className="club-suggestion-region">
+                    <span className="text-xs text-muted-foreground">
                       {[club.regionDepth1, club.regionDepth2].filter(Boolean).join(" ")}
                     </span>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
 
-        <select
-          value={entityType}
-          onChange={(e) => setEntityType(e.target.value as AuditEntityType | "")}
+        <Select
+          value={entityType || "_all"}
+          onValueChange={(val) =>
+            setEntityType(val === "_all" ? "" : (val as AuditEntityType))
+          }
         >
-          <option value="">Entity Type (All)</option>
-          <option value="SCHEDULE">SCHEDULE</option>
-          <option value="SCHEDULE_PARTICIPANT">SCHEDULE_PARTICIPANT</option>
-          <option value="MATCH">MATCH</option>
-          <option value="CLUB">CLUB</option>
-          <option value="CLUB_MEMBER">CLUB_MEMBER</option>
-        </select>
-        <select
-          value={actionType}
-          onChange={(e) => setActionType(e.target.value as AuditActionType | "")}
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Entity Type (All)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">Entity Type (All)</SelectItem>
+            <SelectItem value="SCHEDULE">SCHEDULE</SelectItem>
+            <SelectItem value="SCHEDULE_PARTICIPANT">SCHEDULE_PARTICIPANT</SelectItem>
+            <SelectItem value="MATCH">MATCH</SelectItem>
+            <SelectItem value="CLUB">CLUB</SelectItem>
+            <SelectItem value="CLUB_MEMBER">CLUB_MEMBER</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={actionType || "_all"}
+          onValueChange={(val) =>
+            setActionType(val === "_all" ? "" : (val as AuditActionType))
+          }
         >
-          <option value="">Action Type (All)</option>
-          <option value="CREATE">CREATE</option>
-          <option value="UPDATE">UPDATE</option>
-          <option value="DELETE">DELETE</option>
-        </select>
-        <button className="btn-primary" onClick={handleSearch}>
-          조회
-        </button>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Action Type (All)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">Action Type (All)</SelectItem>
+            <SelectItem value="CREATE">CREATE</SelectItem>
+            <SelectItem value="UPDATE">UPDATE</SelectItem>
+            <SelectItem value="DELETE">DELETE</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button onClick={handleSearch}>조회</Button>
       </div>
 
-      {error && <div className="audit-log-page__error">{error}</div>}
+      {error && (
+        <div className="px-4 py-3 rounded-lg text-sm bg-destructive/10 text-destructive border border-destructive/20">
+          {error}
+        </div>
+      )}
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       ) : logs.length === 0 ? (
-        <div className="audit-log-page__empty">
-          <p>조회된 로그가 없습니다.</p>
+        <div className="text-center py-12 text-muted-foreground text-sm">
+          조회된 로그가 없습니다.
         </div>
       ) : (
         <>
-          <div className="audit-log-page__info">
+          <div className="text-sm text-muted-foreground">
             총 {totalElements}건 (페이지 {page + 1} / {totalPages})
             {selectedClub && (
-              <span className="filter-info"> | 클럽: {selectedClub.name}</span>
+              <span className="ml-2 text-primary">| 클럽: {selectedClub.name}</span>
             )}
           </div>
-          <table className="audit-log-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Entity Type</th>
-                <th>Entity ID</th>
-                <th>Action</th>
-                <th>User</th>
-                <th>Club</th>
-                <th>Created At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr
-                  key={log.id}
-                  onClick={() => handleRowClick(log)}
-                  className="audit-log-table__row--clickable"
-                >
-                  <td>{log.id}</td>
-                  <td>{log.entityType}</td>
-                  <td>{log.entityId}</td>
-                  <td>
-                    <span
-                      className={`action-badge action-badge--${log.actionType.toLowerCase()}`}
-                    >
-                      {log.actionType}
-                    </span>
-                  </td>
-                  <td>{log.userName || log.userId}</td>
-                  <td>{log.clubName || log.clubId}</td>
-                  <td>{formatShortDateTime(log.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
 
-          {/* 개선된 페이지네이션 */}
-          <div className="audit-log-page__pagination">
-            <button disabled={page === 0} onClick={() => setPage(0)}>
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Entity Type</TableHead>
+                  <TableHead>Entity ID</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Club</TableHead>
+                  <TableHead>Created At</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log) => (
+                  <TableRow
+                    key={log.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleRowClick(log)}
+                  >
+                    <TableCell>{log.id}</TableCell>
+                    <TableCell className="text-xs">{log.entityType}</TableCell>
+                    <TableCell>{log.entityId}</TableCell>
+                    <TableCell>{getActionBadge(log.actionType)}</TableCell>
+                    <TableCell>{log.userName || log.userId}</TableCell>
+                    <TableCell>{log.clubName || log.clubId}</TableCell>
+                    <TableCell className="text-xs">{formatShortDateTime(log.createdAt)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* 페이지네이션 */}
+          <div className="flex items-center justify-center gap-1 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0}
+              onClick={() => setPage(0)}
+            >
               «
-            </button>
-            <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+            >
               ‹
-            </button>
-
+            </Button>
             {getPageNumbers().map((pageNum) => (
-              <button
+              <Button
                 key={pageNum}
-                className={pageNum === page ? "active" : ""}
+                variant={pageNum === page ? "default" : "outline"}
+                size="sm"
                 onClick={() => setPage(pageNum)}
               >
                 {pageNum + 1}
-              </button>
+              </Button>
             ))}
-
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
             >
               ›
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page >= totalPages - 1}
               onClick={() => setPage(totalPages - 1)}
             >
               »
-            </button>
+            </Button>
           </div>
         </>
       )}
