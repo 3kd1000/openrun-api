@@ -11,6 +11,7 @@ import ClubRecruitingPage from "./pages/club/recruit/ClubRecruitingPage";
 import ClubMainPage from "./pages/club/home/ClubMainPage";
 import ClubExplorePage from "./pages/club/list/ClubExplorePage";
 import ClubMembersPage from "./pages/club/home/ClubMembersPage";
+import MemberProfilePage from "./pages/club/home/MemberProfilePage";
 import ClubRulesPage from "./pages/club/home/ClubRulesPage";
 import ClubManagePage from "./pages/club/manage/ClubManagePage";
 import ClubCreatePage from "./pages/club/create/ClubCreatePage";
@@ -33,6 +34,7 @@ import UserGuidePage from "./pages/more/UserGuidePage";
 import UserGuideDetailPage from "./pages/more/UserGuideDetailPage";
 import GuideEditorPage from "./pages/more/GuideEditorPage";
 import InquiryPage from "./pages/more/InquiryPage";
+import ProfileEditPage from "./pages/more/ProfileEditPage";
 import NotificationPage from "./pages/notification/NotificationPage";
 import IntroPage from "./pages/intro/IntroPage";
 import Navigation from "./components/common/Navigation";
@@ -94,6 +96,14 @@ function App() {
               <Route
                 path="/clubs/:clubId/recruiting"
                 element={<ClubRecruitingPage />}
+              />
+              <Route
+                path="/clubs/:clubId/members/:userId"
+                element={
+                  <ProtectedRoute>
+                    <MemberProfilePage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/clubs/:clubId/members"
@@ -228,6 +238,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <InquiryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/more/profile/edit"
+                element={
+                  <ProtectedRoute>
+                    <ProfileEditPage />
                   </ProtectedRoute>
                 }
               />

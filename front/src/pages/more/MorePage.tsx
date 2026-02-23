@@ -30,7 +30,6 @@ import {
   PhoneIcon,
 } from "../../components/common/Icons";
 import { AppHeader } from "../../components/common/AppHeader";
-import ProfileEditModal from "../../components/ProfileEditModal";
 import { useNotification } from "../../contexts/NotificationContext";
 import { setOpenRunSession } from "../../utils/openrunSession";
 
@@ -53,7 +52,6 @@ const MorePage: React.FC = () => {
   const { isAuthReady, user: firebaseUser } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
   const [myClubs, setMyClubs] = useState<MyClub[]>([]);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
@@ -75,7 +73,7 @@ const MorePage: React.FC = () => {
     if (!isAuthReady) return;
 
     if (firebaseUser) {
-      loadUserProfile();
+      fetchUserData();
       loadOAuthProviders();
       loadMyClubs();
     } else {
@@ -83,7 +81,14 @@ const MorePage: React.FC = () => {
     }
   }, [isAuthReady, firebaseUser]);
 
-  const loadUserProfile = async () => {
+  // 프로필 수정 페이지에서 돌아올 때 re-fetch
+  useEffect(() => {
+    const handleFocus = () => { if (firebaseUser) fetchUserData(); };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [firebaseUser]);
+
+  const fetchUserData = async () => {
     try {
       setIsLoading(true);
 
@@ -138,10 +143,6 @@ const MorePage: React.FC = () => {
 
   const handleLogin = () => {
     navigate("/login");
-  };
-
-  const handleProfileUpdate = (updatedUser: UserProfile) => {
-    setUser(updatedUser);
   };
 
   // 회원 탈퇴 모달 열기 (탈퇴 가능 여부 체크)
@@ -210,7 +211,7 @@ const MorePage: React.FC = () => {
         {isLoggedIn && !isLoading && user && (
           <div
             className="bg-background border border-border rounded-lg p-4 mb-5 cursor-pointer transition-all flex justify-between items-center min-h-[92px] hover:bg-muted hover:border-primary hover:-translate-y-0.5 hover:shadow-md group"
-            onClick={() => setIsEditModalOpen(true)}
+            onClick={() => navigate('/more/profile/edit')}
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-[52px] h-[52px] rounded-full bg-secondary flex items-center justify-center text-muted-foreground shrink-0">
@@ -424,15 +425,6 @@ const MorePage: React.FC = () => {
           </button>
         )}
       </div>
-
-      {/* 프로필 수정 모달 */}
-      {isEditModalOpen && user && (
-        <ProfileEditModal
-          user={user}
-          onClose={() => setIsEditModalOpen(false)}
-          onUpdate={handleProfileUpdate}
-        />
-      )}
 
       {/* iOS PWA 설치 가이드 모달 */}
       {showInstallGuide && (

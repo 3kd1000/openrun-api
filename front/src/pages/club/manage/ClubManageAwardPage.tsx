@@ -11,13 +11,14 @@ import {
 import type { Club, UpdateAwardPolicyRequest, AwardRankingResponse, AwardType } from "../../../types/club";
 import { ArrowLeftIcon, CheckIcon, Trash2Icon, EditIcon, XIcon } from "../../../components/common/Icons";
 import { useToast } from "../../../contexts/ToastContext";
-// 뱃지 스타일은 UserNameWithBadge 컴포넌트 내 Tailwind로 처리
+import { useAwardWinners } from "../../../contexts/AwardWinnersContext";
 
 type TabType = "policy" | "winners";
 
 const ClubManageAwardPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { refetch: refetchAwardContext } = useAwardWinners();
   const { clubId } = useParams<{ clubId: string }>();
 
   // 탭 상태
@@ -227,9 +228,10 @@ const ClubManageAwardPage: React.FC = () => {
       });
       showToast(`${awardService.getAwardBadgeLabel(type)} 수상자가 수정되었습니다`, "success");
 
-      // 수정 모드 종료 및 데이터 새로고침
+      // 수정 모드 종료 및 데이터 새로고침 + 뱃지 컨텍스트 갱신
       setEditingType(null);
       await loadRankingsAndWinners();
+      void refetchAwardContext();
     } catch (e) {
       console.error(e);
       setError("수상자 수정에 실패했습니다.");
@@ -269,8 +271,9 @@ const ClubManageAwardPage: React.FC = () => {
       await awardService.saveAwardWinner(Number(clubId), request);
       showToast(`${awardService.getAwardBadgeLabel(type)} 수상자가 확정되었습니다`, "success");
 
-      // 데이터 새로고침
+      // 데이터 새로고침 + 뱃지 컨텍스트 갱신
       await loadRankingsAndWinners();
+      void refetchAwardContext();
     } catch (e) {
       console.error(e);
       setError("수상자 확정에 실패했습니다.");
@@ -290,7 +293,9 @@ const ClubManageAwardPage: React.FC = () => {
       setConfirmingSaving(true);
       await awardService.deleteAwardWinner(Number(clubId), winnerId);
       showToast("수상자가 삭제되었습니다", "success");
+      // 데이터 새로고침 + 뱃지 컨텍스트 갱신
       await loadRankingsAndWinners();
+      void refetchAwardContext();
     } catch (e) {
       console.error(e);
       setError("수상자 삭제에 실패했습니다.");

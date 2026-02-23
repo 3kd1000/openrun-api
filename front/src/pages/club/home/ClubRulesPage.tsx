@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "../../../services/api/axiosInstance";
 import { clubService } from "../../../services/clubService";
-import type { Club, ClubNotice, ClubRule } from "../../../types/club";
+import type { ClubNotice, ClubRule } from "../../../types/club";
 import { getClubSettings, setClubSettings } from "../../../utils/openrunClubSettings";
 import {
   ArrowLeftIcon,
@@ -16,7 +15,6 @@ const ClubRulesPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
   const [rules, setRules] = useState<ClubRule[]>([]);
   const [notices, setNotices] = useState<ClubNotice[]>([]);
-  const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,13 +32,11 @@ const ClubRulesPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const [clubResponse, rulesData, noticesData] = await Promise.all([
-        axiosInstance.get(`/clubs/${clubId}`),
+      const [rulesData, noticesData] = await Promise.all([
         clubService.getClubRules(Number(clubId)),
         clubService.getClubNotices(Number(clubId)),
       ]);
 
-      setClub(clubResponse.data);
       setRules(rulesData.sort((a, b) => a.displayOrder - b.displayOrder));
       setNotices(noticesData.sort((a, b) => a.displayOrder - b.displayOrder));
     } catch (error: unknown) {
@@ -99,7 +95,7 @@ const ClubRulesPage: React.FC = () => {
           <ArrowLeftIcon size={20} />
         </button>
         <span className="flex-1 text-center text-sm font-bold text-foreground">
-          {club?.name ? `${club.name} 공지/회칙` : "공지/회칙"}
+          공지/회칙
         </span>
         <div className="w-9 h-9" />
       </div>

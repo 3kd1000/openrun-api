@@ -220,7 +220,7 @@ const ClubRecruitingPage: React.FC = () => {
   return (
     <div className="page-container">
       {/* 헤더 */}
-      <div className="flex items-center justify-between py-2 mb-3">
+      <div className="relative flex items-center justify-between py-2 mb-3">
         <BackButton
           onClick={() => {
             const state = location.state as { fromClubMain?: boolean; from?: string; returnUrl?: string } | null;
@@ -235,7 +235,7 @@ const ClubRecruitingPage: React.FC = () => {
             }
           }}
         />
-        <span className="flex-1 text-center text-sm font-bold text-foreground">클럽 초대</span>
+        <span className="absolute left-1/2 -translate-x-1/2 text-sm font-bold text-foreground pointer-events-none">클럽 초대</span>
         <Button
           variant="outline"
           size="sm"

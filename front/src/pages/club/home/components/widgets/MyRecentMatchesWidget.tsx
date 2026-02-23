@@ -129,7 +129,7 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
   };
 
   return (
-    <div className="border border-border rounded-xl bg-white p-4">
+    <div className="border border-border rounded-xl bg-white px-3 py-2">
       <div className="flex items-center justify-between">
         <button
           className="flex items-center gap-2 bg-transparent border-none py-2 cursor-pointer text-foreground hover:text-primary transition-colors"
@@ -171,7 +171,7 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
           {!isLoading && clubStats && clubStats.totalMatches > 0 && (
             <>
               {/* 누적 전적 요약 */}
-              <div className="flex items-center justify-center gap-4 py-3 bg-muted/50 rounded-lg mb-3">
+              <div className="flex items-center justify-center gap-3 py-2 bg-muted/50 rounded-lg mb-2">
                 <span className="text-sm font-semibold text-green-700">
                   {clubStats.wins}승
                 </span>
@@ -192,7 +192,7 @@ const MyRecentMatchesWidget: React.FC<MyRecentMatchesWidgetProps> = ({
                   {matches.map((match) => (
                     <div
                       key={match.matchId}
-                      className="flex items-center gap-3 py-3 px-4 bg-muted/50 rounded-lg text-sm min-h-[44px]"
+                      className="flex items-center gap-1.5 py-2 px-3 bg-muted/50 rounded-lg text-xs min-h-[40px]"
                     >
                       <span
                         className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${getResultBadgeColor(match.result)}`}

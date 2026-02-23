@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../../services/api/axiosInstance";
-import type { Club } from "../../../types/club";
 import {
   ArrowLeftIcon,
   InboxIcon,
@@ -41,7 +40,6 @@ const ClubManagePage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
 
-  const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,10 +57,7 @@ const ClubManagePage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const [clubResponse] = await Promise.all([
-        axiosInstance.get(`/clubs/${clubId}`),
-      ]);
-      setClub(clubResponse.data);
+      await axiosInstance.get(`/clubs/${clubId}`);
     } catch (error: unknown) {
       logError("클럽 관리 데이터 조회", error);
       setError(getErrorMessage(error));
@@ -106,7 +101,7 @@ const ClubManagePage: React.FC = () => {
           <ArrowLeftIcon size={20} />
         </button>
         <span className="flex-1 text-center text-sm font-bold text-foreground">
-          {club?.name ? `${club.name} 관리` : "클럽 관리"}
+          클럽 관리
         </span>
         <div className="w-9 h-9" />
       </div>

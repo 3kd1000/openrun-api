@@ -259,9 +259,9 @@ const GuestRecruitPage: React.FC = () => {
   return (
     <div className="page-container">
       {/* 헤더 */}
-      <div className="flex items-center justify-between py-2 mb-3">
+      <div className="relative flex items-center justify-between py-2 mb-3">
         <BackButton onClick={handleBack} />
-        <span className="flex-1 text-center text-sm font-bold text-foreground">
+        <span className="absolute left-1/2 -translate-x-1/2 text-sm font-bold text-foreground pointer-events-none">
           게스트 모집
         </span>
         <Button

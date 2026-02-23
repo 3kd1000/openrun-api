@@ -124,7 +124,7 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
   };
 
   return (
-    <div className="border border-border rounded-xl bg-white p-4">
+    <div className="border border-border rounded-xl bg-white px-3 py-2">
       <div className="flex items-center justify-between">
         <button
           className="flex items-center gap-2 bg-transparent border-none py-2 cursor-pointer text-foreground hover:text-primary transition-colors"
@@ -146,7 +146,7 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
       {isExpanded && (
         <div className="mt-3">
           {/* 정렬 토글 */}
-          <div className="flex gap-2 mb-3 bg-muted/50 p-0.5 rounded">
+          <div className="flex gap-2 mb-2 bg-muted/50 p-0.5 rounded">
             <button
               className={`flex-1 py-2 border-none bg-transparent rounded text-sm cursor-pointer transition-all ${
                 currentSortBy === 'points' ? 'bg-white text-primary font-semibold shadow-sm' : 'text-muted-foreground'
@@ -182,7 +182,7 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
               {rankings.map((entry, index) => (
                 <div
                   key={entry.userId}
-                  className="flex items-center gap-3 py-3 px-4 bg-muted/50 rounded-lg text-sm min-h-[44px]"
+                  className="flex items-center gap-1.5 py-2 px-3 bg-muted/50 rounded-lg text-xs min-h-[40px]"
                 >
                   <span className="flex items-center justify-center min-w-[40px]">
                     {getRankDisplay(index + 1)}

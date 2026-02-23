@@ -16,6 +16,7 @@ import type {
 import type { ClubMembership } from '../../../types/club';
 import type { Schedule } from '../../../types/schedule';
 import { ArrowLeftIcon } from '../../../components/common/Icons';
+import { PackagePlus, ArrowLeftRight, UserCheck, ClipboardList } from 'lucide-react';
 import { getOpenRunSession } from '../../../utils/openrunSession';
 import { normalizeClubRole } from '../../../utils/role';
 import { getErrorMessage, logError } from '../../../utils/errorHandler';
@@ -978,32 +979,36 @@ const ClubBallManagePage: React.FC = () => {
 
       {/* 관리자 액션 버튼 (일반 모드) */}
       {isAdmin && !isEditMode && (
-        <div className="flex gap-2 overflow-x-auto mb-3">
+        <div className="grid grid-cols-4 gap-2 mb-3">
           <button
-            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold bg-green-100 text-green-800 hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setShowAddModal(true)}
             disabled={!summary || summary.keepers.length === 0}
           >
+            <PackagePlus size={18} />
             입고
           </button>
           <button
-            className="px-3 py-2 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setShowDistributeModal(true)}
             disabled={!summary || summary.keepers.length < 2}
           >
+            <ArrowLeftRight size={18} />
             배분
           </button>
           <button
-            className="px-3 py-2 rounded-lg text-xs font-semibold bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors whitespace-nowrap"
+            className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
             onClick={() => setShowKeeperModal(true)}
           >
+            <UserCheck size={18} />
             보유자 지정
           </button>
           <button
-            className="px-3 py-2 rounded-lg text-xs font-semibold bg-orange-100 text-orange-800 hover:bg-orange-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleEnterEditMode}
             disabled={!summary || summary.keepers.length === 0}
           >
+            <ClipboardList size={18} />
             재고관리
           </button>
         </div>
