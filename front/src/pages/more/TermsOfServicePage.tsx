@@ -1,9 +1,13 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { AppHeader } from "../../components/common/AppHeader";
 
 const TermsOfServicePage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-[#f8f9fa] p-5">
+    <div className="min-h-[calc(100vh-140px)]">
+      <AppHeader title="이용약관" onBack={() => navigate(-1)} />
       <div className="max-w-[800px] mx-auto bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)] p-10 max-md:px-4 max-md:py-6">
         <div className="text-center mb-10 pb-5 border-b-2 border-[#e9ecef]">
           <span className="block text-[32px] max-md:text-2xl font-bold text-[#212529] mb-2.5">서비스 이용약관</span>
@@ -104,12 +108,12 @@ const TermsOfServicePage: React.FC = () => {
         </div>
 
         <div className="mt-10 pt-5 border-t border-[#e9ecef] text-center">
-          <Link
-            to="/login"
-            className="inline-block text-[#007bff] no-underline text-base font-medium transition-colors duration-200 hover:text-[#0056b3] hover:underline"
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-block text-[#007bff] bg-transparent border-none cursor-pointer text-base font-medium transition-colors duration-200 hover:text-[#0056b3] hover:underline"
           >
-            ← 홈으로 돌아가기
-          </Link>
+            ← 돌아가기
+          </button>
         </div>
       </div>
     </div>

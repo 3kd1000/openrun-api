@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { inquiryService } from "../../services/inquiryService";
 import {
-  ArrowLeftIcon,
   PlusIcon,
   MessageCircleIcon,
 } from "../../components/common/Icons";
+import { AppHeader } from "../../components/common/AppHeader";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import type { Post, Comment } from "../../types/post";
@@ -134,19 +134,10 @@ const InquiryPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 min-h-[calc(100vh-140px)] box-border max-md:p-4 max-[425px]:p-2">
-      <div className="max-w-[600px] mx-auto">
-        {/* 헤더 */}
-        <div className="flex items-center gap-4 mb-8 max-[425px]:mb-6">
-          <button
-            className="flex items-center gap-1 px-2 py-1 bg-transparent border border-border rounded-md text-muted-foreground cursor-pointer text-sm transition-all hover:bg-muted hover:border-primary hover:text-primary"
-            onClick={() => navigate("/more")}
-          >
-            <ArrowLeftIcon size={20} />
-            <span className="max-[360px]:hidden">뒤로</span>
-          </button>
-          <span className="text-2xl font-bold text-foreground max-md:text-xl max-[425px]:text-lg max-[360px]:text-base">문의하기</span>
-        </div>
+    <div className="min-h-[calc(100vh-140px)]">
+      <AppHeader title="문의하기" onBack={() => navigate(-1)} />
+      <div className="max-w-[600px] mx-auto p-4 max-[425px]:p-2">
+        {/* 문의 작성 폼 */}
 
         {/* 문의 작성 폼 */}
         {showForm && (

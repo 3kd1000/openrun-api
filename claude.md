@@ -70,25 +70,27 @@ openrun/
 └── claude.md         # 이 파일
 ```
 
-## 🚀 다음 작업 예정
+## 🚀 작업 현황 (2026-02-24 기준)
 
-- [ ] Phase C: 동적 OG 태그
-- [ ] Phase B-2: PWA 설치 유도
+### 다음 작업
+- [ ] Phase B-2: PWA 설치 유도 + 알림 허용 유도
 - [ ] 이용 가이드 페이지 콘텐츠 작성
-- [ ] Front UI Stage 4: DrawCreateModal/DrawViewModal shadcn 전환
-- [ ] 공개일정(Open Schedule) 기능 착수 (`docs/side-projects/openrun/decisions/open-schedule-design.md`)
 
-### ✅ 최근 완료
+### ✅ 완료
 
 - [x] Phase A: SecurityContext 마이그레이션 (@RequestParam userId → @AuthenticationPrincipal)
-- [x] Phase B: FCM 알림 케이스 확장 + 알림 설정 페이지 (B-1 7케이스 + B-3 설정)
+- [x] Phase B-1 + B-3: FCM 알림 7케이스 + 알림 설정 페이지
+- [x] Phase C: 동적 OG 태그 (Express og-server, 카카오톡/SNS 미리보기)
+- [x] 공개일정(Open Schedule) 기능
+- [x] Front UI Stage 1~4: shadcn/ui 점진 전환 (Emerald/Charcoal 4색 시스템)
+- [x] 비로그인 UX 개선: useLoginGuard 훅, 모집 페이지 공개 프로필 permitAll
+- [x] 클럽 가입 신청 취소 기능, 가입관리 페이지 필터 정리
 - [x] FCM 푸시 알림 시스템 구축 (Phase 1: 인프라 + 인앱 UI)
 - [x] 일별 통계 수집 배치 + 차트 대시보드 (Recharts)
 - [x] K8s CronJob 기반 배치 시스템 (중복 실행 방지)
 - [x] 서비스 소개 페이지 (/intro)
 - [x] 클럽 멤버 역할 관리 기능
 - [x] 대진표 생성 알고리즘 개선
-- [x] Front shadcn/ui 점진 전환 Stage 1~3 (Emerald/Charcoal 4색 시스템)
 - [x] 메시지 시스템 고도화 (일정 배너 링크, 운영자 DM 3개 진입점, Admin DM 관리)
 - [x] Admin 백오피스 shadcn/Tailwind v4 전체 마이그레이션 (인디고 테마)
 

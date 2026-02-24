@@ -4,6 +4,7 @@ import type { MessagePayload } from "firebase/messaging";
 import axios from "axios";
 import { app } from "./firebase";
 import axiosInstance from "./api/axiosInstance";
+import { isMobile } from "../utils/platformDetection";
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
@@ -72,16 +73,7 @@ export const requestFcmToken = async (): Promise<string | null> => {
  * 디바이스 타입 판별 (MOBILE / DESKTOP)
  */
 const getDeviceType = (): "MOBILE" | "DESKTOP" => {
-  const ua = navigator.userAgent.toLowerCase();
-  if (
-    ua.includes("iphone") ||
-    ua.includes("ipad") ||
-    ua.includes("android") ||
-    ua.includes("mobile")
-  ) {
-    return "MOBILE";
-  }
-  return "DESKTOP";
+  return isMobile() ? "MOBILE" : "DESKTOP";
 };
 
 /**

@@ -20,44 +20,24 @@ import {
   EditIcon,
   FileTextIcon,
   LinkIcon,
-  MailIcon,
   MegaphoneIcon,
   ScaleIcon,
   UsersIcon,
   UserIcon,
-  BookOpenIcon,
-  Share2Icon,
   PhoneIcon,
-  MessageCircleIcon,
 } from "../../components/common/Icons";
 import { AppHeader } from "../../components/common/AppHeader";
 import { useNotification } from "../../contexts/NotificationContext";
+import { usePwaInstall } from "../../contexts/PwaInstallContext";
+import { isMobile, isAndroid } from "../../utils/platformDetection";
 import { setOpenRunSession } from "../../utils/openrunSession";
-import { useLoginGuard } from "../../hooks/useLoginGuard";
-
-/**
- * iOS Safari 브라우저인지 확인 (PWA가 아닌 경우)
- */
-const isIOSSafariBrowser = (): boolean => {
-  const ua = navigator.userAgent.toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isSafari = /safari/.test(ua) && !/crios|fxios|edgios/.test(ua);
-  // standalone이면 PWA로 실행 중
-  const isStandalone =
-    ("standalone" in window.navigator && (window.navigator as { standalone?: boolean }).standalone) ||
-    window.matchMedia("(display-mode: standalone)").matches;
-  return isIOS && isSafari && !isStandalone;
-};
-
 const MorePage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthReady, user: firebaseUser } = useAuth();
-  const requireLogin = useLoginGuard();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
   const [myClubs, setMyClubs] = useState<MyClub[]>([]);
-  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   // 회원 탈퇴 관련 state
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -66,9 +46,10 @@ const MorePage: React.FC = () => {
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   const { needsPermission, permissionRevoked, requestPushPermission } = useNotification();
+  const { isPwa, canInstallNatively, triggerInstall } = usePwaInstall();
 
-  // iOS Safari 브라우저 여부 (PWA가 아닌 경우에만 설치 안내 표시)
-  const showIOSInstallBanner = isIOSSafariBrowser();
+  // 모바일 비-PWA 상태에서 설치 배너 표시
+  const showInstallBanner = !isPwa && isMobile();
 
   const isLoggedIn = isAuthReady && firebaseUser;
 
@@ -274,11 +255,17 @@ const MorePage: React.FC = () => {
           </div>
         )}
 
-        {/* iOS Safari에서 PWA 설치 안내 배너 */}
-        {showIOSInstallBanner && (
+        {/* PWA 미설치 + 모바일 → 앱 설치 안내 배너 */}
+        {showInstallBanner && (
           <div
             className="flex items-center gap-3 p-3 mb-5 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-lg cursor-pointer text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(102,126,234,0.4)]"
-            onClick={() => setShowInstallGuide(true)}
+            onClick={() => {
+              if (isAndroid() && canInstallNatively) {
+                triggerInstall();
+              } else {
+                navigate("/install-guide");
+              }
+            }}
           >
             <span className="flex items-center justify-center w-11 h-11 bg-white/20 rounded-full shrink-0">
               <PhoneIcon size={24} />
@@ -286,15 +273,15 @@ const MorePage: React.FC = () => {
             <div className="flex-1 min-w-0">
               <span className="block text-sm font-semibold mb-0.5">앱으로 설치하기</span>
               <span className="block text-xs opacity-90">
-                푸시 알림을 받으려면 홈 화면에 추가하세요
+                설치하면 푸시 알림을 받을 수 있어요
               </span>
             </div>
             <span className="text-2xl opacity-70 shrink-0">›</span>
           </div>
         )}
 
-        {/* 푸시 알림 권한 요청 배너 (아직 허용하지 않은 경우) */}
-        {isLoggedIn && !showIOSInstallBanner && needsPermission && (
+        {/* 푸시 알림 권한 요청 배너 (PWA에서 아직 허용하지 않은 경우) */}
+        {isLoggedIn && !showInstallBanner && needsPermission && (
           <div
             className="flex items-center gap-3 p-3 mb-5 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-lg cursor-pointer text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(102,126,234,0.4)]"
             onClick={requestPushPermission}
@@ -316,7 +303,7 @@ const MorePage: React.FC = () => {
         )}
 
         {/* PWA에서 알림 권한이 해제된 경우 재설정 안내 배너 */}
-        {isLoggedIn && !showIOSInstallBanner && permissionRevoked && (
+        {isLoggedIn && !showInstallBanner && permissionRevoked && (
           <div
             className="flex items-center gap-3 p-3 mb-5 bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-lg cursor-pointer text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(102,126,234,0.4)]"
             onClick={() => navigate("/notifications")}
@@ -352,57 +339,13 @@ const MorePage: React.FC = () => {
           </div>
           <div
             className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
-            onClick={() => navigate("/more/user-guide")}
+            onClick={() => navigate("/install-guide")}
           >
             <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
-              <BookOpenIcon size={20} />
+              <PhoneIcon size={20} />
             </span>
-            <span className="flex-1 text-sm text-foreground no-underline font-medium">이용 가이드</span>
+            <span className="flex-1 text-sm text-foreground no-underline font-medium">앱 설치 가이드</span>
           </div>
-          {import.meta.env.DEV && (
-            <div
-              className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
-              onClick={() => navigate("/more/guide-editor")}
-            >
-              <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
-                <EditIcon size={20} />
-              </span>
-              <span className="flex-1 text-sm text-foreground no-underline font-medium">가이드 에디터 (개발용)</span>
-            </div>
-          )}
-          <div className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px">
-            <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
-              <FileTextIcon size={20} />
-            </span>
-            <div
-              onClick={() => navigate("/more/terms")}
-              className="flex-1 text-sm text-foreground no-underline font-medium cursor-pointer"
-            >
-              이용약관
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px">
-            <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
-              <ScaleIcon size={20} />
-            </span>
-            <div
-              onClick={() => navigate("/more/license")}
-              className="flex-1 text-sm text-foreground no-underline font-medium cursor-pointer"
-            >
-              오픈소스 라이센스
-            </div>
-          </div>
-          {isLoggedIn && (
-            <div
-              className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
-              onClick={() => navigate("/messages")}
-            >
-              <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
-                <MessageCircleIcon size={20} />
-              </span>
-              <span className="flex-1 text-sm text-foreground no-underline font-medium">메시지</span>
-            </div>
-          )}
           {isLoggedIn && (
             <div
               className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
@@ -419,12 +362,21 @@ const MorePage: React.FC = () => {
           )}
           <div
             className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
-            onClick={() => { if (!requireLogin()) return; navigate("/more/inquiry"); }}
+            onClick={() => navigate("/more/terms")}
           >
             <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
-              <MailIcon size={20} />
+              <FileTextIcon size={20} />
             </span>
-            <span className="flex-1 text-sm text-foreground no-underline font-medium">문의하기</span>
+            <span className="flex-1 text-sm text-foreground no-underline font-medium">이용약관</span>
+          </div>
+          <div
+            className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
+            onClick={() => navigate("/more/license")}
+          >
+            <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
+              <ScaleIcon size={20} />
+            </span>
+            <span className="flex-1 text-sm text-foreground no-underline font-medium">오픈소스 라이센스</span>
           </div>
         </div>
 
@@ -433,13 +385,13 @@ const MorePage: React.FC = () => {
           <>
             <button
               onClick={handleLogout}
-              className="w-full p-3 mt-4 bg-destructive text-destructive-foreground border-none rounded-md text-sm font-semibold cursor-pointer transition-all min-h-12 hover:bg-destructive/90 hover:-translate-y-px hover:shadow-sm active:translate-y-0"
+              className="w-full p-3 mt-4 bg-primary/10 text-primary border border-primary/30 rounded-md text-sm font-medium cursor-pointer transition-all min-h-10 hover:bg-primary/20 hover:border-primary/50"
             >
               로그아웃
             </button>
             <button
               onClick={handleOpenWithdrawModal}
-              className="w-full p-3 mt-2 bg-transparent text-muted-foreground border border-border rounded-md text-xs font-medium cursor-pointer transition-all min-h-10 hover:text-destructive hover:border-destructive hover:bg-secondary"
+              className="w-full p-3 mt-2 bg-destructive/10 text-destructive/70 border border-destructive/20 rounded-md text-sm font-medium cursor-pointer transition-all min-h-10 hover:bg-destructive/20 hover:border-destructive/40 hover:text-destructive"
             >
               회원 탈퇴
             </button>
@@ -453,53 +405,6 @@ const MorePage: React.FC = () => {
           </button>
         )}
       </div>
-
-      {/* iOS PWA 설치 가이드 모달 */}
-      {showInstallGuide && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4"
-          onClick={() => setShowInstallGuide(false)}
-        >
-          <div
-            className="bg-background rounded-xl p-5 max-w-[360px] w-full shadow-[0_20px_40px_rgba(0,0,0,0.2)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-lg font-bold text-foreground mb-4 text-center">앱 설치 방법</div>
-            <div className="flex flex-col gap-3 mb-4">
-              <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-7 h-7 bg-primary text-primary-foreground rounded-full text-xs font-bold shrink-0">1</span>
-                <div className="flex items-center gap-2 flex-1 min-h-7 text-sm text-foreground leading-relaxed">
-                  <span className="inline-flex text-primary">
-                    <Share2Icon size={20} />
-                  </span>
-                  <span>하단의 <strong>공유</strong> 버튼을 탭하세요</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-7 h-7 bg-primary text-primary-foreground rounded-full text-xs font-bold shrink-0">2</span>
-                <div className="flex items-center gap-2 flex-1 min-h-7 text-sm text-foreground leading-relaxed">
-                  <span>메뉴에서 <strong>홈 화면에 추가</strong>를 선택하세요</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-7 h-7 bg-primary text-primary-foreground rounded-full text-xs font-bold shrink-0">3</span>
-                <div className="flex items-center gap-2 flex-1 min-h-7 text-sm text-foreground leading-relaxed">
-                  <span>오른쪽 상단의 <strong>추가</strong>를 탭하세요</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground text-center mb-4 p-3 bg-secondary rounded-md">
-              설치 후 앱에서 알림 탭 → 알림 허용을 눌러주세요
-            </p>
-            <button
-              className="w-full p-3 bg-primary text-primary-foreground border-none rounded-md text-sm font-semibold cursor-pointer transition-colors hover:bg-primary/90"
-              onClick={() => setShowInstallGuide(false)}
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 회원 탈퇴 확인 모달 */}
       {showWithdrawModal && (

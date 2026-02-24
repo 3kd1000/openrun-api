@@ -14,7 +14,7 @@ import {
   formatPhoneNumber,
 } from "../../utils/contactUtils";
 import RegionSelector from "../../components/common/RegionSelector";
-import BackButton from "../../components/common/BackButton";
+import { AppHeader } from "../../components/common/AppHeader";
 import { useToast } from "../../contexts/ToastContext";
 import { cn } from "../../lib/utils";
 
@@ -227,27 +227,22 @@ const ProfileEditPage: React.FC = () => {
   const sectionTitle =
     "flex items-center gap-2 text-base font-bold text-secondary mb-5";
 
-  // 헤더 컴포넌트
-  const Header = () => (
-    <div className="bg-secondary text-white px-4 py-3 flex items-center justify-between -mx-3 -mt-0 mb-4 rounded-b-2xl">
-      <BackButton className="text-white" />
-      <span className="text-sm font-bold">프로필 수정</span>
-      <button
-        type="submit"
-        form="profile-form"
-        disabled={isSubmitting}
-        className="text-sm font-bold text-primary disabled:opacity-50 px-1 py-1"
-      >
-        {isSubmitting ? "저장 중..." : "저장"}
-      </button>
-    </div>
+  const headerRight = (
+    <button
+      type="submit"
+      form="profile-form"
+      disabled={isSubmitting}
+      className="w-9 h-9 flex items-center justify-center text-sm font-bold text-primary disabled:opacity-50"
+    >
+      {isSubmitting ? "..." : "저장"}
+    </button>
   );
 
   // 로딩 상태
   if (isLoading) {
     return (
       <div className="page-container">
-        <Header />
+        <AppHeader title="프로필 수정" onBack={() => navigate(-1)} rightElement={headerRight} />
         <div className="text-center py-10 text-muted-foreground text-sm">
           불러오는 중...
         </div>
@@ -259,7 +254,7 @@ const ProfileEditPage: React.FC = () => {
   if (loadError) {
     return (
       <div className="page-container">
-        <Header />
+        <AppHeader title="프로필 수정" onBack={() => navigate(-1)} rightElement={headerRight} />
         <div className="text-center py-10 text-destructive text-sm">
           {loadError}
         </div>
@@ -269,7 +264,7 @@ const ProfileEditPage: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Header />
+      <AppHeader title="프로필 수정" onBack={() => navigate(-1)} rightElement={headerRight} />
 
       <form id="profile-form" onSubmit={handleSubmit} className="px-1">
         {/* 제출 에러 */}

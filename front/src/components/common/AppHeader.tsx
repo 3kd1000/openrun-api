@@ -6,14 +6,18 @@ import { useMessage } from "../../contexts/MessageContext";
 interface AppHeaderProps {
   children?: React.ReactNode;
   showBell?: boolean;
+  /** 서브페이지 모드: onBack 제공 시 백버튼 + 중앙 제목 레이아웃 */
+  title?: string;
+  onBack?: () => void;
+  rightElement?: React.ReactNode;
 }
 
 /**
  * AppHeader - 앱 전역 상단 헤더
- * - 4열 Grid 레이아웃: 좌측 spacer | 중앙 children | 메시지 | 알림 bell
- * - children(ClubSelector)이 정확히 화면 중앙에 배치됨
+ * - 기본 모드: 4열 Grid (spacer | children | 메시지 | 알림)
+ * - 서브페이지 모드 (onBack 제공): [← 백버튼] [중앙 title] [rightElement|spacer]
  */
-export const AppHeader: React.FC<AppHeaderProps> = ({ children, showBell = true }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ children, showBell = true, title, onBack, rightElement }) => {
   const navigate = useNavigate();
   const { unreadCount: notifUnread } = useNotification();
   const { unreadCount: msgUnread } = useMessage();
@@ -25,6 +29,25 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ children, showBell = true 
   const handleMessageClick = () => {
     navigate("/messages");
   };
+
+  // 서브페이지 모드: 백버튼 + 중앙 제목
+  if (onBack) {
+    return (
+      <header className="flex items-center justify-between px-4 py-1 bg-white border-b border-gray-200 min-h-[48px]">
+        <button
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-foreground"
+          onClick={onBack}
+          aria-label="뒤로가기"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className="flex-1 text-center text-sm font-bold text-foreground">{title}</span>
+        {rightElement || <div className="w-9 h-9" />}
+      </header>
+    );
+  }
 
   if (!showBell) {
     return (

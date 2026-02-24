@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { ContactVisibility } from "../../services/api/userApi";
 import {
@@ -16,6 +16,11 @@ import {
   validatePhoneNumber as validatePhone,
   formatPhoneNumber,
 } from "../../utils/contactUtils";
+import { getOpenRunUiSettings } from "../../utils/openrunUiSettings";
+import { isPWA } from "../../utils/platformDetection";
+import { usePwaInstall } from "../../contexts/PwaInstallContext";
+import { useNotification } from "../../contexts/NotificationContext";
+import { PwaSetupSheet } from "../../components/pwa/PwaSetupSheet";
 import { cn } from "@/lib/utils";
 
 interface LocationState {
@@ -69,6 +74,12 @@ const SetupProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  // PWA 설치 유도
+  const { isPwa } = usePwaInstall();
+  const { needsPermission } = useNotification();
+  const [showPwaSetup, setShowPwaSetup] = useState(false);
+  const destinationRef = useRef<{ path: string; options?: object } | null>(null);
 
   // 기존 사용자 정보 불러오기
   useEffect(() => {
@@ -204,14 +215,21 @@ const SetupProfilePage: React.FC = () => {
 
       console.log("✅ 프로필 설정 완료:", updatedUser);
 
-      // currentClubId가 있으면 클럽일정, 없으면 클럽 탐색
+      // 네비게이션 대상 결정
       const session = getOpenRunSession();
-      if (session.currentClubId) {
-        console.log("✅ 가입한 클럽 있음 → 클럽일정으로 이동");
-        navigate("/schedules/club");
+      const dest = session.currentClubId
+        ? { path: "/schedules/club", options: undefined as object | undefined }
+        : { path: "/clubs/explore", options: { replace: true, state: { defaultTab: "member" } } };
+
+      // PwaSetupSheet 표시 여부 판단 (1회만)
+      const uiSettings = getOpenRunUiSettings();
+      const shouldShowPwaSetup = !uiSettings.pwaSetupShown && (!isPwa || needsPermission);
+
+      if (shouldShowPwaSetup) {
+        destinationRef.current = dest;
+        setShowPwaSetup(true);
       } else {
-        console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지로 이동");
-        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        navigate(dest.path, dest.options);
       }
     } catch (err: unknown) {
       console.error("❌ 프로필 설정 실패:", err);
@@ -560,6 +578,15 @@ const SetupProfilePage: React.FC = () => {
           나중에 프로필 설정에서 변경할 수 있습니다.
         </p>
       </div>
+
+      <PwaSetupSheet
+        open={showPwaSetup}
+        onComplete={() => {
+          setShowPwaSetup(false);
+          const dest = destinationRef.current;
+          if (dest) navigate(dest.path, dest.options);
+        }}
+      />
     </div>
   );
 };

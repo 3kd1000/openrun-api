@@ -6,6 +6,7 @@ import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import { isNotEmpty } from "../../utils/isEmpty";
 import { UsersIcon } from "../../components/common/Icons";
+import { AppHeader } from "../../components/common/AppHeader";
 import { useToast } from "../../contexts/ToastContext";
 
 const MyClubsPage: React.FC = () => {
@@ -72,17 +73,9 @@ const MyClubsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 min-h-[calc(100vh-140px)] box-border max-[425px]:p-3 max-[359px]:p-3">
-      <div className="max-w-[600px] mx-auto">
-        <div className="mb-8 max-[425px]:mb-6 max-[359px]:mb-4">
-          <button
-            className="bg-transparent border-none text-base max-[359px]:text-sm text-primary cursor-pointer p-2 mb-4 -ml-2 transition-all duration-200 font-medium hover:text-primary/80 hover:-translate-x-0.5"
-            onClick={() => navigate("/more")}
-          >
-            ← 뒤로
-          </button>
-          <span className="block text-2xl max-[768px]:text-xl max-[425px]:text-lg max-[359px]:text-base font-bold text-foreground m-0">가입한 클럽</span>
-        </div>
+    <div className="min-h-[calc(100vh-140px)]">
+      <AppHeader title="가입한 클럽" onBack={() => navigate(-1)} />
+      <div className="max-w-[600px] mx-auto p-4">
 
         {isLoading ? (
           <div className="text-center py-8 text-base text-muted-foreground">로딩 중...</div>

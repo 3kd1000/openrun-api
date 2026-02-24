@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import DrawGenerationPage from "./pages/draw/DrawGenerationPage";
 import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
@@ -40,12 +41,14 @@ import ProfileEditPage from "./pages/more/ProfileEditPage";
 import NotificationPage from "./pages/notification/NotificationPage";
 import NotificationSettingsPage from "./pages/more/NotificationSettingsPage";
 import IntroPage from "./pages/intro/IntroPage";
+import InstallGuidePage from "./pages/pwa/InstallGuidePage";
 import MessageListPage from "./pages/message/MessageListPage";
 import MessageDetailPage from "./pages/message/MessageDetailPage";
 import Navigation from "./components/common/Navigation";
 import Footer from "./components/common/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import { PwaInstallProvider } from "./contexts/PwaInstallContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { AwardWinnersProvider } from "./contexts/AwardWinnersContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -59,18 +62,25 @@ import "./App.css";
 function App() {
   const location = useLocation();
 
+  // 라우트 전환 시 스크롤 최상단으로 리셋
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // "/" 경로와 "/setup-profile", "/intro"에서는 Navigation 숨김
   const shouldShowNavigation =
     location.pathname !== "/" &&
     location.pathname !== "/login" &&
     location.pathname !== "/setup-profile" &&
-    location.pathname !== "/intro";
+    location.pathname !== "/intro" &&
+    location.pathname !== "/install-guide";
 
   return (
     <QueryProvider>
     <ToastProvider>
       <ErrorBoundary>
         <AuthProvider>
+          <PwaInstallProvider>
           <NotificationProvider>
           <MessageProvider>
           <AwardWinnersProvider>
@@ -239,6 +249,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/install-guide" element={<InstallGuidePage />} />
               <Route path="/more" element={<MorePage />} />
               <Route
                 path="/more/oauth-providers"
@@ -335,6 +346,7 @@ function App() {
           </AwardWinnersProvider>
           </MessageProvider>
           </NotificationProvider>
+          </PwaInstallProvider>
         </AuthProvider>
       </ErrorBoundary>
     </ToastProvider>

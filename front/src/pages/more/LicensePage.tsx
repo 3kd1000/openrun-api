@@ -1,10 +1,14 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { AppHeader } from "../../components/common/AppHeader";
 
 const LicensePage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="p-6 min-h-[calc(100vh-140px)] box-border max-[425px]:p-3 max-[359px]:p-3">
-      <div className="max-w-[800px] mx-auto">
-        <span className="block text-2xl max-[768px]:text-xl max-[425px]:text-lg max-[359px]:text-base font-bold text-foreground mb-8 max-[768px]:mb-6 max-[425px]:mb-4 max-[359px]:mb-4">오픈소스 라이센스</span>
+    <div className="min-h-[calc(100vh-140px)]">
+      <AppHeader title="오픈소스 라이센스" onBack={() => navigate(-1)} />
+      <div className="max-w-[800px] mx-auto p-6 max-[425px]:p-3 max-[359px]:p-3">
 
         <section className="mb-8 max-[425px]:mb-6 max-[359px]:mb-4">
           <p className="text-base max-[425px]:text-sm max-[359px]:text-sm text-muted-foreground leading-relaxed m-0">

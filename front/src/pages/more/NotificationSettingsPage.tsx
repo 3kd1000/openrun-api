@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import BackButton from "../../components/common/BackButton";
+import { AppHeader } from "../../components/common/AppHeader";
 import { Switch } from "@/components/ui/switch";
 import {
   notificationSettingService,
@@ -74,11 +74,9 @@ const NotificationSettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 min-h-[calc(100vh-140px)] max-w-[600px] mx-auto md:p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <BackButton onClick={() => navigate(-1)} />
-        <span className="text-lg font-semibold text-foreground">알림 설정</span>
-      </div>
+    <div className="min-h-[calc(100vh-140px)]">
+      <AppHeader title="알림 설정" onBack={() => navigate(-1)} />
+      <div className="max-w-[600px] mx-auto p-4">
 
       {isLoading ? (
         <div className="text-center p-5 text-muted-foreground text-sm">
@@ -112,6 +110,7 @@ const NotificationSettingsPage: React.FC = () => {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 };
