@@ -78,14 +78,14 @@ function buildScheduleOgData(schedule, requestUrl) {
 // --- OG 태그 치환 ---
 function injectOgTags(html, og) {
   return html
-    .replace(/(<meta property="og:title" content=")[^"]*(">)/, `$1${og.title}$2`)
-    .replace(/(<meta property="og:description" content=")[^"]*(">)/, `$1${og.description}$2`)
-    .replace(/(<meta property="og:image" content=")[^"]*(">)/, `$1${og.image}$2`)
-    .replace(/(<meta property="og:url" content=")[^"]*(">)/, `$1${og.url}$2`)
-    .replace(/(<meta name="twitter:title" content=")[^"]*(">)/, `$1${og.title}$2`)
-    .replace(/(<meta name="twitter:description" content=")[^"]*(">)/, `$1${og.description}$2`)
-    .replace(/(<meta name="twitter:image" content=")[^"]*(">)/, `$1${og.image}$2`)
-    .replace(/(<meta name="description" content=")[^"]*(">)/, `$1${og.description}$2`);
+    .replace(/(<meta property="og:title" content=")[^"]*("\s*\/?>)/, `$1${og.title}$2`)
+    .replace(/(<meta property="og:description" content=")[^"]*("\s*\/?>)/, `$1${og.description}$2`)
+    .replace(/(<meta property="og:image" content=")[^"]*("\s*\/?>)/, `$1${og.image}$2`)
+    .replace(/(<meta property="og:url" content=")[^"]*("\s*\/?>)/, `$1${og.url}$2`)
+    .replace(/(<meta name="twitter:title" content=")[^"]*("\s*\/?>)/, `$1${og.title}$2`)
+    .replace(/(<meta name="twitter:description" content=")[^"]*("\s*\/?>)/, `$1${og.description}$2`)
+    .replace(/(<meta name="twitter:image" content=")[^"]*("\s*\/?>)/, `$1${og.image}$2`)
+    .replace(/(<meta name="description" content=")[^"]*("\s*\/?>)/, `$1${og.description}$2`);
 }
 
 // --- 크롤러 요청 처리 (정적 파일보다 먼저) ---
