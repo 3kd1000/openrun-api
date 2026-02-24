@@ -5,7 +5,6 @@ import {
   clubService,
   type ExternalRequestResponse,
   type ExternalRequestStatus,
-  type ExternalRequestType,
 } from "../../../services/clubService";
 import { ArrowLeftIcon, CheckIcon, XIcon } from "../../../components/common/Icons";
 import { postService } from "../../../services/postService";
@@ -13,13 +12,6 @@ import { commentService } from "../../../services/commentService";
 import type { Post, Comment } from "../../../types/post";
 import RequestProfileDrawer from "../../../components/RequestProfileDrawer";
 import { useToast } from "../../../contexts/ToastContext";
-
-const typeLabel = (t: ExternalRequestType) => {
-  if (t === "JOIN") return "가입 신청";
-  if (t === "GUEST") return "게스트 신청";
-  if (t === "INTERCLUB") return "교류전 신청";
-  return t;
-};
 
 const statusLabel = (s: ExternalRequestStatus) => {
   if (s === "PENDING") return "대기중";
@@ -65,7 +57,6 @@ const ClubRecruitManagePage: React.FC = () => {
 
   const [list, setList] = useState<ExternalRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [type, setType] = useState<ExternalRequestType | "">("");
   // 상태 필터: "" = 전체, "PENDING" = 미처리, "DONE" = 처리완료(APPROVED/REJECTED/CANCELLED)
   const [statusFilter, setStatusFilter] = useState<"" | "PENDING" | "DONE">("");
   const [expandedRequestIds, setExpandedRequestIds] = useState<Set<number>>(
@@ -98,11 +89,10 @@ const ClubRecruitManagePage: React.FC = () => {
       return { postId: targetPostId };
     }
     return {
-      type: type || undefined,
       // "미처리"만 API에서 필터, "전체"/"처리완료"는 전체 조회 후 클라이언트 필터
       status: statusFilter === "PENDING" ? ("PENDING" as ExternalRequestStatus) : undefined,
     };
-  }, [type, statusFilter, targetPostId]);
+  }, [statusFilter, targetPostId]);
 
   const load = async () => {
     if (!Number.isFinite(cid)) return;
@@ -131,7 +121,7 @@ const ClubRecruitManagePage: React.FC = () => {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cid, params.type, params.status]);
+  }, [cid, params.status]);
 
   useEffect(() => {
     if (!targetPostId) return;
@@ -166,12 +156,6 @@ const ClubRecruitManagePage: React.FC = () => {
       console.error(e);
       showToast("반려에 실패했습니다", "error");
     }
-  };
-
-  const sanitizeInquiryText = (text: string) => {
-    return text
-      .replace(/^\[게스트 모집\]\s*\(바로가기:.*\)\s*\n?/m, "[게스트 모집]\n")
-      .trim();
   };
 
   const ensureThreadLoaded = async (r: ExternalRequestResponse) => {
@@ -246,69 +230,37 @@ const ClubRecruitManagePage: React.FC = () => {
 
       {/* Filters (sticky) */}
       <div className="sticky top-0 z-10 bg-white border border-border rounded-xl px-4 py-2 mb-3 shadow-sm">
-        <div className="flex flex-col gap-1">
-          {/* Type filter row */}
-          <div className="flex items-center gap-2">
-            <span className="w-9 flex-none text-xs font-semibold text-gray-400">
-              타입
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                className={chipClass(type === "", Boolean(targetPostId))}
-                onClick={() => setType("")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                전체
-              </button>
-              <button
-                className={chipClass(type === "JOIN", Boolean(targetPostId))}
-                onClick={() => setType("JOIN")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                가입문의
-              </button>
-            </div>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2">
+            <button
+              className={chipClass(statusFilter === "", Boolean(targetPostId))}
+              onClick={() => setStatusFilter("")}
+              type="button"
+              disabled={Boolean(targetPostId)}
+            >
+              전체
+            </button>
+            <button
+              className={chipClass(statusFilter === "PENDING", Boolean(targetPostId))}
+              onClick={() => setStatusFilter("PENDING")}
+              type="button"
+              disabled={Boolean(targetPostId)}
+            >
+              미처리
+            </button>
+            <button
+              className={chipClass(statusFilter === "DONE", Boolean(targetPostId))}
+              onClick={() => setStatusFilter("DONE")}
+              type="button"
+              disabled={Boolean(targetPostId)}
+            >
+              처리완료
+            </button>
           </div>
-
-          {/* Status filter row */}
-          <div className="flex items-center gap-2">
-            <span className="w-9 flex-none text-xs font-semibold text-gray-400">
-              상태
-            </span>
-            <div className="flex gap-2">
-              <button
-                className={chipClass(statusFilter === "", Boolean(targetPostId))}
-                onClick={() => setStatusFilter("")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                전체
-              </button>
-              <button
-                className={chipClass(statusFilter === "PENDING", Boolean(targetPostId))}
-                onClick={() => setStatusFilter("PENDING")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                미처리
-              </button>
-              <button
-                className={chipClass(statusFilter === "DONE", Boolean(targetPostId))}
-                onClick={() => setStatusFilter("DONE")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                처리완료
-              </button>
-            </div>
-          </div>
-
           {targetPostId && (
-            <p className="text-xs text-gray-500 pt-0.5">
-              문의글에서 이동한 상세 보기입니다. (필터 고정)
-            </p>
+            <span className="text-xs text-gray-500 ml-auto">
+              상세 보기 (필터 고정)
+            </span>
           )}
         </div>
       </div>
@@ -328,7 +280,7 @@ const ClubRecruitManagePage: React.FC = () => {
               {/* Card Header */}
               <div className="flex items-center justify-between mb-2 pb-2 border-b border-border">
                 <span className="font-bold text-sm text-gray-900">
-                  {typeLabel(r.type)} · {statusLabel(r.status)}
+                  {statusLabel(r.status)}
                 </span>
               </div>
 
@@ -464,7 +416,7 @@ const ClubRecruitManagePage: React.FC = () => {
                       {postsById[r.postId] && (
                         <div className="bg-gray-50 rounded-lg p-3 border border-gray-900">
                           <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                            {sanitizeInquiryText(postsById[r.postId].content)}
+                            {postsById[r.postId].content.replace(/^\[가입 문의\]\s*\n?/, "").trim()}
                           </p>
                           <p className="mt-1.5 text-xs text-gray-500">
                             {postsById[r.postId].author?.name ??

@@ -79,7 +79,7 @@ const ClubRecruitingPage: React.FC = () => {
   }, [clubId, currentUserId]);
 
   const sanitizeJoinInquiryText = (text: string) => {
-    return text.replace(/^\[가입 문의\]\s*\n?/m, "[가입 문의]\n").trim();
+    return text.replace(/^\[가입 문의\]\s*\n?/m, "").trim();
   };
 
   const fetchJoinInquiryThread = useCallback(async () => {
@@ -88,7 +88,10 @@ const ClubRecruitingPage: React.FC = () => {
     try {
       const req = await clubService.getMyJoinRequest(Number(clubId));
       setJoinReq(req);
-      if (req.postId) {
+      if (req && req.status === "PENDING") {
+        setJoinStatus("PENDING");
+      }
+      if (req && req.postId) {
         const p = await postService.getPost(Number(clubId), req.postId);
         setJoinPost(p);
         const cs = await commentService.getComments(Number(clubId), req.postId);
@@ -139,6 +142,18 @@ const ClubRecruitingPage: React.FC = () => {
               ?.data?.message
           : undefined;
       showToast("가입 신청 실패: " + (errorMessage || "오류 발생"), "error");
+    }
+  };
+
+  const handleCancelJoinRequest = async () => {
+    if (!clubId) return;
+    if (!confirm("가입 신청을 취소하시겠습니까?")) return;
+    try {
+      await clubService.cancelJoinRequest(Number(clubId));
+      showToast("가입 신청이 취소되었습니다", "success");
+      setJoinStatus("NONE");
+    } catch {
+      showToast("가입 신청 취소에 실패했습니다", "error");
     }
   };
 
@@ -304,8 +319,12 @@ const ClubRecruitingPage: React.FC = () => {
             </button>
           )}
           {joinStatus === "PENDING" && (
-            <button className={outlineBtnClass} disabled type="button">
-              가입 대기중
+            <button
+              className={outlineBtnClass}
+              onClick={handleCancelJoinRequest}
+              type="button"
+            >
+              가입 대기중 · 신청 취소
             </button>
           )}
           {joinStatus === "NONE" && (
