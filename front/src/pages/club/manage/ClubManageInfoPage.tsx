@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../../services/api/axiosInstance";
 import { clubService } from "../../../services/clubService";
 import type { Club, UpdateClubRequest } from "../../../types/club";
-import { ArrowLeftIcon } from "../../../components/common/Icons";
+import { ArrowLeftIcon, UsersIcon } from "../../../components/common/Icons";
 import RegionSelector from "../../../components/common/RegionSelector";
 import { useToast } from "../../../contexts/ToastContext";
+import { getErrorMessage } from "../../../utils/errorHandler";
 
 const ClubManageInfoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ const ClubManageInfoPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -29,6 +33,7 @@ const ClubManageInfoPage: React.FC = () => {
           regionDepth2: res.data.regionDepth2 ?? "",
           description: res.data.description ?? "",
         });
+        setLogoUrl(res.data.logoUrl ?? null);
       } catch (e) {
         console.error(e);
         setError("클럽 정보를 불러오지 못했습니다.");
@@ -40,6 +45,41 @@ const ClubManageInfoPage: React.FC = () => {
   }, [clubId]);
 
   const handleBack = () => navigate(`/clubs/${clubId}/manage`);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !clubId) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      setLogoUploading(true);
+      const res = await axiosInstance.post<Club>(`/clubs/${clubId}/logo`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setLogoUrl(res.data.logoUrl ?? null);
+      showToast("로고가 업로드되었습니다", "success");
+    } catch (err: unknown) {
+      showToast("로고 업로드 실패: " + getErrorMessage(err), "error");
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    if (!clubId || !logoUrl) return;
+    if (!confirm("로고를 삭제하시겠습니까?")) return;
+    try {
+      setLogoUploading(true);
+      await axiosInstance.delete(`/clubs/${clubId}/logo`);
+      setLogoUrl(null);
+      showToast("로고가 삭제되었습니다", "success");
+    } catch (err: unknown) {
+      showToast("로고 삭제 실패: " + getErrorMessage(err), "error");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!clubId) return;
@@ -96,6 +136,54 @@ const ClubManageInfoPage: React.FC = () => {
 
       {/* 폼 */}
       <div className="flex flex-col gap-4">
+        {/* 클럽 로고 */}
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-gray-500">클럽 로고</span>
+          <div className="bg-white rounded-lg border border-border p-3">
+            <div className="flex items-center gap-4">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="클럽 로고"
+                  className="w-16 h-16 rounded-xl object-cover shrink-0 border border-border"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                  <UsersIcon size={24} className="text-muted-foreground" />
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  className="text-sm font-medium text-primary border border-primary/40 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors disabled:opacity-50"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={logoUploading}
+                >
+                  {logoUploading ? "처리 중..." : "로고 변경"}
+                </button>
+                {logoUrl && (
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground border border-border rounded-lg px-3 py-1.5 hover:bg-muted transition-colors disabled:opacity-50"
+                    onClick={handleLogoDelete}
+                    disabled={logoUploading}
+                  >
+                    로고 삭제
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">PNG, JPG, WebP · 최대 5MB</p>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleLogoUpload}
+            />
+          </div>
+        </div>
+
         <label className="flex flex-col gap-1">
           <span className="text-sm text-gray-500">
             클럽 이름 <span className="text-red-500 ml-0.5">*</span>

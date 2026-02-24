@@ -19,39 +19,56 @@ export default function ClubCard({ club, onClick }: ClubCardProps) {
       onClick={onClick}
     >
       <CardContent className="px-3 py-2.5">
-        {/* Header: Club name + Badge */}
-        <div className="mb-1 flex items-center justify-between">
-          <span className="text-sm font-semibold text-foreground">
-            {club.name}
-          </span>
-          {club.autoJoinEnabled ? (
-            <Badge variant="default" className="bg-primary text-xs">
-              바로가입
-            </Badge>
+        <div className="flex items-center gap-3">
+          {/* 클럽 로고 썸네일 */}
+          {club.logoThumbnailUrl ? (
+            <img
+              src={club.logoThumbnailUrl}
+              alt={`${club.name} 로고`}
+              className="w-12 h-12 rounded-lg object-cover shrink-0"
+            />
           ) : (
-            <Badge variant="secondary" className="text-xs">
-              승인제
-            </Badge>
-          )}
-        </div>
-
-        {/* Info rows + Description */}
-        <div className="space-y-1 text-sm text-muted-foreground">
-          {region && (
-            <div className="flex items-center gap-2">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
-              <span>{region}</span>
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <Users className="h-5 w-5 text-muted-foreground" />
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <Users className="h-3.5 w-3.5 shrink-0" />
-            <span>{club.memberCount ?? 0}명</span>
+
+          <div className="flex-1 min-w-0">
+            {/* Header: Club name + Badge */}
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-foreground truncate">
+                {club.name}
+              </span>
+              {club.autoJoinEnabled ? (
+                <Badge variant="default" className="bg-primary text-xs shrink-0">
+                  바로가입
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs shrink-0">
+                  승인제
+                </Badge>
+              )}
+            </div>
+
+            {/* Info rows + Description */}
+            <div className="space-y-1 text-sm text-muted-foreground">
+              {region && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span>{region}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 shrink-0" />
+                <span>{club.memberCount ?? 0}명</span>
+              </div>
+              {club.description && (
+                <p className="line-clamp-2">
+                  {club.description}
+                </p>
+              )}
+            </div>
           </div>
-          {club.description && (
-            <p className="line-clamp-2">
-              {club.description}
-            </p>
-          )}
         </div>
       </CardContent>
     </Card>

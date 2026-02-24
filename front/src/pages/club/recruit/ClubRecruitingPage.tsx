@@ -259,10 +259,19 @@ const ClubRecruitingPage: React.FC = () => {
       <div className="rounded-2xl overflow-hidden border border-border bg-white">
         {/* 에메랄드 배너 */}
         <div className="bg-primary px-6 pt-6 pb-5">
-          <h2 className="text-xl font-bold text-white leading-tight break-words">
-            {club.name}
-          </h2>
-          <div className="flex items-center gap-4 mt-3">
+          <div className="flex items-center gap-4 mb-2">
+            {club.logoUrl ? (
+              <img
+                src={club.logoUrl}
+                alt={`${club.name} 로고`}
+                className="w-16 h-16 rounded-xl object-cover shrink-0 border-2 border-white/30"
+              />
+            ) : null}
+            <h2 className="text-xl font-bold text-white leading-tight break-words">
+              {club.name}
+            </h2>
+          </div>
+          <div className="flex items-center gap-4">
             {club.region && (
               <span className="inline-flex items-center gap-1 text-sm text-white/85">
                 <MapPinIcon size={14} color="currentColor" />

@@ -33,6 +33,8 @@ export interface Club {
     memberRecruitmentNote?: string | null;
     activitySummary?: string | null;
     memberCount?: number;
+    logoUrl?: string | null;
+    logoThumbnailUrl?: string | null;
     // 어워드 정책 필드
     awardPeriod?: AwardPeriod | null;
     awardAttendanceEnabled?: boolean | null;

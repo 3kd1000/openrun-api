@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "../../../services/api/axiosInstance";
 import {
   ArrowLeftIcon,
   InboxIcon,
@@ -17,6 +16,7 @@ import { getOpenRunSession } from "../../../utils/openrunSession";
 import { normalizeClubRole } from "../../../utils/role";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
 import { userService } from "../../../services/userService";
+
 const MenuItem: React.FC<{
   icon: React.ReactNode;
   label: string;
@@ -60,13 +60,8 @@ const ClubManagePage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const [, operator] = await Promise.allSettled([
-        axiosInstance.get(`/clubs/${clubId}`),
-        userService.getOperatorProfile(),
-      ]);
-      if (operator.status === "fulfilled") {
-        setOperatorId(operator.value.id);
-      }
+      const operator = await userService.getOperatorProfile();
+      setOperatorId(operator.id);
     } catch (error: unknown) {
       logError("클럽 관리 데이터 조회", error);
       setError(getErrorMessage(error));

@@ -100,6 +100,14 @@ spec:
               name: {{ .Values.secrets.name }}
               key: INTERNAL_BATCH_KEY
 
+        # === OCI Object Storage (비민감 설정 - Helm values에서 주입) ===
+        - name: OCI_BUCKET_NAME
+          value: {{ .Values.oci.bucketName | quote }}
+        - name: OCI_REGION
+          value: {{ .Values.oci.region | quote }}
+        - name: OCI_NAMESPACE
+          value: {{ .Values.oci.namespace | quote }}
+
         # === OAuth2 Provider 설정 ===
         - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI
           value: {{ .Values.oauth2Provider.kakao.authorizationUri | quote }}

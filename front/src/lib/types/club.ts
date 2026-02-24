@@ -15,6 +15,8 @@ export interface Club {
   memberRecruitmentNote?: string | null;
   activitySummary?: string | null;
   memberCount?: number;
+  logoUrl?: string | null;
+  logoThumbnailUrl?: string | null;
   awardPeriod?: AwardPeriod | null;
   awardAttendanceEnabled?: boolean | null;
   awardPointsEnabled?: boolean | null;

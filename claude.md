@@ -27,7 +27,8 @@
 - 대진표 자동 생성 (한울 KDK, 무작위, 수동)
 - 소셜 로그인 (Google, Kakao, Naver)
 - FCM 푸시 알림 시스템 (일정/대진표/클럽 알림)
-- Admin 백오피스 (통계 대시보드, 배치 관리, 감사 로그)
+- 1:1 메시지 시스템 (일정 연관 대화, 운영자 DM)
+- Admin 백오피스 (통계 대시보드, 배치 관리, 감사 로그, DM 관리)
 
 ## 🔧 개발 환경
 
@@ -72,6 +73,8 @@ openrun/
 ## 🚀 다음 작업 예정
 
 - [ ] 이용 가이드 페이지 콘텐츠 작성
+- [ ] Front UI Stage 4: DrawCreateModal/DrawViewModal shadcn 전환
+- [ ] 공개일정(Open Schedule) 기능 착수 (`docs/side-projects/openrun/decisions/open-schedule-design.md`)
 
 ### ✅ 최근 완료
 
@@ -81,7 +84,9 @@ openrun/
 - [x] 서비스 소개 페이지 (/intro)
 - [x] 클럽 멤버 역할 관리 기능
 - [x] 대진표 생성 알고리즘 개선
-- [x] 모바일 반응형 UI 개선
+- [x] Front shadcn/ui 점진 전환 Stage 1~3 (Emerald/Charcoal 4색 시스템)
+- [x] 메시지 시스템 고도화 (일정 배너 링크, 운영자 DM 3개 진입점, Admin DM 관리)
+- [x] Admin 백오피스 shadcn/Tailwind v4 전체 마이그레이션 (인디고 테마)
 
 ## ⚠️ Claude Code 작업 가이드라인
 
@@ -130,4 +135,4 @@ openrun/
 ---
 
 **프로젝트 상태**: 운영 중 (Production Ready)
-**마지막 업데이트**: 2026-02-07 (일별 통계 배치 + 차트, 서비스 소개 페이지)
+**마지막 업데이트**: 2026-02-24 (Admin shadcn 마이그레이션, 메시징 시스템 고도화, Front UI Stage 1~3)

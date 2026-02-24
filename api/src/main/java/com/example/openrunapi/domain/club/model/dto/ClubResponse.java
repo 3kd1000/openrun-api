@@ -25,6 +25,8 @@ public class ClubResponse {
 
     private final String activitySummary;
     private final Integer memberCount;
+    private final String logoUrl;
+    private final String logoThumbnailUrl;
     private final LocalDateTime createdAt;
 
     // 어워드 정책 필드
@@ -46,6 +48,8 @@ public class ClubResponse {
         this.ownerUserId = club.getOwnerUserId();
         this.activitySummary = club.getActivitySummary();
         this.memberCount = club.getMemberCount();
+        this.logoUrl = club.getLogoUrl();
+        this.logoThumbnailUrl = club.getLogoThumbnailUrl();
         this.createdAt = club.getCreatedAt();
 
         // ClubPolicy에서 정책 정보 가져오기

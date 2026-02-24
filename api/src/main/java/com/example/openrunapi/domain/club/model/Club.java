@@ -51,6 +51,12 @@ public class Club {
     @Column(name = "member_count")
     private Integer memberCount = 0;
 
+    @Column(name = "logo_url", length = 500)
+    private String logoUrl;
+
+    @Column(name = "logo_thumbnail_url", length = 500)
+    private String logoThumbnailUrl;
+
     private boolean deleted = false;
 
     @CreatedDate
@@ -108,6 +114,16 @@ public class Club {
 
     public void updateActivitySummary(String activitySummary) {
         this.activitySummary = activitySummary;
+    }
+
+    public void updateLogo(String logoUrl, String logoThumbnailUrl) {
+        this.logoUrl = logoUrl;
+        this.logoThumbnailUrl = logoThumbnailUrl;
+    }
+
+    public void clearLogo() {
+        this.logoUrl = null;
+        this.logoThumbnailUrl = null;
     }
 
     public void updateMemberCount(Integer memberCount) {
