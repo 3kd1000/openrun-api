@@ -117,7 +117,7 @@ const ScheduleRecruitPage: React.FC = () => {
       // 내 신청 상태 조회 (공개/클럽 공통)
       if (currentUserId) {
         try {
-          const participant = await scheduleService.getMyParticipant(sid, currentUserId);
+          const participant = await scheduleService.getMyParticipant(sid);
           setMyParticipant(participant);
         } catch {
           setMyParticipant(null);
@@ -169,7 +169,7 @@ const ScheduleRecruitPage: React.FC = () => {
     if (!currentUserId || !Number.isFinite(sid)) return;
     try {
       setActionLoading(true);
-      const participant = await scheduleService.requestJoinSchedule(sid, currentUserId);
+      const participant = await scheduleService.requestJoinSchedule(sid);
       setMyParticipant(participant);
       showToast("신청이 완료되었습니다", "success");
     } catch (e) {
@@ -186,7 +186,7 @@ const ScheduleRecruitPage: React.FC = () => {
     if (!confirm("신청을 취소하시겠습니까?")) return;
     try {
       setActionLoading(true);
-      await scheduleService.cancelParticipantRequest(sid, currentUserId);
+      await scheduleService.cancelParticipantRequest(sid);
       setMyParticipant(null);
       showToast("신청이 취소되었습니다", "success");
     } catch (e) {
@@ -204,7 +204,7 @@ const ScheduleRecruitPage: React.FC = () => {
     if (!confirm("참가를 취소하시겠습니까?")) return;
     try {
       setActionLoading(true);
-      await scheduleService.cancelParticipation(sid, currentUserId);
+      await scheduleService.cancelParticipation(sid);
       setMyParticipant(null);
       showToast("참가가 취소되었습니다", "success");
     } catch (e) {

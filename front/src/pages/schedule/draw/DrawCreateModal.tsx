@@ -118,12 +118,9 @@ const DrawCreateModal: React.FC<Props> = ({
         return;
       }
 
-      const session = getOpenRunSession();
-      if (!session.userId) return;
       await participantService.addGuestParticipant(
         scheduleId,
-        name.trim(),
-        session.userId
+        name.trim()
       );
 
       // 참가자 목록 다시 가져오기 (모달은 열린 상태 유지)
@@ -156,17 +153,12 @@ const DrawCreateModal: React.FC<Props> = ({
       setError("");
       setLoading(true);
 
-      const session = getOpenRunSession();
-      const userId = session.userId;
-      if (!userId) return;
-
       // 선택된 게스트 참가자만 삭제 (participantId 기반)
       await Promise.all(
         selectedPIds.map((pId) =>
           participantService.removeGuestParticipant(
             scheduleId,
-            pId,
-            userId
+            pId
           )
         )
       );

@@ -66,7 +66,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
         matchType: data.matchType,
       };
 
-      await scheduleService.createSchedule(requestData, currentUserId ?? undefined);
+      await scheduleService.createSchedule(requestData);
       onSuccess();
       onClose();
     } catch (err) {

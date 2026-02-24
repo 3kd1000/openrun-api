@@ -44,7 +44,19 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").authenticated() // Admin 백오피스 API (Firebase 인증 필요)
                         // 클럽 조회 API (미로그인 유저 포함) - 목록/상세만 허용
                         .requestMatchers(HttpMethod.GET, "/api/clubs", "/api/clubs/*").permitAll()
-                        .requestMatchers("/api/schedules/**").permitAll() // 일정 관리 API (개발 단계)
+                        // Schedule API - 공개 조회만 permitAll, 나머지는 인증 필요
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/recruit").permitAll()        // 게스트/교류전 모집 목록 (탐색)
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/public").permitAll()         // 공개 일정 목록
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/*/draw").permitAll()         // 대진표 조회
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/*/participants").permitAll() // 참가자 목록 조회
+                        // 인증 필요 GET (broad pattern보다 먼저 매칭되어야 함)
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/cursor").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/my-participations").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/*/participants/me").authenticated()
+                        // 일정 상세 조회는 공개 (recruit 페이지 접근)
+                        .requestMatchers(HttpMethod.GET, "/api/schedules/*").permitAll()
+                        // 나머지 일정 API는 인증 필요 (CRUD, 참가, 템플릿 등)
+                        .requestMatchers("/api/schedules/**").authenticated()
                         .requestMatchers("/api/clubs/*/posts/**").authenticated() // 게시판 API (로그인 필요)
                         .requestMatchers("/api/clubs/*/rules/**").authenticated() // 회칙 관리 API (로그인 필요)
                         .requestMatchers("/api/clubs/*/notices/**").authenticated() // 공지사항 API (로그인 필요)

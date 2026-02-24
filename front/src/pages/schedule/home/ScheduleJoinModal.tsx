@@ -72,7 +72,7 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         setLoading(true);
         setError("");
 
-        const clubSchedules = await scheduleService.getAllSchedules(currentUserId, currentClubId);
+        const clubSchedules = await scheduleService.getAllSchedules(currentClubId);
 
         const futureSchedules = clubSchedules.filter((schedule) => {
           const scheduleDate = new Date(schedule.scheduledAt);
@@ -92,7 +92,7 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
         });
         setLocalParticipantCounts(initialCounts);
 
-        const myParticipationIds = await scheduleService.getMyParticipations(currentUserId);
+        const myParticipationIds = await scheduleService.getMyParticipations();
         const initialSelected = new Set<number>(myParticipationIds);
 
         const futureParticipations = new Set<number>();
@@ -151,7 +151,7 @@ const ScheduleJoinModal: React.FC<Props> = ({ onClose, onSuccess }) => {
       setSaving(true);
       setError("");
 
-      const response = await participantService.batchParticipation(currentUserId, {
+      const response = await participantService.batchParticipation({
         selectedScheduleIds: Array.from(selectedScheduleIds),
       });
 

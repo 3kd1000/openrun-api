@@ -20,18 +20,14 @@ export interface BatchParticipationResponse {
 
 export const participantService = {
   // 일정 참가 신청
-  joinSchedule: async (scheduleId: number, userId: number): Promise<Participant> => {
-    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants`, null, {
-      params: { userId }
-    });
+  joinSchedule: async (scheduleId: number): Promise<Participant> => {
+    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants`, null);
     return response.data;
   },
 
   // 참가 신청 취소
-  cancelParticipation: async (scheduleId: number, userId: number): Promise<void> => {
-    await axiosInstance.delete(`/schedules/${scheduleId}/participants`, {
-      params: { userId }
-    });
+  cancelParticipation: async (scheduleId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/participants`);
   },
 
   // 특정 일정의 참가자 목록 조회
@@ -42,10 +38,9 @@ export const participantService = {
 
   // 내 참가 신청 내역 조회
   // 백엔드에서 { data: Participant | null } 형태로 반환
-  getMyParticipation: async (scheduleId: number, userId: number): Promise<Participant | null> => {
+  getMyParticipation: async (scheduleId: number): Promise<Participant | null> => {
     const response = await axiosInstance.get<{ data: Participant | null }>(
-      `/schedules/${scheduleId}/participants/me`,
-      { params: { userId } }
+      `/schedules/${scheduleId}/participants/me`
     );
     return response.data.data; // Participant 또는 null
   },
@@ -53,69 +48,53 @@ export const participantService = {
   // 참가자 일괄 수정 (운영진 전용)
   bulkUpdateParticipants: async (
     scheduleId: number,
-    userIds: number[],
-    userId: number
+    userIds: number[]
   ): Promise<void> => {
     await axiosInstance.put(`/schedules/${scheduleId}/participants/bulk`,
-      { userIds },
-      { params: { userId } }
+      { userIds }
     );
   },
 
   // 일정 참가신청/취소 배치 처리
   batchParticipation: async (
-    userId: number,
     request: BatchParticipationRequest
   ): Promise<BatchParticipationResponse> => {
     const response = await axiosInstance.post<BatchParticipationResponse>(
       `/schedules/participants/batch`,
-      request,
-      { params: { userId } }
+      request
     );
     return response.data;
   },
 
   // 게스트 참가자 추가
-  addGuestParticipant: async (scheduleId: number, guestName: string, userId: number): Promise<Participant> => {
-    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/guests`, { guestName }, {
-      params: { userId }
-    });
+  addGuestParticipant: async (scheduleId: number, guestName: string): Promise<Participant> => {
+    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/guests`, { guestName });
     return response.data;
   },
 
   // 게스트 참가자 삭제
-  removeGuestParticipant: async (scheduleId: number, participantId: number, userId: number): Promise<void> => {
-    await axiosInstance.delete(`/schedules/${scheduleId}/participants/guests/${participantId}`, {
-      params: { userId }
-    });
+  removeGuestParticipant: async (scheduleId: number, participantId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/participants/guests/${participantId}`);
   },
 
   // 게스트 이름 변경
-  updateGuestName: async (scheduleId: number, participantId: number, guestName: string, userId: number): Promise<void> => {
-    await axiosInstance.patch(`/schedules/${scheduleId}/participants/guests/${participantId}/name`, { guestName }, {
-      params: { userId }
-    });
+  updateGuestName: async (scheduleId: number, participantId: number, guestName: string): Promise<void> => {
+    await axiosInstance.patch(`/schedules/${scheduleId}/participants/guests/${participantId}/name`, { guestName });
   },
 
   // 공개일정 참가 신청
-  requestJoinPublicSchedule: async (scheduleId: number, userId: number): Promise<Participant> => {
-    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/request`, null, {
-      params: { userId }
-    });
+  requestJoinPublicSchedule: async (scheduleId: number): Promise<Participant> => {
+    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/request`, null);
     return response.data;
   },
 
   // 참가자 승인 (호스트)
-  approveParticipant: async (scheduleId: number, participantId: number, userId: number): Promise<void> => {
-    await axiosInstance.patch(`/schedules/${scheduleId}/participants/${participantId}/approve`, null, {
-      params: { userId }
-    });
+  approveParticipant: async (scheduleId: number, participantId: number): Promise<void> => {
+    await axiosInstance.patch(`/schedules/${scheduleId}/participants/${participantId}/approve`, null);
   },
 
   // 참가자 거절 (호스트)
-  rejectParticipant: async (scheduleId: number, participantId: number, userId: number): Promise<void> => {
-    await axiosInstance.patch(`/schedules/${scheduleId}/participants/${participantId}/reject`, null, {
-      params: { userId }
-    });
+  rejectParticipant: async (scheduleId: number, participantId: number): Promise<void> => {
+    await axiosInstance.patch(`/schedules/${scheduleId}/participants/${participantId}/reject`, null);
   },
 };

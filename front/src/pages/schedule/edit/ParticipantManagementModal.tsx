@@ -93,8 +93,7 @@ const ParticipantManagementModal: React.FC<Props> = ({
 
       await participantService.bulkUpdateParticipants(
         scheduleId,
-        Array.from(selectedUserIds),
-        session.userId
+        Array.from(selectedUserIds)
       );
 
       onSuccess();
@@ -118,7 +117,7 @@ const ParticipantManagementModal: React.FC<Props> = ({
       setError("");
       const sess = getOpenRunSession();
       if (!sess.userId) return;
-      const added = await participantService.addGuestParticipant(scheduleId, newGuestName.trim(), sess.userId);
+      const added = await participantService.addGuestParticipant(scheduleId, newGuestName.trim());
       setLocalGuests((prev) => [...prev, added]);
       markGuestChanged();
       setNewGuestName("");
@@ -295,7 +294,7 @@ const ParticipantManagementModal: React.FC<Props> = ({
                         const sess = getOpenRunSession();
                         if (!sess.userId) return;
                         try {
-                          await participantService.removeGuestParticipant(scheduleId, guest.id, sess.userId);
+                          await participantService.removeGuestParticipant(scheduleId, guest.id);
                           setLocalGuests((prev) => prev.filter((g) => g.id !== guest.id));
                           markGuestChanged();
                         } catch (err) {

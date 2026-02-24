@@ -82,10 +82,7 @@ export default function ScheduleCreatePage() {
         matchType: data.matchType,
       };
 
-      await scheduleService.createSchedule(
-        requestData,
-        currentUserId ?? undefined
-      );
+      await scheduleService.createSchedule(requestData);
       // 성공 시 리스트로 복귀
       navigate(-1);
     } catch (err) {

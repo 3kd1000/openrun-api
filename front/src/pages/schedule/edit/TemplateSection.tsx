@@ -82,9 +82,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
 
   const fetchTemplates = async () => {
     try {
-      const allTemplates = await scheduleTemplateService.getUserTemplates(
-        currentUserId
-      );
+      const allTemplates = await scheduleTemplateService.getUserTemplates();
       // 해당 타입의 템플릿만 필터링
       const filteredTemplates = allTemplates.filter(
         (t) => t.templateType === templateType
@@ -161,7 +159,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
         participationStartPattern: saveFormData.participationStartPattern,
       };
 
-      await scheduleTemplateService.createTemplate(currentUserId, request);
+      await scheduleTemplateService.createTemplate(request);
       await fetchTemplates();
 
       if (onSaveTemplate) {
@@ -201,7 +199,6 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
       setError("");
 
       await scheduleTemplateService.updateTemplate(
-        currentUserId,
         editingTemplateId,
         {
           templateName: saveFormData.templateName,
@@ -244,7 +241,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
     }
 
     try {
-      await scheduleTemplateService.deleteTemplate(currentUserId, templateId);
+      await scheduleTemplateService.deleteTemplate(templateId);
       await fetchTemplates();
 
       if (selectedTemplateId === templateId) {

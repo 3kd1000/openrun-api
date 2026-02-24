@@ -195,8 +195,8 @@ const ScheduleListPage: React.FC = () => {
 
       const pivotDate = pivotDateOverride || new Date().toISOString();
       const [pastResponse, futureResponse] = await Promise.all([
-        scheduleService.getSchedulesByCursor(userId, selectedClubId, pivotDate, "PAST", INITIAL_PAGE_SIZE),
-        scheduleService.getSchedulesByCursor(userId, selectedClubId, pivotDate, "FUTURE", INITIAL_PAGE_SIZE),
+        scheduleService.getSchedulesByCursor(selectedClubId, pivotDate, "PAST", INITIAL_PAGE_SIZE),
+        scheduleService.getSchedulesByCursor(selectedClubId, pivotDate, "FUTURE", INITIAL_PAGE_SIZE),
       ]);
 
       const combinedSchedules = [...pastResponse.content, ...futureResponse.content];
@@ -209,7 +209,7 @@ const ScheduleListPage: React.FC = () => {
 
       if (firebaseUser) {
         try {
-          const participationIds = await scheduleService.getMyParticipations(userId);
+          const participationIds = await scheduleService.getMyParticipations();
           setMyParticipations(new Set(participationIds));
         } catch (err) {
           console.error("참여 일정 조회 실패:", err);
@@ -244,7 +244,7 @@ const ScheduleListPage: React.FC = () => {
     setLoadingPast(true);
     try {
       const response = await scheduleService.getSchedulesByCursor(
-        userId, selectedClubId, pastCursor, "PAST", INITIAL_PAGE_SIZE
+        selectedClubId, pastCursor, "PAST", INITIAL_PAGE_SIZE
       );
       setSchedules(prev => [...response.content, ...prev]);
       setPastCursor(response.nextCursor);
@@ -266,7 +266,7 @@ const ScheduleListPage: React.FC = () => {
     setLoadingFuture(true);
     try {
       const response = await scheduleService.getSchedulesByCursor(
-        userId, selectedClubId, futureCursor, "FUTURE", INITIAL_PAGE_SIZE
+        selectedClubId, futureCursor, "FUTURE", INITIAL_PAGE_SIZE
       );
       setSchedules(prev => [...prev, ...response.content]);
       setFutureCursor(response.nextCursor);

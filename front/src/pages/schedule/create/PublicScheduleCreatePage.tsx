@@ -44,21 +44,18 @@ export default function PublicScheduleCreatePage() {
     setError("");
 
     try {
-      const created = await scheduleService.createPublicSchedule(
-        {
-          courtName: data.courtName.trim(),
-          courtAddress: data.courtAddress?.trim() || undefined,
-          region: data.region?.trim() || undefined,
-          scheduledAt: data.scheduledAt,
-          maxCapacity: data.maxCapacity,
-          cost: data.cost,
-          description: data.description?.trim() || undefined,
-          matchType: data.matchType === "NONE" ? undefined : data.matchType,
-          durationMinutes: data.durationMinutes,
-          numberOfCourts: data.numberOfCourts,
-        },
-        currentUserId
-      );
+      const created = await scheduleService.createPublicSchedule({
+        courtName: data.courtName.trim(),
+        courtAddress: data.courtAddress?.trim() || undefined,
+        region: data.region?.trim() || undefined,
+        scheduledAt: data.scheduledAt,
+        maxCapacity: data.maxCapacity,
+        cost: data.cost,
+        description: data.description?.trim() || undefined,
+        matchType: data.matchType === "NONE" ? undefined : data.matchType,
+        durationMinutes: data.durationMinutes,
+        numberOfCourts: data.numberOfCourts,
+      });
       showToast("공개일정이 생성되었습니다", "success");
       navigate(`/schedules/${created.id}`);
     } catch (err: unknown) {

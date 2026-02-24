@@ -37,28 +37,7 @@ describe("scheduleService", () => {
 
       const result = await scheduleService.createSchedule(request);
 
-      expect(axios.post).toHaveBeenCalledWith("/schedules", request, {
-        params: undefined,
-      });
-      expect(result).toEqual(mockSchedule);
-    });
-
-    it("userId 포함하여 일정 생성", async () => {
-      vi.mocked(axios.post).mockResolvedValueOnce({ data: mockSchedule });
-
-      const request: CreateScheduleRequest = {
-        clubId: 1,
-        courtName: "테스트 코트",
-        scheduledAt: "2025-01-15T10:00:00",
-        durationMinutes: 120,
-        maxCapacity: 8,
-      };
-
-      const result = await scheduleService.createSchedule(request, 100);
-
-      expect(axios.post).toHaveBeenCalledWith("/schedules", request, {
-        params: { userId: 100 },
-      });
+      expect(axios.post).toHaveBeenCalledWith("/schedules", request);
       expect(result).toEqual(mockSchedule);
     });
   });
@@ -67,10 +46,10 @@ describe("scheduleService", () => {
     it("clubId 없이 전체 일정 조회", async () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
-      const result = await scheduleService.getAllSchedules(100);
+      const result = await scheduleService.getAllSchedules();
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: { userId: 100 },
+        params: {},
       });
       expect(result).toEqual([mockSchedule]);
     });
@@ -78,10 +57,10 @@ describe("scheduleService", () => {
     it("clubId로 특정 클럽 일정 조회", async () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
-      const result = await scheduleService.getAllSchedules(100, 1);
+      const result = await scheduleService.getAllSchedules(1);
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: { userId: 100, clubId: 1 },
+        params: { clubId: 1 },
       });
       expect(result).toEqual([mockSchedule]);
     });
@@ -93,20 +72,7 @@ describe("scheduleService", () => {
 
       const result = await scheduleService.getScheduleById(1);
 
-      expect(axios.get).toHaveBeenCalledWith("/schedules/1", {
-        params: undefined,
-      });
-      expect(result).toEqual(mockSchedule);
-    });
-
-    it("userId 포함하여 일정 조회", async () => {
-      vi.mocked(axios.get).mockResolvedValueOnce({ data: mockSchedule });
-
-      const result = await scheduleService.getScheduleById(1, 100);
-
-      expect(axios.get).toHaveBeenCalledWith("/schedules/1", {
-        params: { userId: 100 },
-      });
+      expect(axios.get).toHaveBeenCalledWith("/schedules/1");
       expect(result).toEqual(mockSchedule);
     });
   });
@@ -115,10 +81,10 @@ describe("scheduleService", () => {
     it("향후 일정 조회", async () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
-      const result = await scheduleService.getUpcomingSchedules(100, 1);
+      const result = await scheduleService.getUpcomingSchedules(1);
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: { userId: 100, clubId: 1, upcoming: true },
+        params: { clubId: 1, upcoming: true },
       });
       expect(result).toEqual([mockSchedule]);
     });
@@ -129,14 +95,13 @@ describe("scheduleService", () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [mockSchedule] });
 
       const result = await scheduleService.getSchedulesByDateRange(
-        100,
         1,
         "2025-01-01",
         "2025-01-31"
       );
 
       expect(axios.get).toHaveBeenCalledWith("/schedules", {
-        params: { userId: 100, clubId: 1, start: "2025-01-01", end: "2025-01-31" },
+        params: { clubId: 1, start: "2025-01-01", end: "2025-01-31" },
       });
       expect(result).toEqual([mockSchedule]);
     });
@@ -157,29 +122,7 @@ describe("scheduleService", () => {
 
       const result = await scheduleService.updateSchedule(1, request);
 
-      expect(axios.put).toHaveBeenCalledWith("/schedules/1", request, {
-        params: undefined,
-      });
-      expect(result.courtName).toBe("수정된 코트");
-    });
-
-    it("userId 포함하여 일정 수정", async () => {
-      const updatedSchedule = { ...mockSchedule, courtName: "수정된 코트" };
-      vi.mocked(axios.put).mockResolvedValueOnce({ data: updatedSchedule });
-
-      const request: CreateScheduleRequest = {
-        clubId: 1,
-        courtName: "수정된 코트",
-        scheduledAt: "2025-01-15T10:00:00",
-        durationMinutes: 120,
-        maxCapacity: 8,
-      };
-
-      const result = await scheduleService.updateSchedule(1, request, 100);
-
-      expect(axios.put).toHaveBeenCalledWith("/schedules/1", request, {
-        params: { userId: 100 },
-      });
+      expect(axios.put).toHaveBeenCalledWith("/schedules/1", request);
       expect(result.courtName).toBe("수정된 코트");
     });
   });
@@ -190,19 +133,7 @@ describe("scheduleService", () => {
 
       await scheduleService.deleteSchedule(1);
 
-      expect(axios.delete).toHaveBeenCalledWith("/schedules/1", {
-        params: undefined,
-      });
-    });
-
-    it("userId 포함하여 일정 삭제", async () => {
-      vi.mocked(axios.delete).mockResolvedValueOnce({});
-
-      await scheduleService.deleteSchedule(1, 100);
-
-      expect(axios.delete).toHaveBeenCalledWith("/schedules/1", {
-        params: { userId: 100 },
-      });
+      expect(axios.delete).toHaveBeenCalledWith("/schedules/1");
     });
   });
 
@@ -210,11 +141,9 @@ describe("scheduleService", () => {
     it("내가 참여한 일정 ID 목록 조회", async () => {
       vi.mocked(axios.get).mockResolvedValueOnce({ data: [1, 2, 3] });
 
-      const result = await scheduleService.getMyParticipations(100);
+      const result = await scheduleService.getMyParticipations();
 
-      expect(axios.get).toHaveBeenCalledWith("/schedules/my-participations", {
-        params: { userId: 100 },
-      });
+      expect(axios.get).toHaveBeenCalledWith("/schedules/my-participations");
       expect(result).toEqual([1, 2, 3]);
     });
   });
@@ -234,12 +163,11 @@ describe("scheduleService", () => {
       const pinnedSchedule = { ...mockSchedule, pinned: true };
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: pinnedSchedule });
 
-      const result = await scheduleService.updateSchedulePinned(1, true, 100);
+      const result = await scheduleService.updateSchedulePinned(1, true);
 
       expect(axios.patch).toHaveBeenCalledWith(
         "/schedules/1/pinned",
-        { pinned: true },
-        { params: { userId: 100 } }
+        { pinned: true }
       );
       expect(result.pinned).toBe(true);
     });
@@ -248,12 +176,11 @@ describe("scheduleService", () => {
       const unpinnedSchedule = { ...mockSchedule, pinned: false };
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: unpinnedSchedule });
 
-      const result = await scheduleService.updateSchedulePinned(1, false, 100);
+      const result = await scheduleService.updateSchedulePinned(1, false);
 
       expect(axios.patch).toHaveBeenCalledWith(
         "/schedules/1/pinned",
-        { pinned: false },
-        { params: { userId: 100 } }
+        { pinned: false }
       );
       expect(result.pinned).toBe(false);
     });
@@ -271,14 +198,12 @@ describe("scheduleService", () => {
       const result = await scheduleService.updateGuestRecruit(
         1,
         true,
-        100,
         "NTRP 3.5 이상"
       );
 
       expect(axios.patch).toHaveBeenCalledWith(
         "/schedules/1/guest-recruit",
-        { open: true, note: "NTRP 3.5 이상" },
-        { params: { userId: 100 } }
+        { open: true, note: "NTRP 3.5 이상" }
       );
       expect(result.guestRecruitOpen).toBe(true);
     });
@@ -287,12 +212,11 @@ describe("scheduleService", () => {
       const recruitSchedule = { ...mockSchedule, guestRecruitOpen: false };
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: recruitSchedule });
 
-      const result = await scheduleService.updateGuestRecruit(1, false, 100);
+      const result = await scheduleService.updateGuestRecruit(1, false);
 
       expect(axios.patch).toHaveBeenCalledWith(
         "/schedules/1/guest-recruit",
-        { open: false, note: null },
-        { params: { userId: 100 } }
+        { open: false, note: null }
       );
       expect(result.guestRecruitOpen).toBe(false);
     });
@@ -310,14 +234,12 @@ describe("scheduleService", () => {
       const result = await scheduleService.updateInterclubRecruit(
         1,
         true,
-        100,
         "4vs4 교류전"
       );
 
       expect(axios.patch).toHaveBeenCalledWith(
         "/schedules/1/interclub-recruit",
-        { open: true, note: "4vs4 교류전" },
-        { params: { userId: 100 } }
+        { open: true, note: "4vs4 교류전" }
       );
       expect(result.interclubRecruitOpen).toBe(true);
     });

@@ -114,13 +114,10 @@ export default function ScheduleDetailPage() {
     try {
       setLoading(true);
       const [scheduleData, participantsList, myStatus] = await Promise.all([
-        scheduleService.getScheduleById(
-          scheduleId,
-          currentUserId || undefined
-        ),
+        scheduleService.getScheduleById(scheduleId),
         participantService.getParticipants(scheduleId),
         currentUserId
-          ? participantService.getMyParticipation(scheduleId, currentUserId)
+          ? participantService.getMyParticipation(scheduleId)
           : Promise.resolve(null),
       ]);
 
@@ -205,8 +202,7 @@ export default function ScheduleDetailPage() {
       setError("");
       const updated = await scheduleService.updateSchedulePinned(
         schedule.id,
-        !schedule.pinned,
-        currentUserId
+        !schedule.pinned
       );
       setSchedule(updated);
     } catch (err) {
@@ -234,7 +230,6 @@ export default function ScheduleDetailPage() {
       const updated = await scheduleService.updateGuestRecruit(
         schedule.id,
         false,
-        currentUserId,
         schedule.guestRecruitNote || null
       );
       setSchedule(updated);
@@ -264,7 +259,6 @@ export default function ScheduleDetailPage() {
       const updated = await scheduleService.updateInterclubRecruit(
         schedule.id,
         false,
-        currentUserId,
         schedule.interclubRecruitNote || null
       );
       setSchedule(updated);
@@ -287,7 +281,6 @@ export default function ScheduleDetailPage() {
         const updated = await scheduleService.updateGuestRecruit(
           schedule.id,
           true,
-          currentUserId,
           tempRecruitNote || null
         );
         setSchedule(updated);
@@ -296,7 +289,6 @@ export default function ScheduleDetailPage() {
         const updated = await scheduleService.updateInterclubRecruit(
           schedule.id,
           true,
-          currentUserId,
           tempRecruitNote || null
         );
         setSchedule(updated);
@@ -334,17 +326,17 @@ export default function ScheduleDetailPage() {
       setError("");
       if (schedule.clubId === null) {
         // 공개일정: 항상 PENDING → 호스트 승인 플로우
-        await participantService.requestJoinPublicSchedule(schedule.id, currentUserId);
+        await participantService.requestJoinPublicSchedule(schedule.id);
         showToast("참가 신청이 완료되었습니다. 호스트 승인을 기다려주세요.", "success");
       } else {
         // 클럽일정: 클럽원은 직접 참가, 비클럽원은 PENDING 플로우
         try {
-          await participantService.joinSchedule(schedule.id, currentUserId);
+          await participantService.joinSchedule(schedule.id);
           showToast("참가 신청이 완료되었습니다", "success");
         } catch (joinErr: unknown) {
           // 비클럽원(게스트)이 클럽일정에 참가 시도 → 게스트 모집 열려있으면 PENDING 플로우로 전환
           if (schedule.guestRecruitOpen) {
-            await participantService.requestJoinPublicSchedule(schedule.id, currentUserId);
+            await participantService.requestJoinPublicSchedule(schedule.id);
             showToast("참가 신청이 완료되었습니다. 호스트 승인을 기다려주세요.", "success");
           } else {
             throw joinErr;
@@ -371,7 +363,7 @@ export default function ScheduleDetailPage() {
     try {
       setLoading(true);
       setError("");
-      await participantService.cancelParticipation(schedule.id, currentUserId);
+      await participantService.cancelParticipation(schedule.id);
       await loadScheduleAndParticipants();
     } catch (err) {
       console.error("신청 취소 실패:", err);
@@ -389,10 +381,7 @@ export default function ScheduleDetailPage() {
     try {
       setLoading(true);
       setError("");
-      await scheduleService.deleteSchedule(
-        schedule.id,
-        currentUserId ?? undefined
-      );
+      await scheduleService.deleteSchedule(schedule.id);
       navigate(returnUrl);
     } catch (err) {
       console.error("일정 삭제 실패:", err);
@@ -430,7 +419,7 @@ export default function ScheduleDetailPage() {
     if (!currentUserId || !schedule) return;
     try {
       setLoading(true);
-      await participantService.approveParticipant(schedule.id, participantId, currentUserId);
+      await participantService.approveParticipant(schedule.id, participantId);
       await loadScheduleAndParticipants();
     } catch (err) {
       console.error("승인 실패:", err);
@@ -445,7 +434,7 @@ export default function ScheduleDetailPage() {
     if (!currentUserId || !schedule) return;
     try {
       setLoading(true);
-      await participantService.rejectParticipant(schedule.id, participantId, currentUserId);
+      await participantService.rejectParticipant(schedule.id, participantId);
       await loadScheduleAndParticipants();
     } catch (err) {
       console.error("거절 실패:", err);
@@ -511,11 +500,7 @@ export default function ScheduleDetailPage() {
         matchType: data.matchType,
       };
 
-      await scheduleService.updateSchedule(
-        schedule.id,
-        requestData,
-        currentUserId ?? undefined
-      );
+      await scheduleService.updateSchedule(schedule.id, requestData);
       setIsEditMode(false);
       await loadScheduleAndParticipants();
     } catch (err) {
