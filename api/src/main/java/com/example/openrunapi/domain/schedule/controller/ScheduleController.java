@@ -430,10 +430,10 @@ public class ScheduleController {
         return ResponseEntity.ok(response);
     }
 
-    // === 공개 일정 참가 신청/승인/거절 ===
+    // === 공개/클럽 일정 참가 신청/승인/거절 ===
 
     /**
-     * 공개 일정 참가 신청 (로그인 사용자)
+     * 공개/클럽 일정 게스트 참가 신청 (로그인 사용자)
      * POST /api/schedules/{scheduleId}/participants/request
      */
     @PostMapping("/{scheduleId}/participants/request")
@@ -445,7 +445,7 @@ public class ScheduleController {
     }
 
     /**
-     * 공개 일정 참가 승인 (호스트 전용)
+     * 공개/클럽 일정 참가 승인 (호스트 또는 운영진 전용)
      * PATCH /api/schedules/{scheduleId}/participants/{participantId}/approve
      */
     @PatchMapping("/{scheduleId}/participants/{participantId}/approve")

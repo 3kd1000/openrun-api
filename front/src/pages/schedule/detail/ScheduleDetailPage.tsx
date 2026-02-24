@@ -333,11 +333,23 @@ export default function ScheduleDetailPage() {
       setLoading(true);
       setError("");
       if (schedule.clubId === null) {
+        // 공개일정: 항상 PENDING → 호스트 승인 플로우
         await participantService.requestJoinPublicSchedule(schedule.id, currentUserId);
         showToast("참가 신청이 완료되었습니다. 호스트 승인을 기다려주세요.", "success");
       } else {
-        await participantService.joinSchedule(schedule.id, currentUserId);
-        showToast("참가 신청이 완료되었습니다", "success");
+        // 클럽일정: 클럽원은 직접 참가, 비클럽원은 PENDING 플로우
+        try {
+          await participantService.joinSchedule(schedule.id, currentUserId);
+          showToast("참가 신청이 완료되었습니다", "success");
+        } catch (joinErr: unknown) {
+          // 비클럽원(게스트)이 클럽일정에 참가 시도 → 게스트 모집 열려있으면 PENDING 플로우로 전환
+          if (schedule.guestRecruitOpen) {
+            await participantService.requestJoinPublicSchedule(schedule.id, currentUserId);
+            showToast("참가 신청이 완료되었습니다. 호스트 승인을 기다려주세요.", "success");
+          } else {
+            throw joinErr;
+          }
+        }
       }
       await loadScheduleAndParticipants();
     } catch (err: unknown) {
@@ -1093,11 +1105,13 @@ export default function ScheduleDetailPage() {
             }
             setIsEditMode(true);
           }}
-          disabled={isPastDate(schedule.scheduledAt)}
+          disabled={isPastDate(schedule.scheduledAt) || !canDelete}
           title={
-            isPastDate(schedule.scheduledAt)
-              ? "과거 날짜에는 일정을 수정할 수 없습니다."
-              : undefined
+            !canDelete
+              ? "일정 생성자 또는 운영진만 수정할 수 있습니다."
+              : isPastDate(schedule.scheduledAt)
+                ? "과거 날짜에는 일정을 수정할 수 없습니다."
+                : undefined
           }
         >
           수정하기

@@ -100,6 +100,10 @@ public class Schedule {
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
 
+    public void setCreatedByUserId(Long createdByUserId) {
+        this.createdByUserId = createdByUserId;
+    }
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;

@@ -1,5 +1,5 @@
 import axiosInstance from './api/axiosInstance';
-import type { Schedule, CreateScheduleRequest, CreatePublicScheduleRequest, PublicScheduleResponse } from '../types/schedule';
+import type { Schedule, CreateScheduleRequest, CreatePublicScheduleRequest, PublicScheduleResponse, Participant } from '../types/schedule';
 
 // 커서 기반 페이지네이션 응답 타입
 export interface ScheduleCursorResponse {
@@ -167,5 +167,35 @@ export const scheduleService = {
       params: { region: region || undefined, matchType: matchType || undefined, limit: limit || undefined }
     });
     return response.data;
+  },
+
+  // 공개/클럽 일정 게스트 참가 신청 (PENDING 상태로 등록)
+  requestJoinSchedule: async (scheduleId: number, userId: number): Promise<Participant> => {
+    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/request`, null, {
+      params: { userId }
+    });
+    return response.data;
+  },
+
+  // PENDING 상태의 참가 신청 취소
+  cancelParticipantRequest: async (scheduleId: number, userId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/participants/request`, {
+      params: { userId }
+    });
+  },
+
+  // CONFIRMED/WAITING 상태의 참가 취소 (카운터 감소, 대기자 승격 포함)
+  cancelParticipation: async (scheduleId: number, userId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/participants`, {
+      params: { userId }
+    });
+  },
+
+  // 내 참가 신청 상태 조회 (없으면 null). 응답 형식: { "data": Participant | null }
+  getMyParticipant: async (scheduleId: number, userId: number): Promise<Participant | null> => {
+    const response = await axiosInstance.get(`/schedules/${scheduleId}/participants/me`, {
+      params: { userId }
+    });
+    return (response.data as { data: Participant | null })?.data ?? null;
   },
 };

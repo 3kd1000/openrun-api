@@ -18,7 +18,7 @@ export default function ClubCard({ club, onClick }: ClubCardProps) {
       className="cursor-pointer gap-0 py-0 transition-shadow hover:shadow-md"
       onClick={onClick}
     >
-      <CardContent className="px-3 py-2.5">
+      <CardContent className="px-3 pt-2.5 pb-2">
         <div className="flex items-center gap-3">
           {/* 클럽 로고 썸네일 */}
           {club.logoThumbnailUrl ? (
@@ -51,19 +51,21 @@ export default function ClubCard({ club, onClick }: ClubCardProps) {
             </div>
 
             {/* Info rows + Description */}
-            <div className="space-y-1 text-sm text-muted-foreground">
-              {region && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" />
-                  <span>{region}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 shrink-0" />
-                <span>{club.memberCount ?? 0}명</span>
+            <div className="space-y-0.5 text-sm text-muted-foreground">
+              <div className="flex items-center gap-3">
+                {region && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {region}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1">
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  {club.memberCount ?? 0}명
+                </span>
               </div>
               {club.description && (
-                <p className="line-clamp-2">
+                <p className="line-clamp-2 mb-0">
                   {club.description}
                 </p>
               )}

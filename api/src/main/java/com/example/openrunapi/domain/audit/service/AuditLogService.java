@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
@@ -57,9 +58,9 @@ public class AuditLogService {
     }
 
     /**
-     * Schedule 수정 로그
+     * Schedule 수정 로그 (별도 트랜잭션으로 실행 - 실패 시 부모 트랜잭션에 영향 없음)
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logScheduleUpdate(Long userId, ScheduleAuditSnapshot before, Schedule afterSchedule) {
         ScheduleAuditSnapshot after = ScheduleAuditSnapshot.from(afterSchedule);
         String changes = buildChangesJson(before, after);

@@ -200,17 +200,27 @@ const MessageDetailPage: React.FC = () => {
         </span>
       </div>
 
-      {/* 참조 정보 배너 - 클릭 시 일정 상세로 이동 */}
-      {referenceInfo?.type === "PUBLIC_SCHEDULE" && (
+      {/* 참조 정보 배너 - 클릭 시 일정 모집 페이지로 이동 */}
+      {(referenceInfo?.type === "PUBLIC_SCHEDULE" || referenceInfo?.type === "CLUB_SCHEDULE") && (
         <button
           type="button"
-          className="mx-0 mb-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg text-xs text-primary shrink-0 w-full text-left flex items-center justify-between cursor-pointer hover:bg-primary/10 transition-colors"
+          className={`mx-0 mb-2 px-3 py-2 rounded-lg text-xs shrink-0 w-full text-left flex items-center justify-between cursor-pointer transition-colors ${
+            referenceInfo.type === "PUBLIC_SCHEDULE"
+              ? "bg-primary/5 border border-primary/20 text-primary hover:bg-primary/10"
+              : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100"
+          }`}
           onClick={() => navigate(`/schedules/${referenceInfo.id}/recruit`, {
             state: { returnUrl: `/messages/${partnerId}` },
           })}
         >
-          <span>공개일정 #{referenceInfo.id} 관련 대화</span>
-          <span className="text-primary/60">일정 보기 →</span>
+          <span>
+            {referenceInfo.type === "PUBLIC_SCHEDULE"
+              ? `공개일정 #${referenceInfo.id} 관련 대화`
+              : `클럽일정 #${referenceInfo.id} 관련 대화`}
+          </span>
+          <span className={referenceInfo.type === "PUBLIC_SCHEDULE" ? "text-primary/60" : "text-slate-400"}>
+            일정 보기 →
+          </span>
         </button>
       )}
 

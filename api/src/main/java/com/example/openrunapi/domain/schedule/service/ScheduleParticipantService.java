@@ -54,8 +54,9 @@ public class ScheduleParticipantService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + userId));
 
-        // 3. 클럽 멤버십 체크 (게스트 사용자 및 공개 일정은 제외)
-        if (!user.isGuest() && schedule.isClubSchedule()) {
+        // 3. 클럽 멤버십 체크 (클럽 일정에서 클럽원만 직접 참가 가능)
+        // 게스트/외부 사용자는 requestJoinPublicSchedule(PENDING → 승인) 플로우를 사용해야 함
+        if (schedule.isClubSchedule()) {
             permissionService.requireClubMembership(userId, schedule.getClubId());
         }
 
@@ -654,18 +655,23 @@ public class ScheduleParticipantService {
         return new ParticipantResponse(participant, newGuestName);
     }
 
-    // === 공개 일정 참가 신청/승인/거절 ===
+    // === 공개/클럽 일정 참가 신청/승인/거절 ===
 
     /**
-     * 공개 일정 참가 신청 (PENDING 상태로 등록)
+     * 공개 또는 클럽 일정 게스트 참가 신청 (PENDING 상태로 등록)
+     * - 공개 일정: 누구나 신청 가능
+     * - 클럽 일정: guestRecruitOpen=true인 경우에만 신청 가능, asGuest=true로 기록
      */
     @Transactional
     public ParticipantResponse requestJoinPublicSchedule(Long scheduleId, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("일정을 찾을 수 없습니다: " + scheduleId));
 
-        if (!schedule.isPublicSchedule()) {
-            throw new IllegalArgumentException("공개 일정만 참가 신청이 가능합니다.");
+        if (schedule.isClubSchedule()) {
+            // 클럽 일정은 게스트 모집이 열려있어야 함
+            if (!Boolean.TRUE.equals(schedule.getGuestRecruitOpen())) {
+                throw new IllegalStateException("게스트 모집이 열려있지 않습니다.");
+            }
         }
 
         // 이미 활성 참가 내역이 있는지 확인
@@ -680,34 +686,69 @@ public class ScheduleParticipantService {
             throw new IllegalStateException("이미 신청한 일정입니다.");
         }
 
-        Integer nextPosition = participantRepository.getNextPosition(scheduleId);
-
-        ScheduleParticipant participant = ScheduleParticipant.builder()
-                .scheduleId(scheduleId)
-                .userId(userId)
-                .status(ParticipantStatus.PENDING)
-                .position(nextPosition != null ? nextPosition : 1)
-                .build();
-
-        participantRepository.save(participant);
+        // 기존 REJECTED 레코드가 있으면 PENDING으로 재활용 (unique constraint 충돌 방지)
+        Optional<ScheduleParticipant> rejectedOpt = existing.stream()
+                .filter(ScheduleParticipant::isRejected)
+                .findFirst();
 
         User user = userRepository.findById(userId).orElse(null);
         String displayName = user != null ? user.getPublicDisplayName() : "알 수 없음";
 
-        log.info("공개 일정 참가 신청: scheduleId={}, userId={}", scheduleId, userId);
+        ScheduleParticipant participant;
+        if (rejectedOpt.isPresent()) {
+            participant = rejectedOpt.get();
+            participant.pending();
+            participantRepository.save(participant);
+            log.info("거절된 참가 신청 재신청(REJECTED→PENDING): scheduleId={}, userId={}", scheduleId, userId);
+        } else {
+            Integer nextPosition = participantRepository.getNextPosition(scheduleId);
+            participant = ScheduleParticipant.builder()
+                    .scheduleId(scheduleId)
+                    .userId(userId)
+                    .status(ParticipantStatus.PENDING)
+                    .position(nextPosition != null ? nextPosition : 1)
+                    .asGuest(schedule.isClubSchedule()) // 클럽 일정 게스트 신청자는 asGuest=true
+                    .build();
+            participantRepository.save(participant);
+            log.info("일정 참가 신청(PENDING): scheduleId={}, userId={}", scheduleId, userId);
+        }
+
         return new ParticipantResponse(participant, displayName);
     }
 
     /**
-     * 공개 일정 참가 승인 (호스트 전용)
+     * PENDING 상태의 참가 신청 취소 (카운터 변경 없음 - PENDING은 승인 전이므로 미집계)
+     */
+    @Transactional
+    public void cancelParticipantRequest(Long scheduleId, Long userId) {
+        participantRepository.findActiveParticipation(scheduleId, userId, ParticipantStatus.CANCELLED)
+                .ifPresent(participant -> {
+                    if (!participant.isPending()) {
+                        throw new IllegalStateException("대기 중인 신청만 이 방법으로 취소할 수 있습니다.");
+                    }
+                    participantRepository.delete(participant);
+                    log.info("게스트 참가 신청 취소: scheduleId={}, userId={}", scheduleId, userId);
+                });
+    }
+
+    /**
+     * 공개/클럽 일정 참가 승인 (호스트 또는 운영진 전용)
      */
     @Transactional
     public ParticipantResponse approveParticipant(Long scheduleId, Long participantId, Long hostUserId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("일정을 찾을 수 없습니다."));
 
-        if (!schedule.isPublicSchedule() || !hostUserId.equals(schedule.getCreatedByUserId())) {
-            throw new SecurityException("호스트만 참가를 승인할 수 있습니다.");
+        boolean isAuthorized;
+        if (schedule.isPublicSchedule()) {
+            isAuthorized = hostUserId.equals(schedule.getCreatedByUserId());
+        } else {
+            // 클럽 일정: 일정 생성자(호스트) 또는 클럽 운영진 이상
+            isAuthorized = hostUserId.equals(schedule.getCreatedByUserId())
+                    || permissionService.canManageSchedule(hostUserId, schedule.getClubId());
+        }
+        if (!isAuthorized) {
+            throw new SecurityException("호스트 또는 운영진만 참가를 승인할 수 있습니다.");
         }
 
         ScheduleParticipant participant = participantRepository.findById(participantId)
@@ -737,15 +778,22 @@ public class ScheduleParticipantService {
     }
 
     /**
-     * 공개 일정 참가 거절 (호스트 전용)
+     * 공개/클럽 일정 참가 거절 (호스트 또는 운영진 전용)
      */
     @Transactional
     public void rejectParticipant(Long scheduleId, Long participantId, Long hostUserId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("일정을 찾을 수 없습니다."));
 
-        if (!schedule.isPublicSchedule() || !hostUserId.equals(schedule.getCreatedByUserId())) {
-            throw new SecurityException("호스트만 참가를 거절할 수 있습니다.");
+        boolean isAuthorized;
+        if (schedule.isPublicSchedule()) {
+            isAuthorized = hostUserId.equals(schedule.getCreatedByUserId());
+        } else {
+            isAuthorized = hostUserId.equals(schedule.getCreatedByUserId())
+                    || permissionService.canManageSchedule(hostUserId, schedule.getClubId());
+        }
+        if (!isAuthorized) {
+            throw new SecurityException("호스트 또는 운영진만 참가를 거절할 수 있습니다.");
         }
 
         ScheduleParticipant participant = participantRepository.findById(participantId)

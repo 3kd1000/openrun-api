@@ -74,6 +74,10 @@ public class ScheduleService {
         }
 
         Schedule schedule = request.toEntity();
+        // 일정 생성자 기록 (클럽일정/공개일정 공통)
+        if (userId != null) {
+            schedule.setCreatedByUserId(userId);
+        }
         Schedule savedSchedule = scheduleRepository.save(schedule);
 
         // Audit 로깅
@@ -268,8 +272,23 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
+        // 권한 체크: 공개일정은 생성자만, 클럽일정은 ADMIN 이상
+        if (userId == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+        if (schedule.isPublicSchedule()) {
+            if (!userId.equals(schedule.getCreatedByUserId())) {
+                throw new SecurityException("일정 생성자만 수정할 수 있습니다.");
+            }
+        } else {
+            if (!userId.equals(schedule.getCreatedByUserId())
+                    && !permissionService.canManageSchedule(userId, schedule.getClubId())) {
+                throw new SecurityException("일정 수정 권한이 없습니다. 생성자 또는 운영진 이상만 가능합니다.");
+            }
+        }
+
         // Audit용 스냅샷 (수정 전)
-        ScheduleAuditSnapshot beforeSnapshot = userId != null ? ScheduleAuditSnapshot.from(schedule) : null;
+        ScheduleAuditSnapshot beforeSnapshot = ScheduleAuditSnapshot.from(schedule);
 
         // 과거 날짜 체크 (KST 기준)
         if (TimeValidationUtils.isPast(request.getScheduledAt())) {

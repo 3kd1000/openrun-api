@@ -2,14 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { formatScheduleDateTime } from "../../../utils/dateUtils";
 import { scheduleService } from "../../../services/scheduleService";
-import {
-  clubService,
-  type ExternalRequestResponse,
-} from "../../../services/clubService";
-import { postService } from "../../../services/postService";
-import { commentService } from "../../../services/commentService";
-import type { Schedule, MatchType } from "../../../types/schedule";
-import type { Post, Comment } from "../../../types/post";
+import type { Schedule, Participant, MatchType } from "../../../types/schedule";
 import {
   MapPinIcon,
   CalendarIcon,
@@ -50,27 +43,20 @@ const ScheduleRecruitPage: React.FC = () => {
   }, []);
 
   const [schedule, setSchedule] = useState<Schedule | null>(null);
-  const [myReq, setMyReq] = useState<ExternalRequestResponse | null>(null);
-  const [post, setPost] = useState<Post | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [myParticipant, setMyParticipant] = useState<Participant | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hostProfile, setHostProfile] = useState<UserPublicProfile | null>(null);
-  const [inquiryContent, setInquiryContent] = useState("");
-  const [commentContent, setCommentContent] = useState("");
 
   // schedule에서 clubId 추출
   const clubId = schedule?.clubId ?? null;
   const isPublic = clubId === null;
+  const isHost = schedule?.createdByUserId != null && schedule.createdByUserId === currentUserId;
 
-  const isApplied = myReq?.status === "PENDING" || myReq?.status === "APPROVED";
-
-  const sanitizeInquiryText = (text: string) => {
-    return text
-      .replace(/^\[게스트 모집\]\s*\(바로가기:.*\)\s*\n?/m, "[게스트 모집]\n")
-      .trim();
-  };
+  const isConfirmed =
+    myParticipant?.status === "CONFIRMED" ||
+    myParticipant?.status === "WAITING";
 
   const handleCopyLink = async () => {
     const url = window.location.origin + window.location.pathname;
@@ -89,24 +75,23 @@ const ScheduleRecruitPage: React.FC = () => {
   };
 
   const statusLabel = useMemo(() => {
-    if (isPublic) return "미신청"; // 공개일정은 향후 별도 처리
-    if (!myReq) return "미신청";
-    if (myReq.status === "PENDING") return "신청완료 (대기중)";
-    if (myReq.status === "APPROVED") return "참가 확정";
-    if (myReq.status === "REJECTED") return "반려됨";
-    if (myReq.status === "CANCELLED") return "신청취소";
-    return myReq.status;
-  }, [myReq, isPublic]);
+    if (!myParticipant) return "미신청";
+    if (myParticipant.status === "PENDING") return "신청완료 (대기중)";
+    if (myParticipant.status === "CONFIRMED") return "참가 확정";
+    if (myParticipant.status === "WAITING") return "대기중";
+    if (myParticipant.status === "REJECTED") return "반려됨";
+    if (myParticipant.status === "CANCELLED") return "신청취소";
+    return myParticipant.status;
+  }, [myParticipant]);
 
   const statusTone = useMemo(() => {
-    if (isPublic) return "neutral";
-    if (!myReq) return "neutral";
-    if (myReq.status === "PENDING") return "pending";
-    if (myReq.status === "APPROVED") return "success";
-    if (myReq.status === "REJECTED") return "danger";
-    if (myReq.status === "CANCELLED") return "neutral";
+    if (!myParticipant) return "neutral";
+    if (myParticipant.status === "PENDING") return "pending";
+    if (myParticipant.status === "CONFIRMED") return "success";
+    if (myParticipant.status === "WAITING") return "pending";
+    if (myParticipant.status === "REJECTED") return "danger";
     return "neutral";
-  }, [myReq, isPublic]);
+  }, [myParticipant]);
 
   const statusToneClass = {
     neutral: "text-muted-foreground",
@@ -129,38 +114,20 @@ const ScheduleRecruitPage: React.FC = () => {
       const scheduleData = await scheduleService.getScheduleById(sid);
       setSchedule(scheduleData);
 
-      // 클럽일정: 기존 게스트모집 API로 신청 상태/문의 조회
-      if (currentUserId && scheduleData.clubId) {
+      // 내 신청 상태 조회 (공개/클럽 공통)
+      if (currentUserId) {
         try {
-          const req = await clubService.getMyGuestRecruitRequest(
-            scheduleData.clubId,
-            sid
-          );
-          setMyReq(req);
-          if (req.postId) {
-            const p = await postService.getPost(
-              scheduleData.clubId,
-              req.postId
-            );
-            setPost(p);
-            const cs = await commentService.getComments(
-              scheduleData.clubId,
-              req.postId
-            );
-            setComments(cs);
-          }
+          const participant = await scheduleService.getMyParticipant(sid, currentUserId);
+          setMyParticipant(participant);
         } catch {
-          setMyReq(null);
-          setPost(null);
-          setComments([]);
+          setMyParticipant(null);
         }
       }
-      // 공개일정: 호스트 프로필 조회
-      if (scheduleData.clubId === null && scheduleData.createdByUserId) {
+
+      // 호스트 프로필 조회 (공개일정/클럽일정 공통)
+      if (scheduleData.createdByUserId) {
         try {
-          const profile = await userService.getUserPublicProfile(
-            scheduleData.createdByUserId
-          );
+          const profile = await userService.getUserPublicProfile(scheduleData.createdByUserId);
           setHostProfile(profile);
         } catch {
           setHostProfile(null);
@@ -199,11 +166,12 @@ const ScheduleRecruitPage: React.FC = () => {
 
   const handleApply = async () => {
     if (requireLogin()) return;
-    if (!clubId || !Number.isFinite(sid)) return;
+    if (!currentUserId || !Number.isFinite(sid)) return;
     try {
       setActionLoading(true);
-      const req = await clubService.applyGuestRecruit(clubId, sid);
-      setMyReq(req);
+      const participant = await scheduleService.requestJoinSchedule(sid, currentUserId);
+      setMyParticipant(participant);
+      showToast("신청이 완료되었습니다", "success");
     } catch (e) {
       console.error(e);
       showToast("신청에 실패했습니다", "error");
@@ -214,12 +182,13 @@ const ScheduleRecruitPage: React.FC = () => {
 
   const handleCancel = async () => {
     if (requireLogin()) return;
-    if (!clubId || !Number.isFinite(sid)) return;
+    if (!currentUserId || !Number.isFinite(sid)) return;
     if (!confirm("신청을 취소하시겠습니까?")) return;
     try {
       setActionLoading(true);
-      const req = await clubService.cancelGuestRecruit(clubId, sid);
-      setMyReq(req);
+      await scheduleService.cancelParticipantRequest(sid, currentUserId);
+      setMyParticipant(null);
+      showToast("신청이 취소되었습니다", "success");
     } catch (e) {
       console.error(e);
       showToast("취소에 실패했습니다", "error");
@@ -228,50 +197,23 @@ const ScheduleRecruitPage: React.FC = () => {
     }
   };
 
-  const handleCreateInquiry = async () => {
+  // CONFIRMED/WAITING 상태의 참가 취소 (카운터 감소 포함)
+  const handleCancelParticipation = async () => {
     if (requireLogin()) return;
-    if (!clubId || !Number.isFinite(sid)) return;
-    if (!inquiryContent.trim()) return;
+    if (!currentUserId || !Number.isFinite(sid)) return;
+    if (!confirm("참가를 취소하시겠습니까?")) return;
     try {
       setActionLoading(true);
-      const p = await clubService.createGuestRecruitInquiry(
-        clubId,
-        sid,
-        inquiryContent.trim()
-      );
-      setPost(p);
-      const cs = await commentService.getComments(clubId, p.id);
-      setComments(cs);
-      setInquiryContent("");
+      await scheduleService.cancelParticipation(sid, currentUserId);
+      setMyParticipant(null);
+      showToast("참가가 취소되었습니다", "success");
     } catch (e) {
       console.error(e);
-      showToast("문의글 작성에 실패했습니다", "error");
+      showToast("취소에 실패했습니다", "error");
     } finally {
       setActionLoading(false);
     }
   };
-
-  const handleCreateComment = async () => {
-    if (requireLogin()) return;
-    if (!clubId || !post) return;
-    if (!commentContent.trim()) return;
-    try {
-      setActionLoading(true);
-      const created = await commentService.createComment(clubId, post.id, {
-        content: commentContent.trim(),
-      });
-      setComments((prev) => [...prev, created]);
-      setCommentContent("");
-    } catch (e) {
-      console.error(e);
-      showToast("댓글 작성에 실패했습니다", "error");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const outlineBtnClass =
-    "w-full border-[1.5px] border-primary rounded-xl py-3.5 text-base font-bold bg-transparent text-primary cursor-pointer transition-all hover:bg-primary/5 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:border-muted-foreground disabled:text-muted-foreground";
 
   if (loading) {
     return (
@@ -282,11 +224,16 @@ const ScheduleRecruitPage: React.FC = () => {
   }
 
   // 배너 표시 정보
-  const bannerTitle = isPublic
-    ? (schedule?.description ? "공개일정" : "공개일정")
-    : (schedule?.clubName ?? "클럽");
+  const bannerTitle = isPublic ? "공개일정" : (schedule?.clubName ?? "클럽");
   const bannerBgClass = isPublic ? "bg-primary" : "bg-slate-700";
   const recruitNote = isPublic ? schedule?.description : schedule?.guestRecruitNote;
+
+  // 테마 색상 (공개: 에메랄드, 클럽: 차콜)
+  const accentBg = isPublic ? "bg-primary" : "bg-slate-700";
+  const accentBgHover = isPublic ? "hover:bg-primary/90" : "hover:bg-slate-600";
+  const accentText = isPublic ? "text-primary" : "text-slate-700";
+  const accentBorder = isPublic ? "border-primary" : "border-slate-700";
+  const accentBgLight = isPublic ? "hover:bg-primary/5" : "hover:bg-slate-50";
 
   return (
     <div className="page-container">
@@ -380,71 +327,73 @@ const ScheduleRecruitPage: React.FC = () => {
                   : "-"}
               </span>
             </div>
-            {schedule.matchType && schedule.matchType !== "NONE" && (
+            {schedule.matchType && schedule.matchType !== "NONE" ? (
               <div className="flex flex-col items-center py-4">
-                <span className="text-xs text-muted-foreground mb-1">
-                  모임타입
-                </span>
+                <span className="text-xs text-muted-foreground mb-1">모임타입</span>
                 <span className="text-lg font-bold text-foreground">
                   {getMatchTypeLabel(schedule.matchType)}
                 </span>
               </div>
-            )}
-            {(!schedule.matchType || schedule.matchType === "NONE") && (
+            ) : (
               <div className="flex flex-col items-center py-4">
-                <span className="text-xs text-muted-foreground mb-1">
-                  모임타입
-                </span>
-                <span className="text-lg font-bold text-muted-foreground">
-                  -
-                </span>
+                <span className="text-xs text-muted-foreground mb-1">모임타입</span>
+                <span className="text-lg font-bold text-muted-foreground">-</span>
               </div>
             )}
           </div>
 
-          {/* 신청 상태 + CTA */}
-          <div className="px-6 py-5">
-            {!isPublic ? (
-              <>
-                <div className="flex items-center justify-between gap-4 mb-3">
-                  <span className="text-sm text-muted-foreground">신청상태</span>
-                  <span
-                    className={`text-sm font-bold whitespace-nowrap ${statusToneClass}`}
-                  >
-                    {statusLabel}
-                  </span>
-                </div>
-                {!isApplied ? (
-                  <button
-                    className="w-full rounded-xl py-3.5 text-base font-bold bg-primary text-white cursor-pointer transition-all hover:bg-primary/90 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleApply}
-                    disabled={actionLoading}
-                    type="button"
-                  >
-                    신청하기
-                  </button>
-                ) : (
-                  <button
-                    className="w-full rounded-xl py-3.5 text-base font-bold cursor-pointer transition-all border-[1.5px] border-red-500 bg-transparent text-red-600 hover:bg-red-50 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleCancel}
-                    disabled={actionLoading}
-                    type="button"
-                  >
-                    신청취소
-                  </button>
-                )}
-              </>
+          {/* 신청 상태 + CTA 3버튼 (공개/클럽 통일, 항상 노출) */}
+          <div className="px-6 py-5 space-y-3">
+            {/* 신청 상태 */}
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm text-muted-foreground">신청상태</span>
+              <span className={`text-sm font-bold whitespace-nowrap ${statusToneClass}`}>
+                {statusLabel}
+              </span>
+            </div>
+
+            {/* 1. 신청하기 / 신청취소 / 참가취소 (항상 노출) */}
+            {myParticipant?.status === "PENDING" ? (
+              <button
+                className="w-full rounded-xl py-3 text-sm font-bold cursor-pointer transition-all border-[1.5px] border-red-500 bg-transparent text-red-600 hover:bg-red-50 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleCancel}
+                disabled={actionLoading}
+                type="button"
+              >
+                신청취소
+              </button>
+            ) : isConfirmed ? (
+              <button
+                className="w-full rounded-xl py-3 text-sm font-bold cursor-pointer transition-all border-[1.5px] border-red-500 bg-transparent text-red-600 hover:bg-red-50 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleCancelParticipation}
+                disabled={actionLoading}
+                type="button"
+              >
+                참가취소
+              </button>
             ) : (
-              <div className="text-center">
-                <button
-                  className="w-full rounded-xl py-3.5 text-base font-bold bg-primary text-white cursor-pointer transition-all hover:bg-primary/90 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => navigate(`/schedules/${sid}`, { replace: true, state: { returnUrl: location.pathname } })}
-                  type="button"
-                >
-                  일정 상세 보기
-                </button>
-              </div>
+              <button
+                className={`w-full rounded-xl py-3 text-sm font-bold ${accentBg} text-white cursor-pointer transition-all ${accentBgHover} hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed`}
+                onClick={handleApply}
+                disabled={actionLoading || isHost}
+                type="button"
+              >
+                {myParticipant?.status === "REJECTED" ? "다시 신청하기" : "신청하기"}
+              </button>
             )}
+
+            {/* 2. 일정 상세 보기 (항상 활성) */}
+            <button
+              className={`w-full rounded-xl py-3 text-sm font-bold cursor-pointer transition-all border-[1.5px] ${accentBorder} bg-transparent ${accentText} ${accentBgLight} hover:-translate-y-px`}
+              onClick={() =>
+                navigate(`/schedules/${sid}`, {
+                  state: { returnUrl: location.pathname },
+                })
+              }
+              type="button"
+            >
+              일정 상세 보기
+            </button>
           </div>
         </div>
       )}
@@ -455,16 +404,18 @@ const ScheduleRecruitPage: React.FC = () => {
           <div className={`text-sm font-bold mb-3 ${isPublic ? "text-primary" : "text-slate-700"}`}>
             {isPublic ? "일정 안내" : "모집 안내"}
           </div>
-          <div className={`w-full p-4 ${isPublic ? "bg-sky-50 border border-sky-200" : "bg-sky-50 border border-sky-200"} rounded-lg text-sm text-foreground whitespace-pre-wrap leading-relaxed`}>
+          <div className="w-full p-4 bg-slate-100 rounded-lg text-sm text-foreground whitespace-pre-wrap leading-relaxed">
             {recruitNote}
           </div>
         </div>
       )}
 
-      {/* 호스트 정보 (공개일정) */}
-      {isPublic && hostProfile && (
+      {/* 호스트/담당자 정보 */}
+      {hostProfile && (
         <div className="border border-border rounded-2xl bg-white p-6 mt-4">
-          <div className="text-sm font-bold text-primary mb-4">호스트 정보</div>
+          <div className={`text-sm font-bold mb-4 ${isPublic ? "text-primary" : "text-slate-700"}`}>
+            호스트 정보
+          </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">이름</span>
@@ -480,114 +431,40 @@ const ScheduleRecruitPage: React.FC = () => {
                 </span>
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">공개일정 개설</span>
-              <span className="text-sm font-medium text-foreground">
-                {hostProfile.publicScheduleCount}회
-              </span>
-            </div>
+            {isPublic && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">공개일정 개설</span>
+                <span className="text-sm font-medium text-foreground">
+                  {hostProfile.publicScheduleCount}회
+                </span>
+              </div>
+            )}
           </div>
-          {/* 메시지 보내기 버튼 */}
-          {currentUserId && currentUserId !== hostProfile.id && (
-            <button
-              className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold border-[1.5px] border-primary bg-transparent text-primary cursor-pointer transition-all hover:bg-primary/5 hover:-translate-y-px"
-              onClick={() =>
-                navigate(`/messages/${hostProfile.id}`, {
-                  state: {
-                    referenceType: "PUBLIC_SCHEDULE",
-                    referenceId: sid,
-                    returnUrl: location.pathname,
-                  },
-                })
-              }
-              type="button"
-            >
-              <MessageCircle size={16} />
-              호스트에게 메시지 보내기
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* 문의하기 (클럽일정, 문의글 없을 때) */}
-      {!isPublic && !post && (
-        <div className="border border-border rounded-2xl bg-white p-6 mt-4">
-          <div className="text-sm font-bold mb-3">문의하기</div>
-          <textarea
-            className="w-full border-[1.5px] border-muted-foreground/30 bg-white rounded-xl p-3 text-sm font-[inherit] min-h-[96px] resize-y mb-3 transition-colors focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
-            placeholder={
-              "연락 방법/질문/요청사항 등을 자유롭게 작성해주세요.\n문의글은 신청 여부와 무관하게 남길 수 있어요."
-            }
-            value={inquiryContent}
-            onChange={(e) => setInquiryContent(e.target.value)}
-            disabled={actionLoading}
-          />
+          {/* 메시지 보내기 (항상 노출, 호스트 시 disabled) */}
           <button
-            className={outlineBtnClass}
-            onClick={handleCreateInquiry}
-            disabled={actionLoading || !inquiryContent.trim()}
+            className={`w-full mt-4 inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold border-[1.5px] ${accentBorder} bg-transparent ${accentText} cursor-pointer transition-all ${accentBgLight} hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed`}
+            onClick={() => {
+              if (!currentUserId) {
+                if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
+                  sessionStorage.setItem("returnUrl", location.pathname);
+                  navigate("/login");
+                }
+                return;
+              }
+              navigate(`/messages/${hostProfile.id}`, {
+                state: {
+                  referenceType: isPublic ? "PUBLIC_SCHEDULE" : "CLUB_SCHEDULE",
+                  referenceId: sid,
+                  returnUrl: location.pathname,
+                },
+              });
+            }}
+            disabled={isHost}
             type="button"
           >
-            문의하기
+            <MessageCircle size={16} />
+            {isPublic ? "호스트에게 메시지 보내기" : "담당자에게 메시지 보내기"}
           </button>
-        </div>
-      )}
-
-      {/* 대화 스레드 (클럽일정) */}
-      {!isPublic && post && (
-        <div className="border border-border rounded-2xl bg-white p-6 mt-4">
-          <div className="text-sm font-bold mb-3">대화</div>
-          <div className="flex flex-col gap-3">
-            {/* 원본 게시글 */}
-            <div className="border border-border bg-white rounded-xl p-3">
-              <div className="text-sm whitespace-pre-wrap">
-                {sanitizeInquiryText(post.content)}
-              </div>
-              <div className="mt-1.5 text-xs text-muted-foreground">
-                {post.author?.name ?? post.guestName ?? "익명"} ·{" "}
-                {new Date(post.createdAt).toLocaleString()}
-              </div>
-            </div>
-
-            {/* 댓글 목록 */}
-            {comments.length === 0 ? (
-              <div className="text-xs text-muted-foreground text-center py-2">
-                아직 댓글이 없습니다.
-              </div>
-            ) : (
-              comments.map((c) => (
-                <div
-                  key={c.id}
-                  className="border border-border bg-white rounded-xl p-3"
-                >
-                  <div className="text-sm whitespace-pre-wrap">{c.content}</div>
-                  <div className="mt-1.5 text-xs text-muted-foreground">
-                    {c.author?.name ?? "익명"} ·{" "}
-                    {new Date(c.createdAt).toLocaleString()}
-                  </div>
-                </div>
-              ))
-            )}
-
-            {/* 댓글 입력 */}
-            <div className="mt-1">
-              <textarea
-                className="w-full border-[1.5px] border-muted-foreground/30 bg-white rounded-xl p-3 text-sm font-[inherit] min-h-[72px] resize-y mb-3 transition-colors focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
-                placeholder="댓글을 입력하세요"
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
-                disabled={actionLoading}
-              />
-              <button
-                className={outlineBtnClass}
-                onClick={handleCreateComment}
-                disabled={actionLoading || !commentContent.trim()}
-                type="button"
-              >
-                댓글 작성
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

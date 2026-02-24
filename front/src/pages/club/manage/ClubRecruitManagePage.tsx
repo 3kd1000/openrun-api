@@ -12,7 +12,6 @@ import { postService } from "../../../services/postService";
 import { commentService } from "../../../services/commentService";
 import type { Post, Comment } from "../../../types/post";
 import RequestProfileDrawer from "../../../components/RequestProfileDrawer";
-import { FEATURE_FLAGS } from "../../../config/featureFlags";
 import { useToast } from "../../../contexts/ToastContext";
 
 const typeLabel = (t: ExternalRequestType) => {
@@ -270,27 +269,6 @@ const ClubRecruitManagePage: React.FC = () => {
               >
                 가입문의
               </button>
-              <button
-                className={chipClass(type === "GUEST", Boolean(targetPostId))}
-                onClick={() => setType("GUEST")}
-                type="button"
-                disabled={Boolean(targetPostId)}
-              >
-                게스트문의
-              </button>
-              {FEATURE_FLAGS.INTERCLUB_ENABLED && (
-                <button
-                  className={chipClass(
-                    type === "INTERCLUB",
-                    Boolean(targetPostId)
-                  )}
-                  onClick={() => setType("INTERCLUB")}
-                  type="button"
-                  disabled={Boolean(targetPostId)}
-                >
-                  교류전
-                </button>
-              )}
             </div>
           </div>
 

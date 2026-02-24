@@ -31,13 +31,25 @@ public class ParticipantController {
     }
 
     /**
-     * 참가 신청 취소
+     * 참가 신청 취소 (CONFIRMED/WAITING 상태, 카운터 감소)
      */
     @DeleteMapping
     public ResponseEntity<Void> cancelParticipation(
             @PathVariable Long scheduleId,
             @RequestParam Long userId) { // TODO: 나중에 SecurityContext에서 가져오기
         participantService.cancelParticipation(scheduleId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * PENDING 상태의 게스트 참가 신청 취소 (카운터 변경 없음)
+     * DELETE /api/schedules/{scheduleId}/participants/request
+     */
+    @DeleteMapping("/request")
+    public ResponseEntity<Void> cancelParticipantRequest(
+            @PathVariable Long scheduleId,
+            @RequestParam Long userId) {
+        participantService.cancelParticipantRequest(scheduleId, userId);
         return ResponseEntity.noContent().build();
     }
 
