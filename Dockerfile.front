@@ -28,7 +28,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Express 설치 (동적 OG 태그 서빙용)
-RUN npm install express
+RUN npm install express@4
 
 # 빌드 결과물 복사
 COPY --from=builder /app/front/dist ./dist
