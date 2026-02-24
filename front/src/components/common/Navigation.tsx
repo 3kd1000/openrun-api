@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { getOpenRunSession } from "../../utils/openrunSession";
+import { useLoginGuard } from "../../hooks/useLoginGuard";
 
 // 선 스타일 SVG 아이콘 컴포넌트
 const SearchIcon: React.FC<{ isActive: boolean }> = () => (
@@ -92,6 +93,7 @@ const MoreIcon: React.FC<{ isActive: boolean }> = () => (
 const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const requireLogin = useLoginGuard();
   const session = getOpenRunSession();
   const hasClubs = session.clubList && session.clubList.length > 0;
 
@@ -135,8 +137,22 @@ const Navigation: React.FC = () => {
           },
         ]
       : []),
-    { path: "/schedules/club", label: "일정", icon: TennisBallIcon },
-    { path: "/scoreboard", label: "기록", icon: BarChartIcon },
+    {
+      path: "/schedules/club",
+      label: "일정",
+      icon: TennisBallIcon,
+      onClick: (e: React.MouseEvent) => {
+        if (!requireLogin()) { e.preventDefault(); return; }
+      },
+    },
+    {
+      path: "/scoreboard",
+      label: "기록",
+      icon: BarChartIcon,
+      onClick: (e: React.MouseEvent) => {
+        if (!requireLogin()) { e.preventDefault(); return; }
+      },
+    },
     { path: "/more", label: "더보기", icon: MoreIcon },
   ];
 

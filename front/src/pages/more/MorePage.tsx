@@ -33,6 +33,7 @@ import {
 import { AppHeader } from "../../components/common/AppHeader";
 import { useNotification } from "../../contexts/NotificationContext";
 import { setOpenRunSession } from "../../utils/openrunSession";
+import { useLoginGuard } from "../../hooks/useLoginGuard";
 
 /**
  * iOS Safari 브라우저인지 확인 (PWA가 아닌 경우)
@@ -51,6 +52,7 @@ const isIOSSafariBrowser = (): boolean => {
 const MorePage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthReady, user: firebaseUser } = useAuth();
+  const requireLogin = useLoginGuard();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
@@ -417,7 +419,7 @@ const MorePage: React.FC = () => {
           )}
           <div
             className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
-            onClick={() => navigate("/more/inquiry")}
+            onClick={() => { if (!requireLogin()) return; navigate("/more/inquiry"); }}
           >
             <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
               <MailIcon size={20} />

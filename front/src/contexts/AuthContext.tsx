@@ -116,6 +116,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log(
         `✅ [${now}] userId 복원 완료: ${userInfo.id} (${userInfo.name})`
       );
+
+      // clubList도 함께 복원 (부분 삭제 대응: Firebase는 살아있지만 localStorage가 없는 경우)
+      const { syncClubList } = await import('../services/api/userApi');
+      await syncClubList();
     } catch (error) {
       console.warn(`⚠️ [${now}] userId 복원 실패 (계속 진행):`, error);
     }

@@ -13,6 +13,7 @@ import { userService, type UserPublicProfile } from "../../../services/userServi
 import { Button } from "@/components/ui/button";
 import { useToast } from "../../../contexts/ToastContext";
 import { getOpenRunSession } from "../../../utils/openrunSession";
+import { useLoginGuard } from "../../../hooks/useLoginGuard";
 
 const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
   switch (matchType) {
@@ -31,6 +32,7 @@ const ScheduleRecruitPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
+  const requireLogin = useLoginGuard();
   const { scheduleId } = useParams<{ scheduleId: string }>();
 
   const sid = scheduleId ? Number(scheduleId) : NaN;
@@ -155,17 +157,8 @@ const ScheduleRecruitPage: React.FC = () => {
     }
   };
 
-  const requireLogin = () => {
-    if (currentUserId) return false;
-    if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-      sessionStorage.setItem("returnUrl", location.pathname);
-      navigate("/login");
-    }
-    return true;
-  };
-
   const handleApply = async () => {
-    if (requireLogin()) return;
+    if (!requireLogin()) return;
     if (!currentUserId || !Number.isFinite(sid)) return;
     try {
       setActionLoading(true);
@@ -181,7 +174,7 @@ const ScheduleRecruitPage: React.FC = () => {
   };
 
   const handleCancel = async () => {
-    if (requireLogin()) return;
+    if (!requireLogin()) return;
     if (!currentUserId || !Number.isFinite(sid)) return;
     if (!confirm("신청을 취소하시겠습니까?")) return;
     try {
@@ -199,7 +192,7 @@ const ScheduleRecruitPage: React.FC = () => {
 
   // CONFIRMED/WAITING 상태의 참가 취소 (카운터 감소 포함)
   const handleCancelParticipation = async () => {
-    if (requireLogin()) return;
+    if (!requireLogin()) return;
     if (!currentUserId || !Number.isFinite(sid)) return;
     if (!confirm("참가를 취소하시겠습니까?")) return;
     try {
@@ -385,11 +378,12 @@ const ScheduleRecruitPage: React.FC = () => {
             {/* 2. 일정 상세 보기 (항상 활성) */}
             <button
               className={`w-full rounded-xl py-3 text-sm font-bold cursor-pointer transition-all border-[1.5px] ${accentBorder} bg-transparent ${accentText} ${accentBgLight} hover:-translate-y-px`}
-              onClick={() =>
+              onClick={() => {
+                if (!requireLogin()) return;
                 navigate(`/schedules/${sid}`, {
                   state: { returnUrl: location.pathname },
-                })
-              }
+                });
+              }}
               type="button"
             >
               일정 상세 보기
@@ -444,13 +438,7 @@ const ScheduleRecruitPage: React.FC = () => {
           <button
             className={`w-full mt-4 inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold border-[1.5px] ${accentBorder} bg-transparent ${accentText} cursor-pointer transition-all ${accentBgLight} hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={() => {
-              if (!currentUserId) {
-                if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-                  sessionStorage.setItem("returnUrl", location.pathname);
-                  navigate("/login");
-                }
-                return;
-              }
+              if (!requireLogin()) return;
               navigate(`/messages/${hostProfile.id}`, {
                 state: {
                   referenceType: isPublic ? "PUBLIC_SCHEDULE" : "CLUB_SCHEDULE",

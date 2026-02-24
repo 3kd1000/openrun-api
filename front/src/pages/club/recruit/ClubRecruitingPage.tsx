@@ -18,12 +18,14 @@ import { postService } from "../../../services/postService";
 import { commentService } from "../../../services/commentService";
 import type { Post, Comment } from "../../../types/post";
 import { getOpenRunSession } from "../../../utils/openrunSession";
+import { useLoginGuard } from "../../../hooks/useLoginGuard";
 import { syncClubList } from "../../../services/api/userApi";
 import { useToast } from "../../../contexts/ToastContext";
 
 const ClubRecruitingPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const requireLogin = useLoginGuard();
   const { clubId } = useParams<{ clubId: string }>();
   const [club, setClub] = useState<Club | null>(null);
   const [joinStatus, setJoinStatus] = useState<
@@ -112,12 +114,7 @@ const ClubRecruitingPage: React.FC = () => {
   }, [clubId, fetchClubDetail, fetchMyMembership, fetchJoinInquiryThread]);
 
   const handleJoinRequest = async () => {
-    if (!currentUserId) {
-      if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-        navigate("/login");
-      }
-      return;
-    }
+    if (!requireLogin()) return;
     if (!confirm("가입 신청하시겠습니까?")) return;
     try {
       const response = await axiosInstance.post<{ autoApproved: boolean; message: string }>(
@@ -147,12 +144,7 @@ const ClubRecruitingPage: React.FC = () => {
 
   const handleCreateJoinInquiry = async () => {
     if (!clubId) return;
-    if (!currentUserId) {
-      if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-        navigate("/login");
-      }
-      return;
-    }
+    if (!requireLogin()) return;
     if (!joinInquiryContent.trim()) return;
     try {
       setActionLoading(true);
@@ -178,12 +170,7 @@ const ClubRecruitingPage: React.FC = () => {
 
   const handleCreateJoinComment = async () => {
     if (!clubId) return;
-    if (!currentUserId) {
-      if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-        navigate("/login");
-      }
-      return;
-    }
+    if (!requireLogin()) return;
     if (!joinPost) return;
     if (!joinCommentContent.trim()) return;
     try {
