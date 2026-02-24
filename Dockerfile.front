@@ -22,19 +22,22 @@ RUN ${BUILD_COMMAND}
 RUN ls -la /app/front/dist 2>/dev/null || echo "dist 폴더 없음 - 빌드 실패 가능성"
 
 
-# --- Stage 2: 최종 실행 이미지 (Node.js serve) ---
+# --- Stage 2: 최종 실행 이미지 (Express OG 서버) ---
 FROM node:22-alpine
 
 WORKDIR /app
 
-# serve 패키지 설치
-RUN npm install -g serve
+# Express 설치 (동적 OG 태그 서빙용)
+RUN npm install express
 
 # 빌드 결과물 복사
 COPY --from=builder /app/front/dist ./dist
 
+# OG 서버 스크립트 복사
+COPY front/og-server.js ./og-server.js
+
 # 포트 노출
 EXPOSE 80
 
-# SPA 라우팅 처리 (-s: SPA 모드, -l 80: 80 포트 listen)
-ENTRYPOINT ["serve", "-s", "dist", "-l", "80"]
+# Express OG 서버 실행 (정적 파일 서빙 + 크롤러 동적 OG 태그)
+ENTRYPOINT ["node", "og-server.js"]

@@ -22,6 +22,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final FcmSenderService fcmSenderService;
+    private final UserNotificationSettingService userNotificationSettingService;
 
     /**
      * Send notification to multiple users (batch)
@@ -37,7 +38,13 @@ public class NotificationService {
             data.put("referenceType", referenceType);
         }
 
+        int sentCount = 0;
         for (Long userId : userIds) {
+            if (!userNotificationSettingService.isNotificationEnabled(userId, type)) {
+                log.debug("Notification skipped for user {} (type={}, setting OFF)", userId, type);
+                continue;
+            }
+
             Notification notification = Notification.builder()
                     .userId(userId)
                     .clubId(clubId)
@@ -54,9 +61,10 @@ public class NotificationService {
             } catch (Exception e) {
                 log.warn("Failed to send FCM to user {}: {}", userId, e.getMessage());
             }
+            sentCount++;
         }
 
-        log.info("Sent notification to {} users (clubId={}): {}", userIds.size(), clubId, title);
+        log.info("Sent notification to {}/{} users (clubId={}): {}", sentCount, userIds.size(), clubId, title);
     }
 
     /**

@@ -179,7 +179,7 @@ export default function ScheduleDetailPage() {
   // 링크 복사
   const handleCopyLink = async () => {
     if (!schedule) return;
-    const url = `${window.location.origin}/schedules/club?scheduleId=${schedule.id}`;
+    const url = `${window.location.origin}/schedules/${schedule.id}`;
     try {
       await navigator.clipboard.writeText(url);
       showToast("링크가 복사되었습니다", "success");

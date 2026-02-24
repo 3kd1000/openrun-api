@@ -32,6 +32,8 @@ import com.example.openrunapi.domain.externalrequest.model.ExternalRequestStatus
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequestType;
 import com.example.openrunapi.domain.externalrequest.repository.ExternalRequestRepository;
 import com.example.openrunapi.domain.user.model.User;
+import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.domain.user.model.UserProfile;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.repository.UserProfileRepository;
@@ -66,6 +68,7 @@ public class ClubService {
     private final PermissionService permissionService;
     private final AuditLogService auditLogService;
     private final ObjectStorageService objectStorageService;
+    private final NotificationService notificationService;
 
     private static final Set<String> ALLOWED_LOGO_TYPES = Set.of("image/png", "image/jpeg", "image/webp");
 
@@ -295,6 +298,22 @@ public class ClubService {
         }
 
         externalRequestRepository.save(externalRequest);
+
+        // 수동 승인 경로: 클럽 ADMIN/OWNER에게 가입 신청 알림
+        if (!isAutoApprove) {
+            try {
+                List<Long> adminIds = clubMemberRepository.findUserIdsByClubIdAndRoleIn(
+                        clubId, List.of(ClubRole.ADMIN, ClubRole.OWNER));
+                if (!adminIds.isEmpty()) {
+                    notificationService.sendNotification(
+                            clubId, adminIds,
+                            "가입 신청", club.getName() + "에 새 가입 신청이 있습니다",
+                            NotificationType.EXTERNAL_REQUEST, clubId, "CLUB");
+                }
+            } catch (Exception e) {
+                // 알림 실패가 가입 신청을 막으면 안 됨
+            }
+        }
 
         return isAutoApprove ? JoinRequestResponse.autoApproved() : JoinRequestResponse.pending();
     }

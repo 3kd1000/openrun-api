@@ -121,6 +121,45 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
+  name: schedule-reminder
+  namespace: openrun
+spec:
+  # 매일 KST 20:00 (UTC 11:00)
+  schedule: "0 11 * * *"
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: batch-caller
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  curl -X POST \
+                    -H "X-Internal-Key: ${INTERNAL_BATCH_KEY}" \
+                    -H "Content-Type: application/json" \
+                    --fail \
+                    --silent \
+                    --show-error \
+                    "http://openrun-api-production-service:8080/internal/batch/execute/SCHEDULE_REMINDER"
+              env:
+                - name: INTERNAL_BATCH_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: openrun-secrets-prod
+                      key: INTERNAL_BATCH_KEY
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
   name: image-cleanup
   namespace: kube-system
 spec:

@@ -38,6 +38,7 @@ import GuideEditorPage from "./pages/more/GuideEditorPage";
 import InquiryPage from "./pages/more/InquiryPage";
 import ProfileEditPage from "./pages/more/ProfileEditPage";
 import NotificationPage from "./pages/notification/NotificationPage";
+import NotificationSettingsPage from "./pages/more/NotificationSettingsPage";
 import IntroPage from "./pages/intro/IntroPage";
 import MessageListPage from "./pages/message/MessageListPage";
 import MessageDetailPage from "./pages/message/MessageDetailPage";
@@ -257,6 +258,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ProfileEditPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/more/notification-settings"
+                element={
+                  <ProtectedRoute>
+                    <NotificationSettingsPage />
                   </ProtectedRoute>
                 }
               />

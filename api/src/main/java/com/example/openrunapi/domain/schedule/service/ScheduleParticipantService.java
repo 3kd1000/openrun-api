@@ -20,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.openrunapi.domain.club.model.ClubRole;
+import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
+import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,6 +41,8 @@ public class ScheduleParticipantService {
     private final AuditLogService auditLogService;
     private final AwardService awardService;
     private final MatchRepository matchRepository;
+    private final NotificationService notificationService;
+    private final ClubMemberRepository clubMemberRepository;
 
     /**
      * 일정 참가 신청
@@ -237,6 +243,18 @@ public class ScheduleParticipantService {
                 ScheduleParticipant firstWaiting = waitingList.get(0);
                 firstWaiting.confirm();
                 // currentParticipants는 이미 카운트되어 있으므로 증가시키지 않음
+
+                // 대기→확정 승격 알림
+                if (firstWaiting.getUserId() != null) {
+                    try {
+                        notificationService.sendNotification(
+                                schedule.getClubId(), firstWaiting.getUserId(),
+                                "참가 확정", schedule.getCourtName() + " 일정에 대기에서 확정으로 변경되었습니다",
+                                NotificationType.SCHEDULE, scheduleId, "SCHEDULE");
+                    } catch (Exception e) {
+                        log.warn("대기→확정 승격 알림 발송 실패: {}", e.getMessage());
+                    }
+                }
             }
         }
     }
@@ -713,6 +731,26 @@ public class ScheduleParticipantService {
             log.info("일정 참가 신청(PENDING): scheduleId={}, userId={}", scheduleId, userId);
         }
 
+        // 참가 신청 알림 발송 (호스트/운영진에게)
+        try {
+            List<Long> recipientIds;
+            if (schedule.isPublicSchedule()) {
+                recipientIds = schedule.getCreatedByUserId() != null
+                        ? List.of(schedule.getCreatedByUserId()) : List.of();
+            } else {
+                recipientIds = clubMemberRepository.findUserIdsByClubIdAndRoleIn(
+                        schedule.getClubId(), List.of(ClubRole.ADMIN, ClubRole.OWNER));
+            }
+            if (!recipientIds.isEmpty()) {
+                notificationService.sendNotification(
+                        schedule.getClubId(), recipientIds,
+                        "참가 신청", schedule.getCourtName() + " 일정에 새 참가 신청이 있습니다",
+                        NotificationType.EXTERNAL_REQUEST, scheduleId, "SCHEDULE");
+            }
+        } catch (Exception e) {
+            log.warn("참가 신청 알림 발송 실패: {}", e.getMessage());
+        }
+
         return new ParticipantResponse(participant, displayName);
     }
 
@@ -774,6 +812,19 @@ public class ScheduleParticipantService {
                 : (participant.getGuestName() != null ? participant.getGuestName() : "알 수 없음");
 
         log.info("공개 일정 참가 승인: scheduleId={}, participantId={}, status={}", scheduleId, participantId, participant.getStatus());
+
+        // 참가 승인 알림 발송 (신청자에게)
+        if (participant.getUserId() != null) {
+            try {
+                notificationService.sendNotification(
+                        schedule.getClubId(), participant.getUserId(),
+                        "참가 승인", schedule.getCourtName() + " 일정 참가가 승인되었습니다",
+                        NotificationType.REQUEST_RESULT, scheduleId, "SCHEDULE");
+            } catch (Exception e) {
+                log.warn("참가 승인 알림 발송 실패: {}", e.getMessage());
+            }
+        }
+
         return new ParticipantResponse(participant, displayName);
     }
 
@@ -801,6 +852,18 @@ public class ScheduleParticipantService {
 
         participant.reject();
         participantRepository.save(participant);
+
+        // 참가 거절 알림 발송 (신청자에게)
+        if (participant.getUserId() != null) {
+            try {
+                notificationService.sendNotification(
+                        schedule.getClubId(), participant.getUserId(),
+                        "참가 거절", schedule.getCourtName() + " 일정 참가가 거절되었습니다",
+                        NotificationType.REQUEST_RESULT, scheduleId, "SCHEDULE");
+            } catch (Exception e) {
+                log.warn("참가 거절 알림 발송 실패: {}", e.getMessage());
+            }
+        }
 
         log.info("공개 일정 참가 거절: scheduleId={}, participantId={}", scheduleId, participantId);
     }

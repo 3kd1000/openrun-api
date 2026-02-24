@@ -20,6 +20,8 @@ import com.example.openrunapi.domain.post.repository.PostRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
+import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.model.UserProfile;
 import com.example.openrunapi.domain.user.repository.UserProfileRepository;
@@ -50,6 +52,7 @@ public class ExternalRequestService {
     private final PostRepository postRepository;
     private final PermissionService permissionService;
     private final ScheduleParticipantService scheduleParticipantService;
+    private final NotificationService notificationService;
 
     public List<ExternalRequestResponse> listForClub(Long clubId, ExternalRequestType type, ExternalRequestStatus status, Long postId, Long adminUserId) {
         permissionService.requireScheduleManagePermission(adminUserId, clubId);
@@ -389,6 +392,18 @@ public class ExternalRequestService {
             scheduleParticipantService.addApprovedExternalGuest(req.getSchedule().getId(), req.getRequester().getId());
         }
 
+        // 승인 알림 발송 (신청자에게)
+        try {
+            String title = req.getType() == ExternalRequestType.JOIN ? "가입 승인" : "참가 승인";
+            String body = req.getClub().getName() + (req.getType() == ExternalRequestType.JOIN ? " 가입이 승인되었습니다" : " 게스트 참가가 승인되었습니다");
+            notificationService.sendNotification(
+                    clubId, req.getRequester().getId(),
+                    title, body,
+                    NotificationType.REQUEST_RESULT, clubId, "CLUB");
+        } catch (Exception e) {
+            // 알림 실패가 승인 처리를 막으면 안 됨
+        }
+
         return toResponseWithProfile(req);
     }
 
@@ -414,6 +429,19 @@ public class ExternalRequestService {
         if (req.getType() == ExternalRequestType.GUEST && req.getSchedule() != null) {
             scheduleParticipantService.removeApprovedExternalGuest(req.getSchedule().getId(), req.getRequester().getId());
         }
+
+        // 반려 알림 발송 (신청자에게)
+        try {
+            String title = req.getType() == ExternalRequestType.JOIN ? "가입 반려" : "참가 거절";
+            String body = req.getClub().getName() + (req.getType() == ExternalRequestType.JOIN ? " 가입이 반려되었습니다" : " 게스트 참가가 거절되었습니다");
+            notificationService.sendNotification(
+                    clubId, req.getRequester().getId(),
+                    title, body,
+                    NotificationType.REQUEST_RESULT, clubId, "CLUB");
+        } catch (Exception e) {
+            // 알림 실패가 반려 처리를 막으면 안 됨
+        }
+
         return toResponseWithProfile(req);
     }
 }

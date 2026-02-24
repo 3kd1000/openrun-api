@@ -72,12 +72,16 @@ openrun/
 
 ## 🚀 다음 작업 예정
 
+- [ ] Phase C: 동적 OG 태그
+- [ ] Phase B-2: PWA 설치 유도
 - [ ] 이용 가이드 페이지 콘텐츠 작성
 - [ ] Front UI Stage 4: DrawCreateModal/DrawViewModal shadcn 전환
 - [ ] 공개일정(Open Schedule) 기능 착수 (`docs/side-projects/openrun/decisions/open-schedule-design.md`)
 
 ### ✅ 최근 완료
 
+- [x] Phase A: SecurityContext 마이그레이션 (@RequestParam userId → @AuthenticationPrincipal)
+- [x] Phase B: FCM 알림 케이스 확장 + 알림 설정 페이지 (B-1 7케이스 + B-3 설정)
 - [x] FCM 푸시 알림 시스템 구축 (Phase 1: 인프라 + 인앱 UI)
 - [x] 일별 통계 수집 배치 + 차트 대시보드 (Recharts)
 - [x] K8s CronJob 기반 배치 시스템 (중복 실행 방지)
@@ -98,6 +102,11 @@ openrun/
 - 임의로 판단하지 말 것 (API 비용 낭비 방지)
 
 자세한 내용: `@docs/guides/claude-code-guidelines.md`
+
+### 대규모 작업 시 세션 관리
+- Plan 승인 후 본격 구현에 들어갈 때, 작업 계획을 memory에 저장하고 `/compact`를 실행하여 컨텍스트를 확보한 후 작업을 시작할 것
+- 기준: 수정 파일 5개 이상 또는 step 10개 이상인 경우
+- 작업 진행 중 중간 지점에서도 컨텍스트가 부족해지면 진행 상황을 memory에 기록 후 `/compact` 실행
 
 ## 📚 문서화 가이드
 
