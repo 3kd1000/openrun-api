@@ -1,14 +1,19 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../../services/api/axiosInstance";
 import { clubService } from "../../../services/clubService";
 import type { CreateClubRequest } from "../../../types/club";
 import BackButton from "../../../components/common/BackButton";
 import RegionSelector from "../../../components/common/RegionSelector";
+import { UsersIcon } from "../../../components/common/Icons";
 
 const ClubCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<CreateClubRequest>({
     name: "",
@@ -18,6 +23,19 @@ const ClubCreatePage: React.FC = () => {
   });
 
   const handleBack = () => navigate("/clubs/explore");
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleLogoRemove = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    if (logoInputRef.current) logoInputRef.current.value = "";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +53,17 @@ const ClubCreatePage: React.FC = () => {
         regionDepth2: form.regionDepth2?.trim() || undefined,
         description: form.description?.trim() || undefined,
       });
+
+      // 로고 파일이 선택된 경우 업로드
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append("file", logoFile);
+        await axiosInstance.post(`/clubs/${created.id}/logo`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
       // 생성 직후 온보딩(CTA) 화면으로 이동
-      // 정책 기본값: 승인필요/교류전 CLOSED (백엔드 기본값으로 적용)
       navigate(`/clubs/${created.id}/manage/onboarding`);
     } catch (err: unknown) {
       console.error("클럽 생성 실패:", err);
@@ -75,6 +102,54 @@ const ClubCreatePage: React.FC = () => {
           />
         </label>
 
+        {/* 클럽 로고 */}
+        <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+          클럽 로고 (선택)
+          <div className="bg-background rounded-lg border border-input p-3">
+            <div className="flex items-center gap-4">
+              {logoPreview ? (
+                <img
+                  src={logoPreview}
+                  alt="클럽 로고 미리보기"
+                  className="w-16 h-16 rounded-xl object-cover shrink-0 border border-border"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                  <UsersIcon size={24} className="text-muted-foreground" />
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  className="text-sm font-medium text-primary border border-primary/40 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors disabled:opacity-50"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={loading}
+                >
+                  {logoPreview ? "로고 변경" : "로고 선택"}
+                </button>
+                {logoPreview && (
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground border border-border rounded-lg px-3 py-1.5 hover:bg-muted transition-colors disabled:opacity-50"
+                    onClick={handleLogoRemove}
+                    disabled={loading}
+                  >
+                    선택 취소
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">PNG, JPG, WebP · 최대 5MB</p>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleLogoChange}
+            />
+          </div>
+        </div>
+
         <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
           지역 (선택)
           <RegionSelector
@@ -94,14 +169,18 @@ const ClubCreatePage: React.FC = () => {
             onChange={(e) =>
               setForm((p) => ({ ...p, description: e.target.value }))
             }
-            placeholder="클럽을 한두 문장으로 소개해주세요"
+            placeholder="클럽에 대해 소개해주세요."
             maxLength={5000}
             disabled={loading}
           />
         </label>
 
+        <p className="text-xs text-muted-foreground text-center">
+          클럽 로고는 생성 후 <span className="font-medium">클럽 관리 &gt; 클럽 정보</span>에서도 변경할 수 있어요
+        </p>
+
         <button
-          className="mt-2 px-6 py-3 border-none rounded-lg bg-slate-700 text-white font-semibold text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="px-6 py-3 border-none rounded-lg bg-slate-700 text-white font-semibold text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           type="submit"
           disabled={loading}
         >

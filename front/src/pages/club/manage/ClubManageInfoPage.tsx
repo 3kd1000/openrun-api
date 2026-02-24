@@ -136,6 +136,19 @@ const ClubManageInfoPage: React.FC = () => {
 
       {/* 폼 */}
       <div className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-gray-500">
+            클럽 이름 <span className="text-red-500 ml-0.5">*</span>
+          </span>
+          <input
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-white text-gray-900"
+            value={form.name ?? ""}
+            onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+            maxLength={100}
+            disabled={saving}
+          />
+        </label>
+
         {/* 클럽 로고 */}
         <div className="flex flex-col gap-1">
           <span className="text-sm text-gray-500">클럽 로고</span>
@@ -183,19 +196,6 @@ const ClubManageInfoPage: React.FC = () => {
             />
           </div>
         </div>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-gray-500">
-            클럽 이름 <span className="text-red-500 ml-0.5">*</span>
-          </span>
-          <input
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-white text-gray-900"
-            value={form.name ?? ""}
-            onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-            maxLength={100}
-            disabled={saving}
-          />
-        </label>
 
         <label className="flex flex-col gap-1">
           <span className="text-sm text-gray-500">지역</span>
