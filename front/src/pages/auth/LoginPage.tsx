@@ -496,7 +496,7 @@ const LoginPage: React.FC = () => {
         {/* Brand */}
         <div className="flex flex-col items-center pt-10 pb-6 px-8">
           <img
-            src="/logo/openrun-icon-emerald.svg"
+            src="/icon-512x512-v4.png"
             alt="OpenRun"
             className="mb-4 w-20 h-20 rounded-2xl object-cover shadow-md"
           />
