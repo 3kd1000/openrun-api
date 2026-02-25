@@ -84,13 +84,13 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
   error,
   submitButtonText = mode === "create" ? "생성" : "저장",
 }) => {
-  // 초기 날짜 및 시간 분리 (기본값: 다음 정시, 23시 이후면 내일)
+  // 초기 날짜 및 시간 분리 (기본값: +3시간 뒤 정시, 자정 넘어가면 내일)
   const now = new Date();
-  const nextHour = now.getHours() + 1;
-  const defaultDateFallback = nextHour >= 24
+  const defaultHour = now.getHours() + 3;
+  const defaultDateFallback = defaultHour >= 24
     ? format(new Date(now.getTime() + 24 * 60 * 60 * 1000), "yyyy-MM-dd")
     : format(now, "yyyy-MM-dd");
-  const defaultTimeFallback = `${String(nextHour >= 24 ? 0 : nextHour).padStart(2, "0")}:00`;
+  const defaultTimeFallback = `${String(defaultHour >= 24 ? defaultHour - 24 : defaultHour).padStart(2, "0")}:00`;
   const defaultDate = initialData?.scheduledAt
     ? initialData.scheduledAt.split("T")[0]
     : defaultDateFallback;
