@@ -29,11 +29,6 @@ const SETTING_ITEMS: SettingItem[] = [
     label: "메시지 알림",
     description: "새 메시지 수신 알림",
   },
-  {
-    key: "notiSystem",
-    label: "시스템 알림",
-    description: "서비스 공지, 업데이트 알림",
-  },
 ];
 
 const NotificationSettingsPage: React.FC = () => {

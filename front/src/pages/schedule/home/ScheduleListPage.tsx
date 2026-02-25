@@ -361,26 +361,17 @@ const ScheduleListPage: React.FC = () => {
           setSelectedScheduleForDraw(target);
           setShowDrawViewModal(true);
         }).catch(() => {
-          // 실패 시 상세 페이지로
           navigate(`/schedules/${targetScheduleId}`, { replace: true });
         });
       } else {
         navigate(`/schedules/${targetScheduleId}`, { replace: true });
       }
     } else {
-      // 일반 상세 보기 → 상세 페이지로 navigate
+      // 일반 상세 보기 → 상세 페이지로 navigate (replace로 URL 교체되므로 params 자동 정리)
       navigate(`/schedules/${targetScheduleId}`, {
         replace: true,
         state: { returnUrl: "/schedules/club" },
       });
-    }
-
-    // state/params 재사용 방지
-    if (openScheduleIdFromState) {
-      navigate(location.pathname, { replace: true, state: null });
-    }
-    if (scheduleIdFromParams) {
-      setSearchParams({}, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openScheduleIdFromState, scheduleIdFromParams, openDrawFromParams, loading, schedules.length]);

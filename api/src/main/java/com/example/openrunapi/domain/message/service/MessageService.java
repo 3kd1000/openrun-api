@@ -9,6 +9,7 @@ import com.example.openrunapi.domain.message.model.dto.SendMessageRequest;
 import com.example.openrunapi.domain.message.repository.MessageReportRepository;
 import com.example.openrunapi.domain.message.repository.MessageRepository;
 import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.repository.NotificationRepository;
 import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
@@ -31,6 +32,7 @@ public class MessageService {
     private final MessageReportRepository messageReportRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
 
     /**
      * 메시지 전송
@@ -56,21 +58,27 @@ public class MessageService {
 
         messageRepository.save(message);
 
-        // FCM 알림 전송
-        try {
-            notificationService.sendNotification(
-                    null,
-                    request.getReceiverId(),
-                    sender.getPublicDisplayName() + "님의 메시지",
-                    request.getContent().length() > 100
-                            ? request.getContent().substring(0, 100) + "..."
-                            : request.getContent(),
-                    NotificationType.MESSAGE,
-                    message.getId(),
-                    "MESSAGE"
-            );
-        } catch (Exception e) {
-            log.warn("Failed to send FCM for message {}: {}", message.getId(), e.getMessage());
+        // FCM 알림 전송 (읽지 않은 메시지 알림이 이미 있으면 스킵 → 스팸 방지)
+        boolean hasUnreadMessageNotification = notificationRepository
+                .existsByUserIdAndTypeAndIsReadFalse(request.getReceiverId(), NotificationType.MESSAGE);
+        if (hasUnreadMessageNotification) {
+            log.info("Skipping FCM for message {} (receiver {} has unread MESSAGE notification)", message.getId(), request.getReceiverId());
+        } else {
+            try {
+                notificationService.sendNotification(
+                        null,
+                        request.getReceiverId(),
+                        sender.getPublicDisplayName() + "님의 메시지",
+                        request.getContent().length() > 100
+                                ? request.getContent().substring(0, 100) + "..."
+                                : request.getContent(),
+                        NotificationType.MESSAGE,
+                        senderId,
+                        "MESSAGE"
+                );
+            } catch (Exception e) {
+                log.warn("Failed to send FCM for message {}: {}", message.getId(), e.getMessage());
+            }
         }
 
         log.info("Message sent: {} -> {} (id={})", senderId, request.getReceiverId(), message.getId());

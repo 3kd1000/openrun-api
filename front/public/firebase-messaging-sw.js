@@ -48,20 +48,26 @@ self.addEventListener("notificationclick", (event) => {
   const data = event.notification.data || {};
   let targetUrl = "/";
 
-  // 알림 타입에 따라 이동할 페이지 결정
-  if (data.type === "SCHEDULE" && data.referenceId) {
-    targetUrl = `/schedules/club?scheduleId=${data.referenceId}`;
-  } else if (data.type === "DRAW" && data.referenceId) {
-    targetUrl = `/schedules/club?scheduleId=${data.referenceId}&openDraw=true`;
-  } else if (data.type === "CLUB_INVITE" && data.referenceId) {
-    // 클럽 초대 → 클럽 메인 페이지
-    targetUrl = `/clubs/${data.referenceId}`;
+  // 알림 타입 + referenceType 기반으로 이동할 페이지 결정
+  if ((data.type === "SCHEDULE" || data.type === "DRAW") && data.referenceId) {
+    targetUrl = `/schedules/${data.referenceId}`;
   } else if (data.type === "EXTERNAL_REQUEST" && data.referenceId) {
-    // 외부 신청 (가입/게스트/교류전) → 신청 관리 페이지 (운영진용)
-    targetUrl = `/clubs/${data.referenceId}/manage/external-requests`;
+    if (data.referenceType === "SCHEDULE") {
+      targetUrl = `/schedules/${data.referenceId}`;
+    } else {
+      targetUrl = `/clubs/${data.referenceId}/manage/external-requests`;
+    }
   } else if (data.type === "REQUEST_RESULT" && data.referenceId) {
-    // 신청 결과 → 클럽 메인 페이지 (신청자용)
+    if (data.referenceType === "SCHEDULE") {
+      targetUrl = `/schedules/${data.referenceId}`;
+    } else {
+      targetUrl = `/clubs/${data.referenceId}`;
+    }
+  } else if (data.type === "CLUB_INVITE" && data.referenceId) {
     targetUrl = `/clubs/${data.referenceId}`;
+  } else if (data.type === "MESSAGE" && data.referenceId) {
+    // referenceId = senderId (대화 상대)
+    targetUrl = `/messages/${data.referenceId}`;
   }
 
   event.waitUntil(

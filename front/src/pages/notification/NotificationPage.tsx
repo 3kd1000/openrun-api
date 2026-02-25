@@ -178,6 +178,7 @@ const NotificationPage: React.FC = () => {
     id: number;
     type: string;
     referenceId: number | null;
+    referenceType: string | null;
     isRead: boolean;
   }) => {
     // 편집 모드에서는 선택/해제만
@@ -190,25 +191,29 @@ const NotificationPage: React.FC = () => {
       markAsRead(notification.id);
     }
 
-    // 타입에 따라 페이지 이동 (referenceId가 있으면 특정 리소스로 이동)
-    if (notification.type === "SCHEDULE") {
-      if (notification.referenceId) {
-        navigate(`/schedules/club?scheduleId=${notification.referenceId}`);
+    const { type, referenceId, referenceType } = notification;
+    if (!referenceId) return;
+
+    // referenceType 기반으로 정확한 랜딩 URL 결정
+    if (type === "SCHEDULE" || type === "DRAW") {
+      navigate(`/schedules/${referenceId}`);
+    } else if (type === "EXTERNAL_REQUEST") {
+      if (referenceType === "SCHEDULE") {
+        navigate(`/schedules/${referenceId}`);
       } else {
-        navigate("/schedules/club");
+        navigate(`/clubs/${referenceId}/manage/external-requests`);
       }
-    } else if (notification.type === "DRAW") {
-      if (notification.referenceId) {
-        navigate(`/schedules/club?scheduleId=${notification.referenceId}&openDraw=true`);
+    } else if (type === "REQUEST_RESULT") {
+      if (referenceType === "SCHEDULE") {
+        navigate(`/schedules/${referenceId}`);
       } else {
-        navigate("/schedules/club");
+        navigate(`/clubs/${referenceId}`);
       }
-    } else if (notification.type === "CLUB_INVITE" && notification.referenceId) {
-      navigate(`/clubs/${notification.referenceId}`);
-    } else if (notification.type === "EXTERNAL_REQUEST" && notification.referenceId) {
-      navigate(`/clubs/${notification.referenceId}/manage/external-requests`);
-    } else if (notification.type === "REQUEST_RESULT" && notification.referenceId) {
-      navigate(`/clubs/${notification.referenceId}`);
+    } else if (type === "CLUB_INVITE") {
+      navigate(`/clubs/${referenceId}`);
+    } else if (type === "MESSAGE") {
+      // referenceId = senderId (대화 상대)
+      navigate(`/messages/${referenceId}`);
     }
   };
 

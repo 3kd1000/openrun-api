@@ -158,6 +158,12 @@ function PushSendPage() {
     setSending(true);
     setMessage(null);
     try {
+      // 타입에 따라 referenceType 자동 결정
+      const resolvedReferenceType =
+        type === "SCHEDULE" || type === "DRAW" ? "SCHEDULE" :
+        type === "CLUB_INVITE" || type === "EXTERNAL_REQUEST" || type === "REQUEST_RESULT" ? "CLUB" :
+        null;
+
       await sendNotification({
         clubId: Number(clubId),
         userIds,
@@ -165,7 +171,7 @@ function PushSendPage() {
         body,
         type,
         referenceId: referenceId,
-        referenceType: null,
+        referenceType: resolvedReferenceType,
       });
       setMessage({ text: `${userIds.length}명에게 알림 발송 완료!`, isError: false });
     } catch (error) {

@@ -32,6 +32,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> findAllByTypeNotOrderByCreatedAtDesc(NotificationType excludedType, Pageable pageable);
     Page<Notification> findByClubIdAndTypeNotOrderByCreatedAtDesc(Long clubId, NotificationType excludedType, Pageable pageable);
 
+    // 특정 사용자에게 읽지 않은 특정 타입 알림이 있는지 확인 (중복 발송 방지용)
+    boolean existsByUserIdAndTypeAndIsReadFalse(Long userId, NotificationType type);
+
     // 선택 삭제 (ID 목록 + 소유권 검증)
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.id IN :ids")
