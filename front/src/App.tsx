@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
 import ScheduleCreatePage from "./pages/schedule/create/ScheduleCreatePage";
 import ScheduleDetailPage from "./pages/schedule/detail/ScheduleDetailPage";
@@ -59,11 +59,23 @@ import "./App.css";
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // 라우트 전환 시 스크롤 최상단으로 리셋
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // 푸시 알림 클릭 시 SW에서 postMessage로 전달한 URL로 네비게이션
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "NOTIFICATION_CLICK" && event.data?.url) {
+        navigate(event.data.url);
+      }
+    };
+    navigator.serviceWorker?.addEventListener("message", handler);
+    return () => navigator.serviceWorker?.removeEventListener("message", handler);
+  }, [navigate]);
 
   // "/" 경로와 "/setup-profile", "/intro"에서는 Navigation 숨김
   const shouldShowNavigation =

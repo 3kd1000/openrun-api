@@ -70,15 +70,24 @@ self.addEventListener("notificationclick", (event) => {
     targetUrl = `/messages/${data.referenceId}`;
   }
 
+  // FCM SW는 /firebase-cloud-messaging-push-scope 스코프이므로
+  // PWA 메인 윈도우를 제어하지 않아 client.navigate()가 실패할 수 있음
+  // → navigate 실패 시 postMessage로 프론트에 URL 전달
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        // 이미 열려있는 창이 있으면 포커스
+      .then(async (clientList) => {
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && "focus" in client) {
-            client.navigate(targetUrl);
-            return client.focus();
+            try {
+              await client.navigate(targetUrl);
+              return client.focus();
+            } catch (e) {
+              // navigate 실패 (스코프 불일치) → postMessage로 URL 전달
+              console.log("[firebase-messaging-sw] navigate 실패, postMessage 사용:", e);
+              client.postMessage({ type: "NOTIFICATION_CLICK", url: targetUrl });
+              return client.focus();
+            }
           }
         }
         // 열려있는 창이 없으면 새 창 열기
