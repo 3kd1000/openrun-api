@@ -28,6 +28,10 @@ export function canManageClub(role: ClubRoleOrUnknown): boolean {
   return role === "OWNER" || role === "ADMIN";
 }
 
+export function isClubOwner(role: ClubRoleOrUnknown): boolean {
+  return role === "OWNER";
+}
+
 export function getRoleLabel(role: ClubRoleOrUnknown): string {
   if (role === "OWNER") return "클럽장";
   if (role === "ADMIN") return "운영진";

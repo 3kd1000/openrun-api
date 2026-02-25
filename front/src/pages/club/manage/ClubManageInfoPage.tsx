@@ -186,7 +186,7 @@ const ClubManageInfoPage: React.FC = () => {
                 )}
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">PNG, JPG, WebP · 최대 5MB</p>
+            <p className="text-xs text-muted-foreground mt-2">PNG, JPG, WebP · 최대 5MB · 정사각형 이미지 권장</p>
             <input
               ref={logoInputRef}
               type="file"

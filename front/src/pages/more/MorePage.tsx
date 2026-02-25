@@ -6,13 +6,11 @@ import { signOut } from "firebase/auth";
 import type {
   UserProfile,
   OAuthProvider,
-  MyClub,
   WithdrawalCheckResponse,
 } from "../../services/api/userApi";
 import {
   getCurrentUser,
   getOAuthProviders,
-  getMyClubs,
   checkWithdrawal,
   withdrawUser,
 } from "../../services/api/userApi";
@@ -27,6 +25,8 @@ import {
   PhoneIcon,
 } from "../../components/common/Icons";
 import { AppHeader } from "../../components/common/AppHeader";
+import { ClubSelector } from "../../components/ClubSelector";
+import { useClubSelectorState } from "../../hooks/useClubSelectorState";
 import { useNotification } from "../../contexts/NotificationContext";
 import { usePwaInstall } from "../../contexts/PwaInstallContext";
 import { isMobile, isAndroid } from "../../utils/platformDetection";
@@ -37,7 +37,13 @@ const MorePage: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
-  const [myClubs, setMyClubs] = useState<MyClub[]>([]);
+  const {
+    clubs: myClubs,
+    selectedClubId,
+    isLoading: clubSelectorLoading,
+    handleClubChange: handleSelectorClubChange,
+    isLoggedIn: selectorLoggedIn,
+  } = useClubSelectorState();
 
   // 회원 탈퇴 관련 state
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -59,7 +65,6 @@ const MorePage: React.FC = () => {
     if (firebaseUser) {
       fetchUserData();
       loadOAuthProviders();
-      loadMyClubs();
     } else {
       setIsLoading(false);
     }
@@ -96,15 +101,6 @@ const MorePage: React.FC = () => {
       setOAuthProviders(providers);
     } catch (error) {
       console.error("OAuth 제공자 목록 조회 실패:", error);
-    }
-  };
-
-  const loadMyClubs = async () => {
-    try {
-      const clubs = await getMyClubs();
-      setMyClubs(clubs);
-    } catch (error) {
-      console.error("내 클럽 목록 조회 실패:", error);
     }
   };
 
@@ -187,9 +183,18 @@ const MorePage: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-140px)]">
-      <AppHeader showBell={false}>
-        <div className="text-lg font-semibold text-foreground">더보기</div>
-      </AppHeader>
+      <div className="shrink-0 sticky top-0 z-[100]">
+        <AppHeader>
+          {selectorLoggedIn && (
+            <ClubSelector
+              selectedClubId={selectedClubId}
+              onClubChange={handleSelectorClubChange}
+              clubs={myClubs}
+              isLoading={clubSelectorLoading}
+            />
+          )}
+        </AppHeader>
+      </div>
       <div className="max-w-[600px] mx-auto p-4">
         {/* 프로필 카드 - 로그인 시에만 표시 */}
         {isLoggedIn && !isLoading && user && (

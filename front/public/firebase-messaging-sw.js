@@ -31,8 +31,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = data.title || "OpenRun";
   const notificationOptions = {
     body: data.body || "",
-    icon: "/icon-192x192-v2.png",
-    badge: "/icon-192x192-v2.png",
+    icon: "/icon-192x192-v4.png",
+    badge: "/icon-192x192-v4.png",
     data: data,
     tag: data.type || "default",
   };

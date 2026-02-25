@@ -173,12 +173,12 @@ const IntroPage: React.FC = () => {
           >
             지금 시작하기
           </Link>
-          <a
-            href="#features"
+          <Link
+            to="/explore"
             className="px-6 py-2.5 bg-white/20 text-white font-medium rounded-full text-sm no-underline hover:bg-white/30 transition-colors"
           >
             둘러보기
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -328,13 +328,6 @@ const IntroPage: React.FC = () => {
             className="text-white/60 no-underline hover:text-white transition-colors"
           >
             이용약관
-          </Link>
-          <span>|</span>
-          <Link
-            to="/"
-            className="text-white/60 no-underline hover:text-white transition-colors"
-          >
-            대진표 생성
           </Link>
         </div>
       </footer>

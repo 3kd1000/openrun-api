@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 80;
 const API_URL = process.env.API_INTERNAL_URL || 'http://localhost:8080/api';
 const SITE_URL = process.env.SITE_URL || 'https://front.openrun.app';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og_image_v2.png`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og_image_v4.png`;
 
 // index.html 템플릿 로드 (서버 시작 시 1회)
 const distPath = path.join(__dirname, 'dist');

@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../services/api/axiosInstance";
 import { clubService } from "../../../services/clubService";
 import type { CreateClubRequest } from "../../../types/club";
-import BackButton from "../../../components/common/BackButton";
 import RegionSelector from "../../../components/common/RegionSelector";
+import { AppHeader } from "../../../components/common/AppHeader";
 import { UsersIcon } from "../../../components/common/Icons";
 
 const ClubCreatePage: React.FC = () => {
@@ -22,7 +22,7 @@ const ClubCreatePage: React.FC = () => {
     description: "",
   });
 
-  const handleBack = () => navigate("/clubs/explore");
+  const handleBack = () => navigate("/explore");
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,11 +75,7 @@ const ClubCreatePage: React.FC = () => {
 
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between mb-6">
-        <BackButton onClick={handleBack} />
-        <h1 className="text-xl font-semibold">클럽 만들기</h1>
-        <div className="w-10" />
-      </div>
+      <AppHeader title="클럽 만들기" onBack={handleBack} />
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         {error && (

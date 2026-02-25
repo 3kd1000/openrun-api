@@ -26,7 +26,8 @@ export interface Schedule {
   matchType?: MatchType;
   isDrawValid?: boolean | null;
   drawCreatedAt?: string | null;
-  canManageSchedule?: boolean | null; // 권한 정보 (System Admin 또는 Club ADMIN 이상)
+  isScheduleAdmin?: boolean | null;   // 관리자 역할 (PIN, 모집설정)
+  canManageSchedule?: boolean | null; // 편집/삭제/대진 권한 (생성자 OR 관리자)
   createdByUserId?: number;
   createdAt: string;
   updatedAt: string;

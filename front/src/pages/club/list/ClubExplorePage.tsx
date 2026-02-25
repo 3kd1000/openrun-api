@@ -3,22 +3,22 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axiosInstance from "../../../services/api/axiosInstance";
 import type { Club } from "../../../types/club";
 import { useAuth } from "../../../contexts/AuthContext";
-import { getOpenRunSession } from "../../../utils/openrunSession";
 import RegionSelector from "../../../components/common/RegionSelector";
 import DateRangePicker from "../../../components/common/DateRangePicker";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import ScheduleCard from "@/components/openrun/schedule-card";
 import ClubCard from "@/components/openrun/club-card";
 import EmptyState from "@/components/openrun/empty-state";
-import { Search, CalendarSearch, Users } from "lucide-react";
+import { Search, CalendarSearch, Users, Plus } from "lucide-react";
 import type { PublicScheduleResponse } from "../../../types/schedule";
 import { scheduleService } from "../../../services/scheduleService";
 import BackButton from "../../../components/common/BackButton";
+import { AppHeader } from "../../../components/common/AppHeader";
+import { ClubSelector } from "../../../components/ClubSelector";
+import { useClubSelectorState } from "../../../hooks/useClubSelectorState";
 
 type TabType = "schedule" | "club";
 type MatchTypeFilter = "" | "MEN_DOUBLES" | "WOMEN_DOUBLES" | "MIXED_DOUBLES" | "SINGLES";
@@ -95,6 +95,13 @@ const ClubExplorePage: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: firebaseUser } = useAuth();
+  const {
+    clubs: selectorClubs,
+    selectedClubId,
+    isLoading: clubSelectorLoading,
+    handleClubChange,
+    isLoggedIn,
+  } = useClubSelectorState();
 
   const initialTab = useMemo(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -116,9 +123,6 @@ const ClubExplorePage: React.FC = () => {
   const [guestRegionDepth2, setGuestRegionDepth2] = useState(() => searchParams.get("guestRegion2") || "");
   const [fromDate, setFromDate] = useState<Date | null>(() => parseDateParam(searchParams.get("fromDate")));
   const [toDate, setToDate] = useState<Date | null>(() => parseDateParam(searchParams.get("toDate")));
-  const [includeClubSchedules, setIncludeClubSchedules] = useState(
-    () => searchParams.get("includeClub") !== "false"
-  );
 
   // 공개일정 상태
   const [publicSchedules, setPublicSchedules] = useState<PublicScheduleResponse[]>([]);
@@ -281,14 +285,6 @@ const ClubExplorePage: React.FC = () => {
     return result;
   }, [guestItems, guestKeyword, guestRegionDepth1, guestRegionDepth2]);
 
-  // 클럽일정 포함 필터
-  const displayGuestItems = useMemo(() => {
-    if (includeClubSchedules) return filteredGuestItems;
-    const session = getOpenRunSession();
-    const myClubIds = new Set((session.clubList ?? []).map((c) => c.id));
-    return filteredGuestItems.filter((x) => !myClubIds.has(x.clubId));
-  }, [filteredGuestItems, includeClubSchedules]);
-
   // 공개일정 클라이언트 필터링 (키워드, 지역)
   const filteredPublicSchedules = useMemo(() => {
     let result = publicSchedules;
@@ -324,7 +320,7 @@ const ClubExplorePage: React.FC = () => {
     | { type: "public"; key: string; scheduledAt: string; data: PublicScheduleResponse };
 
   const mergedScheduleItems = useMemo<DisplayItem[]>(() => {
-    const clubItems: DisplayItem[] = displayGuestItems.map((x) => ({
+    const clubItems: DisplayItem[] = filteredGuestItems.map((x) => ({
       type: "club" as const,
       key: `club:${x.scheduleId}`,
       scheduledAt: x.scheduledAt,
@@ -339,7 +335,7 @@ const ClubExplorePage: React.FC = () => {
     return [...clubItems, ...pubItems].sort(
       (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
     );
-  }, [displayGuestItems, filteredPublicSchedules]);
+  }, [filteredGuestItems, filteredPublicSchedules]);
 
   // 클럽 탐색 클라이언트 필터링
   const filteredClubs = useMemo(() => {
@@ -383,7 +379,7 @@ const ClubExplorePage: React.FC = () => {
   };
 
   const handleGuestItemClick = (item: PublicRecruitSchedule) => {
-    const returnUrl = `/clubs/explore?${searchParams.toString()}`;
+    const returnUrl = `/explore?${searchParams.toString()}`;
     navigate(`/schedules/${item.scheduleId}/recruit`, { state: { returnUrl } });
   };
 
@@ -395,35 +391,28 @@ const ClubExplorePage: React.FC = () => {
   const isScheduleLoading = (guestLoading || !guestLoaded) && (publicLoading || !publicLoaded);
 
   return (
-    <div className="page-container">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          {shouldShowBack && (
-            <BackButton onClick={handleBack} />
+    <>
+      {/* 통일 헤더 */}
+      <div className="shrink-0 sticky top-0 z-[100]">
+        <AppHeader>
+          {isLoggedIn && (
+            <ClubSelector
+              selectedClubId={selectedClubId}
+              onClubChange={handleClubChange}
+              clubs={selectorClubs}
+              isLoading={clubSelectorLoading}
+            />
           )}
-          <h1 className="text-lg font-semibold">탐색</h1>
-        </div>
-        {firebaseUser && (
-          activeTab === "schedule" ? (
-            <Button
-              size="sm"
-              className="bg-gray-700 text-white hover:bg-gray-600"
-              onClick={() => navigate("/schedules/public/new")}
-            >
-              일정 만들기
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className="bg-gray-700 text-white hover:bg-gray-600"
-              onClick={() => navigate("/clubs/new")}
-            >
-              클럽 만들기
-            </Button>
-          )
-        )}
+        </AppHeader>
       </div>
+
+    <div className="page-container">
+      {/* 뒤로가기 */}
+      {shouldShowBack && (
+        <div className="mb-3">
+          <BackButton onClick={handleBack} />
+        </div>
+      )}
 
       {/* 탭 + 콘텐츠 */}
       <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as TabType)}>
@@ -512,34 +501,37 @@ const ClubExplorePage: React.FC = () => {
               </div>
             </div>
 
-            {/* 클럽일정 포함 토글 */}
-            <div className="flex items-center gap-2 mt-3">
-              <Switch
-                id="include-club"
-                checked={includeClubSchedules}
-                onCheckedChange={(checked) => {
-                  setIncludeClubSchedules(checked);
-                  updateSearchParams({ includeClub: checked ? undefined : "false" });
-                }}
-              />
-              <Label htmlFor="include-club" className="text-sm text-muted-foreground cursor-pointer">
-                클럽일정 포함
-              </Label>
-            </div>
           </div>
 
           {/* 통합 리스트 */}
           <div className="mt-4">
             {isScheduleLoading ? (
               <CardSkeleton />
-            ) : mergedScheduleItems.length === 0 ? (
+            ) : mergedScheduleItems.length === 0 && !firebaseUser ? (
               <EmptyState
                 icon={CalendarSearch}
                 title="모집 중인 일정이 없습니다"
-                description="검색 조건을 변경하거나 새 일정을 만들어보세요"
+                description="검색 조건을 변경해보세요"
               />
             ) : (
               <div className="space-y-3">
+                {/* 새 일정 만들기 카드 */}
+                {firebaseUser && (
+                  <Card
+                    className="cursor-pointer gap-0 py-0 border-primary/30 border-dashed transition-all hover:shadow-md hover:border-primary"
+                    onClick={() => navigate("/schedules/public/new")}
+                  >
+                    <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                        <Plus className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-primary">새 일정 만들기</span>
+                        <p className="text-xs text-muted-foreground mt-0.5 mb-0">직접 모임을 만들고 참가자를 모집해보세요</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                 {mergedScheduleItems.map((item) =>
                   item.type === "club" ? (
                     <ScheduleCard
@@ -573,7 +565,7 @@ const ClubExplorePage: React.FC = () => {
                         note: item.data.courtAddress ?? null,
                       }}
                       onClick={() => {
-                        const returnUrl = `/clubs/explore?${searchParams.toString()}`;
+                        const returnUrl = `/explore?${searchParams.toString()}`;
                         navigate(`/schedules/${item.data.id}/recruit`, { state: { returnUrl } });
                       }}
                     />
@@ -638,7 +630,7 @@ const ClubExplorePage: React.FC = () => {
                 title="오류가 발생했습니다"
                 description={clubError}
               />
-            ) : filteredClubs.length === 0 ? (
+            ) : filteredClubs.length === 0 && !firebaseUser ? (
               <EmptyState
                 icon={Users}
                 title="모집 중인 클럽이 없습니다"
@@ -646,12 +638,29 @@ const ClubExplorePage: React.FC = () => {
               />
             ) : (
               <div className="space-y-3">
+                {/* 새 클럽 만들기 카드 */}
+                {firebaseUser && (
+                  <Card
+                    className="cursor-pointer gap-0 py-0 border-primary/30 border-dashed transition-all hover:shadow-md hover:border-primary"
+                    onClick={() => navigate("/clubs/new")}
+                  >
+                    <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                        <Plus className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-primary">새 클럽 만들기</span>
+                        <p className="text-xs text-muted-foreground mt-0.5 mb-0">나만의 테니스 클럽을 만들어보세요</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
                 {filteredClubs.map((club) => (
                   <ClubCard
                     key={club.id}
                     club={club}
                     onClick={() => {
-                      const returnUrl = `/clubs/explore?${searchParams.toString()}`;
+                      const returnUrl = `/explore?${searchParams.toString()}`;
                       navigate(`/clubs/${club.id}/recruiting`, { state: { returnUrl } });
                     }}
                   />
@@ -662,6 +671,7 @@ const ClubExplorePage: React.FC = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </>
   );
 };
 

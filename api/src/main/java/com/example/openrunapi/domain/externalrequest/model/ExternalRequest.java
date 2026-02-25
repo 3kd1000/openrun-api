@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.externalrequest.model;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.post.model.Post;
 import com.example.openrunapi.domain.schedule.model.Schedule;
@@ -101,7 +102,7 @@ public class ExternalRequest {
 
     public void cancel(User requester) {
         if (this.requester != null && requester != null && !this.requester.getId().equals(requester.getId())) {
-            throw new SecurityException("요청자만 취소할 수 있습니다.");
+            throw new PermissionDeniedException("요청자만 취소할 수 있습니다.");
         }
         this.status = ExternalRequestStatus.CANCELLED;
     }

@@ -219,7 +219,7 @@ const SetupProfilePage: React.FC = () => {
       const session = getOpenRunSession();
       const dest = session.currentClubId
         ? { path: "/schedules/club", options: undefined as object | undefined }
-        : { path: "/clubs/explore", options: { replace: true, state: { defaultTab: "member" } } };
+        : { path: "/explore", options: { replace: true, state: { defaultTab: "member" } } };
 
       // PwaSetupSheet 표시 여부 판단 (1회만)
       const uiSettings = getOpenRunUiSettings();

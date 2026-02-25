@@ -58,8 +58,8 @@ export default function ScheduleDetailPage() {
   const location = useLocation();
   const { showToast } = useToast();
 
-  const returnUrl =
-    (location.state as { returnUrl?: string })?.returnUrl || "/schedules/club";
+  const stateReturnUrl =
+    (location.state as { returnUrl?: string })?.returnUrl ?? null;
   const scheduleId = scheduleIdParam ? parseInt(scheduleIdParam) : 0;
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -101,10 +101,11 @@ export default function ScheduleDetailPage() {
 
   const session = getOpenRunSession();
   const currentUserId = session.userId ?? null;
-  const canDelete = schedule?.canManageSchedule ?? false;
   const isLoadingRef = useRef(false);
 
   const isHost = schedule?.createdByUserId != null && schedule.createdByUserId === currentUserId;
+  const canDelete = schedule?.canManageSchedule ?? false;
+  const canManageDraw = schedule?.canManageSchedule ?? false;
 
   // 데이터 로드
   const loadScheduleAndParticipants = useCallback(async () => {
@@ -173,7 +174,11 @@ export default function ScheduleDetailPage() {
   }, [showParticipantManagementModal, schedule]);
 
   const handleGoBack = () => {
-    navigate(returnUrl);
+    if (stateReturnUrl) {
+      navigate(stateReturnUrl);
+    } else {
+      navigate(schedule?.clubId ? "/schedules/club" : "/explore?tab=schedule");
+    }
   };
 
   // 링크 복사
@@ -382,7 +387,8 @@ export default function ScheduleDetailPage() {
       setLoading(true);
       setError("");
       await scheduleService.deleteSchedule(schedule.id);
-      navigate(returnUrl);
+      showToast("일정이 삭제되었습니다", "success");
+      navigate(schedule.clubId ? `/schedules/club` : `/explore?tab=schedule`, { replace: true });
     } catch (err) {
       console.error("일정 삭제 실패:", err);
       setError("일정 삭제에 실패했습니다.");
@@ -610,8 +616,8 @@ export default function ScheduleDetailPage() {
         </Button>
       </div>
 
-      {/* 관리자 토글 버튼 (클럽일정만) */}
-      {canDelete && schedule.clubId !== null && (
+      {/* 관리자 토글 버튼 (클럽일정 + ADMIN 이상만) */}
+      {schedule.isScheduleAdmin && schedule.clubId !== null && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           <Button
             variant="outline"
@@ -709,20 +715,14 @@ export default function ScheduleDetailPage() {
       {/* 일정 정보 카드 */}
       <Card className="mb-3 gap-0 py-0">
         <CardContent className="space-y-3 p-4">
-          {/* 일정 구분 배지 */}
-          <div className="flex items-center gap-2">
-            {schedule.clubId !== null ? (
-              <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-                클럽일정
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
-                공개일정
-              </Badge>
-            )}
-            {schedule.clubName && (
-              <span className="text-sm text-muted-foreground">{schedule.clubName}</span>
-            )}
+          {/* 일정 구분 */}
+          <div>
+            <span className="text-xs text-muted-foreground">일정 구분</span>
+            <p className="text-sm font-medium">
+              {schedule.clubId !== null
+                ? `클럽일정${schedule.clubName ? ` (${schedule.clubName})` : ""}`
+                : "공개일정"}
+            </p>
           </div>
 
           {/* 코트명 + 코트수 */}
@@ -847,9 +847,11 @@ export default function ScheduleDetailPage() {
                   size="sm"
                   className="text-xs text-red-600 hover:text-red-700"
                   onClick={handleDeleteDraw}
-                  disabled={loading || isPastDate(schedule.scheduledAt)}
+                  disabled={loading || isPastDate(schedule.scheduledAt) || !canManageDraw}
                   title={
-                    isPastDate(schedule.scheduledAt)
+                    !canManageDraw
+                      ? "대진 관리는 호스트 또는 관리자만 가능합니다."
+                      : isPastDate(schedule.scheduledAt)
                       ? "이미 지난 경기에는 대진표를 삭제할 수 없습니다."
                       : undefined
                   }
@@ -865,9 +867,11 @@ export default function ScheduleDetailPage() {
                 size="sm"
                 className="text-xs"
                 onClick={() => setShowDrawCreateModal(true)}
-                disabled={schedule.maxCapacity < 4}
+                disabled={schedule.maxCapacity < 4 || !canManageDraw}
                 title={
-                  schedule.maxCapacity < 4
+                  !canManageDraw
+                    ? "대진 관리는 호스트 또는 관리자만 가능합니다."
+                    : schedule.maxCapacity < 4
                     ? `대진 생성은 4인 이상 모임에서 가능합니다. (현재 총원: ${schedule.maxCapacity}명)`
                     : undefined
                 }
@@ -1015,16 +1019,12 @@ export default function ScheduleDetailPage() {
         </CardContent>
       </Card>
 
-      {/* 공용구 섹션 (클럽 일정에서만 표시) */}
+      {/* 공용구 섹션 (클럽 일정에서만 표시, 보유자 없으면 자동 숨김) */}
       {schedule.clubId != null && (
-        <Card className="mb-3 gap-0 py-0 overflow-hidden">
-          <CardContent className="p-4">
-            <ScheduleBallUsageSection
-              clubId={schedule.clubId}
-              scheduleId={schedule.id}
-            />
-          </CardContent>
-        </Card>
+        <ScheduleBallUsageSection
+          clubId={schedule.clubId}
+          scheduleId={schedule.id}
+        />
       )}
 
       {/* 에러 메시지 */}
@@ -1074,7 +1074,7 @@ export default function ScheduleDetailPage() {
           disabled={loading || !canDelete}
           title={
             !canDelete
-              ? "관리자만 일정을 삭제할 수 있습니다."
+              ? "일정 생성자 또는 관리자만 삭제할 수 있습니다."
               : undefined
           }
         >
@@ -1126,6 +1126,7 @@ export default function ScheduleDetailPage() {
             setShowDrawViewModal(false);
             await loadScheduleAndParticipants();
           }}
+          canManageDraw={canManageDraw}
         />
       )}
 

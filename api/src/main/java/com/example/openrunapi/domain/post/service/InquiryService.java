@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.post.service;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.config.SystemConfig;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
@@ -215,7 +216,7 @@ public class InquiryService {
         boolean isSystemAdmin = systemAdminRepository.existsByUserId(userId);
 
         if (!isAuthor && !isSystemAdmin) {
-            throw new SecurityException("해당 문의글에 접근할 권한이 없습니다.");
+            throw new PermissionDeniedException("해당 문의글에 접근할 권한이 없습니다.");
         }
     }
 

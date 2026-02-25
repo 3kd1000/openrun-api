@@ -14,6 +14,7 @@ import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepo
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -338,7 +339,7 @@ public class ScheduleParticipantService {
         // 2. 권한 체크: 공개 일정은 호스트, 클럽 일정은 System Admin 또는 Club ADMIN 이상
         if (schedule.isPublicSchedule()) {
             if (!requestUserId.equals(schedule.getCreatedByUserId())) {
-                throw new SecurityException("일정 호스트만 참가자를 관리할 수 있습니다.");
+                throw new PermissionDeniedException("일정 호스트만 참가자를 관리할 수 있습니다.");
             }
         } else {
             permissionService.requireScheduleManagePermission(requestUserId, schedule.getClubId());
@@ -786,7 +787,7 @@ public class ScheduleParticipantService {
                     || permissionService.canManageSchedule(hostUserId, schedule.getClubId());
         }
         if (!isAuthorized) {
-            throw new SecurityException("호스트 또는 운영진만 참가를 승인할 수 있습니다.");
+            throw new PermissionDeniedException("호스트 또는 운영진만 참가를 승인할 수 있습니다.");
         }
 
         ScheduleParticipant participant = participantRepository.findById(participantId)
@@ -844,7 +845,7 @@ public class ScheduleParticipantService {
                     || permissionService.canManageSchedule(hostUserId, schedule.getClubId());
         }
         if (!isAuthorized) {
-            throw new SecurityException("호스트 또는 운영진만 참가를 거절할 수 있습니다.");
+            throw new PermissionDeniedException("호스트 또는 운영진만 참가를 거절할 수 있습니다.");
         }
 
         ScheduleParticipant participant = participantRepository.findById(participantId)
@@ -878,7 +879,7 @@ public class ScheduleParticipantService {
     private void requireGuestManagePermission(Long userId, Schedule schedule) {
         if (schedule.isPublicSchedule()) {
             if (!userId.equals(schedule.getCreatedByUserId())) {
-                throw new SecurityException("일정 호스트만 게스트를 관리할 수 있습니다.");
+                throw new PermissionDeniedException("일정 호스트만 게스트를 관리할 수 있습니다.");
             }
         } else {
             permissionService.requireScheduleManagePermission(userId, schedule.getClubId());

@@ -9,6 +9,7 @@ import { getOpenRunSession } from '../../utils/openrunSession';
 import { normalizeClubRole } from '../../utils/role';
 import { getErrorMessage, logError } from '../../utils/errorHandler';
 import { useToast } from '../../contexts/ToastContext';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Props {
   clubId: number;
@@ -145,23 +146,14 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
     return myKeeperInfo && usage.fromMemberId === myKeeperInfo.memberId;
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <div className="flex justify-between items-center mb-2">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">공용구</div>
-        </div>
-        <div className="p-4 text-center text-muted-foreground text-sm">로딩 중...</div>
-      </div>
-    );
-  }
-
-  // 보유자가 없으면 섹션 숨김
-  if (keepers.length === 0) {
+  // 로딩 중이거나 보유자가 없으면 섹션 숨김
+  if (loading || keepers.length === 0) {
     return null;
   }
 
   return (
+    <Card className="mb-3 gap-0 py-0 overflow-hidden">
+      <CardContent className="p-4">
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center mb-2">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">공용구</div>
@@ -280,6 +272,8 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
         </div>
       )}
     </div>
+      </CardContent>
+    </Card>
   );
 };
 

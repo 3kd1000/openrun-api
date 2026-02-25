@@ -53,7 +53,7 @@ const ClubCreateOnboardingPage: React.FC = () => {
 
   const handleBack = () => {
     if (!clubId) {
-      navigate("/clubs/explore");
+      navigate("/explore");
       return;
     }
     navigate(`/clubs/${clubId}`);
@@ -83,7 +83,7 @@ const ClubCreateOnboardingPage: React.FC = () => {
     return (
       <div className="page-container">
         <div className="flex items-center justify-between mb-6">
-          <BackButton onClick={() => navigate("/clubs/explore")} />
+          <BackButton onClick={() => navigate("/explore")} />
           <h1 className="text-sm font-semibold">클럽 만들기 완료</h1>
           <div className="w-10" />
         </div>

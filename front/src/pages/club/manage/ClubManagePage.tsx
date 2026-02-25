@@ -11,11 +11,12 @@ import {
   ScaleIcon,
   TrophyIcon,
 } from "../../../components/common/Icons";
-import { Headphones } from "lucide-react";
+import { Headphones, Lock } from "lucide-react";
 import { getOpenRunSession } from "../../../utils/openrunSession";
-import { normalizeClubRole } from "../../../utils/role";
+import { canManageClub, normalizeClubRole } from "../../../utils/role";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
 import { userService } from "../../../services/userService";
+import { useToast } from "../../../contexts/ToastContext";
 
 const MenuItem: React.FC<{
   icon: React.ReactNode;
@@ -23,24 +24,30 @@ const MenuItem: React.FC<{
   onClick: () => void;
   danger?: boolean;
   last?: boolean;
-}> = ({ icon, label, onClick, danger, last }) => (
+  disabled?: boolean;
+}> = ({ icon, label, onClick, danger, last, disabled }) => (
   <button
     className={`flex items-center gap-3 w-full px-4 py-3 min-h-[52px] bg-transparent border-none cursor-pointer transition-colors hover:bg-muted text-sm text-left ${
       !last ? "border-b border-border" : ""
-    } ${danger ? "text-amber-700" : "text-foreground"}`}
+    } ${danger ? "text-amber-700" : "text-foreground"} ${disabled ? "opacity-50" : ""}`}
     onClick={onClick}
   >
     <span className={`flex items-center ${danger ? "text-amber-600" : "text-muted-foreground"}`}>
       {icon}
     </span>
     <span className="flex-1">{label}</span>
-    <ChevronRightIcon size={16} className="text-muted-foreground" />
+    {disabled ? (
+      <Lock size={14} className="text-muted-foreground" />
+    ) : (
+      <ChevronRightIcon size={16} className="text-muted-foreground" />
+    )}
   </button>
 );
 
 const ClubManagePage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +56,7 @@ const ClubManagePage: React.FC = () => {
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
   const isOwner = myRole === "OWNER";
+  const canManage = canManageClub(myRole);
 
   useEffect(() => {
     if (clubId) {
@@ -72,6 +80,14 @@ const ClubManagePage: React.FC = () => {
 
   const handleBack = () => {
     navigate(`/clubs/${clubId}`);
+  };
+
+  const handleAdminAction = (path: string) => {
+    if (!canManage) {
+      showToast("운영진 이상만 이용 가능합니다", "info");
+      return;
+    }
+    navigate(path);
   };
 
   if (loading) {
@@ -115,8 +131,8 @@ const ClubManagePage: React.FC = () => {
         <div>
           <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">기본 설정</p>
           <div className="bg-white rounded-xl border border-border overflow-hidden">
-            <MenuItem icon={<EditIcon size={18} />} label="클럽 정보" onClick={() => navigate(`/clubs/${clubId}/manage/info`)} />
-            <MenuItem icon={<SettingsIcon size={18} />} label="운영 정책" onClick={() => navigate(`/clubs/${clubId}/manage/policy`)} last />
+            <MenuItem icon={<EditIcon size={18} />} label="클럽 정보" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/info`)} disabled={!canManage} />
+            <MenuItem icon={<SettingsIcon size={18} />} label="운영 정책" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/policy`)} disabled={!canManage} last />
           </div>
         </div>
 
@@ -124,7 +140,7 @@ const ClubManagePage: React.FC = () => {
         <div>
           <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">콘텐츠 관리</p>
           <div className="bg-white rounded-xl border border-border overflow-hidden">
-            <MenuItem icon={<FileTextIcon size={18} />} label="공지사항 / 회칙" onClick={() => navigate(`/clubs/${clubId}/manage/content`)} last />
+            <MenuItem icon={<FileTextIcon size={18} />} label="공지사항 / 회칙" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/content`)} disabled={!canManage} last />
           </div>
         </div>
 
@@ -132,7 +148,7 @@ const ClubManagePage: React.FC = () => {
         <div>
           <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">회원 관리</p>
           <div className="bg-white rounded-xl border border-border overflow-hidden">
-            <MenuItem icon={<InboxIcon size={18} />} label="가입관리" onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)} last />
+            <MenuItem icon={<InboxIcon size={18} />} label="가입관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/external-requests`)} disabled={!canManage} last />
           </div>
         </div>
 
@@ -140,12 +156,12 @@ const ClubManagePage: React.FC = () => {
         <div>
           <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">활동 관리</p>
           <div className="bg-white rounded-xl border border-border overflow-hidden">
-            <MenuItem icon={<TrophyIcon size={18} />} label="어워드 관리" onClick={() => navigate(`/clubs/${clubId}/manage/award`)} />
-            <MenuItem icon={<ScaleIcon size={18} />} label="공용구 관리" onClick={() => navigate(`/clubs/${clubId}/manage/balls`)} last />
+            <MenuItem icon={<TrophyIcon size={18} />} label="어워드 관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/award`)} disabled={!canManage} />
+            <MenuItem icon={<ScaleIcon size={18} />} label="공용구 관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/balls`)} disabled={!canManage} last />
           </div>
         </div>
 
-        {/* 클럽장 전용 */}
+        {/* 클럽장 전용 — 파괴적/민감 행위이므로 OWNER에게만 표시 */}
         {isOwner && (
           <div>
             <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">클럽장 전용</p>

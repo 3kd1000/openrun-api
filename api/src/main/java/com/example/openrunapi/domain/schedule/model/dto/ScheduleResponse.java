@@ -42,7 +42,8 @@ public class ScheduleResponse {
     private final Integer numberOfCourts;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
-    private final Boolean canManageSchedule; // 권한 정보 (nullable, 요청 userId가 없으면 null)
+    private final Boolean isScheduleAdmin;   // 관리자 역할 (클럽: ADMIN/OWNER, 공개: 생성자) — PIN, 모집설정용
+    private final Boolean canManageSchedule; // 편집/삭제/대진 권한 (생성자 OR 관리자)
 
     public ScheduleResponse(Schedule schedule, ClubRepository clubRepository, UserRepository userRepository) {
         this(schedule, clubRepository, userRepository, null, null);
@@ -94,11 +95,14 @@ public class ScheduleResponse {
         // 권한 체크 (공개 일정과 클럽 일정 구분)
         if (permissionService != null && requestUserId != null) {
             if (schedule.isPublicSchedule()) {
-                this.canManageSchedule = requestUserId.equals(schedule.getCreatedByUserId());
+                this.isScheduleAdmin = requestUserId.equals(schedule.getCreatedByUserId());
+                this.canManageSchedule = this.isScheduleAdmin;
             } else {
-                this.canManageSchedule = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
+                this.isScheduleAdmin = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
+                this.canManageSchedule = requestUserId.equals(schedule.getCreatedByUserId()) || this.isScheduleAdmin;
             }
         } else {
+            this.isScheduleAdmin = null;
             this.canManageSchedule = null;
         }
     }

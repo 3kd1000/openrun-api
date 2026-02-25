@@ -369,7 +369,7 @@ const ClubMainPage: React.FC = () => {
       // 클럽 ID가 없으면 클럽 탐색 페이지로 리다이렉트
       if (!clubId) {
         console.log("✅ 가입한 클럽 없음 → 클럽 탐색 페이지(신규회원 모집 탭)로 이동");
-        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        navigate("/explore", { replace: true, state: { defaultTab: "member" } });
         return;
       }
 
@@ -390,7 +390,7 @@ const ClubMainPage: React.FC = () => {
         } else {
           // 가입한 클럽이 없으면 클럽 탐색 페이지로
           showToast("가입한 클럽이 없습니다", "error");
-          navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+          navigate("/explore", { replace: true, state: { defaultTab: "member" } });
         }
         return;
       }
@@ -426,7 +426,7 @@ const ClubMainPage: React.FC = () => {
         console.log("⚠️ 클럽 멤버가 아님 → 세션 정리 후 클럽 탐색 페이지로 이동");
         setOpenRunSession({ currentClubId: undefined, currentClubRole: undefined });
         showToast("클럽 정보를 조회할 권한이 없습니다", "error");
-        navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+        navigate("/explore", { replace: true, state: { defaultTab: "member" } });
         return;
       } else {
         showToast(getErrorMessage(error), "error");
@@ -564,7 +564,7 @@ const ClubMainPage: React.FC = () => {
           </p>
           <button
             className="px-6 py-3 bg-primary text-white border-none rounded-lg text-base cursor-pointer transition-colors hover:bg-primary/90"
-            onClick={() => navigate("/clubs/explore")}
+            onClick={() => navigate("/explore")}
           >
             클럽 찾아보기
           </button>
@@ -599,16 +599,20 @@ const ClubMainPage: React.FC = () => {
           <MailOpen size={20} />
           <span className="text-[11px] leading-none whitespace-nowrap">클럽초대</span>
         </button>
-        {canManage && (
-          <button
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
-            onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
-            title="가입 관리"
-          >
-            <UserPlusIcon size={20} />
-            <span className="text-[11px] leading-none whitespace-nowrap">가입관리</span>
-          </button>
-        )}
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
+          onClick={() => {
+            if (!canManage) {
+              showToast("운영진 이상만 이용 가능합니다", "info");
+              return;
+            }
+            navigate(`/clubs/${clubId}/manage/external-requests`);
+          }}
+          title="가입 관리"
+        >
+          <UserPlusIcon size={20} />
+          <span className="text-[11px] leading-none whitespace-nowrap">가입관리</span>
+        </button>
         <button
           className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
           onClick={handleViewMembers}
@@ -617,16 +621,14 @@ const ClubMainPage: React.FC = () => {
           <UsersIcon size={20} />
           <span className="text-[11px] leading-none whitespace-nowrap">클럽원</span>
         </button>
-        {canManage && (
-          <button
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
-            onClick={handleManageClub}
-            title="클럽 관리"
-          >
-            <SettingsIcon size={20} />
-            <span className="text-[11px] leading-none whitespace-nowrap">클럽관리</span>
-          </button>
-        )}
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
+          onClick={handleManageClub}
+          title="클럽 관리"
+        >
+          <SettingsIcon size={20} />
+          <span className="text-[11px] leading-none whitespace-nowrap">클럽관리</span>
+        </button>
       </div>
 
       {/* 위젯 영역 */}

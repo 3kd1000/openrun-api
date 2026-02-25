@@ -30,6 +30,7 @@ export interface Schedule {
   matchType?: MatchType;
   isDrawValid?: boolean | null;
   drawCreatedAt?: string | null;
+  isScheduleAdmin?: boolean | null;
   canManageSchedule?: boolean | null;
   createdAt: string;
   updatedAt: string;

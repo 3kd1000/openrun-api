@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "../../../contexts/ToastContext";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { useLoginGuard } from "../../../hooks/useLoginGuard";
+import { AppHeader } from "../../../components/common/AppHeader";
+import { ClubSelector } from "../../../components/ClubSelector";
+import { useClubSelectorState } from "../../../hooks/useClubSelectorState";
 
 const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
   switch (matchType) {
@@ -34,6 +37,13 @@ const ScheduleRecruitPage: React.FC = () => {
   const { showToast } = useToast();
   const requireLogin = useLoginGuard();
   const { scheduleId } = useParams<{ scheduleId: string }>();
+  const {
+    clubs: selectorClubs,
+    selectedClubId,
+    isLoading: clubSelectorLoading,
+    handleClubChange,
+    isLoggedIn,
+  } = useClubSelectorState();
 
   const sid = scheduleId ? Number(scheduleId) : NaN;
 
@@ -153,7 +163,7 @@ const ScheduleRecruitPage: React.FC = () => {
     if (state?.returnUrl) {
       navigate(state.returnUrl);
     } else {
-      navigate(-1);
+      navigate("/explore?tab=schedule");
     }
   };
 
@@ -210,14 +220,28 @@ const ScheduleRecruitPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="page-container p-4">
-        <div className="py-6 text-muted-foreground text-center">로딩 중...</div>
-      </div>
+      <>
+        <div className="shrink-0 sticky top-0 z-[100]">
+          <AppHeader>
+            {isLoggedIn && (
+              <ClubSelector
+                selectedClubId={selectedClubId}
+                onClubChange={handleClubChange}
+                clubs={selectorClubs}
+                isLoading={clubSelectorLoading}
+              />
+            )}
+          </AppHeader>
+        </div>
+        <div className="page-container p-4">
+          <div className="py-6 text-muted-foreground text-center">로딩 중...</div>
+        </div>
+      </>
     );
   }
 
   // 배너 표시 정보
-  const bannerTitle = isPublic ? "공개일정" : (schedule?.clubName ?? "클럽");
+  const bannerLabel = isPublic ? "공개일정" : "클럽일정";
   const bannerBgClass = isPublic ? "bg-primary" : "bg-slate-700";
   const recruitNote = isPublic ? schedule?.description : schedule?.guestRecruitNote;
 
@@ -229,12 +253,27 @@ const ScheduleRecruitPage: React.FC = () => {
   const accentBgLight = isPublic ? "hover:bg-primary/5" : "hover:bg-slate-50";
 
   return (
+    <>
+      {/* 통일 헤더 */}
+      <div className="shrink-0 sticky top-0 z-[100]">
+        <AppHeader>
+          {isLoggedIn && (
+            <ClubSelector
+              selectedClubId={selectedClubId}
+              onClubChange={handleClubChange}
+              clubs={selectorClubs}
+              isLoading={clubSelectorLoading}
+            />
+          )}
+        </AppHeader>
+      </div>
+
     <div className="page-container">
-      {/* 헤더 */}
+      {/* 서브 헤더 */}
       <div className="relative flex items-center justify-between py-2 mb-3">
         <BackButton onClick={handleBack} />
         <span className="absolute left-1/2 -translate-x-1/2 text-sm font-bold text-foreground pointer-events-none">
-          {isPublic ? "일정 정보" : "게스트 모집"}
+          일정 정보
         </span>
         <Button
           variant="outline"
@@ -260,9 +299,14 @@ const ScheduleRecruitPage: React.FC = () => {
           {/* 배너 */}
           <div className={`${bannerBgClass} px-6 pt-6 pb-5`}>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-xl font-bold text-white leading-tight break-words flex-1 min-w-0">
-                {bannerTitle}
-              </h2>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <h2 className="text-xl font-bold text-white leading-tight shrink-0">
+                  {bannerLabel}
+                </h2>
+                {!isPublic && schedule?.clubName && (
+                  <span className="text-sm text-white/80 truncate">{schedule.clubName}</span>
+                )}
+              </div>
               {/* 클럽일정: 클럽 보기 버튼 */}
               {!isPublic && clubId && (
                 <button
@@ -456,6 +500,7 @@ const ScheduleRecruitPage: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

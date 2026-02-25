@@ -27,6 +27,8 @@ import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
+import com.example.openrunapi.common.exception.AuthenticationRequiredException;
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,10 +108,24 @@ public class ScheduleService {
 
     /**
      * 특정 일정 조회 (권한 정보 포함)
+     * - 클럽일정 + 모집 미진행: 멤버만 조회 가능
+     * - 클럽일정 + 모집 중 (게스트/교류전): 비회원도 조회 가능 (ScheduleRecruitPage 플로우 보존)
+     * - 공개일정: 누구나 조회 가능
      */
     public ScheduleResponse getScheduleById(Long scheduleId, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 클럽일정 + 모집 미진행: 멤버만 조회 가능
+        if (schedule.isClubSchedule()
+                && !Boolean.TRUE.equals(schedule.getGuestRecruitOpen())
+                && !Boolean.TRUE.equals(schedule.getInterclubRecruitOpen())) {
+            if (userId == null) {
+                throw new AuthenticationRequiredException("클럽 일정을 조회하려면 로그인이 필요합니다.");
+            }
+            permissionService.requireClubMembership(userId, schedule.getClubId());
+        }
+
         return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
@@ -272,18 +288,15 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // 권한 체크: 공개일정은 생성자만, 클럽일정은 ADMIN 이상
-        if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
-        }
+        // 권한 체크: 공개일정은 생성자만, 클럽일정은 생성자 OR ADMIN 이상
         if (schedule.isPublicSchedule()) {
             if (!userId.equals(schedule.getCreatedByUserId())) {
-                throw new SecurityException("일정 생성자만 수정할 수 있습니다.");
+                throw new PermissionDeniedException("일정 생성자만 수정할 수 있습니다.");
             }
         } else {
             if (!userId.equals(schedule.getCreatedByUserId())
                     && !permissionService.canManageSchedule(userId, schedule.getClubId())) {
-                throw new SecurityException("일정 수정 권한이 없습니다. 생성자 또는 운영진 이상만 가능합니다.");
+                throw new PermissionDeniedException("일정 수정 권한이 없습니다. 생성자 또는 운영진 이상만 가능합니다.");
             }
         }
 
@@ -341,10 +354,10 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
         }
         if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
-            throw new SecurityException("일정 고정(PIN) 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("일정 고정(PIN) 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         boolean pinned = request != null && Boolean.TRUE.equals(request.getPinned());
@@ -361,10 +374,10 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
         }
         if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
-            throw new SecurityException("게스트 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("게스트 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         Boolean open = request != null ? request.getOpen() : null;
@@ -382,10 +395,10 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
         }
         if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
-            throw new SecurityException("교류전 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("교류전 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         Boolean open = request != null ? request.getOpen() : null;
@@ -446,12 +459,48 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // Audit 로깅 (삭제 전)
-        if (userId != null) {
-            auditLogService.logScheduleDelete(userId, schedule);
+        // 권한 체크: 공개일정은 생성자만, 클럽일정은 생성자 OR ADMIN 이상
+        if (userId == null) {
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
+        }
+        if (schedule.isPublicSchedule()) {
+            if (!userId.equals(schedule.getCreatedByUserId())) {
+                throw new PermissionDeniedException("일정 생성자만 삭제할 수 있습니다.");
+            }
+        } else {
+            if (!userId.equals(schedule.getCreatedByUserId())
+                    && !permissionService.canManageSchedule(userId, schedule.getClubId())) {
+                throw new PermissionDeniedException("일정 삭제 권한이 없습니다. 생성자 또는 운영진 이상만 가능합니다.");
+            }
         }
 
+        // Audit 로깅 (삭제 전)
+        auditLogService.logScheduleDelete(userId, schedule);
+
         scheduleRepository.delete(schedule);
+    }
+
+    /**
+     * 대진 관리 권한 검증
+     * - 공개일정: 호스트(생성자)만
+     * - 클럽일정: 호스트 OR ADMIN 이상
+     */
+    public void validateDrawManagePermission(Long scheduleId, Long userId) {
+        if (userId == null) {
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
+        }
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+        if (schedule.isPublicSchedule()) {
+            if (!userId.equals(schedule.getCreatedByUserId())) {
+                throw new PermissionDeniedException("대진 관리는 호스트만 가능합니다.");
+            }
+        } else {
+            if (!userId.equals(schedule.getCreatedByUserId())
+                    && !permissionService.canManageSchedule(userId, schedule.getClubId())) {
+                throw new PermissionDeniedException("대진 관리 권한이 없습니다. 호스트 또는 운영진 이상만 가능합니다.");
+            }
+        }
     }
 
     /**
@@ -778,11 +827,23 @@ public class ScheduleService {
 
     /**
      * 일정의 대진표 조회 (Match -> DrawResponse 변환)
+     * - 클럽일정 + 모집 미진행: 멤버만 조회 가능
+     * - 클럽일정 + 모집 중 / 공개일정: 누구나 조회 가능
      */
-    public DrawResponse getDrawForSchedule(Long scheduleId) {
+    public DrawResponse getDrawForSchedule(Long scheduleId, Long userId) {
         // 일정 존재 확인
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 클럽일정 + 모집 미진행: 멤버만 조회 가능
+        if (schedule.isClubSchedule()
+                && !Boolean.TRUE.equals(schedule.getGuestRecruitOpen())
+                && !Boolean.TRUE.equals(schedule.getInterclubRecruitOpen())) {
+            if (userId == null) {
+                throw new AuthenticationRequiredException("클럽 대진표를 조회하려면 로그인이 필요합니다.");
+            }
+            permissionService.requireClubMembership(userId, schedule.getClubId());
+        }
 
         // 대진표가 없으면 404
         if (schedule.getDrawType() == null) {

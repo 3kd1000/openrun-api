@@ -70,14 +70,18 @@ openrun/
 └── claude.md         # 이 파일
 ```
 
-## 🚀 작업 현황 (2026-02-24 기준)
+## 🚀 작업 현황 (2026-02-25 기준)
 
 ### 다음 작업
-- [ ] Phase B-2: PWA 설치 유도 + 알림 허용 유도
+- [ ] 앱 설치 가이드 일러스트 → 실제 스크린샷 교체 (폰 테스트 후 결정)
 - [ ] 이용 가이드 페이지 콘텐츠 작성
 
 ### ✅ 완료
 
+- [x] Phase B-2: PWA 설치 유도 + 알림 허용 유도 (InstallGuidePage, PwaSetupSheet, MorePage 배너)
+- [x] 더보기 서브페이지 헤더 통일 (AppHeader 서브페이지 모드, 8개 페이지 적용)
+- [x] 더보기 메뉴 정리 (이용가이드/에디터/메시지/문의하기 제거, 순서 변경, 버튼 스타일 개선)
+- [x] 전역 ScrollToTop 추가 (App.tsx, 라우트 전환 시 스크롤 리셋)
 - [x] Phase A: SecurityContext 마이그레이션 (@RequestParam userId → @AuthenticationPrincipal)
 - [x] Phase B-1 + B-3: FCM 알림 7케이스 + 알림 설정 페이지
 - [x] Phase C: 동적 OG 태그 (Express og-server, 카카오톡/SNS 미리보기)

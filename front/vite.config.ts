@@ -12,9 +12,8 @@ export default defineConfig({
     VitePWA({
       registerType: "prompt",
       includeAssets: [
-        "icon-192x192.png",
-        "icon-512x512.png",
-        "openrun_logo.jpeg",
+        "icon-192x192-v4.png",
+        "icon-512x512-v4.png",
       ],
       manifest: false, // 이미 수동으로 생성한 manifest.json 사용
       workbox: {

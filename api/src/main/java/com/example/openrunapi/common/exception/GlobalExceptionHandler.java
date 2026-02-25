@@ -20,8 +20,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body("잘못된 파라미터: " + message);
     }
 
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<String> handleSecurityException(SecurityException ex) {
+    @ExceptionHandler(AuthenticationRequiredException.class)
+    public ResponseEntity<String> handleAuthenticationRequired(AuthenticationRequiredException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                             .body("인증 필요: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<String> handlePermissionDenied(PermissionDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                              .body("접근 권한 없음: " + ex.getMessage());
     }

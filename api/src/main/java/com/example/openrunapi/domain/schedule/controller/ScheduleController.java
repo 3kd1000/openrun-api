@@ -35,6 +35,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.openrunapi.common.exception.AuthenticationRequiredException;
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -97,7 +99,7 @@ public class ScheduleController {
         } else {
             // 전체 일정 조회는 System Admin만 가능
             if (!permissionService.isSystemAdmin(userId)) {
-                throw new SecurityException("전체 일정 조회는 관리자만 가능합니다.");
+                throw new PermissionDeniedException("전체 일정 조회는 관리자만 가능합니다.");
             }
             responses = scheduleService.getAllSchedules();
         }
@@ -156,7 +158,7 @@ public class ScheduleController {
             @PathVariable Long scheduleId,
             @Valid @RequestBody UpdateScheduleRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = resolveUserId(userDetails);
+        Long userId = requireUserId(userDetails);
         ScheduleResponse response = scheduleService.updateSchedule(scheduleId, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -168,7 +170,7 @@ public class ScheduleController {
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long scheduleId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = resolveUserId(userDetails);
+        Long userId = requireUserId(userDetails);
         scheduleService.deleteSchedule(scheduleId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -261,7 +263,12 @@ public class ScheduleController {
     @PostMapping("/{scheduleId}/draw")
     public ResponseEntity<DrawResponse> createDrawForSchedule(
             @PathVariable Long scheduleId,
-            @Valid @RequestBody CreateDrawRequest request) {
+            @Valid @RequestBody CreateDrawRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 권한 체크: 호스트 또는 운영진 이상
+        Long userId = requireUserId(userDetails);
+        scheduleService.validateDrawManagePermission(scheduleId, userId);
 
         // 일정 존재 확인 및 조회
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
@@ -282,7 +289,12 @@ public class ScheduleController {
     @PostMapping("/{scheduleId}/draw/with-ids")
     public ResponseEntity<DrawResponse> createDrawForScheduleWithIds(
             @PathVariable Long scheduleId,
-            @Valid @RequestBody CreateDrawRequestWithIds request) {
+            @Valid @RequestBody CreateDrawRequestWithIds request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 권한 체크: 호스트 또는 운영진 이상
+        Long userId = requireUserId(userDetails);
+        scheduleService.validateDrawManagePermission(scheduleId, userId);
 
         // 일정 존재 확인 및 조회
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
@@ -354,8 +366,11 @@ public class ScheduleController {
      * 일정의 대진표 조회
      */
     @GetMapping("/{scheduleId}/draw")
-    public ResponseEntity<DrawResponse> getDrawForSchedule(@PathVariable Long scheduleId) {
-        DrawResponse response = scheduleService.getDrawForSchedule(scheduleId);
+    public ResponseEntity<DrawResponse> getDrawForSchedule(
+            @PathVariable Long scheduleId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = resolveUserId(userDetails);
+        DrawResponse response = scheduleService.getDrawForSchedule(scheduleId, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -363,7 +378,13 @@ public class ScheduleController {
      * 일정의 대진표 삭제
      */
     @DeleteMapping("/{scheduleId}/draw")
-    public ResponseEntity<Void> deleteDrawForSchedule(@PathVariable Long scheduleId) {
+    public ResponseEntity<Void> deleteDrawForSchedule(
+            @PathVariable Long scheduleId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // 권한 체크: 호스트 또는 운영진 이상
+        Long userId = requireUserId(userDetails);
+        scheduleService.validateDrawManagePermission(scheduleId, userId);
+
         scheduleService.deleteDrawForSchedule(scheduleId);
         return ResponseEntity.noContent().build();
     }
@@ -502,7 +523,7 @@ public class ScheduleController {
      */
     private Long requireUserId(UserDetails userDetails) {
         if (userDetails == null) {
-            throw new SecurityException("인증이 필요합니다.");
+            throw new AuthenticationRequiredException("인증이 필요합니다.");
         }
         UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
         return currentUser.getId();

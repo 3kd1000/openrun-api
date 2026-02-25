@@ -29,6 +29,7 @@ interface Props {
   participants: Participant[];
   onClose: () => void;
   onSuccess: () => void;
+  canManageDraw: boolean;
 }
 
 const DrawViewModal: React.FC<Props> = ({
@@ -36,6 +37,7 @@ const DrawViewModal: React.FC<Props> = ({
   participants,
   onClose,
   onSuccess,
+  canManageDraw,
 }) => {
   const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -293,8 +295,8 @@ const DrawViewModal: React.FC<Props> = ({
   // 공개일정 여부 (경기 결과 저장 불가)
   const isPublicSchedule = schedule.clubId == null;
 
-  // 대진 수정 가능 여부: 경기 결과가 입력되지 않은 경우에만
-  const canEditDraw = !hasAnyResult && drawResult !== null;
+  // 대진 수정 가능 여부: 권한 있고 경기 결과가 입력되지 않은 경우에만
+  const canEditDraw = canManageDraw && !hasAnyResult && drawResult !== null;
 
   // 재생성 모달: DrawCreateModal (이미 Dialog) full replacement
   if (showRegenerateModal) {
@@ -414,14 +416,16 @@ const DrawViewModal: React.FC<Props> = ({
             )}>
               <div
                 title={
-                  hasAnyResult
+                  !canManageDraw
+                    ? "대진 관리는 호스트 또는 관리자만 가능합니다."
+                    : hasAnyResult
                     ? "경기 결과가 입력된 대진표는 재생성할 수 없습니다"
                     : ""
                 }
               >
                 <Button
                   onClick={() => setShowRegenerateModal(true)}
-                  disabled={!drawResult || isEditMode || hasAnyResult}
+                  disabled={!drawResult || isEditMode || hasAnyResult || !canManageDraw}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   재생성

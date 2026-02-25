@@ -5,7 +5,7 @@ import axiosInstance from '../../../services/api/axiosInstance';
 import { Button } from '../../../components/ui/button';
 import { ArrowLeftIcon, CrownIcon, StarIcon, UserIcon, SettingsIcon, XIcon, ChevronRightIcon } from '../../../components/common/Icons';
 import { getErrorMessage, logError } from '../../../utils/errorHandler';
-import { canManageClub, normalizeClubRole } from '../../../utils/role';
+import { canManageClub, isClubOwner, normalizeClubRole } from '../../../utils/role';
 import { getOpenRunSession } from '../../../utils/openrunSession';
 import UserNameWithBadge from '../../../components/common/UserNameWithBadge';
 import { useToast } from '../../../contexts/ToastContext';
@@ -54,8 +54,8 @@ const ClubMembersPage: React.FC = () => {
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
   const canManage = canManageClub(myRole);
-  const isOwner = myRole === 'OWNER';
-  const canEditRoles = canManage;
+  const isOwner = isClubOwner(myRole);
+  const canEditRoles = isOwner;
 
   // React Query로 멤버 목록 캐싱 (staleTime 1분)
   const { data: members = [], isLoading: loading, error: queryError } = useQuery({
@@ -199,12 +199,18 @@ const ClubMembersPage: React.FC = () => {
           클럽원
         </span>
         {/* 편집 버튼이 없을 때도 레이아웃 균형 유지 */}
-        {canEditRoles && !loading && !error ? (
+        {!loading && !error ? (
           <Button
             variant="outline"
             size="sm"
             className="text-xs"
-            onClick={() => (isEditMode ? void handleSaveRoles() : setIsEditMode(true))}
+            onClick={() => {
+              if (!canEditRoles) {
+                showToast("클럽장만 역할을 변경할 수 있습니다", "info");
+                return;
+              }
+              isEditMode ? void handleSaveRoles() : setIsEditMode(true);
+            }}
             disabled={saving}
             type="button"
           >

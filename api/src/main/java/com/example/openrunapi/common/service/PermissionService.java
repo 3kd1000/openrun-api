@@ -1,5 +1,6 @@
 package com.example.openrunapi.common.service;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.domain.club.model.ClubMember;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.user.repository.SystemAdminRepository;
@@ -88,7 +89,7 @@ public class PermissionService {
      */
     public void requireScheduleManagePermission(Long userId, Long clubId) {
         if (!canManageSchedule(userId, clubId)) {
-            throw new SecurityException("일정 관리 권한이 없습니다.");
+            throw new PermissionDeniedException("일정 관리 권한이 없습니다.");
         }
     }
 
@@ -97,7 +98,7 @@ public class PermissionService {
      */
     public void requireMemberManagePermission(Long userId, Long clubId) {
         if (!canManageMembers(userId, clubId)) {
-            throw new SecurityException("회원 관리 권한이 없습니다.");
+            throw new PermissionDeniedException("회원 관리 권한이 없습니다.");
         }
     }
 
@@ -129,7 +130,7 @@ public class PermissionService {
      */
     public void requireClubMembership(Long userId, Long clubId) {
         if (!isClubMember(userId, clubId)) {
-            throw new SecurityException("해당 클럽의 멤버만 접근할 수 있습니다.");
+            throw new PermissionDeniedException("해당 클럽의 멤버만 접근할 수 있습니다.");
         }
     }
 }

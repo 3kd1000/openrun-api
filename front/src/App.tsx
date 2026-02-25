@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
-import DrawGenerationPage from "./pages/draw/DrawGenerationPage";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
 import ScheduleCreatePage from "./pages/schedule/create/ScheduleCreatePage";
 import PublicScheduleCreatePage from "./pages/schedule/create/PublicScheduleCreatePage";
@@ -95,12 +94,12 @@ function App() {
           <div className="App-content-wrapper">
             <Routes>
               {/* Public 페이지 (로그인 불필요) */}
-              <Route path="/" element={<DrawGenerationPage />} />
+              <Route path="/" element={<Navigate to="/intro" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/intro" element={<IntroPage />} />
               <Route path="/more/terms" element={<TermsOfServicePage />} />
               <Route path="/more/license" element={<LicensePage />} />
-              <Route path="/clubs/explore" element={<ClubExplorePage />} />
+              <Route path="/explore" element={<ClubExplorePage />} />
               <Route
                 path="/clubs/new"
                 element={

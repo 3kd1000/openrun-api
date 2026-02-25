@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BackButton from "../../../components/common/BackButton";
 import { scheduleService } from "../../../services/scheduleService";
+import { AppHeader } from "../../../components/common/AppHeader";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { useToast } from "../../../contexts/ToastContext";
 import ScheduleFormSection, {
@@ -70,10 +70,7 @@ export default function PublicScheduleCreatePage() {
 
   return (
     <div className="page-container">
-      <div className="mb-4 flex items-center gap-2">
-        <BackButton onClick={handleGoBack} />
-        <span className="text-sm font-semibold">공개일정 만들기</span>
-      </div>
+      <AppHeader title="공개일정 만들기" onBack={handleGoBack} />
 
       <ScheduleFormSection
         mode="create"

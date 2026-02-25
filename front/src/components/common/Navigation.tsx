@@ -49,9 +49,16 @@ const TennisBallIcon: React.FC<{ isActive: boolean }> = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
+    <defs>
+      <clipPath id="ball-clip-nav">
+        <circle cx="12" cy="12" r="10" />
+      </clipPath>
+    </defs>
     <circle cx="12" cy="12" r="10" />
-    <path d="M7 2.5C9 7 9 17 7 21.5" />
-    <path d="M17 2.5C15 7 15 17 17 21.5" />
+    <g clipPath="url(#ball-clip-nav)">
+      <path d="M7 2.5C9 7 9 17 7 21.5" />
+      <path d="M17 2.5C15 7 15 17 17 21.5" />
+    </g>
   </svg>
 );
 
@@ -98,7 +105,7 @@ const Navigation: React.FC = () => {
   const hasClubs = session.clubList && session.clubList.length > 0;
 
   // Active 상태 감지
-  const isExploreRoute = location.pathname === "/clubs/explore";
+  const isExploreRoute = location.pathname === "/explore";
 
   const isClubHomeRoute =
     !isExploreRoute &&
@@ -116,7 +123,7 @@ const Navigation: React.FC = () => {
     e.preventDefault();
     const latestSession = getOpenRunSession();
     const currentClubId = latestSession.currentClubId;
-    const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/clubs/explore";
+    const clubPath = currentClubId ? `/clubs/${currentClubId}` : "/explore";
     navigate(clubPath);
   };
 
@@ -126,11 +133,11 @@ const Navigation: React.FC = () => {
     icon: React.FC<{ isActive: boolean }>;
     onClick?: (e: React.MouseEvent) => void;
   }> = [
-    { path: "/clubs/explore", label: "탐색", icon: SearchIcon },
+    { path: "/explore", label: "탐색", icon: SearchIcon },
     ...(hasClubs
       ? [
           {
-            path: `/clubs/${session.currentClubId || "explore"}`,
+            path: session.currentClubId ? `/clubs/${session.currentClubId}` : "/explore",
             label: "클럽",
             icon: UsersIcon,
             onClick: handleClubClick,

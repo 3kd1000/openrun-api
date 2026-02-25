@@ -48,7 +48,7 @@ const LoginPage: React.FC = () => {
       navigate("/schedules/club", { replace: true });
     } else {
       console.log(`✅ 가입한 클럽 없음 → 클럽 탐색 페이지로 이동`);
-      navigate("/clubs/explore", { replace: true, state: { defaultTab: "member" } });
+      navigate("/explore", { replace: true, state: { defaultTab: "member" } });
     }
   };
 
@@ -496,9 +496,9 @@ const LoginPage: React.FC = () => {
         {/* Brand */}
         <div className="flex flex-col items-center pt-10 pb-6 px-8">
           <img
-            src="/openrun_logo_square.jpeg"
+            src="/logo/openrun-icon-emerald.svg"
             alt="OpenRun"
-            className="mb-4 w-20 h-20 rounded-full object-cover shadow-md"
+            className="mb-4 w-20 h-20 rounded-2xl object-cover shadow-md"
           />
           <div className="text-3xl font-black tracking-tight mb-1 text-center text-foreground">
             OpenRun

@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.club.service;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.common.service.PermissionService;
 import com.example.openrunapi.infrastructure.objectstorage.ClubLogoUrls;
 import com.example.openrunapi.infrastructure.objectstorage.ObjectStorageService;
@@ -236,7 +237,7 @@ public class ClubService {
 
         // TODO: 추후 인증 기능 구현 시, currentUserId가 클럽의 소유자(또는 관리자)인지 확인하는 권한 검증 로직 필요
         if (!club.getOwnerUserId().equals(currentUserId)) {
-            throw new SecurityException("클럽을 삭제할 권한이 없습니다.");
+            throw new PermissionDeniedException("클럽을 삭제할 권한이 없습니다.");
         }
 
         clubRepository.deleteById(clubId);
@@ -332,7 +333,7 @@ public class ClubService {
 
         // 권한 체크: 요청자가 클럽 소유자인지 확인
         if (!club.getOwnerUserId().equals(adminId)) {
-            throw new SecurityException("승인 권한이 없습니다.");
+            throw new PermissionDeniedException("승인 권한이 없습니다.");
         }
 
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
@@ -354,7 +355,7 @@ public class ClubService {
 
         // 권한 체크: 요청자가 클럽 소유자인지 확인
         if (!club.getOwnerUserId().equals(adminId)) {
-            throw new SecurityException("거절 권한이 없습니다.");
+            throw new PermissionDeniedException("거절 권한이 없습니다.");
         }
 
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
@@ -582,7 +583,7 @@ public class ClubService {
                 .orElseThrow(() -> new EntityNotFoundException("클럽 멤버를 찾을 수 없습니다."));
 
         if (!currentOwner.isOwner()) {
-            throw new SecurityException("클럽장만 권한을 양도할 수 있습니다.");
+            throw new PermissionDeniedException("클럽장만 권한을 양도할 수 있습니다.");
         }
 
         // 2. 대상자가 ADMIN인지 확인
