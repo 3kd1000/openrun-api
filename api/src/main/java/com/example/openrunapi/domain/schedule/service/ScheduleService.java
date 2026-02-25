@@ -474,6 +474,11 @@ public class ScheduleService {
             }
         }
 
+        // 경기 결과가 존재하는 일정은 삭제 불가 (랭킹 데이터 보호)
+        if (matchRepository.existsResultByScheduleId(scheduleId)) {
+            throw new IllegalStateException("경기 결과가 존재하는 일정은 삭제할 수 없습니다.");
+        }
+
         // Audit 로깅 (삭제 전)
         auditLogService.logScheduleDelete(userId, schedule);
 
@@ -528,6 +533,8 @@ public class ScheduleService {
         // 기존 대진이 있으면 삭제 (재생성 대응)
         List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
         if (!existingMatches.isEmpty()) {
+            // 경기 결과가 존재하면 재생성 불가
+            validateNoGameResults(scheduleId);
             log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
             matchRepository.deleteAll(existingMatches);
         }
@@ -696,6 +703,8 @@ public class ScheduleService {
         // 기존 대진이 있으면 삭제 (재생성 대응)
         List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
         if (!existingMatches.isEmpty()) {
+            // 경기 결과가 존재하면 재생성 불가
+            validateNoGameResults(scheduleId);
             log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
             matchRepository.deleteAll(existingMatches);
         }
@@ -1001,6 +1010,9 @@ public class ScheduleService {
             throw new IllegalStateException("삭제할 대진표가 존재하지 않습니다.");
         }
 
+        // 경기 결과가 존재하면 대진 삭제 불가
+        validateNoGameResults(scheduleId);
+
         // Match 테이블에서 해당 일정의 모든 매치 삭제
         List<Match> matches = matchRepository.findByScheduleId(scheduleId);
         if (!matches.isEmpty()) {
@@ -1016,6 +1028,15 @@ public class ScheduleService {
         log.info("참가자 상태 유지 (선착순 정보 보존)");
 
         log.info("=== 대진표 삭제 완료 ===");
+    }
+
+    /**
+     * 경기 결과가 존재하면 예외 발생 (대진 삭제/재생성 차단용)
+     */
+    private void validateNoGameResults(Long scheduleId) {
+        if (matchRepository.existsResultByScheduleId(scheduleId)) {
+            throw new IllegalStateException("경기 결과가 존재하는 대진표는 삭제하거나 재생성할 수 없습니다.");
+        }
     }
 
     /**
@@ -1040,6 +1061,8 @@ public class ScheduleService {
         // 기존 대진이 있으면 삭제 (재생성 대응)
         List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
         if (!existingMatches.isEmpty()) {
+            // 경기 결과가 존재하면 재생성 불가
+            validateNoGameResults(scheduleId);
             log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
             matchRepository.deleteAll(existingMatches);
         }

@@ -20,8 +20,11 @@ export default defineConfig({
         // Service Worker 업데이트 전략
         skipWaiting: false, // prompt 모드에서는 사용자 확인 후 skipWaiting
         clientsClaim: true, // 새 SW 활성화 즉시 모든 클라이언트 제어
-        // JS/CSS/이미지만 precache (HTML 제외)
+        // JS/CSS/이미지만 precache (HTML 제외 → runtimeCaching NetworkFirst로 처리)
         globPatterns: ["**/*.{js,css,ico,png,svg,jpeg}"],
+        // HTML은 precache에 없으므로 navigateFallback 비활성화
+        // (navigation 요청은 아래 runtimeCaching의 NetworkFirst가 처리)
+        navigateFallback: null,
         // 구버전 캐시 자동 삭제
         cleanupOutdatedCaches: true,
         // firebase-messaging-sw.js는 Workbox에서 제외 (별도 SW로 동작)

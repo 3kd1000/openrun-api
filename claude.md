@@ -64,6 +64,7 @@ openrun/
 │   └── cronjobs/    # K8s CronJob 배치 작업
 ├── docs/             # 모든 문서 저장소 (git submodule)
 │   ├── guides/      # 작업 가이드 (문서화, 배포 등)
+│   ├── operations/  # 운영 규칙 (역할/권한, 리소스 CRUD, 알림 발송)
 │   ├── infra/       # 인프라 관련
 │   ├── backend/     # 백엔드 관련
 │   └── frontend/    # 프론트엔드 관련
@@ -75,9 +76,20 @@ openrun/
 ### 다음 작업
 - [ ] 앱 설치 가이드 일러스트 → 실제 스크린샷 교체 (폰 테스트 후 결정)
 - [ ] 이용 가이드 페이지 콘텐츠 작성
+- [ ] Intro 페이지 동영상/스크린샷 업데이트
 
 ### ✅ 완료
 
+- [x] 화면 일관성 개선: 5개 메인 페이지 헤더 통일 (ClubSelector + 메시지 + 알림벨), 서브페이지 헤더 통일 (ClubCreatePage, PublicScheduleCreatePage, ScheduleRecruitPage)
+- [x] 일정 화면 개선: 제목 "일정 정보" 통일, badge→label-value 변환, 배너 "공개일정/클럽일정" 라벨, 뒤로가기 무한루프 해결
+- [x] 로고 리뉴얼: Emerald 테마 아이콘/horizontal SVG 제작, 테니스공 심 라인 추가 (clipPath), v4 PNG 일괄 교체, 구버전 archive 이동
+- [x] 네비게이션 테니스공 아이콘 심 라인 clipPath 적용
+- [x] 앱 아이콘/OG 이미지 v4 일괄 교체 (manifest, index.html, og-server, FCM SW, vite.config)
+- [x] 루트 경로(/) → /intro 리다이렉트, 페이지 타이틀 변경
+- [x] 역할/권한 매트릭스 문서화 및 코드 검증 (`docs/operations/role-permission.md`)
+- [x] 리소스 CRUD 규칙 문서화 (`docs/operations/resource-rules.md`)
+- [x] 알림 발송 규칙 문서화 (`docs/operations/notification-rules.md`)
+- [x] 권한 수정: 일정 삭제/대진 CRUD 권한 체크, 클럽일정 상세 멤버십 체크, 역할 변경 OWNER 전용, 메뉴 가시성 개선
 - [x] Phase B-2: PWA 설치 유도 + 알림 허용 유도 (InstallGuidePage, PwaSetupSheet, MorePage 배너)
 - [x] 더보기 서브페이지 헤더 통일 (AppHeader 서브페이지 모드, 8개 페이지 적용)
 - [x] 더보기 메뉴 정리 (이용가이드/에디터/메시지/문의하기 제거, 순서 변경, 버튼 스타일 개선)

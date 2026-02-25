@@ -87,6 +87,14 @@ public interface MatchRepository extends JpaRepository<Match, Long>, JpaSpecific
     boolean existsUserInDraw(@Param("scheduleId") Long scheduleId, @Param("userId") Long userId);
 
     /**
+     * 특정 일정에 경기 결과가 1건이라도 존재하는지 확인
+     * (일정 삭제 / 대진 재생성·삭제 차단 판단용)
+     */
+    @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END FROM Match m " +
+           "WHERE m.scheduleId = :scheduleId AND m.result IS NOT NULL")
+    boolean existsResultByScheduleId(@Param("scheduleId") Long scheduleId);
+
+    /**
      * 특정 일정의 대진에 특정 게스트 이름이 포함되어 있는지 확인
      */
     @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END FROM Match m WHERE m.scheduleId = :scheduleId AND (m.teamAPlayer1GuestName = :guestName OR m.teamAPlayer2GuestName = :guestName OR m.teamBPlayer1GuestName = :guestName OR m.teamBPlayer2GuestName = :guestName)")
