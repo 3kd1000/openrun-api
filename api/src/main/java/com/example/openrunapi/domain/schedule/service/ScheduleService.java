@@ -499,8 +499,8 @@ public class ScheduleService {
                     "일정이 취소되었습니다",
                     courtName + " 일정이 취소되었습니다.",
                     NotificationType.SCHEDULE,
-                    scheduleId,
-                    "SCHEDULE"
+                    null,  // 삭제된 일정이므로 referenceId null → 알림 클릭 시 /explore로 이동
+                    null
             );
         }
 

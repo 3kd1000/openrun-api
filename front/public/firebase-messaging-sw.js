@@ -46,7 +46,7 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  let targetUrl = "/";
+  let targetUrl = "/explore";
 
   // 알림 타입 + referenceType 기반으로 이동할 페이지 결정
   if ((data.type === "SCHEDULE" || data.type === "DRAW") && data.referenceId) {
