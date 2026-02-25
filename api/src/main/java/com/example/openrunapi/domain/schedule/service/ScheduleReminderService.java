@@ -32,7 +32,7 @@ public class ScheduleReminderService {
     private final ScheduleParticipantRepository participantRepository;
     private final NotificationService notificationService;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public String sendReminders() {
         LocalDate tomorrow = LocalDate.now(KST).plusDays(1);
         LocalDateTime start = tomorrow.atStartOfDay();

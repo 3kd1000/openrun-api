@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ScheduleListPage from "./pages/schedule/home/ScheduleListPage";
 import ScheduleCreatePage from "./pages/schedule/create/ScheduleCreatePage";
-import PublicScheduleCreatePage from "./pages/schedule/create/PublicScheduleCreatePage";
 import ScheduleDetailPage from "./pages/schedule/detail/ScheduleDetailPage";
 import MorePage from "./pages/more/MorePage";
 import ScoreboardPage from "./pages/scoreboard/ScoreboardPage";
@@ -307,7 +306,7 @@ function App() {
                 path="/schedules/public/new"
                 element={
                   <ProtectedRoute>
-                    <PublicScheduleCreatePage />
+                    <ScheduleCreatePage />
                   </ProtectedRoute>
                 }
               />
