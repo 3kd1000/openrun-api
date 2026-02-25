@@ -46,15 +46,13 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
         } catch (FirebaseAuthException e) {
-            log.error("Firebase token verification failed", e);
+            log.warn("Firebase token verification failed: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Firebase Token");
-            return;
+            // 401을 즉시 반환하지 않고 체인을 계속 진행
+            // → permitAll 경로는 인증 없이 통과, 인증 필요 경로는 Spring Security가 403 반환
         } catch (Exception e) {
-            log.error("Error during authentication", e);
+            log.warn("Error during authentication: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error during authentication");
-            return;
         }
 
         filterChain.doFilter(request, response);
