@@ -9,7 +9,8 @@ import { useToast } from "../../contexts/ToastContext";
 import { useMessage } from "../../contexts/MessageContext";
 
 const formatMessageTime = (dateStr: string): string => {
-  const date = new Date(dateStr);
+  // 서버가 UTC로 저장하므로 timezone 없는 문자열은 UTC로 해석
+  const date = new Date(dateStr.endsWith("Z") ? dateStr : dateStr + "Z");
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
 

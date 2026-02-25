@@ -7,7 +7,8 @@ import BackButton from "../../components/common/BackButton";
 import { MessageCircle, Headphones } from "lucide-react";
 
 const formatTimeAgo = (dateStr: string): string => {
-  const date = new Date(dateStr);
+  // 서버가 UTC로 저장하므로 timezone 없는 문자열은 UTC로 해석
+  const date = new Date(dateStr.endsWith("Z") ? dateStr : dateStr + "Z");
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);

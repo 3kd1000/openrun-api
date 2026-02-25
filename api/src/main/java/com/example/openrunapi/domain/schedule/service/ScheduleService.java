@@ -35,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -56,6 +58,7 @@ public class ScheduleService {
     private final PermissionService permissionService;
     private final ClubRepository clubRepository;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     /**
      * 일정 생성
@@ -477,6 +480,28 @@ public class ScheduleService {
         // 경기 결과가 존재하는 일정은 삭제 불가 (랭킹 데이터 보호)
         if (matchRepository.existsResultByScheduleId(scheduleId)) {
             throw new IllegalStateException("경기 결과가 존재하는 일정은 삭제할 수 없습니다.");
+        }
+
+        // 참가자에게 일정 삭제 알림 발송 (삭제 전)
+        List<ScheduleParticipant> participants = participantRepository.findByScheduleIdOrderByPositionAsc(scheduleId);
+        List<Long> notifyUserIds = participants.stream()
+                .filter(p -> p.isConfirmed() || p.isWaiting() || p.isPending())
+                .map(ScheduleParticipant::getUserId)
+                .filter(id -> id != null && !id.equals(userId)) // 삭제자 본인 제외
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!notifyUserIds.isEmpty()) {
+            String courtName = schedule.getCourtName();
+            notificationService.sendNotification(
+                    schedule.getClubId(),
+                    notifyUserIds,
+                    "일정이 취소되었습니다",
+                    courtName + " 일정이 취소되었습니다.",
+                    NotificationType.SCHEDULE,
+                    scheduleId,
+                    "SCHEDULE"
+            );
         }
 
         // Audit 로깅 (삭제 전)

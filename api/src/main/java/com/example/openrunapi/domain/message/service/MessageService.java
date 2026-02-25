@@ -58,11 +58,11 @@ public class MessageService {
 
         messageRepository.save(message);
 
-        // FCM 알림 전송 (읽지 않은 메시지 알림이 이미 있으면 스킵 → 스팸 방지)
-        boolean hasUnreadMessageNotification = notificationRepository
-                .existsByUserIdAndTypeAndIsReadFalse(request.getReceiverId(), NotificationType.MESSAGE);
-        if (hasUnreadMessageNotification) {
-            log.info("Skipping FCM for message {} (receiver {} has unread MESSAGE notification)", message.getId(), request.getReceiverId());
+        // FCM 알림 전송 (동일 발신자의 읽지 않은 메시지 알림이 있으면 스킵 → 스팸 방지)
+        boolean hasUnreadFromSameSender = notificationRepository
+                .existsByUserIdAndTypeAndReferenceIdAndIsReadFalse(request.getReceiverId(), NotificationType.MESSAGE, senderId);
+        if (hasUnreadFromSameSender) {
+            log.info("Skipping FCM for message {} (receiver {} has unread MESSAGE notification from sender {})", message.getId(), request.getReceiverId(), senderId);
         } else {
             try {
                 notificationService.sendNotification(

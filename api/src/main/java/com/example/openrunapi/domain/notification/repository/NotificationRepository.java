@@ -35,6 +35,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // 특정 사용자에게 읽지 않은 특정 타입 알림이 있는지 확인 (중복 발송 방지용)
     boolean existsByUserIdAndTypeAndIsReadFalse(Long userId, NotificationType type);
 
+    // 동일 발신자(referenceId) 기준 중복 발송 방지 (MESSAGE 타입용)
+    boolean existsByUserIdAndTypeAndReferenceIdAndIsReadFalse(Long userId, NotificationType type, Long referenceId);
+
     // 선택 삭제 (ID 목록 + 소유권 검증)
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.id IN :ids")
