@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { generateScheduleOgImage, generateClubOgImage, initBackground } = require('./og-image-generator.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -42,18 +43,18 @@ async function fetchJson(url) {
 }
 
 // --- OG 데이터 생성 ---
-function buildClubOgData(club, requestUrl) {
+function buildClubOgData(club, requestUrl, resourceId) {
   const description = club.description
     || `${club.region || ''}의 테니스 클럽. ${club.memberCount || 0}명 활동 중`;
   return {
     title: `${club.name} - 테니스 클럽 가입하기`,
     description: description.length > 100 ? description.substring(0, 100) + '...' : description,
-    image: club.logoUrl || DEFAULT_OG_IMAGE,
+    image: club.logoUrl || `${SITE_URL}/og-image/club/${resourceId}`,
     url: `${SITE_URL}${requestUrl}`,
   };
 }
 
-function buildScheduleOgData(schedule, requestUrl) {
+function buildScheduleOgData(schedule, requestUrl, resourceId) {
   // 날짜 포맷: MM/DD(요일) HH:mm
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   const dt = new Date(schedule.scheduledAt);
@@ -70,7 +71,7 @@ function buildScheduleOgData(schedule, requestUrl) {
   return {
     title: `${schedule.courtName} - ${dateStr}`,
     description: `${clubLabel} | ${participants}`,
-    image: DEFAULT_OG_IMAGE,
+    image: `${SITE_URL}/og-image/schedule/${resourceId}`,
     url: `${SITE_URL}${requestUrl}`,
   };
 }
@@ -87,6 +88,34 @@ function injectOgTags(html, og) {
     .replace(/(<meta name="twitter:image" content=")[^"]*("\s*\/?>)/, `$1${og.image}$2`)
     .replace(/(<meta name="description" content=")[^"]*("\s*\/?>)/, `$1${og.description}$2`);
 }
+
+// --- 동적 OG 이미지 엔드포인트 (크롤러가 og:image URL로 직접 요청) ---
+app.get('/og-image/schedule/:id', async (req, res) => {
+  try {
+    const data = await fetchJson(`${API_URL}/schedules/${req.params.id}`);
+    const imageBuffer = await generateScheduleOgImage(data);
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=600'); // 10분 CDN 캐시
+    res.send(imageBuffer);
+  } catch (err) {
+    console.error(`[OG Image] Failed to generate schedule/${req.params.id}:`, err.message);
+    // 실패 시 정적 이미지로 리다이렉트
+    res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
+
+app.get('/og-image/club/:id', async (req, res) => {
+  try {
+    const data = await fetchJson(`${API_URL}/clubs/${req.params.id}`);
+    const imageBuffer = await generateClubOgImage(data);
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=600');
+    res.send(imageBuffer);
+  } catch (err) {
+    console.error(`[OG Image] Failed to generate club/${req.params.id}:`, err.message);
+    res.redirect(DEFAULT_OG_IMAGE);
+  }
+});
 
 // --- 크롤러 요청 처리 (정적 파일보다 먼저) ---
 app.get('*', async (req, res, next) => {
@@ -106,8 +135,8 @@ app.get('*', async (req, res, next) => {
 
       const data = await fetchJson(apiPath);
       const ogData = route.type === 'club'
-        ? buildClubOgData(data, req.path)
-        : buildScheduleOgData(data, req.path);
+        ? buildClubOgData(data, req.path, resourceId)
+        : buildScheduleOgData(data, req.path, resourceId);
 
       return res.send(injectOgTags(indexHtml, ogData));
     } catch (err) {
@@ -129,8 +158,17 @@ app.get('*', (req, res) => {
 });
 
 // --- 서버 시작 ---
-app.listen(PORT, () => {
-  console.log(`[OG Server] Running on port ${PORT}`);
-  console.log(`[OG Server] API: ${API_URL}`);
-  console.log(`[OG Server] Site: ${SITE_URL}`);
+initBackground().then(() => {
+  app.listen(PORT, () => {
+    console.log(`[OG Server] Running on port ${PORT}`);
+    console.log(`[OG Server] API: ${API_URL}`);
+    console.log(`[OG Server] Site: ${SITE_URL}`);
+    console.log(`[OG Server] Dynamic OG images enabled`);
+  });
+}).catch((err) => {
+  console.error('[OG Server] Failed to initialize background:', err);
+  // 배경 초기화 실패해도 서버는 시작 (정적 이미지로 폴백)
+  app.listen(PORT, () => {
+    console.log(`[OG Server] Running on port ${PORT} (without dynamic OG images)`);
+  });
 });
