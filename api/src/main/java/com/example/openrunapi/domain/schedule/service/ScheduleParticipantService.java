@@ -1,6 +1,7 @@
 package com.example.openrunapi.domain.schedule.service;
 
 import com.example.openrunapi.common.service.PermissionService;
+import com.example.openrunapi.domain.audit.dto.ScheduleParticipantAuditSnapshot;
 import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.award.service.AwardService;
 import com.example.openrunapi.domain.match.repository.MatchRepository;
@@ -716,8 +717,10 @@ public class ScheduleParticipantService {
         ScheduleParticipant participant;
         if (rejectedOpt.isPresent()) {
             participant = rejectedOpt.get();
+            ScheduleParticipantAuditSnapshot beforeSnapshot = ScheduleParticipantAuditSnapshot.from(participant);
             participant.pending();
             participantRepository.save(participant);
+            auditLogService.logParticipantUpdate(userId, beforeSnapshot, participant, schedule.getClubId());
             log.info("거절된 참가 신청 재신청(REJECTED→PENDING): scheduleId={}, userId={}", scheduleId, userId);
         } else {
             Integer nextPosition = participantRepository.getNextPosition(scheduleId);
@@ -729,6 +732,7 @@ public class ScheduleParticipantService {
                     .asGuest(schedule.isClubSchedule()) // 클럽 일정 게스트 신청자는 asGuest=true
                     .build();
             participantRepository.save(participant);
+            auditLogService.logParticipantCreate(userId, participant, schedule.getClubId());
             log.info("일정 참가 신청(PENDING): scheduleId={}, userId={}", scheduleId, userId);
         }
 
@@ -797,6 +801,8 @@ public class ScheduleParticipantService {
             throw new IllegalStateException("승인 대기 상태가 아닙니다.");
         }
 
+        ScheduleParticipantAuditSnapshot beforeSnapshot = ScheduleParticipantAuditSnapshot.from(participant);
+
         Long currentCount = participantRepository.countActiveParticipants(scheduleId, ParticipantStatus.CANCELLED);
         if (currentCount < schedule.getMaxCapacity()) {
             participant.confirm();
@@ -805,6 +811,8 @@ public class ScheduleParticipantService {
         }
         schedule.incrementParticipants();
         participantRepository.save(participant);
+
+        auditLogService.logParticipantUpdate(hostUserId, beforeSnapshot, participant, schedule.getClubId());
 
         User user = participant.getUserId() != null
                 ? userRepository.findById(participant.getUserId()).orElse(null)
@@ -851,8 +859,10 @@ public class ScheduleParticipantService {
         ScheduleParticipant participant = participantRepository.findById(participantId)
                 .orElseThrow(() -> new EntityNotFoundException("참가자를 찾을 수 없습니다."));
 
+        ScheduleParticipantAuditSnapshot beforeSnapshot = ScheduleParticipantAuditSnapshot.from(participant);
         participant.reject();
         participantRepository.save(participant);
+        auditLogService.logParticipantUpdate(hostUserId, beforeSnapshot, participant, schedule.getClubId());
 
         // 참가 거절 알림 발송 (신청자에게)
         if (participant.getUserId() != null) {

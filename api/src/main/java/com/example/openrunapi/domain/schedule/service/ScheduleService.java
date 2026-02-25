@@ -1199,6 +1199,9 @@ public class ScheduleService {
 
         Schedule saved = scheduleRepository.save(schedule);
 
+        // Audit 로깅
+        auditLogService.logScheduleCreate(userId, saved);
+
         // 호스트(생성자)를 첫 번째 CONFIRMED 참가자로 자동 등록
         Integer nextPosition = participantRepository.getNextPosition(saved.getId());
         ScheduleParticipant hostParticipant = ScheduleParticipant.builder()
