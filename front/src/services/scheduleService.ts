@@ -1,5 +1,5 @@
 import axiosInstance from './api/axiosInstance';
-import type { Schedule, CreateScheduleRequest } from '../types/schedule';
+import type { Schedule, CreateScheduleRequest, CreatePublicScheduleRequest, PublicScheduleResponse, Participant } from '../types/schedule';
 
 // 커서 기반 페이지네이션 응답 타입
 export interface ScheduleCursorResponse {
@@ -14,78 +14,67 @@ export type CursorDirection = 'PAST' | 'FUTURE';
 
 export const scheduleService = {
   // 일정 생성
-  createSchedule: async (data: CreateScheduleRequest, userId?: number): Promise<Schedule> => {
-    const response = await axiosInstance.post('/schedules', data, {
-      params: userId ? { userId } : undefined
-    });
+  createSchedule: async (data: CreateScheduleRequest): Promise<Schedule> => {
+    const response = await axiosInstance.post('/schedules', data);
     return response.data;
   },
 
-  // 모든 일정 조회 (userId 필수, clubId 없으면 전체 조회는 관리자만 가능)
-  getAllSchedules: async (userId: number, clubId?: number): Promise<Schedule[]> => {
+  // 모든 일정 조회 (clubId 없으면 전체 조회는 관리자만 가능)
+  getAllSchedules: async (clubId?: number): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: { userId, ...(clubId && { clubId }) }
+      params: { ...(clubId && { clubId }) }
     });
     return response.data;
   },
 
   // 특정 클럽의 일정 조회
-  getSchedulesByClubId: async (userId: number, clubId: number): Promise<Schedule[]> => {
+  getSchedulesByClubId: async (clubId: number): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: { userId, clubId }
+      params: { clubId }
     });
     return response.data;
   },
 
   // 특정 일정 조회
-  getScheduleById: async (scheduleId: number, userId?: number): Promise<Schedule> => {
-    const response = await axiosInstance.get(`/schedules/${scheduleId}`, {
-      params: userId ? { userId } : undefined
-    });
+  getScheduleById: async (scheduleId: number): Promise<Schedule> => {
+    const response = await axiosInstance.get(`/schedules/${scheduleId}`);
     return response.data;
   },
 
   // 향후 일정 조회
-  getUpcomingSchedules: async (userId: number, clubId: number): Promise<Schedule[]> => {
+  getUpcomingSchedules: async (clubId: number): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: { userId, clubId, upcoming: true }
+      params: { clubId, upcoming: true }
     });
     return response.data;
   },
 
   // 날짜 범위로 조회
   getSchedulesByDateRange: async (
-    userId: number,
     clubId: number,
     start: string,
     end: string
   ): Promise<Schedule[]> => {
     const response = await axiosInstance.get('/schedules', {
-      params: { userId, clubId, start, end }
+      params: { clubId, start, end }
     });
     return response.data;
   },
 
   // 일정 수정
-  updateSchedule: async (scheduleId: number, data: CreateScheduleRequest, userId?: number): Promise<Schedule> => {
-    const response = await axiosInstance.put(`/schedules/${scheduleId}`, data, {
-      params: userId ? { userId } : undefined
-    });
+  updateSchedule: async (scheduleId: number, data: CreateScheduleRequest): Promise<Schedule> => {
+    const response = await axiosInstance.put(`/schedules/${scheduleId}`, data);
     return response.data;
   },
 
   // 일정 삭제
-  deleteSchedule: async (scheduleId: number, userId?: number): Promise<void> => {
-    await axiosInstance.delete(`/schedules/${scheduleId}`, {
-      params: userId ? { userId } : undefined
-    });
+  deleteSchedule: async (scheduleId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}`);
   },
 
   // 내가 참여한 일정 ID 목록 조회
-  getMyParticipations: async (userId: number): Promise<number[]> => {
-    const response = await axiosInstance.get('/schedules/my-participations', {
-      params: { userId }
-    });
+  getMyParticipations: async (): Promise<number[]> => {
+    const response = await axiosInstance.get('/schedules/my-participations');
     return response.data;
   },
 
@@ -97,12 +86,9 @@ export const scheduleService = {
   // 일정 PIN 설정/해제 (운영진 이상)
   updateSchedulePinned: async (
     scheduleId: number,
-    pinned: boolean,
-    userId: number
+    pinned: boolean
   ): Promise<Schedule> => {
-    const response = await axiosInstance.patch(`/schedules/${scheduleId}/pinned`, { pinned }, {
-      params: { userId },
-    });
+    const response = await axiosInstance.patch(`/schedules/${scheduleId}/pinned`, { pinned });
     return response.data;
   },
 
@@ -110,12 +96,9 @@ export const scheduleService = {
   updateGuestRecruit: async (
     scheduleId: number,
     open: boolean,
-    userId: number,
     note?: string | null
   ): Promise<Schedule> => {
-    const response = await axiosInstance.patch(`/schedules/${scheduleId}/guest-recruit`, { open, note: note ?? null }, {
-      params: { userId },
-    });
+    const response = await axiosInstance.patch(`/schedules/${scheduleId}/guest-recruit`, { open, note: note ?? null });
     return response.data;
   },
 
@@ -123,33 +106,64 @@ export const scheduleService = {
   updateInterclubRecruit: async (
     scheduleId: number,
     open: boolean,
-    userId: number,
     note?: string | null
   ): Promise<Schedule> => {
-    const response = await axiosInstance.patch(`/schedules/${scheduleId}/interclub-recruit`, { open, note: note ?? null }, {
-      params: { userId },
-    });
+    const response = await axiosInstance.patch(`/schedules/${scheduleId}/interclub-recruit`, { open, note: note ?? null });
     return response.data;
   },
 
   /**
    * 커서 기반 페이지네이션 일정 조회 (Infinite Scroll용)
-   * @param userId 사용자 ID
    * @param clubId 클럽 ID
    * @param pivotDate 기준 날짜 (ISO 8601 형식)
    * @param direction PAST(과거 방향) | FUTURE(미래 방향)
    * @param size 조회할 개수 (기본 30, 최대 50)
    */
   getSchedulesByCursor: async (
-    userId: number,
     clubId: number,
     pivotDate: string,
     direction: CursorDirection = 'FUTURE',
     size: number = 30
   ): Promise<ScheduleCursorResponse> => {
     const response = await axiosInstance.get('/schedules/cursor', {
-      params: { userId, clubId, pivotDate, direction, size }
+      params: { clubId, pivotDate, direction, size }
     });
     return response.data;
+  },
+
+  // 공개일정 생성
+  createPublicSchedule: async (data: CreatePublicScheduleRequest): Promise<Schedule> => {
+    const response = await axiosInstance.post('/schedules/public', data);
+    return response.data;
+  },
+
+  // 공개일정 목록 조회
+  getPublicSchedules: async (region?: string, matchType?: string, limit?: number): Promise<PublicScheduleResponse[]> => {
+    const response = await axiosInstance.get('/schedules/public', {
+      params: { region: region || undefined, matchType: matchType || undefined, limit: limit || undefined }
+    });
+    return response.data;
+  },
+
+  // 공개/클럽 일정 게스트 참가 신청 (PENDING 상태로 등록)
+  requestJoinSchedule: async (scheduleId: number): Promise<Participant> => {
+    const response = await axiosInstance.post(`/schedules/${scheduleId}/participants/request`, null);
+    return response.data;
+  },
+
+  // PENDING 상태의 참가 신청 취소
+  cancelParticipantRequest: async (scheduleId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/participants/request`);
+  },
+
+  // CONFIRMED/WAITING 상태의 참가 취소 (카운터 감소, 대기자 승격 포함)
+  cancelParticipation: async (scheduleId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedules/${scheduleId}/participants`);
+  },
+
+  // 내 참가 신청 상태 조회 (없으면 null). 응답 형식: { "data": Participant | null }
+  getMyParticipant: async (scheduleId: number): Promise<Participant | null> => {
+    const response = await axiosInstance.get(`/schedules/${scheduleId}/participants/me`);
+    return (response.data as { data: Participant | null })?.data ?? null;
   },
 };

@@ -6,50 +6,37 @@ import type {
   CreateScheduleTemplateRequest,
 } from "../../../types/scheduleTemplate";
 import Toast from "../../../components/common/Toast";
-import "./TemplateSection.css";
+import { cn } from "../../../lib/utils";
+
+const MAX_TEMPLATES = 3;
+const MAX_NAME_LENGTH = 20;
+
+/** MatchType enum → 한글 표시 */
+const matchTypeLabel: Record<string, string> = {
+  MEN_DOUBLES: "남복",
+  WOMEN_DOUBLES: "여복",
+  MIXED_DOUBLES: "혼복",
+  SINGLES: "단식",
+};
 
 interface TemplateSectionProps {
-  /** 템플릿 타입 (SCHEDULE 또는 PARTICIPATION_START) */
   templateType: TemplateType;
-
-  /** 현재 사용자 ID */
   currentUserId: number;
-
-  /** 섹션 제목 */
   title: string;
-
-  /** 템플릿 선택 시 호출되는 콜백 */
   onTemplateSelect?: (template: ScheduleTemplate) => void;
-
-  /** 템플릿 선택 해제 시 호출되는 콜백 (폼 초기화용) */
   onTemplateDeselect?: () => void;
-
-  /** Edit mode 진입 시 호출되는 콜백 (템플릿 데이터 전달) */
-  onEditTemplate?: (template: ScheduleTemplate) => void;
-
-  /** Edit mode 상태 변경 시 호출 (일정 생성 버튼 비활성화 용도) */
-  onEditModeChange?: (isEditing: boolean, templateId: number | null) => void;
-
-  /** 현재 Edit mode인 템플릿 ID (외부에서 관리) */
-  editingTemplateId?: number | null;
 
   /** 템플릿 저장을 위한 현재 폼 데이터 */
   saveFormData?: {
-    templateName: string;
     courtName?: string;
     maxCapacity?: number;
     cost?: number;
+    courtAddress?: string;
+    region?: string;
+    matchType?: string | null;
+    numberOfCourts?: number;
     participationStartPattern?: string | null;
   };
-
-  /** 템플릿 이름 변경 시 호출 */
-  onTemplateNameChange?: (value: string) => void;
-
-  /** 템플릿 저장 버튼 클릭 시 호출 */
-  onSaveTemplate?: () => void;
-
-  /** 초기 접기 상태 (기본값: false - 펼쳐진 상태) */
-  defaultCollapsed?: boolean;
 }
 
 export const TemplateSection: React.FC<TemplateSectionProps> = ({
@@ -58,93 +45,85 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
   title,
   onTemplateSelect,
   onTemplateDeselect,
-  onEditTemplate,
-  onEditModeChange,
-  editingTemplateId,
   saveFormData,
-  onTemplateNameChange,
-  onSaveTemplate,
-  defaultCollapsed = false,
 }) => {
   const [templates, setTemplates] = useState<ScheduleTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
-    null
-  );
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [toastMessage, setToastMessage] = useState("");
 
-  // 템플릿 목록 로드
+  // 인라인 이름변경
+  const [renamingId, setRenamingId] = useState<number | null>(null);
+  const [renamingValue, setRenamingValue] = useState("");
+
   useEffect(() => {
     fetchTemplates();
   }, [currentUserId, templateType]);
 
   const fetchTemplates = async () => {
     try {
-      const allTemplates = await scheduleTemplateService.getUserTemplates(
-        currentUserId
-      );
-      // 해당 타입의 템플릿만 필터링
-      const filteredTemplates = allTemplates.filter(
-        (t) => t.templateType === templateType
-      );
-      setTemplates(filteredTemplates);
+      const allTemplates = await scheduleTemplateService.getUserTemplates();
+      setTemplates(allTemplates.filter((t) => t.templateType === templateType));
     } catch (err) {
       console.error("템플릿 목록 조회 실패:", err);
-      setError("템플릿 목록을 불러오는데 실패했습니다.");
+      setError("즐겨찾기 목록을 불러오는데 실패했습니다.");
     }
   };
 
-  // 템플릿 선택/해제
+  // 선택/해제
   const handleSelectTemplate = (templateId: number) => {
-    // 같은 템플릿을 다시 클릭하면 선택 해제
     if (selectedTemplateId === templateId) {
       setSelectedTemplateId(null);
-      if (onTemplateDeselect) {
-        onTemplateDeselect();
-      }
+      onTemplateDeselect?.();
       return;
     }
-
     const template = templates.find((t) => t.id === templateId);
     if (!template) return;
-
     setSelectedTemplateId(templateId);
-    if (onTemplateSelect) {
-      onTemplateSelect(template);
+    onTemplateSelect?.(template);
+  };
+
+  // SCHEDULE 자동 이름: 코트명-정원-코트수-모임타입
+  const generateAutoName = (): string => {
+    if (!saveFormData) return "";
+
+    if (templateType === "SCHEDULE") {
+      const parts: string[] = [];
+      const court = (saveFormData.courtName || "").trim();
+      if (court) parts.push(court);
+      const cap = saveFormData.maxCapacity;
+      if (cap && cap > 0) parts.push(`${cap}명`);
+      const courts = saveFormData.numberOfCourts;
+      if (courts && courts > 0) parts.push(`${courts}면`);
+      const mt = saveFormData.matchType;
+      if (mt && mt !== "NONE" && matchTypeLabel[mt]) parts.push(matchTypeLabel[mt]);
+      return parts.join("-").substring(0, MAX_NAME_LENGTH);
+    } else {
+      // PARTICIPATION_START: 패턴 자체를 이름으로
+      return saveFormData.participationStartPattern || "";
     }
   };
 
-  // 템플릿 수정 모드 진입
-  const handleEditTemplate = (templateId: number) => {
-    const template = templates.find((t) => t.id === templateId);
-    if (!template) return;
+  // 저장 가능 여부
+  const canSave = !!saveFormData && (
+    templateType === "SCHEDULE"
+      ? !!(saveFormData.courtName?.trim())
+      : !!(saveFormData.participationStartPattern)
+  );
 
-    if (onEditModeChange) {
-      onEditModeChange(true, templateId);
-    }
-    if (onEditTemplate) {
-      onEditTemplate(template);
-    }
-  };
+  // 저장 카드 노출 여부: 미선택+<MAX → 새로 저장, 선택됨 → 덮어쓰기
+  const showSaveCard = !!saveFormData && (
+    (!selectedTemplateId && templates.length < MAX_TEMPLATES) || !!selectedTemplateId
+  );
 
-  // 템플릿 저장 (신규 생성)
-  const handleCreateTemplate = async () => {
-    if (!saveFormData) return;
+  // 새로 저장
+  const handleCreateNew = async () => {
+    if (!saveFormData || !canSave) return;
 
-    if (!saveFormData.templateName.trim()) {
-      setError("템플릿 이름을 입력해주세요.");
-      return;
-    }
-
-    if (saveFormData.templateName.length > 5) {
-      setError("템플릿 이름은 최대 5자까지 입력 가능합니다.");
-      return;
-    }
-
-    if (templates.length >= 5) {
-      setError("템플릿은 최대 5개까지 저장할 수 있습니다.");
+    const templateName = generateAutoName();
+    if (!templateName) {
+      setError("즐겨찾기 이름을 생성할 수 없습니다.");
       return;
     }
 
@@ -154,45 +133,88 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
 
       const request: CreateScheduleTemplateRequest = {
         templateType,
-        templateName: saveFormData.templateName,
+        templateName,
         courtName: saveFormData.courtName,
         maxCapacity: saveFormData.maxCapacity,
         cost: saveFormData.cost,
+        courtAddress: saveFormData.courtAddress,
+        region: saveFormData.region,
+        matchType: saveFormData.matchType,
+        numberOfCourts: saveFormData.numberOfCourts,
         participationStartPattern: saveFormData.participationStartPattern,
       };
 
-      await scheduleTemplateService.createTemplate(currentUserId, request);
+      await scheduleTemplateService.createTemplate(request);
       await fetchTemplates();
-
-      if (onSaveTemplate) {
-        onSaveTemplate();
-      }
-
-      setToastMessage("템플릿이 저장되었습니다.");
+      setToastMessage("즐겨찾기가 저장되었습니다.");
     } catch (err: unknown) {
-      console.error("템플릿 저장 실패:", err);
-      const errorMessage =
-        err instanceof Error && "response" in err
-          ? (err as { response?: { data?: { message?: string } } }).response
-              ?.data?.message
-          : undefined;
-      setError(errorMessage || "템플릿 저장에 실패했습니다.");
+      console.error("즐겨찾기 저장 실패:", err);
+      const msg = err instanceof Error && "response" in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      setError(msg || "즐겨찾기 저장에 실패했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 템플릿 업데이트
-  const handleUpdateTemplate = async () => {
-    if (!saveFormData || !editingTemplateId) return;
+  // 덮어쓰기 (선택된 템플릿에 현재 폼 값 저장, 이름은 기존 유지)
+  const handleOverwrite = async () => {
+    if (!saveFormData || !selectedTemplateId || !canSave) return;
 
-    if (!saveFormData.templateName.trim()) {
-      setError("템플릿 이름을 입력해주세요.");
+    const selected = templates.find((t) => t.id === selectedTemplateId);
+    if (!selected) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      await scheduleTemplateService.updateTemplate(selectedTemplateId, {
+        templateName: selected.templateName, // 기존 이름 유지
+        courtName: saveFormData.courtName,
+        maxCapacity: saveFormData.maxCapacity,
+        cost: saveFormData.cost,
+        courtAddress: saveFormData.courtAddress,
+        region: saveFormData.region,
+        matchType: saveFormData.matchType,
+        numberOfCourts: saveFormData.numberOfCourts,
+        participationStartPattern: saveFormData.participationStartPattern,
+      });
+
+      await fetchTemplates();
+      setToastMessage("즐겨찾기가 덮어쓰기 되었습니다.");
+    } catch (err: unknown) {
+      console.error("즐겨찾기 덮어쓰기 실패:", err);
+      const msg = err instanceof Error && "response" in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      setError(msg || "즐겨찾기 덮어쓰기에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 이름변경 시작
+  const startRename = (templateId: number) => {
+    const template = templates.find((t) => t.id === templateId);
+    if (!template) return;
+    setRenamingId(templateId);
+    setRenamingValue(template.templateName);
+  };
+
+  // 이름변경 저장
+  const handleRenameSave = async () => {
+    if (!renamingId) return;
+    const template = templates.find((t) => t.id === renamingId);
+    if (!template) return;
+
+    const trimmed = renamingValue.trim();
+    if (!trimmed || trimmed === template.templateName) {
+      setRenamingId(null);
       return;
     }
-
-    if (saveFormData.templateName.length > 5) {
-      setError("템플릿 이름은 최대 5자까지 입력 가능합니다.");
+    if (trimmed.length > MAX_NAME_LENGTH) {
+      setError(`이름은 최대 ${MAX_NAME_LENGTH}자까지 입력 가능합니다.`);
       return;
     }
 
@@ -200,181 +222,178 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
       setLoading(true);
       setError("");
 
-      await scheduleTemplateService.updateTemplate(
-        currentUserId,
-        editingTemplateId,
-        {
-          templateName: saveFormData.templateName,
-          courtName: saveFormData.courtName,
-          maxCapacity: saveFormData.maxCapacity,
-          cost: saveFormData.cost,
-          participationStartPattern: saveFormData.participationStartPattern,
-        }
-      );
+      await scheduleTemplateService.updateTemplate(renamingId, {
+        templateName: trimmed,
+        courtName: template.courtName,
+        maxCapacity: template.maxCapacity,
+        cost: template.cost,
+        courtAddress: template.courtAddress,
+        region: template.region,
+        matchType: template.matchType,
+        numberOfCourts: template.numberOfCourts,
+        participationStartPattern: template.participationStartPattern,
+      });
 
       await fetchTemplates();
-
-      // Edit mode 종료
-      if (onEditModeChange) {
-        onEditModeChange(false, null);
-      }
-
-      if (onSaveTemplate) {
-        onSaveTemplate();
-      }
-
-      setToastMessage("템플릿이 수정되었습니다.");
-    } catch (err: unknown) {
-      console.error("템플릿 수정 실패:", err);
-      const errorMessage =
-        err instanceof Error && "response" in err
-          ? (err as { response?: { data?: { message?: string } } }).response
-              ?.data?.message
-          : undefined;
-      setError(errorMessage || "템플릿 수정에 실패했습니다.");
+      setRenamingId(null);
+      setToastMessage("이름이 변경되었습니다.");
+    } catch (err) {
+      console.error("이름 변경 실패:", err);
+      setError("이름 변경에 실패했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 템플릿 삭제
-  const handleDeleteTemplate = async (templateId: number) => {
-    if (!confirm("정말로 이 템플릿을 삭제하시겠습니까?")) {
-      return;
-    }
+  // 삭제
+  const handleDelete = async (templateId: number) => {
+    if (!confirm("정말로 이 즐겨찾기를 삭제하시겠습니까?")) return;
 
     try {
-      await scheduleTemplateService.deleteTemplate(currentUserId, templateId);
+      await scheduleTemplateService.deleteTemplate(templateId);
       await fetchTemplates();
-
       if (selectedTemplateId === templateId) {
         setSelectedTemplateId(null);
       }
-
-      // Edit mode 종료
-      if (editingTemplateId === templateId && onEditModeChange) {
-        onEditModeChange(false, null);
-      }
-
-      setToastMessage("템플릿이 삭제되었습니다.");
+      setToastMessage("즐겨찾기가 삭제되었습니다.");
     } catch (err) {
-      console.error("템플릿 삭제 실패:", err);
-      setToastMessage("템플릿 삭제에 실패했습니다.");
+      console.error("즐겨찾기 삭제 실패:", err);
+      setToastMessage("즐겨찾기 삭제에 실패했습니다.");
     }
   };
 
-  // Edit mode 취소
-  const handleCancelEdit = () => {
-    if (onEditModeChange) {
-      onEditModeChange(false, null);
-    }
-  };
-
-  const isEditMode =
-    editingTemplateId !== null && editingTemplateId !== undefined;
+  const autoName = generateAutoName();
 
   return (
-    <div className="template-section">
-      <div className="template-header">
-        <h4>{title}</h4>
-        <div className="template-header-actions">
-          <span className="template-count">{templates.length} / 5</span>
-          <button
-            type="button"
-            onClick={() => setCollapsed(!collapsed)}
-            className="btn-toggle-collapse"
-            aria-label={collapsed ? "펼치기" : "접기"}
-          >
-            {collapsed ? "▼" : "▲"}
-          </button>
+    <div className="mb-3 p-2.5 md:p-2 bg-muted rounded-lg border border-border">
+      {/* 헤더 */}
+      <div className="flex justify-between items-center mb-2 md:mb-1.5">
+        <div className="text-sm md:text-[13px] font-semibold text-foreground">
+          {title}
         </div>
+        <span className="text-xs md:text-[11px] text-muted-foreground bg-background px-2 py-0.5 rounded-[10px] border border-border">
+          {templates.length} / {MAX_TEMPLATES}
+        </span>
       </div>
 
-      {error && <div className="template-error">{error}</div>}
+      {error && (
+        <div className="py-2 px-3 bg-red-50 text-red-800 rounded text-[13px] mb-2">
+          {error}
+        </div>
+      )}
 
-      {/* 템플릿 pill-style 선택 (닫힘 상태에서도 표시) */}
-      <div className="template-pills">
-        {templates.length === 0 ? (
-          <p className="template-empty">저장된 템플릿이 없습니다.</p>
-        ) : (
-          templates.map((template) => (
-            <div key={template.id} className="template-pill-wrapper">
-              <button
-                type="button"
-                className={`template-pill ${
-                  selectedTemplateId === template.id ? "selected" : ""
-                } ${editingTemplateId === template.id ? "editing" : ""}`}
-                onClick={() => handleSelectTemplate(template.id)}
-              >
-                {template.templateName}
-              </button>
+      {/* 카드 리스트 */}
+      <div className="flex flex-col gap-1.5">
+        {templates.length === 0 && !showSaveCard && (
+          <p className="text-muted-foreground text-[13px] md:text-xs italic m-0">
+            저장된 즐겨찾기가 없습니다.
+          </p>
+        )}
 
-              {/* 선택된 템플릿에 대해 수정/삭제 버튼 표시 (열림 상태에서만) */}
-              {!collapsed && selectedTemplateId === template.id && (
-                <div className="template-actions">
-                  {editingTemplateId === template.id ? (
-                    <button
-                      type="button"
-                      className="btn-cancel-edit"
-                      onClick={handleCancelEdit}
-                    >
-                      취소
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn-edit"
-                      onClick={() => handleEditTemplate(template.id)}
-                    >
-                      수정
-                    </button>
-                  )}
+        {templates.map((template) => (
+          <div
+            key={template.id}
+            className={cn(
+              "flex items-center gap-2 py-2 px-3 md:py-1.5 md:px-2.5 border rounded-lg bg-background transition-all",
+              renamingId === template.id
+                ? "border-primary ring-1 ring-primary/20"
+                : selectedTemplateId === template.id
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20 cursor-pointer"
+                  : "border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer"
+            )}
+            onClick={() => renamingId !== template.id && handleSelectTemplate(template.id)}
+          >
+            {renamingId === template.id ? (
+              /* 인라인 이름변경 모드 */
+              <div className="flex items-center gap-1.5 flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  value={renamingValue}
+                  onChange={(e) => setRenamingValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); handleRenameSave(); }
+                    if (e.key === "Escape") setRenamingId(null);
+                  }}
+                  maxLength={MAX_NAME_LENGTH}
+                  autoFocus
+                  className="flex-1 min-w-0 text-[13px] md:text-xs font-medium bg-transparent border-b border-primary outline-none py-0.5"
+                />
+                <button
+                  type="button"
+                  className="px-1.5 py-0.5 rounded text-[11px] text-primary hover:bg-primary/10 transition-colors font-medium shrink-0"
+                  onClick={handleRenameSave}
+                >
+                  저장
+                </button>
+                <button
+                  type="button"
+                  className="px-1.5 py-0.5 rounded text-[11px] text-muted-foreground hover:bg-muted transition-colors shrink-0"
+                  onClick={() => setRenamingId(null)}
+                >
+                  취소
+                </button>
+              </div>
+            ) : (
+              /* 일반 모드 */
+              <>
+                <span className={cn(
+                  "flex-1 text-[13px] md:text-xs font-medium truncate",
+                  selectedTemplateId === template.id ? "text-primary" : "text-foreground"
+                )}>
+                  {template.templateName}
+                </span>
+
+                {/* 이름변경 / 삭제 */}
+                <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
-                    className="btn-delete"
-                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="px-1.5 py-0.5 rounded text-[11px] text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    onClick={() => startRename(template.id)}
+                  >
+                    이름변경
+                  </button>
+                  <button
+                    type="button"
+                    className="px-1.5 py-0.5 rounded text-[11px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    onClick={() => handleDelete(template.id)}
                   >
                     삭제
                   </button>
                 </div>
-              )}
-            </div>
-          ))
+              </>
+            )}
+          </div>
+        ))}
+
+        {/* 저장 / 덮어쓰기 카드 */}
+        {showSaveCard && (
+          <div
+            className={cn(
+              "flex items-center gap-2 py-2 px-3 md:py-1.5 md:px-2.5 border border-dashed rounded-lg transition-all",
+              canSave
+                ? "border-emerald-400 bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
+                : "border-border bg-muted/30 cursor-not-allowed"
+            )}
+            onClick={canSave ? (selectedTemplateId ? handleOverwrite : handleCreateNew) : undefined}
+          >
+            <span className={cn(
+              "flex-1 text-[13px] md:text-xs font-medium truncate",
+              canSave ? "text-emerald-700" : "text-muted-foreground"
+            )}>
+              {loading
+                ? "저장 중..."
+                : selectedTemplateId
+                  ? "현재 설정으로 덮어쓰기"
+                  : canSave
+                    ? `${autoName} 으로 저장`
+                    : templateType === "SCHEDULE"
+                      ? "코트명을 입력하면 저장할 수 있습니다"
+                      : "패턴을 설정하면 저장할 수 있습니다"
+              }
+            </span>
+          </div>
         )}
       </div>
-
-      {/* 템플릿 저장 섹션 (열림 상태에서만 표시) */}
-      {!collapsed && saveFormData && (
-        <div className="template-save-section">
-          <label>{isEditMode ? "템플릿 수정" : "새 템플릿 저장"}</label>
-          <div className="template-save-controls">
-            <input
-              type="text"
-              value={saveFormData.templateName}
-              onChange={(e) => {
-                if (onTemplateNameChange) {
-                  onTemplateNameChange(e.target.value);
-                }
-              }}
-              placeholder="템플릿 이름 (최대 5자)"
-              maxLength={5}
-            />
-            <button
-              type="button"
-              onClick={isEditMode ? handleUpdateTemplate : handleCreateTemplate}
-              disabled={loading || (!isEditMode && templates.length >= 5)}
-              className="btn-save-template"
-            >
-              {loading ? "저장 중..." : isEditMode ? "수정" : "저장"}
-            </button>
-          </div>
-          {!isEditMode && templates.length >= 5 && (
-            <p className="template-limit-message">
-              템플릿은 최대 5개까지 저장할 수 있습니다.
-            </p>
-          )}
-        </div>
-      )}
 
       {toastMessage && (
         <Toast message={toastMessage} onClose={() => setToastMessage("")} />

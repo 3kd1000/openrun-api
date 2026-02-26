@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../../../services/api/axiosInstance';
 import { TrophyIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon } from '../../../../../components/common/Icons';
 import { logError } from '../../../../../utils/errorHandler';
-import './TopPlayersWidget.css';
 
 interface RankingEntry {
   rank: number;
@@ -110,7 +109,7 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
 
   const getRankDisplay = (rank: number) => {
     return (
-      <span className="top-players-widget__rank-label">
+      <span className="text-sm font-semibold text-muted-foreground leading-none">
         {rank}
         {getOrdinalSuffix(rank)}
       </span>
@@ -125,18 +124,18 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
   };
 
   return (
-    <div className="top-players-widget">
-      <div className="top-players-widget__header">
+    <div className="border border-border rounded-xl bg-white px-3 py-2">
+      <div className="flex items-center justify-between">
         <button
-          className="top-players-widget__header-left"
+          className="flex items-center gap-2 bg-transparent border-none py-2 cursor-pointer text-foreground hover:text-primary transition-colors"
           onClick={handleToggleExpand}
         >
           <TrophyIcon size={16} />
-          <span className="top-players-widget__title">{getDisplayTitle()}</span>
+          <span className="text-sm font-semibold">{getDisplayTitle()}</span>
           {isExpanded ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
         </button>
         <button
-          className="top-players-widget__view-all"
+          className="flex items-center gap-2 bg-transparent border-none py-2 px-3 text-muted-foreground text-sm cursor-pointer hover:text-primary transition-colors"
           onClick={handleViewAll}
         >
           전체보기
@@ -145,17 +144,21 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
       </div>
 
       {isExpanded && (
-        <div className="top-players-widget__content">
+        <div className="mt-3">
           {/* 정렬 토글 */}
-          <div className="top-players-widget__sort-toggle">
+          <div className="flex gap-2 mb-2 bg-muted/50 p-0.5 rounded">
             <button
-              className={`top-players-widget__sort-btn ${currentSortBy === 'points' ? 'top-players-widget__sort-btn--active' : ''}`}
+              className={`flex-1 py-2 border-none bg-transparent rounded text-sm cursor-pointer transition-all ${
+                currentSortBy === 'points' ? 'bg-white text-primary font-semibold shadow-sm' : 'text-muted-foreground'
+              }`}
               onClick={() => handleSortChange('points')}
             >
               승점
             </button>
             <button
-              className={`top-players-widget__sort-btn ${currentSortBy === 'winRate' ? 'top-players-widget__sort-btn--active' : ''}`}
+              className={`flex-1 py-2 border-none bg-transparent rounded text-sm cursor-pointer transition-all ${
+                currentSortBy === 'winRate' ? 'bg-white text-primary font-semibold shadow-sm' : 'text-muted-foreground'
+              }`}
               onClick={() => handleSortChange('winRate')}
             >
               승률
@@ -163,36 +166,36 @@ const TopPlayersWidget: React.FC<TopPlayersWidgetProps> = ({
           </div>
 
           {isLoading && (
-            <div className="top-players-widget__loading">
+            <div className="py-3 text-center text-muted-foreground text-sm">
               불러오는 중...
             </div>
           )}
 
           {!isLoading && rankings.length === 0 && (
-            <div className="top-players-widget__empty">
+            <div className="py-3 text-center text-muted-foreground text-sm">
               최근 3개월 경기 기록이 없습니다
             </div>
           )}
 
           {!isLoading && rankings.length > 0 && (
-            <div className="top-players-widget__list">
+            <div className="flex flex-col gap-2">
               {rankings.map((entry, index) => (
                 <div
                   key={entry.userId}
-                  className="top-players-widget__item"
+                  className="flex items-center gap-1.5 py-2 px-3 bg-muted/50 rounded-lg text-xs min-h-[40px]"
                 >
-                  <span className="top-players-widget__rank">
+                  <span className="flex items-center justify-center min-w-[40px]">
                     {getRankDisplay(index + 1)}
                   </span>
-                  <span className="top-players-widget__name">{entry.userName}</span>
-                  <span className="top-players-widget__stats">
-                    <span className={`top-players-widget__stat ${currentSortBy === 'points' ? 'top-players-widget__stat--active' : ''}`}>
+                  <span className="flex-1 text-sm font-semibold text-foreground">{entry.userName}</span>
+                  <span className="flex items-center gap-2">
+                    <span className={`text-sm ${currentSortBy === 'points' ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
                       {entry.points}점
                     </span>
-                    <span className={`top-players-widget__stat ${currentSortBy === 'winRate' ? 'top-players-widget__stat--active' : ''}`}>
+                    <span className={`text-sm ${currentSortBy === 'winRate' ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
                       {entry.winRate}%
                     </span>
-                    <span className="top-players-widget__record">
+                    <span className="text-sm text-muted-foreground">
                       {entry.wins}승 {entry.draws}무 {entry.losses}패
                     </span>
                   </span>

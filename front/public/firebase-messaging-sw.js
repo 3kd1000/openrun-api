@@ -31,8 +31,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = data.title || "OpenRun";
   const notificationOptions = {
     body: data.body || "",
-    icon: "/icon-192x192-v2.png",
-    badge: "/icon-192x192-v2.png",
+    icon: "/icon-192x192-v4.png",
+    badge: "/icon-192x192-v4.png",
     data: data,
     tag: data.type || "default",
   };
@@ -46,33 +46,48 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  let targetUrl = "/";
+  let targetUrl = "/explore";
 
-  // 알림 타입에 따라 이동할 페이지 결정
-  if (data.type === "SCHEDULE" && data.referenceId) {
-    targetUrl = `/schedules/club?scheduleId=${data.referenceId}`;
-  } else if (data.type === "DRAW" && data.referenceId) {
-    targetUrl = `/schedules/club?scheduleId=${data.referenceId}&openDraw=true`;
-  } else if (data.type === "CLUB_INVITE" && data.referenceId) {
-    // 클럽 초대 → 클럽 메인 페이지
-    targetUrl = `/clubs/${data.referenceId}`;
+  // 알림 타입 + referenceType 기반으로 이동할 페이지 결정
+  if ((data.type === "SCHEDULE" || data.type === "DRAW") && data.referenceId) {
+    targetUrl = `/schedules/${data.referenceId}`;
   } else if (data.type === "EXTERNAL_REQUEST" && data.referenceId) {
-    // 외부 신청 (가입/게스트/교류전) → 신청 관리 페이지 (운영진용)
-    targetUrl = `/clubs/${data.referenceId}/manage/external-requests`;
+    if (data.referenceType === "SCHEDULE") {
+      targetUrl = `/schedules/${data.referenceId}`;
+    } else {
+      targetUrl = `/clubs/${data.referenceId}/manage/external-requests`;
+    }
   } else if (data.type === "REQUEST_RESULT" && data.referenceId) {
-    // 신청 결과 → 클럽 메인 페이지 (신청자용)
+    if (data.referenceType === "SCHEDULE") {
+      targetUrl = `/schedules/${data.referenceId}`;
+    } else {
+      targetUrl = `/clubs/${data.referenceId}`;
+    }
+  } else if (data.type === "CLUB_INVITE" && data.referenceId) {
     targetUrl = `/clubs/${data.referenceId}`;
+  } else if (data.type === "MESSAGE" && data.referenceId) {
+    // referenceId = senderId (대화 상대)
+    targetUrl = `/messages/${data.referenceId}`;
   }
 
+  // FCM SW는 /firebase-cloud-messaging-push-scope 스코프이므로
+  // PWA 메인 윈도우를 제어하지 않아 client.navigate()가 실패할 수 있음
+  // → navigate 실패 시 postMessage로 프론트에 URL 전달
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        // 이미 열려있는 창이 있으면 포커스
+      .then(async (clientList) => {
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && "focus" in client) {
-            client.navigate(targetUrl);
-            return client.focus();
+            try {
+              await client.navigate(targetUrl);
+              return client.focus();
+            } catch (e) {
+              // navigate 실패 (스코프 불일치) → postMessage로 URL 전달
+              console.log("[firebase-messaging-sw] navigate 실패, postMessage 사용:", e);
+              client.postMessage({ type: "NOTIFICATION_CLICK", url: targetUrl });
+              return client.focus();
+            }
           }
         }
         // 열려있는 창이 없으면 새 창 열기

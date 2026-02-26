@@ -11,5 +11,6 @@ public enum AuditEntityType {
     CLUB_MEMBER,
     CLUB_RULE,
     CLUB_NOTICE,
-    CLUB_POLICY
+    CLUB_POLICY,
+    CLUB_LOGO
 }

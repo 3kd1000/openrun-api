@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import { format, isSameDay, lastDayOfMonth, getDate } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { Schedule } from "../../../types/schedule";
 import { holidayService, type Holiday } from "../../../services/holidayService";
 import { StarIcon, CheckIcon, AlertTriangleIcon } from "../../../components/common/Icons";
@@ -221,41 +222,29 @@ const ScheduleCalendarView: React.FC<Props> = ({
       if (daySchedules.length === 0) return null;
 
       return (
-        <div className="calendar-tile-content">
+        <div className="mt-0.5 flex flex-col gap-0.5 w-full shrink-0 overflow-hidden">
           {daySchedules.slice(0, 3).map((schedule) => {
             const isPast = new Date(schedule.scheduledAt) < new Date();
             const isParticipating = myParticipations.has(schedule.id);
             const hasInvalidDraw = schedule.drawType && !schedule.isDrawValid;
             const hasValidDraw = schedule.drawType && schedule.isDrawValid;
 
-            // 정원 상태 계산 (3단계: 신청 가능 / 마감 또는 초과 / 신청 완료)
-            // + 신청완료+마감 동시 상태 표시
             const isFull = schedule.currentParticipants >= schedule.maxCapacity;
-            const getCapacityStatus = () => {
-              if (isParticipating) return "capacity-participated";
-              if (isFull) return "capacity-full";
-              return "capacity-available";
-            };
-
-            const capacityStatus = getCapacityStatus();
-            // 신청완료 + 마감 동시 상태: 테두리로 구분
+            const isParticipated = isParticipating;
             const isParticipatedAndFull = isParticipating && isFull;
-
-            // 대진 상태 결정
-            const getDrawStatus = () => {
-              if (hasInvalidDraw) return "draw-invalid";
-              if (hasValidDraw) return "draw-valid";
-              return "draw-none";
-            };
-
-            const drawStatus = getDrawStatus();
 
             return (
               <div
                 key={schedule.id}
-                className={`calendar-event ${
-                  isPast ? "past-event" : ""
-                } ${capacityStatus} ${drawStatus} ${isParticipatedAndFull ? "participated-and-full" : ""}`}
+                className={cn(
+                  "flex items-center gap-0.5 rounded-sm text-[10px] md:text-xs cursor-pointer border px-1 py-px transition-all whitespace-nowrap overflow-hidden",
+                  // 정원 상태 색상 (2색 체계: emerald + gray)
+                  !isParticipated && !isFull && "bg-transparent text-gray-800 border-gray-300 hover:bg-gray-50",
+                  isFull && !isParticipated && "bg-gray-100 text-gray-600 border-gray-400 hover:bg-gray-200",
+                  isParticipated && !isFull && "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100",
+                  isParticipatedAndFull && "bg-emerald-50 text-emerald-800 border-2 border-gray-400 hover:bg-emerald-100",
+                  isPast && "opacity-40 hover:opacity-60",
+                )}
                 onClick={(e) => {
                   e.stopPropagation();
                   onScheduleClick(schedule);
@@ -271,39 +260,38 @@ const ScheduleCalendarView: React.FC<Props> = ({
                     : ""
                 }`}
               >
-                <span className="event-time">
+                <span className="font-semibold shrink-0">
                   {format(new Date(schedule.scheduledAt), "HH")}
                 </span>
-                <span className="event-name">
-                  <span className="event-name-text">
+                <span className="flex-1 overflow-hidden text-ellipsis flex items-center justify-between gap-0.5 min-w-0">
+                  <span className="overflow-hidden text-ellipsis whitespace-nowrap flex-1 min-w-0">
                     {schedule.courtName
                       .replace(/\s+/g, "")
                       .substring(0, maxCourtNameLength)}
                   </span>
-                  {/* 데스크탑: 우측 중앙 inline, 모바일: 우측 상단 절대 위치 */}
-                  <div className="event-icons">
+                  <span className="hidden md:flex gap-0.5 items-center shrink-0 ml-auto">
                     {schedule.pinned && (
-                      <span className="event-pin" title="강조">
+                      <span className="text-slate-600 inline-flex" title="강조">
                         <StarIcon size={10} />
                       </span>
                     )}
-                    {drawStatus === "draw-valid" && (
-                      <span className="draw-icon draw-icon-valid">
+                    {hasValidDraw && (
+                      <span className="text-emerald-500 inline-flex">
                         <CheckIcon size={10} />
                       </span>
                     )}
-                    {drawStatus === "draw-invalid" && (
-                      <span className="draw-icon draw-icon-invalid">
+                    {hasInvalidDraw && (
+                      <span className="text-gray-400 inline-flex">
                         <AlertTriangleIcon size={10} />
                       </span>
                     )}
-                  </div>
+                  </span>
                 </span>
               </div>
             );
           })}
           {daySchedules.length > 3 && (
-            <div className="calendar-event-more">
+            <div className="text-[9px] md:text-[10px] text-gray-400 text-center font-medium px-1 py-0.5">
               +{daySchedules.length - 3} more
             </div>
           )}
@@ -543,7 +531,7 @@ const ScheduleCalendarView: React.FC<Props> = ({
 
   return (
     <div
-      className="calendar-view"
+      className="calendar-view w-full max-w-[1200px] relative overflow-hidden pb-[50px] md:pb-10 [touch-action:pan-y_pinch-zoom]"
       ref={calendarRef}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

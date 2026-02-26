@@ -1,10 +1,14 @@
 export type MatchType = 'NONE' | 'MEN_DOUBLES' | 'WOMEN_DOUBLES' | 'MIXED_DOUBLES' | 'SINGLES' | null;
+export type ScheduleType = 'PUBLIC' | 'CLUB';
 
 export interface Schedule {
   id: number;
-  clubId: number;
+  clubId: number | null;
   clubName?: string;
+  scheduleType?: ScheduleType;
   courtName: string;
+  courtAddress?: string;
+  region?: string;
   scheduledAt: string; // ISO 8601 format
   durationMinutes?: number; // 소요시간(분), 기본값 120
   numberOfCourts?: number | null;
@@ -24,13 +28,15 @@ export interface Schedule {
   matchType?: MatchType;
   isDrawValid?: boolean | null;
   drawCreatedAt?: string | null;
-  canManageSchedule?: boolean | null; // 권한 정보 (System Admin 또는 Club ADMIN 이상)
+  isScheduleAdmin?: boolean | null;   // 관리자 역할 (PIN, 모집설정)
+  canManageSchedule?: boolean | null; // 편집/삭제/대진 권한 (생성자 OR 관리자)
+  createdByUserId?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateScheduleRequest {
-  clubId: number;
+  clubId?: number | null;
   courtName: string;
   scheduledAt: string; // ISO 8601 format: "2025-12-25T14:00:00"
   durationMinutes?: number; // 소요시간(분), 기본값 120
@@ -41,14 +47,18 @@ export interface CreateScheduleRequest {
   reservedByUserId?: number;
   participationStartAt?: string | null; // ISO 8601 format: "2025-12-25T14:00:00"
   matchType?: MatchType;
+  courtAddress?: string;
+  region?: string;
 }
 
 export interface Participant {
   id: number;
   scheduleId: number;
-  userId: number;
+  userId: number | null;
   userName: string; // 추가
-  status: 'CONFIRMED' | 'WAITING' | 'CANCELLED';
+  guestName?: string | null;
+  isRegistered?: boolean;
+  status: 'CONFIRMED' | 'WAITING' | 'CANCELLED' | 'PENDING' | 'REJECTED';
   position: number;
   joinedAt: string;
   asGuest: boolean;
@@ -59,7 +69,7 @@ export interface Participant {
  * 내 참가 정보 (ScheduleParticipant)
  */
 export interface MyParticipationInfo {
-  status: 'CONFIRMED' | 'WAITING' | null;
+  status: 'CONFIRMED' | 'WAITING' | 'PENDING' | 'REJECTED' | null;
   waitingNumber: number | null;  // WAITING일 때 대기 순번
   asGuest: boolean | null;       // 게스트로 참가했는지
 }
@@ -82,4 +92,32 @@ export interface MyScheduleResponse {
   schedule: Schedule;
   myParticipation: MyParticipationInfo | null;
   myExternalRequest: MyExternalRequestInfo | null;
+}
+
+export interface CreatePublicScheduleRequest {
+  courtName: string;
+  courtAddress?: string;
+  region?: string;
+  scheduledAt: string;
+  maxCapacity: number;
+  cost?: number;
+  description?: string;
+  matchType?: MatchType;
+  durationMinutes?: number;
+  numberOfCourts?: number;
+}
+
+export interface PublicScheduleResponse {
+  id: number;
+  courtName: string;
+  courtAddress?: string;
+  region?: string;
+  scheduledAt: string;
+  maxCapacity: number;
+  currentParticipants: number;
+  cost?: number;
+  hostDisplayName: string;
+  hostUserId: number;
+  matchType?: MatchType;
+  durationMinutes?: number;
 }

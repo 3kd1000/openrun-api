@@ -33,7 +33,10 @@ export interface Club {
     memberRecruitmentNote?: string | null;
     activitySummary?: string | null;
     memberCount?: number;
+    logoUrl?: string | null;
+    logoThumbnailUrl?: string | null;
     // 어워드 정책 필드
+    awardEnabled?: boolean | null;
     awardPeriod?: AwardPeriod | null;
     awardAttendanceEnabled?: boolean | null;
     awardPointsEnabled?: boolean | null;
@@ -79,6 +82,7 @@ export interface UpdateClubPolicyRequest {
 }
 
 export interface UpdateAwardPolicyRequest {
+    awardEnabled: boolean;
     awardPeriod: AwardPeriod;
     awardAttendanceEnabled: boolean;
     awardPointsEnabled: boolean;

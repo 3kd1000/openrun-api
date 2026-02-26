@@ -6,8 +6,8 @@ import axiosInstance from "../../services/api/axiosInstance";
 import { clubService } from "../../services/clubService";
 import { isNotEmpty } from "../../utils/isEmpty";
 import { UsersIcon } from "../../components/common/Icons";
+import { AppHeader } from "../../components/common/AppHeader";
 import { useToast } from "../../contexts/ToastContext";
-import "./MyClubsPage.css";
 
 const MyClubsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -73,56 +73,54 @@ const MyClubsPage: React.FC = () => {
   };
 
   return (
-    <div className="my-clubs-page">
-      <div className="my-clubs-content">
-        <div className="my-clubs-header">
-          <button className="back-btn" onClick={() => navigate("/more")}>
-            ← 뒤로
-          </button>
-          <h1>가입한 클럽</h1>
-        </div>
+    <div className="min-h-[calc(100vh-140px)]">
+      <AppHeader title="가입한 클럽" onBack={() => navigate(-1)} />
+      <div className="max-w-[600px] mx-auto p-4">
 
         {isLoading ? (
-          <div className="loading">로딩 중...</div>
+          <div className="text-center py-8 text-base text-muted-foreground">로딩 중...</div>
         ) : clubs.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-icon">
+          <div className="text-center py-8">
+            <p className="mb-4 flex items-center justify-center text-muted-foreground">
               <UsersIcon size={64} />
             </p>
-            <p className="empty-message">가입한 클럽이 없습니다.</p>
+            <p className="text-base text-muted-foreground m-0">가입한 클럽이 없습니다.</p>
           </div>
         ) : (
-          <div className="clubs-list">
+          <div className="flex flex-col gap-4">
             {clubs.map((club) => (
-              <div key={club.id} className="club-card">
-                <div className="club-card-header">
-                  <div className="club-icon">
+              <div
+                key={club.id}
+                className="bg-card border border-border rounded-md p-6 max-[768px]:p-4 max-[425px]:p-3 max-[359px]:p-3 transition-all duration-200 hover:shadow-md hover:border-primary"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="shrink-0 w-12 h-12 max-[768px]:w-11 max-[768px]:h-11 max-[425px]:w-10 max-[425px]:h-10 max-[359px]:w-9 max-[359px]:h-9 flex items-center justify-center bg-muted rounded-full text-muted-foreground">
                     <UsersIcon size={22} />
                   </div>
-                  <div className="club-info">
-                    <div className="club-name">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-lg max-[768px]:text-base max-[425px]:text-sm max-[359px]:text-sm font-semibold text-foreground mb-1">
                       {club.name}
                       {(unreadByClubId[club.id] ?? 0) > 0 && (
                         <span
-                          className="my-clubs-page__notice-dot"
+                          className="inline-block w-1.5 h-1.5 ml-1.5 rounded-full bg-red-500 align-middle"
                           aria-label="읽지 않은 공지 있음"
                         />
                       )}
                     </div>
                     {isNotEmpty(club.description) && (
-                      <div className="club-description">{club.description}</div>
+                      <div className="text-sm max-[425px]:text-sm max-[359px]:text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">{club.description}</div>
                     )}
                   </div>
                 </div>
-                <div className="club-card-actions">
+                <div className="flex gap-2 justify-end">
                   <button
-                    className="btn-go-club"
+                    className="px-4 py-2 max-[425px]:px-3 max-[425px]:py-1 max-[359px]:px-3 max-[359px]:py-1 rounded-sm text-sm max-[425px]:text-sm max-[359px]:text-sm font-semibold cursor-pointer transition-all duration-200 border border-primary bg-primary text-white min-w-[80px] max-[768px]:min-w-[70px] max-[425px]:min-w-[60px] max-[359px]:min-w-[55px] hover:bg-primary/90 hover:-translate-y-px hover:shadow-sm"
                     onClick={() => navigate(`/clubs/${club.id}`)}
                   >
                     바로가기
                   </button>
                   <button
-                    className="btn-leave-club"
+                    className="px-4 py-2 max-[425px]:px-3 max-[425px]:py-1 max-[359px]:px-3 max-[359px]:py-1 rounded-sm text-sm max-[425px]:text-sm max-[359px]:text-sm font-semibold cursor-pointer transition-all duration-200 border border-destructive bg-card text-destructive min-w-[80px] max-[768px]:min-w-[70px] max-[425px]:min-w-[60px] max-[359px]:min-w-[55px] enabled:hover:bg-destructive enabled:hover:text-white enabled:hover:-translate-y-px enabled:hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleLeaveClub(club.id, club.name)}
                     disabled={leavingClubId === club.id}
                   >

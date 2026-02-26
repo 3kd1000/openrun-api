@@ -9,6 +9,7 @@ import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.UpdateUserRequest;
 import com.example.openrunapi.domain.user.model.dto.UserProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.model.dto.UserPublicProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
 import com.example.openrunapi.domain.user.model.dto.WithdrawalCheckResponse;
@@ -189,6 +190,23 @@ public class UserController {
     }
 
     /**
+     * 특정 클럽에서의 개인 통계 조회
+     *
+     * @param userDetails 현재 사용자 정보
+     * @param clubId      클럽 ID
+     * @return 해당 클럽에서의 통계 (승/무/패/총경기수)
+     */
+    @GetMapping("/me/stats")
+    public ResponseEntity<UserTotalStatsResponse> getMyClubStats(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam Long clubId
+    ) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        UserTotalStatsResponse stats = userService.getMyClubStats(currentUserResponse.getId(), clubId);
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
      * 개인 전체 경기 기록 조회 (모든 클럽, 페이징)
      *
      * @param userDetails 현재 사용자 정보
@@ -209,5 +227,27 @@ public class UserController {
                 size
         );
         return ResponseEntity.ok(matches);
+    }
+
+    /**
+     * 사용자 공개 프로필 조회 (다른 사용자가 볼 수 있는 정보)
+     * - 표시명, 지역, 공개일정 개설 수, 가입일
+     */
+    @GetMapping("/{userId}/public-profile")
+    public ResponseEntity<UserPublicProfileResponse> getUserPublicProfile(
+            @PathVariable Long userId
+    ) {
+        UserPublicProfileResponse response = userService.getUserPublicProfile(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 운영자 공개 프로필 조회 (인증 불필요)
+     * - system_admins 테이블 첫 번째 항목의 운영자 userId를 사용
+     */
+    @GetMapping("/operator-profile")
+    public ResponseEntity<UserPublicProfileResponse> getOperatorProfile() {
+        UserPublicProfileResponse response = userService.getOperatorProfile();
+        return ResponseEntity.ok(response);
     }
 }

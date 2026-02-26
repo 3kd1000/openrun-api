@@ -16,7 +16,7 @@ const ClubEntryRedirectPage = () => {
       return;
     }
     // clubId가 없으면 탐색으로 보냄
-    navigate("/clubs/explore", { replace: true });
+    navigate("/explore", { replace: true });
   }, [navigate]);
 
   return null;

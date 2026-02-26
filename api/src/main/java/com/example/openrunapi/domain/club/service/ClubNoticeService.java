@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.club.service;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.domain.audit.dto.ClubNoticeAuditSnapshot;
 import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.club.model.Club;
@@ -37,7 +38,7 @@ public class ClubNoticeService {
 
     private ClubMember requireMember(Long clubId, Long userId) {
         return clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new SecurityException("클럽 멤버만 접근할 수 있습니다."));
+                .orElseThrow(() -> new PermissionDeniedException("클럽 멤버만 접근할 수 있습니다."));
     }
 
     /**
@@ -100,7 +101,7 @@ public class ClubNoticeService {
 
         ClubMember member = requireMember(clubId, userId);
         if (!member.getRole().canManageSchedule()) {
-            throw new SecurityException("공지사항 생성 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("공지사항 생성 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         if (clubNoticeRepository.existsByClubIdAndTitle(clubId, request.getTitle())) {
@@ -135,12 +136,12 @@ public class ClubNoticeService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 공지사항을 찾을 수 없습니다: " + noticeId));
 
         if (!notice.getClub().getId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 공지사항은 수정할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 공지사항은 수정할 수 없습니다.");
         }
 
         ClubMember member = requireMember(clubId, userId);
         if (!member.getRole().canManageSchedule()) {
-            throw new SecurityException("공지사항 수정 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("공지사항 수정 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         // Audit용 스냅샷 (수정 전)
@@ -166,12 +167,12 @@ public class ClubNoticeService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 공지사항을 찾을 수 없습니다: " + noticeId));
 
         if (!notice.getClub().getId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 공지사항은 삭제할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 공지사항은 삭제할 수 없습니다.");
         }
 
         ClubMember member = requireMember(clubId, userId);
         if (!member.getRole().canManageSchedule()) {
-            throw new SecurityException("공지사항 삭제 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("공지사항 삭제 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         // Audit 로깅 (삭제 전)

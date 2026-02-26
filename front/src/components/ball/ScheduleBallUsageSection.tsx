@@ -9,7 +9,7 @@ import { getOpenRunSession } from '../../utils/openrunSession';
 import { normalizeClubRole } from '../../utils/role';
 import { getErrorMessage, logError } from '../../utils/errorHandler';
 import { useToast } from '../../contexts/ToastContext';
-import './ScheduleBallUsageSection.css';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Props {
   clubId: number;
@@ -146,29 +146,20 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
     return myKeeperInfo && usage.fromMemberId === myKeeperInfo.memberId;
   };
 
-  if (loading) {
-    return (
-      <div className="schedule-ball-section">
-        <div className="section-header-with-button">
-          <label>공용구</label>
-        </div>
-        <div className="schedule-ball-section__loading">로딩 중...</div>
-      </div>
-    );
-  }
-
-  // 보유자가 없으면 섹션 숨김
-  if (keepers.length === 0) {
+  // 로딩 중이거나 보유자가 없으면 섹션 숨김
+  if (loading || keepers.length === 0) {
     return null;
   }
 
   return (
-    <div className="schedule-ball-section">
-      <div className="section-header-with-button">
-        <label>공용구</label>
+    <Card className="mb-3 gap-0 py-0 overflow-hidden">
+      <CardContent className="p-4">
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-between items-center mb-2">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">공용구</div>
         {canRecordUsage && !showForm && (
           <button
-            className="manage-ball-button"
+            className="flex items-center gap-1 px-3 py-1 bg-white text-muted-foreground border border-border rounded-md text-xs font-medium cursor-pointer transition-all hover:bg-muted hover:text-foreground active:bg-muted/80"
             onClick={() => setShowForm(true)}
           >
             + 사용기록
@@ -177,11 +168,13 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
       </div>
 
       {showForm && (
-        <div className="schedule-ball-section__form">
-          <div className="schedule-ball-section__form-row schedule-ball-section__form-row--inline">
+        <div className="bg-muted rounded-md p-3 mb-3">
+          {/* 첫 번째 줄: 보유자 + 수량 */}
+          <div className="flex items-center gap-2 mb-2">
             <select
               value={selectedKeeperId}
               onChange={(e) => setSelectedKeeperId(Number(e.target.value))}
+              className="flex-1 min-w-0 px-2 py-1 border border-border rounded-sm text-sm"
             >
               <option value="">보유자 선택</option>
               {availableKeepers.map((k) => (
@@ -197,7 +190,7 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
                 value={quantity}
                 onChange={handleQuantityChange}
                 placeholder="수량"
-                className={quantityError ? 'input-error' : ''}
+                className={`w-[60px] shrink-0 px-2 py-1 border border-border rounded-sm text-sm${quantityError ? ' input-error' : ''}`}
               />
               {quantityError && (
                 <div className="field-error-message" style={{ fontSize: 'var(--font-size-s)', color: 'var(--color-error)', marginTop: 'var(--space-xs)' }}>
@@ -205,17 +198,19 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
                 </div>
               )}
             </div>
-            <span className="schedule-ball-section__unit">캔</span>
+            <span className="text-sm text-muted-foreground shrink-0">캔</span>
           </div>
-          <div className="schedule-ball-section__form-row schedule-ball-section__form-row--memo">
+          {/* 두 번째 줄: 메모 + 버튼들 */}
+          <div className="flex items-center gap-2 max-[360px]:flex-wrap">
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="메모 (선택)"
+              className="flex-1 min-w-0 px-2 py-1 border border-border rounded-sm text-sm max-[360px]:w-full max-[360px]:flex-none"
             />
             <button
-              className="schedule-ball-section__btn--primary"
+              className="px-3 py-1 bg-transparent text-primary border border-primary/40 rounded-sm text-sm cursor-pointer transition-all hover:not-disabled:bg-primary/8 hover:not-disabled:border-primary disabled:text-muted-foreground disabled:border-border disabled:cursor-not-allowed"
               onClick={handleSubmit}
               disabled={
                 submitting ||
@@ -227,7 +222,7 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
               {submitting ? '저장 중...' : '저장'}
             </button>
             <button
-              className="schedule-ball-section__btn--cancel"
+              className="px-3 py-1 bg-muted text-foreground border border-border rounded-sm text-sm cursor-pointer"
               onClick={() => {
                 setShowForm(false);
                 setSelectedKeeperId('');
@@ -243,25 +238,25 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
       )}
 
       {usages.length > 0 ? (
-        <div className="schedule-ball-section__usages">
+        <div className="flex flex-col gap-1">
           {usages.map((usage) => (
-            <div key={usage.id} className="schedule-ball-section__usage-item">
-              <div className="schedule-ball-section__usage-main">
-                <span className="schedule-ball-section__usage-info">
+            <div key={usage.id} className="flex items-center justify-between gap-2 px-2 py-1 bg-muted rounded-sm text-sm">
+              <div className="flex flex-wrap items-center gap-1 flex-1">
+                <span className="text-foreground font-medium">
                   {usage.fromMemberName} -{usage.quantity}캔
                 </span>
-                <span className="schedule-ball-section__usage-date">
+                <span className="text-muted-foreground text-xs">
                   ({formatDate(usage.createdAt)})
                 </span>
                 {usage.description && (
-                  <span className="schedule-ball-section__usage-desc">
+                  <span className="text-muted-foreground text-xs italic">
                     {usage.description}
                   </span>
                 )}
               </div>
               {canDelete(usage) && (
                 <button
-                  className="schedule-ball-section__delete-btn"
+                  className="w-6 h-6 flex items-center justify-center bg-[#fce4ec] text-[#c62828] border-none rounded-sm text-base font-bold cursor-pointer shrink-0 transition-colors hover:bg-[#f8bbd9]"
                   onClick={() => handleDelete(usage.id)}
                   title="삭제"
                 >
@@ -272,11 +267,13 @@ const ScheduleBallUsageSection: React.FC<Props> = ({ clubId, scheduleId }) => {
           ))}
         </div>
       ) : (
-        <div className="schedule-ball-section__empty">
+        <div className="p-4 text-center text-muted-foreground text-sm">
           이 일정에서 사용된 공용구가 없습니다.
         </div>
       )}
     </div>
+      </CardContent>
+    </Card>
   );
 };
 

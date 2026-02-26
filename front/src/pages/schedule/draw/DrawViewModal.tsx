@@ -11,18 +11,25 @@ import DrawCreateModal from "./DrawCreateModal";
 import DrawGamesList from "../../../components/draw/DrawGamesList";
 import ManualDrawEditor from "../../../components/draw/ManualDrawEditor";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
-import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { isPastDate } from "../../../utils/scheduleValidation";
 import { isNotEmpty } from "../../../utils/isEmpty";
 import { formatScheduleDateTime } from "../../../utils/dateUtils";
-import { ClipboardListIcon, CheckIcon, CopyIcon, RefreshCwIcon, EditIcon } from "../../../components/common/Icons";
-import "./DrawViewModal.css";
+import { ClipboardListIcon, CopyIcon } from "../../../components/common/Icons";
+import { cn } from "../../../lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
 
 interface Props {
   schedule: Schedule;
   participants: Participant[];
   onClose: () => void;
   onSuccess: () => void;
+  canManageDraw: boolean;
 }
 
 const DrawViewModal: React.FC<Props> = ({
@@ -30,6 +37,7 @@ const DrawViewModal: React.FC<Props> = ({
   participants,
   onClose,
   onSuccess,
+  canManageDraw,
 }) => {
   const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +59,6 @@ const DrawViewModal: React.FC<Props> = ({
   const isLoadingRef = useRef(false);
 
   const loadDraw = useCallback(async () => {
-    // 이미 로딩 중이면 중복 호출 방지
     if (isLoadingRef.current) return;
 
     isLoadingRef.current = true;
@@ -101,8 +108,8 @@ const DrawViewModal: React.FC<Props> = ({
 
   const handleRegenerateSuccess = () => {
     setShowRegenerateModal(false);
-    loadDraw(); // 대진표 다시 로드
-    onSuccess(); // 부모 컴포넌트에도 알림
+    loadDraw();
+    onSuccess();
   };
 
   // 스코어 입력 핸들러
@@ -112,7 +119,6 @@ const DrawViewModal: React.FC<Props> = ({
     value: string
   ) => {
     const numValue = value === "" ? "" : value.replace(/[^0-9]/g, "");
-    // 최댓값 7로 제한
     const limitedValue =
       numValue === "" ? "" : Math.min(parseInt(numValue), 7).toString();
 
@@ -146,7 +152,6 @@ const DrawViewModal: React.FC<Props> = ({
       setSaving(true);
       setError("");
 
-      // 스코어가 모두 입력된 매치만 수집하여 배치 업데이트 요청 생성
       const updateItems = Array.from(matchScores.entries())
         .filter(([matchId, scores]) => {
           const game = drawResult.games.find((g) => g.matchId === matchId);
@@ -168,25 +173,24 @@ const DrawViewModal: React.FC<Props> = ({
           };
         });
 
-      // 입력된 스코어가 있으면 배치 업데이트 실행, 없으면 그냥 모드만 전환
       if (updateItems.length > 0) {
+        if (schedule.clubId == null) {
+          setError("공개일정에서는 경기 결과를 저장할 수 없습니다.");
+          return;
+        }
         const batchRequest: BatchUpdateMatchRequest = {
           matches: updateItems,
         };
 
-        // 배치 업데이트 한 번에 실행
         await drawService.updateMatchResultsBatch(
           schedule.clubId,
           batchRequest
         );
-        // 성공 시 대진표 다시 로드
         await loadDraw();
       }
 
-      // 입력 여부와 관계없이 편집 모드 종료
       setIsEditMode(false);
       setMatchScores(new Map());
-      // 경기 결과 저장 시에는 onSuccess() 호출하지 않음 (일정 정보는 변경되지 않았으므로)
     } catch (err: unknown) {
       console.error("경기 결과 저장 실패:", err);
       const errorMessage = (
@@ -201,10 +205,8 @@ const DrawViewModal: React.FC<Props> = ({
   // 편집 모드 토글
   const handleToggleEditMode = () => {
     if (isEditMode) {
-      // 편집 모드 → 저장
       handleSaveResults();
     } else {
-      // 일반 모드 → 편집 모드
       setIsEditMode(true);
       setError("");
     }
@@ -220,12 +222,13 @@ const DrawViewModal: React.FC<Props> = ({
       setSaving(true);
       setError("");
 
+      if (schedule.clubId == null) {
+        setError("공개일정에서는 경기 결과를 초기화할 수 없습니다.");
+        return;
+      }
       await drawService.deleteMatchResult(schedule.clubId, matchId);
-
-      // 대진표 다시 로드
       await loadDraw();
 
-      // matchScores에서 해당 matchId 제거
       setMatchScores((prev) => {
         const newMap = new Map(prev);
         newMap.delete(matchId);
@@ -248,26 +251,27 @@ const DrawViewModal: React.FC<Props> = ({
       setSaving(true);
       setError("");
 
-      // manualGames에서 모든 userId 추출
       const allUserIds = new Set<number>();
+      const allGuestNames = new Set<string>();
       manualGames.forEach((g) => {
         g.teamAUserIds.forEach((id) => allUserIds.add(id));
         g.teamBUserIds.forEach((id) => allUserIds.add(id));
+        g.teamAGuestNames?.forEach((name) => allGuestNames.add(name));
+        g.teamBGuestNames?.forEach((name) => allGuestNames.add(name));
       });
 
       const requestWithIds: CreateDrawRequestWithIds = {
         drawType: "MANUAL",
-        numberOfTotalPlayer: allUserIds.size,
+        numberOfTotalPlayer: allUserIds.size + allGuestNames.size,
         userIds: Array.from(allUserIds),
+        guestNames: allGuestNames.size > 0 ? Array.from(allGuestNames) : undefined,
         manualGames,
       };
 
       await drawService.createDrawWithScheduleByIds(schedule.id, requestWithIds);
-
-      // 대진표 다시 로드
       await loadDraw();
       setIsEditingDraw(false);
-      onSuccess(); // 부모 컴포넌트에 알림
+      onSuccess();
     } catch (err: unknown) {
       console.error("대진 수정 실패:", err);
       const errorMessage = (
@@ -288,12 +292,13 @@ const DrawViewModal: React.FC<Props> = ({
   // 일정이 미래인지 확인 (미래 일정은 결과 입력 불가)
   const isFutureSchedule = !isPastDate(schedule.scheduledAt);
 
-  // 대진 수정 가능 여부: 경기 결과가 입력되지 않은 경우에만
-  const canEditDraw = !hasAnyResult && drawResult !== null;
+  // 공개일정 여부 (경기 결과 저장 불가)
+  const isPublicSchedule = schedule.clubId == null;
 
-  // ESC 키로 모달 닫기 (편집 모드가 아닐 때만)
-  useEscapeKey(onClose, !isEditMode && !showRegenerateModal && !isEditingDraw);
+  // 대진 수정 가능 여부: 권한 있고 경기 결과가 입력되지 않은 경우에만
+  const canEditDraw = canManageDraw && !hasAnyResult && drawResult !== null;
 
+  // 재생성 모달: DrawCreateModal (이미 Dialog) full replacement
   if (showRegenerateModal) {
     return (
       <DrawCreateModal
@@ -307,42 +312,70 @@ const DrawViewModal: React.FC<Props> = ({
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content draw-view-modal modal-nested-md"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-header">
-          <h2>
-            <ClipboardListIcon size={24} />
-            <span>대진표</span>
-          </h2>
-          <button className="btn-close" onClick={onClose}>
-            &times;
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => {
+      if (!open) {
+        if (isEditMode) {
+          setIsEditMode(false);
+          setMatchScores(new Map());
+        } else if (isEditingDraw) {
+          setIsEditingDraw(false);
+        } else {
+          onClose();
+        }
+      }
+    }}>
+      <DialogContent className="max-w-[700px] w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-4 py-2 border-b flex-shrink-0">
+          <div className="flex items-center justify-between w-full pr-8">
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardListIcon size={24} />
+              <span>{isEditingDraw ? "대진 수정" : "대진표"}</span>
+            </DialogTitle>
+            {drawResult && !isEditingDraw && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={handleCopy}
+                disabled={isEditMode}
+              >
+                <CopyIcon size={14} className="mr-1" />
+                {copied ? "복사됨" : "복사"}
+              </Button>
+            )}
+          </div>
+        </DialogHeader>
 
-        <div className="draw-view-content">
+        <div className={cn(
+          "flex flex-col p-3 gap-3 max-[768px]:p-1.5 max-[768px]:gap-1.5",
+          isEditingDraw ? "overflow-y-auto" : "overflow-hidden"
+        )}>
           {/* 일정 정보 */}
-          <div className="schedule-info-section">
-            <h3>{schedule.courtName}</h3>
-            <p className="schedule-datetime">
+          <div className="text-center p-3 bg-muted rounded-md border shrink-0 max-[768px]:p-1.5 max-[768px]:rounded-sm">
+            <h3 className="text-lg font-bold text-foreground mb-1.5 max-[768px]:text-sm max-[768px]:mb-0.5">
+              {schedule.courtName}
+            </h3>
+            <p className="my-1.5 text-sm text-muted-foreground font-medium max-[768px]:my-0.5 max-[768px]:text-[11px]">
               {formatScheduleDateTime(
                 schedule.scheduledAt,
                 schedule.durationMinutes
               )}
             </p>
-            <div className="draw-type-badge">
+            <div className={cn(
+              "inline-flex items-center justify-center mt-1.5 px-3 py-0.5 bg-background border rounded-md text-sm font-medium text-foreground leading-none",
+              "max-[768px]:mt-0.5 max-[768px]:px-1.5 max-[768px]:rounded-sm max-[768px]:text-[13px] max-[768px]:h-[26px] max-[768px]:min-h-[26px]",
+              "max-[425px]:text-xs",
+              "max-[359px]:text-[11px]"
+            )}>
               대진 타입: {schedule.drawType}
             </div>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
 
           {loading ? (
-            <div className="loading">대진표를 불러오는 중...</div>
+            <div className="py-8 text-center text-muted-foreground text-sm">대진표를 불러오는 중...</div>
           ) : isEditingDraw && drawResult ? (
-            /* 대진 수정 모드 */
             <ManualDrawEditor
               participants={participants}
               playerCount={confirmedParticipantCount}
@@ -352,7 +385,15 @@ const DrawViewModal: React.FC<Props> = ({
               onCancel={() => setIsEditingDraw(false)}
             />
           ) : drawResult ? (
-            <div className="draw-result-section">
+            <div className={cn(
+              "flex-[0_1_auto] min-h-0 flex flex-col overflow-hidden",
+              "[&>.dgc-games-list]:block [&>.dgc-games-list]:min-h-0 [&>.dgc-games-list]:overflow-y-auto",
+              "[&_.dgc-round-group]:shrink-0",
+              "[&_.dgc-round-games]:block [&_.dgc-round-games]:overflow-visible",
+              "[&_.dgc-game-number]:min-w-[35px]",
+              "max-[768px]:[&_.dgc-game-content]:text-[13px]",
+              "max-[768px]:[&>.dgc-games-list]:max-h-none"
+            )}>
               <DrawGamesList
                 games={drawResult.games}
                 playerCount={confirmedParticipantCount}
@@ -367,95 +408,70 @@ const DrawViewModal: React.FC<Props> = ({
 
           {/* 액션 버튼 - 대진 수정 모드가 아닐 때만 표시 */}
           {!isEditingDraw && (
-            <div className="modal-actions">
-              <div className="btn-wrapper">
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="btn-copy"
-                  disabled={!drawResult || isEditMode}
-                >
-                  {copied ? (
-                    <>
-                      <CheckIcon size={16} />
-                      <span>복사됨</span>
-                    </>
-                  ) : (
-                    <>
-                      <CopyIcon size={16} />
-                      <span>복사</span>
-                    </>
-                  )}
-                </button>
-              </div>
+            <div className={cn(
+              "grid gap-2 pt-3 border-t mt-3 shrink-0",
+              "grid-cols-4",
+              "max-[768px]:pt-1.5 max-[768px]:mt-1.5 max-[768px]:gap-1.5",
+              "max-[425px]:grid-cols-2 max-[425px]:gap-1.5"
+            )}>
               <div
-                className="btn-wrapper"
                 title={
-                  hasAnyResult
+                  !canManageDraw
+                    ? "대진 관리는 호스트 또는 관리자만 가능합니다."
+                    : hasAnyResult
                     ? "경기 결과가 입력된 대진표는 재생성할 수 없습니다"
                     : ""
                 }
               >
-                <button
-                  type="button"
+                <Button
                   onClick={() => setShowRegenerateModal(true)}
-                  className="btn-regenerate"
-                  disabled={!drawResult || isEditMode || hasAnyResult}
+                  disabled={!drawResult || isEditMode || hasAnyResult || !canManageDraw}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
-                  <RefreshCwIcon size={16} /> 재생성
-                </button>
+                  재생성
+                </Button>
               </div>
-              {/* 대진 수정 버튼: 경기 결과가 없을 때만 표시 */}
               {canEditDraw && (
-                <div className="btn-wrapper">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingDraw(true)}
-                    className="btn-edit-draw"
-                    disabled={isEditMode}
-                  >
-                    <EditIcon size={16} /> 대진수정
-                  </button>
-                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsEditingDraw(true)}
+                  disabled={isEditMode}
+                  className="w-full"
+                >
+                  대진수정
+                </Button>
               )}
               <div
-                className="btn-wrapper"
                 title={
-                  isFutureSchedule
+                  isPublicSchedule
+                    ? "공개일정에서는 경기 결과를 입력할 수 없습니다"
+                    : isFutureSchedule
                     ? "경기 일정이 지난 후에만 결과를 입력할 수 있습니다"
                     : ""
                 }
               >
-                <button
-                  type="button"
+                <Button
+                  variant={isEditMode ? "default" : "secondary"}
                   onClick={handleToggleEditMode}
-                  className={isEditMode ? "btn-save" : "btn-edit"}
-                  disabled={!drawResult || saving || isFutureSchedule}
+                  disabled={!drawResult || saving || isFutureSchedule || isPublicSchedule}
+                  className="w-full"
                 >
-                  {saving ? (
-                    "저장 중..."
-                  ) : isEditMode ? (
-                    <><CheckIcon size={16} /> 입력완료</>
-                  ) : (
-                    <><EditIcon size={16} /> 결과입력</>
-                  )}
-                </button>
+                  {saving ? "저장 중..." : isEditMode ? "입력완료" : "결과입력"}
+                </Button>
               </div>
-              <div className="btn-wrapper">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="btn-primary"
-                  disabled={isEditMode}
-                >
-                  확인
-                </button>
-              </div>
+              <Button
+                variant="default"
+                onClick={onClose}
+                disabled={isEditMode}
+                className="w-full"
+              >
+                확인
+              </Button>
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

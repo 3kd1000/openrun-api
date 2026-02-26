@@ -78,6 +78,10 @@ actuator:
   readinessEnabled: "true"
   livenessEnabled: "true"
 
+# OCI Object Storage
+oci:
+  bucketName: "openrun-club-logos-dev"
+
 # Secrets 이름
 secrets:
   name: openrun-secrets-dev

@@ -10,7 +10,6 @@ import type { Post, Comment } from "../../../types/post";
 import { ArrowLeftIcon, CopyIcon } from "../../../components/common/Icons";
 import { useToast } from "../../../contexts/ToastContext";
 import { getOpenRunSession } from "../../../utils/openrunSession";
-import "./InterclubRecruitPage.css";
 
 const InterclubRecruitPage: React.FC = () => {
   const navigate = useNavigate();
@@ -57,6 +56,13 @@ const InterclubRecruitPage: React.FC = () => {
     if (myReq.status === "CANCELLED") return "neutral";
     return "neutral";
   }, [myReq]);
+
+  const statusToneClass = {
+    neutral: "text-muted-foreground",
+    pending: "text-[#b26b00]",
+    success: "text-[#0a6b0a]",
+    danger: "text-[#b00020]",
+  }[statusTone];
 
   const sanitizeInquiryText = (text: string) => {
     // 혹시 과거 데이터로 URL이 들어간 케이스가 있으면 제거
@@ -211,21 +217,25 @@ const InterclubRecruitPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="interclub-recruit-page">
-        <div className="interclub-recruit-page__loading">로딩 중...</div>
+      <div className="p-4">
+        <div className="py-6 text-muted-foreground">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="interclub-recruit-page">
-      <div className="interclub-recruit-page__header">
-        <button className="interclub-recruit-page__back-btn" onClick={handleBack}>
+    <div className="p-4">
+      {/* 헤더 */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          className="inline-flex items-center justify-center w-9 h-9 rounded-[10px] border border-border bg-background"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="interclub-recruit-page__title">교류전 모집</h1>
+        <span className="text-lg flex-1 font-medium">교류전 모집</span>
         <button
-          className="interclub-recruit-page__copy-btn"
+          className="inline-flex items-center justify-center w-9 h-9 rounded-[10px] border border-border bg-background active:translate-y-px"
           onClick={handleCopyLink}
           type="button"
           aria-label="링크 복사"
@@ -235,59 +245,79 @@ const InterclubRecruitPage: React.FC = () => {
         </button>
       </div>
 
-      {error && <div className="interclub-recruit-page__error">{error}</div>}
+      {/* 에러 */}
+      {error && (
+        <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-xl">
+          {error}
+        </div>
+      )}
 
+      {/* 일정 카드 */}
       {schedule && (
-        <div className="interclub-recruit-page__card">
-          <div className="interclub-recruit-page__row">
-            <div className="interclub-recruit-page__label">일정</div>
-            <div className="interclub-recruit-page__value">
+        <div className="border border-border rounded-2xl bg-background p-4 mb-4">
+          <div className="flex justify-between gap-4 mb-2">
+            <div className="text-muted-foreground text-sm">일정</div>
+            <div className="font-bold">
               {formatScheduleDateTime(schedule.scheduledAt, schedule.durationMinutes)}
             </div>
           </div>
-          <div className="interclub-recruit-page__row">
-            <div className="interclub-recruit-page__label">장소</div>
-            <div className="interclub-recruit-page__value">{schedule.courtName}</div>
+          <div className="flex justify-between gap-4 mb-2">
+            <div className="text-muted-foreground text-sm">장소</div>
+            <div className="font-bold">{schedule.courtName}</div>
           </div>
-          <div className="interclub-recruit-page__row">
-            <div className="interclub-recruit-page__label">비용</div>
-            <div className="interclub-recruit-page__value">{schedule.cost ?? "-"}</div>
+          <div className="flex justify-between gap-4 mb-2">
+            <div className="text-muted-foreground text-sm">비용</div>
+            <div className="font-bold">{schedule.cost ?? "-"}</div>
           </div>
-          <div className="interclub-recruit-page__row">
-            <div className="interclub-recruit-page__label">현재/정원</div>
-            <div className="interclub-recruit-page__value">
+          <div className="flex justify-between gap-4 mb-2">
+            <div className="text-muted-foreground text-sm">현재/정원</div>
+            <div className="font-bold">
               {schedule.currentParticipants}/{schedule.maxCapacity}
             </div>
           </div>
           {schedule.interclubRecruitNote && (
-            <div className="interclub-recruit-page__note">{schedule.interclubRecruitNote}</div>
+            <div className="mt-2 p-2 border border-border rounded-xl bg-muted">
+              {schedule.interclubRecruitNote}
+            </div>
           )}
         </div>
       )}
 
-      <div className="interclub-recruit-page__apply">
-        <div className="interclub-recruit-page__status-row">
-          <div className="interclub-recruit-page__status-label">신청상태</div>
-          <div className={`interclub-recruit-page__status-value tone-${statusTone}`}>{statusLabel}</div>
+      {/* 신청 영역 */}
+      <div className="mb-4">
+        <div className="flex justify-between items-baseline mb-2">
+          <div className="text-muted-foreground text-sm">신청상태</div>
+          <div className={`font-extrabold ${statusToneClass}`}>{statusLabel}</div>
         </div>
-        <div className="interclub-recruit-page__apply-actions">
+        <div className="flex gap-2">
           {!isApplied ? (
-            <button className="interclub-recruit-page__primary" onClick={handleApply} disabled={actionLoading} type="button">
+            <button
+              className="w-full border-none rounded-xl py-3 font-extrabold bg-primary text-white"
+              onClick={handleApply}
+              disabled={actionLoading}
+              type="button"
+            >
               신청하기
             </button>
           ) : (
-            <button className="interclub-recruit-page__danger" onClick={handleCancel} disabled={actionLoading} type="button">
+            <button
+              className="w-full border-none rounded-xl py-3 font-extrabold bg-red-100 text-[#b00020]"
+              onClick={handleCancel}
+              disabled={actionLoading}
+              type="button"
+            >
               신청취소
             </button>
           )}
         </div>
       </div>
 
+      {/* 문의하기 (문의글 없을 때) */}
       {!post && (
-        <div className="interclub-recruit-page__section">
-          <div className="interclub-recruit-page__section-title">문의하기</div>
+        <div className="mb-4">
+          <div className="font-extrabold mb-2">문의하기</div>
           <textarea
-            className="interclub-recruit-page__textarea"
+            className="w-full border border-[#111] bg-white rounded-xl p-3 text-sm min-h-[88px] resize-y focus:outline-none focus:border-[#111]"
             placeholder={
               "연락 방법/질문/요청사항 등을 자유롭게 작성해주세요.\n\n(문의글은 신청 여부와 무관하게 남길 수 있어요. 운영진 답변은 댓글로 달립니다)"
             }
@@ -295,31 +325,39 @@ const InterclubRecruitPage: React.FC = () => {
             onChange={(e) => setInquiryContent(e.target.value)}
             disabled={actionLoading}
           />
-          <button className="interclub-recruit-page__primary" onClick={handleCreateInquiry} disabled={actionLoading} type="button">
+          <button
+            className="w-full border-none rounded-xl py-3 font-extrabold bg-primary text-white"
+            onClick={handleCreateInquiry}
+            disabled={actionLoading}
+            type="button"
+          >
             문의를 남기기
           </button>
         </div>
       )}
 
+      {/* 대화 스레드 */}
       {post && (
-        <div className="interclub-recruit-page__section">
-          <div className="interclub-recruit-page__section-title">대화</div>
-          <div className="interclub-recruit-page__thread">
-            <div className="interclub-recruit-page__post">
-              <div className="interclub-recruit-page__post-content">{sanitizeInquiryText(post.content)}</div>
-              <div className="interclub-recruit-page__post-meta">
+        <div className="mb-4">
+          <div className="font-extrabold mb-2">대화</div>
+          <div className="flex flex-col gap-2">
+            {/* 원본 게시글 */}
+            <div className="border border-[#111] bg-white rounded-xl p-3">
+              <div>{sanitizeInquiryText(post.content)}</div>
+              <div className="mt-1.5 text-sm text-muted-foreground">
                 {post.author?.name ?? post.guestName ?? "익명"} · {new Date(post.createdAt).toLocaleString()}
               </div>
             </div>
 
-            <div className="interclub-recruit-page__comments">
+            {/* 댓글 목록 */}
+            <div className="flex flex-col gap-2">
               {comments.length === 0 ? (
-                <div className="interclub-recruit-page__hint">아직 댓글이 없습니다.</div>
+                <div className="p-2 text-muted-foreground">아직 댓글이 없습니다.</div>
               ) : (
                 comments.map((c) => (
-                  <div key={c.id} className="interclub-recruit-page__comment">
-                    <div className="interclub-recruit-page__comment-content">{c.content}</div>
-                    <div className="interclub-recruit-page__comment-meta">
+                  <div key={c.id} className="border border-[#111] bg-white rounded-xl p-3">
+                    <div>{c.content}</div>
+                    <div className="mt-1.5 text-sm text-muted-foreground">
                       {c.author?.name ?? "익명"} · {new Date(c.createdAt).toLocaleString()}
                     </div>
                   </div>
@@ -327,16 +365,17 @@ const InterclubRecruitPage: React.FC = () => {
               )}
             </div>
 
-            <div className="interclub-recruit-page__comment-box">
+            {/* 댓글 입력 */}
+            <div className="flex flex-col gap-2.5">
               <textarea
-                className="interclub-recruit-page__textarea"
+                className="w-full border border-[#111] bg-white rounded-xl p-3 text-sm min-h-[88px] resize-y focus:outline-none focus:border-[#111]"
                 placeholder="댓글을 입력하세요"
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
                 disabled={actionLoading}
               />
               <button
-                className="interclub-recruit-page__primary"
+                className="w-full border-none rounded-xl py-3 font-extrabold bg-primary text-white"
                 onClick={handleCreateComment}
                 disabled={actionLoading || !commentContent.trim()}
                 type="button"
@@ -352,4 +391,3 @@ const InterclubRecruitPage: React.FC = () => {
 };
 
 export default InterclubRecruitPage;
-

@@ -10,12 +10,13 @@
  * - Round/Game 구조를 인원수 기반으로 자동 생성
  * - Game 편집: "편집" 클릭 → 참가자 pill 4개 선택 → Player 1,2,3,4 순서 배정
  * - Round 내 동일 선수 중복 배정 방지
+ * - 게스트 참가자(userId=null) 지원: participantId(Participant.id) 기반으로 동작
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import type { Participant } from "../../types/schedule";
 import type { DrawGame, ManualGame } from "../../services/drawService";
-import "./ManualDrawEditor.css";
+import { cn } from "../../lib/utils";
 
 interface ManualDrawEditorProps {
   /** 참가자 목록 */
@@ -32,12 +33,15 @@ interface ManualDrawEditorProps {
   onCancel?: () => void;
 }
 
-/** 내부 Game 상태 (편집용) */
+/**
+ * 내부 Game 상태 (편집용)
+ * teamAIds / teamBIds: participantId(Participant.id) 기반
+ */
 interface EditableGame {
   gameNo: number;
   roundNo: number;
-  teamAUserIds: (number | null)[];  // [player1, player2] or [null, null]
-  teamBUserIds: (number | null)[];  // [player3, player4] or [null, null]
+  teamAIds: (number | null)[];  // [participantId1, participantId2] or [null, null]
+  teamBIds: (number | null)[];  // [participantId3, participantId4] or [null, null]
 }
 
 /**
@@ -88,8 +92,8 @@ const createEmptyGames = (playerCount: number, numberOfCourts?: number | null): 
       games.push({
         gameNo: gameNo++,
         roundNo,
-        teamAUserIds: [null, null],
-        teamBUserIds: [null, null],
+        teamAIds: [null, null],
+        teamBIds: [null, null],
       });
     }
   }
@@ -99,32 +103,74 @@ const createEmptyGames = (playerCount: number, numberOfCourts?: number | null): 
 
 /**
  * 기존 DrawGame을 EditableGame으로 변환
- * userName → userId 매핑 필요
+ * userName → participantId 매핑
+ * 게스트의 경우 userName 또는 guestName으로 매핑
  */
 const convertToEditableGames = (
   drawGames: DrawGame[],
   participants: Participant[]
 ): EditableGame[] => {
-  const nameToId = new Map(participants.map((p) => [p.userName, p.userId]));
+  // userName → participantId 맵 (등록 사용자와 게스트 모두 포함)
+  const nameToId = new Map(
+    participants.map((p) => [p.userName, p.id])
+  );
 
   return drawGames.map((g) => ({
     gameNo: g.gameNo,
     roundNo: g.roundNo,
-    teamAUserIds: g.teamA.map((name) => nameToId.get(name) ?? null),
-    teamBUserIds: g.teamB.map((name) => nameToId.get(name) ?? null),
+    teamAIds: g.teamA.map((name) => nameToId.get(name) ?? null),
+    teamBIds: g.teamB.map((name) => nameToId.get(name) ?? null),
   }));
 };
 
 /**
  * EditableGame을 ManualGame으로 변환 (API 요청용)
+ * participantId를 등록 사용자의 userId와 게스트 이름으로 분리
  */
-const convertToManualGames = (games: EditableGame[]): ManualGame[] => {
-  return games.map((g) => ({
-    gameNo: g.gameNo,
-    roundNo: g.roundNo,
-    teamAUserIds: g.teamAUserIds.filter((id): id is number => id !== null),
-    teamBUserIds: g.teamBUserIds.filter((id): id is number => id !== null),
-  }));
+const convertToManualGames = (
+  games: EditableGame[],
+  participants: Participant[]
+): ManualGame[] => {
+  const pMap = new Map(participants.map((p) => [p.id, p]));
+
+  return games.map((g) => {
+    const teamAUserIds: number[] = [];
+    const teamAGuestNames: string[] = [];
+
+    g.teamAIds
+      .filter((id): id is number => id !== null)
+      .forEach((pId) => {
+        const p = pMap.get(pId);
+        if (p && p.userId != null) {
+          teamAUserIds.push(p.userId);
+        } else if (p) {
+          teamAGuestNames.push(p.guestName || p.userName || "게스트");
+        }
+      });
+
+    const teamBUserIds: number[] = [];
+    const teamBGuestNames: string[] = [];
+
+    g.teamBIds
+      .filter((id): id is number => id !== null)
+      .forEach((pId) => {
+        const p = pMap.get(pId);
+        if (p && p.userId != null) {
+          teamBUserIds.push(p.userId);
+        } else if (p) {
+          teamBGuestNames.push(p.guestName || p.userName || "게스트");
+        }
+      });
+
+    return {
+      gameNo: g.gameNo,
+      roundNo: g.roundNo,
+      teamAUserIds,
+      teamBUserIds,
+      teamAGuestNames: teamAGuestNames.length > 0 ? teamAGuestNames : undefined,
+      teamBGuestNames: teamBGuestNames.length > 0 ? teamBGuestNames : undefined,
+    };
+  });
 };
 
 const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
@@ -141,9 +187,17 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
     [participants]
   );
 
-  // userId → userName 매핑
-  const userIdToName = useMemo(
-    () => new Map(confirmedParticipants.map((p) => [p.userId, p.userName])),
+  // participantId → 표시 이름 매핑 (등록 사용자: userName, 게스트: guestName)
+  const pIdToName = useMemo(
+    () =>
+      new Map(
+        confirmedParticipants.map((p) => [
+          p.id,
+          p.userId != null
+            ? p.userName
+            : p.guestName || p.userName || "게스트",
+        ])
+      ),
     [confirmedParticipants]
   );
 
@@ -153,7 +207,7 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
   // 현재 편집 중인 Game 번호 (null이면 편집 모드 아님)
   const [editingGameNo, setEditingGameNo] = useState<number | null>(null);
 
-  // 편집 중인 Game에서 선택된 플레이어 순서 [player1, player2, player3, player4]
+  // 편집 중인 Game에서 선택된 participantId 순서 [p1, p2, p3, p4]
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
 
   // 초기화
@@ -167,8 +221,8 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
         if (index < existingGames.length) {
           return {
             ...emptyGame,
-            teamAUserIds: existingGames[index].teamAUserIds,
-            teamBUserIds: existingGames[index].teamBUserIds,
+            teamAIds: existingGames[index].teamAIds,
+            teamBIds: existingGames[index].teamBIds,
           };
         }
         return emptyGame;
@@ -198,15 +252,15 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
     [gamesByRound]
   );
 
-  // 특정 라운드에서 이미 배정된 선수 ID 목록
+  // 특정 라운드에서 이미 배정된 participantId 목록
   const getAssignedPlayerIdsInRound = useCallback(
     (roundNo: number, excludeGameNo?: number): Set<number> => {
       const assigned = new Set<number>();
       games
         .filter((g) => g.roundNo === roundNo && g.gameNo !== excludeGameNo)
         .forEach((g) => {
-          g.teamAUserIds.forEach((id) => id !== null && assigned.add(id));
-          g.teamBUserIds.forEach((id) => id !== null && assigned.add(id));
+          g.teamAIds.forEach((id) => id !== null && assigned.add(id));
+          g.teamBIds.forEach((id) => id !== null && assigned.add(id));
         });
       return assigned;
     },
@@ -216,8 +270,8 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
   // Game 완성 여부 확인 (4명 모두 배정됨)
   const isGameComplete = (game: EditableGame): boolean => {
     return (
-      game.teamAUserIds.every((id) => id !== null) &&
-      game.teamBUserIds.every((id) => id !== null)
+      game.teamAIds.every((id) => id !== null) &&
+      game.teamBIds.every((id) => id !== null)
     );
   };
 
@@ -245,25 +299,25 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
     if (!game) return;
 
     setEditingGameNo(gameNo);
-    // 기존에 배정된 선수들을 selectedPlayers로 초기화
+    // 기존에 배정된 participantId들을 selectedPlayers로 초기화
     const existing = [
-      ...game.teamAUserIds.filter((id): id is number => id !== null),
-      ...game.teamBUserIds.filter((id): id is number => id !== null),
+      ...game.teamAIds.filter((id): id is number => id !== null),
+      ...game.teamBIds.filter((id): id is number => id !== null),
     ];
     setSelectedPlayers(existing);
   };
 
-  // 플레이어 pill 클릭 (편집 중인 Game에 선수 추가/제거)
-  const handlePlayerClick = (userId: number) => {
+  // 플레이어 pill 클릭 (편집 중인 Game에 participantId 추가/제거)
+  const handlePlayerClick = (pId: number) => {
     if (editingGameNo === null) return;
 
     setSelectedPlayers((prev) => {
-      if (prev.includes(userId)) {
+      if (prev.includes(pId)) {
         // 이미 선택됨 → 제거
-        return prev.filter((id) => id !== userId);
+        return prev.filter((id) => id !== pId);
       } else if (prev.length < 4) {
         // 4명 미만이면 추가
-        return [...prev, userId];
+        return [...prev, pId];
       }
       return prev;
     });
@@ -278,8 +332,8 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
         if (g.gameNo === editingGameNo) {
           return {
             ...g,
-            teamAUserIds: [selectedPlayers[0], selectedPlayers[1]],
-            teamBUserIds: [selectedPlayers[2], selectedPlayers[3]],
+            teamAIds: [selectedPlayers[0], selectedPlayers[1]],
+            teamBIds: [selectedPlayers[2], selectedPlayers[3]],
           };
         }
         return g;
@@ -303,8 +357,8 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
         if (g.gameNo === gameNo) {
           return {
             ...g,
-            teamAUserIds: [null, null],
-            teamBUserIds: [null, null],
+            teamAIds: [null, null],
+            teamBIds: [null, null],
           };
         }
         return g;
@@ -319,7 +373,7 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
     const completeGames = games.filter(
       (g) => completedRounds.includes(g.roundNo) && isGameComplete(g)
     );
-    onComplete(convertToManualGames(completeGames));
+    onComplete(convertToManualGames(completeGames, participants));
   };
 
   // 현재 편집 중인 Game
@@ -332,70 +386,79 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
   }, [editingGame, editingGameNo, getAssignedPlayerIdsInRound]);
 
   return (
-    <div className="mde">
+    <div className="flex flex-col gap-4 max-md:gap-3">
       {/* 편집 모드가 아닐 때: Round/Game 구조 표시 */}
       {editingGameNo === null && (
         <>
-          <div className="mde__rounds">
+          <div className="flex flex-col gap-6 max-md:gap-4">
             {sortedRounds.map((roundNo) => (
-              <div key={roundNo} className="mde__round">
-                <div className="mde__round-header">
-                  <span className="mde__round-label">라운드 {roundNo}</span>
+              <div key={roundNo} className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-foreground/70">
+                    라운드 {roundNo}
+                  </span>
                 </div>
-                <div className="mde__games-grid">
+                <div className="grid gap-4 max-md:grid-cols-1 max-md:gap-3"
+                  style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
+                >
                   {gamesByRound[roundNo].map((game) => {
                     const complete = isGameComplete(game);
                     return (
                       <div
                         key={game.gameNo}
-                        className={`mde__game-slot ${
-                          complete ? "mde__game-slot--complete" : "mde__game-slot--empty"
-                        }`}
+                        className={cn(
+                          "p-4 rounded-lg border bg-background transition-all max-md:p-3",
+                          complete
+                            ? "border-green-500 border-l-[3px]"
+                            : "border-dashed border-border"
+                        )}
                       >
-                        <div className="mde__game-header">
-                          <span className="mde__game-number">게임 {game.gameNo}</span>
-                          <div className="mde__game-actions">
+                        <div className="flex justify-between items-center mb-3 max-md:mb-2">
+                          <span className="text-sm font-semibold text-foreground/70">
+                            게임 {game.gameNo}
+                          </span>
+                          <div className="flex gap-2">
                             <button
                               type="button"
-                              className="mde__btn-edit"
+                              className="px-3 py-0.5 text-xs font-medium rounded cursor-pointer transition-all border border-primary bg-transparent text-primary hover:bg-primary hover:text-white"
                               onClick={() => handleEditGame(game.gameNo)}
                             >
-                              편집
+                              수정
                             </button>
                             {complete && (
                               <button
                                 type="button"
-                                className="mde__btn-clear"
+                                className="px-3 py-0.5 text-xs font-medium rounded cursor-pointer transition-all border border-border bg-transparent text-muted-foreground hover:bg-red-50 hover:text-destructive hover:border-destructive"
                                 onClick={() => handleClearGame(game.gameNo)}
                               >
-                                초기화
+                                삭제
                               </button>
                             )}
                           </div>
                         </div>
-                        <div className="mde__game-teams">
+                        <div className="flex items-center gap-2">
                           {complete ? (
                             <>
-                              <div className="mde__team mde__team--a">
-                                <span className="mde__team-label">A</span>
-                                <span className="mde__team-players">
-                                  {game.teamAUserIds
-                                    .map((id) => (id ? userIdToName.get(id) : "?"))
+                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-start">
+                                <span className="text-[13px] font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap max-md:text-sm">
+                                  {game.teamAIds
+                                    .map((id) => (id != null ? pIdToName.get(id) : "?"))
                                     .join(", ")}
                                 </span>
                               </div>
-                              <div className="mde__vs">vs</div>
-                              <div className="mde__team mde__team--b">
-                                <span className="mde__team-label">B</span>
-                                <span className="mde__team-players">
-                                  {game.teamBUserIds
-                                    .map((id) => (id ? userIdToName.get(id) : "?"))
+                              <div className="text-[11px] font-bold text-muted-foreground flex-shrink-0">
+                                vs
+                              </div>
+                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                                <span className="text-[13px] font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap max-md:text-sm">
+                                  {game.teamBIds
+                                    .map((id) => (id != null ? pIdToName.get(id) : "?"))
                                     .join(", ")}
                                 </span>
                               </div>
                             </>
                           ) : (
-                            <div className="mde__empty-message">
+                            <div className="text-xs text-muted-foreground text-center py-3 w-full">
                               편집 버튼을 눌러 선수 4명을 배정하세요
                             </div>
                           )}
@@ -409,15 +472,19 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
           </div>
 
           {/* 저장/취소 버튼 */}
-          <div className="mde__footer">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border mt-4 max-md:flex-col">
             {onCancel && (
-              <button type="button" className="mde__btn-cancel" onClick={onCancel}>
+              <button
+                type="button"
+                className="px-6 py-2 text-[13px] font-semibold rounded-md cursor-pointer transition-all border border-border bg-muted text-foreground/70 hover:bg-muted/70 max-md:w-full"
+                onClick={onCancel}
+              >
                 취소
               </button>
             )}
             <button
               type="button"
-              className="mde__btn-save"
+              className="px-6 py-2 text-[13px] font-semibold rounded-md cursor-pointer transition-all border-none bg-green-500 text-white hover:enabled:bg-green-600 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed max-md:w-full"
               onClick={handleSave}
               disabled={!canSave}
             >
@@ -429,79 +496,90 @@ const ManualDrawEditor: React.FC<ManualDrawEditorProps> = ({
 
       {/* 편집 모드: 참가자 pill 선택 UI */}
       {editingGameNo !== null && editingGame && (
-        <div className="mde__editor">
-          <div className="mde__editor-header">
-            <h4>게임 {editingGameNo} 편집</h4>
-            <span className="mde__editor-hint">
+        <div className="flex flex-col gap-4 p-6 bg-background rounded-xl border border-border max-md:p-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="m-0 text-lg font-bold text-foreground">
+              게임 {editingGameNo} 편집
+            </span>
+            <span className="text-sm text-foreground/70">
               라운드 {editingGame.roundNo} - 선수 4명을 순서대로 선택하세요
             </span>
           </div>
 
           {/* 선택된 선수 미리보기 */}
-          <div className="mde__preview">
-            <div className="mde__preview-team">
-              <span className="mde__preview-label">Team A:</span>
-              <span className="mde__preview-slot">
-                {selectedPlayers[0] ? userIdToName.get(selectedPlayers[0]) : "P1"}
+          <div className="flex items-center justify-center gap-4 p-4 bg-background rounded-lg flex-wrap max-md:flex-col max-md:gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-foreground/70">Team A:</span>
+              <span className="px-2 py-1 bg-muted rounded text-sm font-medium text-foreground min-w-[50px] text-center">
+                {selectedPlayers[0] != null ? pIdToName.get(selectedPlayers[0]) : "P1"}
               </span>
-              <span className="mde__preview-slot">
-                {selectedPlayers[1] ? userIdToName.get(selectedPlayers[1]) : "P2"}
+              <span className="px-2 py-1 bg-muted rounded text-sm font-medium text-foreground min-w-[50px] text-center">
+                {selectedPlayers[1] != null ? pIdToName.get(selectedPlayers[1]) : "P2"}
               </span>
             </div>
-            <div className="mde__preview-vs">vs</div>
-            <div className="mde__preview-team">
-              <span className="mde__preview-label">Team B:</span>
-              <span className="mde__preview-slot">
-                {selectedPlayers[2] ? userIdToName.get(selectedPlayers[2]) : "P3"}
+            <div className="text-sm font-bold text-muted-foreground">vs</div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-foreground/70">Team B:</span>
+              <span className="px-2 py-1 bg-muted rounded text-sm font-medium text-foreground min-w-[50px] text-center">
+                {selectedPlayers[2] != null ? pIdToName.get(selectedPlayers[2]) : "P3"}
               </span>
-              <span className="mde__preview-slot">
-                {selectedPlayers[3] ? userIdToName.get(selectedPlayers[3]) : "P4"}
+              <span className="px-2 py-1 bg-muted rounded text-sm font-medium text-foreground min-w-[50px] text-center">
+                {selectedPlayers[3] != null ? pIdToName.get(selectedPlayers[3]) : "P4"}
               </span>
             </div>
           </div>
 
           {/* 참가자 pill 그리드 */}
-          <div className="mde__player-pills">
+          <div
+            className="grid gap-3 max-md:grid-cols-3 max-[425px]:grid-cols-2"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))" }}
+          >
             {confirmedParticipants.map((p) => {
-              const isAssignedInRound = assignedInCurrentRound.has(p.userId);
-              const selectedIndex = selectedPlayers.indexOf(p.userId);
+              const isAssignedInRound = assignedInCurrentRound.has(p.id);
+              const selectedIndex = selectedPlayers.indexOf(p.id);
               const isSelected = selectedIndex !== -1;
+              const displayName = pIdToName.get(p.id) ?? p.userName;
 
               return (
                 <button
-                  key={p.userId}
+                  key={p.id}
                   type="button"
-                  className={`mde__pill ${
-                    isAssignedInRound
-                      ? "mde__pill--disabled"
-                      : isSelected
-                      ? `mde__pill--selected mde__pill--order-${selectedIndex + 1}`
-                      : ""
-                  }`}
-                  onClick={() => handlePlayerClick(p.userId)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 px-4 py-2 bg-background border-2 border-border rounded-md text-sm font-medium text-foreground cursor-pointer transition-all",
+                    !isAssignedInRound && !isSelected && "hover:border-primary hover:bg-primary/10 hover:-translate-y-px",
+                    isAssignedInRound && "bg-muted text-muted-foreground border-border cursor-not-allowed opacity-60",
+                    isSelected && selectedIndex <= 1 && "bg-green-500 border-green-500 text-white",
+                    isSelected && selectedIndex >= 2 && "bg-blue-500 border-blue-500 text-white",
+                    "max-md:px-2 max-md:py-1 max-md:text-xs"
+                  )}
+                  onClick={() => handlePlayerClick(p.id)}
                   disabled={isAssignedInRound}
                 >
                   {isSelected && (
-                    <span className="mde__pill-order">{selectedIndex + 1}</span>
+                    <span className="flex items-center justify-center w-[18px] h-[18px] bg-white/30 rounded-full text-xs font-bold flex-shrink-0">
+                      {selectedIndex + 1}
+                    </span>
                   )}
-                  <span className="mde__pill-name">{p.userName}</span>
+                  <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                    {displayName}
+                  </span>
                 </button>
               );
             })}
           </div>
 
           {/* 편집 확인/취소 버튼 */}
-          <div className="mde__editor-actions">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border max-md:flex-col">
             <button
               type="button"
-              className="mde__btn-cancel"
+              className="px-6 py-2 text-[13px] font-semibold rounded-md cursor-pointer transition-all border border-border bg-muted text-foreground/70 hover:bg-muted/70 max-md:w-full"
               onClick={handleCancelEdit}
             >
               취소
             </button>
             <button
               type="button"
-              className="mde__btn-confirm"
+              className="px-6 py-2 text-[13px] font-semibold rounded-md cursor-pointer transition-all border-none bg-primary text-white hover:enabled:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed max-md:w-full"
               onClick={handleConfirmEdit}
               disabled={selectedPlayers.length !== 4}
             >

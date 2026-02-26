@@ -7,7 +7,6 @@ import { validateScheduleCreation } from "../../../utils/scheduleValidation";
 import ScheduleFormSection, {
   type ScheduleFormData,
 } from "./ScheduleFormSection";
-import "./ScheduleCreateModal.css";
 import { getOpenRunSession } from "../../../utils/openrunSession";
 
 interface Props {
@@ -54,7 +53,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
 
     try {
       const requestData: CreateScheduleRequest = {
-        clubId: data.clubId,
+        clubId: data.clubId!,
         scheduledAt: data.scheduledAt,
         durationMinutes: data.durationMinutes,
         courtName: data.courtName,
@@ -67,7 +66,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
         matchType: data.matchType,
       };
 
-      await scheduleService.createSchedule(requestData, currentUserId ?? undefined);
+      await scheduleService.createSchedule(requestData);
       onSuccess();
       onClose();
     } catch (err) {
@@ -106,7 +105,7 @@ const ScheduleCreateModal: React.FC<Props> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content modal-sm" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>일정 생성</h2>
           <button className="btn-close" onClick={onClose}>

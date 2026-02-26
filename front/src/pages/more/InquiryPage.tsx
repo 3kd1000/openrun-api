@@ -3,14 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { inquiryService } from "../../services/inquiryService";
 import {
-  ArrowLeftIcon,
   PlusIcon,
   MessageCircleIcon,
 } from "../../components/common/Icons";
+import { AppHeader } from "../../components/common/AppHeader";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import type { Post, Comment } from "../../types/post";
-import "./InquiryPage.css";
 
 const InquiryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -126,49 +125,40 @@ const InquiryPage: React.FC = () => {
   // 로딩 중
   if (!isAuthReady || loading) {
     return (
-      <div className="inquiry-page">
-        <div className="inquiry-page__content">
-          <div className="inquiry-page__loading">로딩 중...</div>
+      <div className="p-6 min-h-[calc(100vh-140px)] box-border">
+        <div className="max-w-[600px] mx-auto">
+          <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="inquiry-page">
-      <div className="inquiry-page__content">
-        {/* 헤더 */}
-        <div className="inquiry-page__header">
-          <button
-            className="inquiry-page__back-btn"
-            onClick={() => navigate("/more")}
-          >
-            <ArrowLeftIcon size={20} />
-            <span>뒤로</span>
-          </button>
-          <h1>문의하기</h1>
-        </div>
+    <div className="min-h-[calc(100vh-140px)]">
+      <AppHeader title="문의하기" onBack={() => navigate(-1)} />
+      <div className="max-w-[600px] mx-auto p-4 max-[425px]:p-2">
+        {/* 문의 작성 폼 */}
 
         {/* 문의 작성 폼 */}
         {showForm && (
-          <div className="inquiry-page__form">
+          <div className="bg-background border border-border rounded-lg p-6 mb-6 max-md:p-4 max-[425px]:p-2">
             <textarea
-              className="inquiry-page__textarea"
+              className="w-full p-4 border border-border rounded-md text-base font-[inherit] resize-y min-h-[120px] box-border focus:outline-none focus:border-primary max-[425px]:text-sm max-[425px]:min-h-[100px] max-[360px]:text-sm max-[360px]:min-h-[80px] max-[360px]:p-2"
               placeholder="문의 내용을 입력해주세요 (최대 500자)"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               maxLength={500}
               rows={5}
             />
-            <div className="inquiry-page__form-meta">
-              <span className="inquiry-page__char-count">
+            <div className="flex justify-end mt-1">
+              <span className="text-sm text-muted-foreground">
                 {content.length}/500
               </span>
             </div>
-            <div className="inquiry-page__form-actions">
+            <div className="flex justify-end gap-2 mt-4">
               {inquiries.length > 0 && (
                 <button
-                  className="inquiry-page__btn-cancel"
+                  className="px-4 py-2 bg-muted border border-border rounded-md text-muted-foreground text-base font-medium cursor-pointer transition-all hover:bg-muted/80 disabled:opacity-50 max-[360px]:text-sm max-[360px]:px-2"
                   onClick={() => setShowForm(false)}
                   disabled={submitting}
                 >
@@ -176,7 +166,7 @@ const InquiryPage: React.FC = () => {
                 </button>
               )}
               <button
-                className="inquiry-page__btn-submit"
+                className="px-6 py-2 bg-primary border-none rounded-md text-white text-base font-semibold cursor-pointer transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed max-[360px]:text-sm max-[360px]:px-2"
                 onClick={handleSubmit}
                 disabled={!content.trim() || submitting}
               >
@@ -189,7 +179,7 @@ const InquiryPage: React.FC = () => {
         {/* 새 문의 작성 버튼 */}
         {inquiries.length > 0 && !showForm && (
           <button
-            className="inquiry-page__new-btn"
+            className="flex items-center justify-center gap-2 w-full p-4 bg-primary border-none rounded-md text-white text-base font-semibold cursor-pointer transition-all mb-6 hover:bg-primary/90 hover:-translate-y-px hover:shadow-sm"
             onClick={() => setShowForm(true)}
           >
             <PlusIcon size={18} />
@@ -199,29 +189,31 @@ const InquiryPage: React.FC = () => {
 
         {/* 문의 목록 */}
         {inquiries.length > 0 && (
-          <div className="inquiry-page__list">
+          <div className="flex flex-col gap-4">
             {inquiries.map((inquiry) => (
               <div
                 key={inquiry.id}
-                className={`inquiry-page__card ${
-                  expandedId === inquiry.id ? "is-expanded" : ""
+                className={`bg-background border rounded-lg overflow-hidden transition-all ${
+                  expandedId === inquiry.id
+                    ? "border-primary"
+                    : "border-border hover:border-primary"
                 }`}
               >
                 <div
-                  className="inquiry-page__card-header"
+                  className="p-4 cursor-pointer"
                   onClick={() => handleExpandToggle(inquiry.id)}
                 >
-                  <div className="inquiry-page__card-content">
+                  <div className="text-base text-foreground leading-relaxed mb-2 max-[425px]:text-sm max-[360px]:text-sm">
                     {inquiry.content.length > 80
                       ? inquiry.content.substring(0, 80) + "..."
                       : inquiry.content}
                   </div>
-                  <div className="inquiry-page__card-meta">
-                    <span className="inquiry-page__card-date">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-muted-foreground">
                       {format(new Date(inquiry.createdAt), "yyyy.M.d HH:mm")}
                     </span>
                     {inquiry.commentCount > 0 && (
-                      <span className="inquiry-page__comment-badge">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary text-white rounded-xl text-sm font-semibold">
                         <MessageCircleIcon size={14} />
                         <span>{inquiry.commentCount}</span>
                       </span>
@@ -231,35 +223,35 @@ const InquiryPage: React.FC = () => {
 
                 {/* 확장된 스레드 */}
                 {expandedId === inquiry.id && (
-                  <div className="inquiry-page__thread">
+                  <div className="border-t border-border p-4 bg-muted">
                     {/* 원본 문의 전문 */}
-                    <div className="inquiry-page__original">
-                      <div className="inquiry-page__original-label">내 문의</div>
-                      <div className="inquiry-page__original-content">
+                    <div className="bg-background rounded-md p-4 mb-4">
+                      <div className="text-sm font-semibold text-primary mb-1">내 문의</div>
+                      <div className="text-base text-foreground leading-relaxed whitespace-pre-wrap max-[360px]:text-sm">
                         {inquiry.content}
                       </div>
                     </div>
 
                     {/* 댓글 (운영팀 답변) */}
-                    <div className="inquiry-page__comments">
+                    <div className="mb-4">
                       {loadingComments[inquiry.id] ? (
-                        <div className="inquiry-page__comments-loading">
+                        <div className="text-center p-4 text-muted-foreground text-sm">
                           댓글 로딩 중...
                         </div>
                       ) : (commentsByPostId[inquiry.id] || []).length === 0 ? (
-                        <div className="inquiry-page__no-reply">
+                        <div className="text-center p-4 text-muted-foreground text-sm">
                           아직 답변이 없습니다.
                         </div>
                       ) : (
                         (commentsByPostId[inquiry.id] || []).map((comment) => (
-                          <div key={comment.id} className="inquiry-page__comment">
-                            <div className="inquiry-page__comment-author">
+                          <div key={comment.id} className="bg-background rounded-md p-4 mb-2 last:mb-0">
+                            <div className="text-sm font-semibold text-muted-foreground mb-1">
                               {comment.author?.name || "운영팀"}
                             </div>
-                            <div className="inquiry-page__comment-content">
+                            <div className="text-base text-foreground leading-relaxed whitespace-pre-wrap max-[360px]:text-sm">
                               {comment.content}
                             </div>
-                            <div className="inquiry-page__comment-date">
+                            <div className="text-sm text-muted-foreground mt-1">
                               {format(
                                 new Date(comment.createdAt),
                                 "yyyy.M.d HH:mm"
@@ -271,9 +263,9 @@ const InquiryPage: React.FC = () => {
                     </div>
 
                     {/* 추가 문의 입력 */}
-                    <div className="inquiry-page__add-comment">
+                    <div className="flex gap-2 items-end max-[425px]:flex-col max-[425px]:items-stretch max-[360px]:flex-col max-[360px]:items-stretch">
                       <textarea
-                        className="inquiry-page__comment-input"
+                        className="flex-1 p-2 border border-border rounded-md text-base font-[inherit] resize-none min-h-[60px] focus:outline-none focus:border-primary"
                         placeholder="추가 문의사항을 입력하세요"
                         value={commentDraft[inquiry.id] || ""}
                         onChange={(e) =>
@@ -285,7 +277,7 @@ const InquiryPage: React.FC = () => {
                         rows={2}
                       />
                       <button
-                        className="inquiry-page__btn-comment"
+                        className="px-4 py-2 bg-primary border-none rounded-md text-white text-base font-semibold cursor-pointer transition-all whitespace-nowrap hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed max-[425px]:w-full max-[360px]:w-full"
                         onClick={() => handleAddComment(inquiry.id)}
                         disabled={!commentDraft[inquiry.id]?.trim()}
                       >
@@ -301,17 +293,22 @@ const InquiryPage: React.FC = () => {
 
         {/* 빈 상태 안내 */}
         {inquiries.length === 0 && !showForm && (
-          <div className="inquiry-page__empty">
-            <p>문의 내역이 없습니다.</p>
-            <button onClick={() => setShowForm(true)}>첫 문의 작성하기</button>
+          <div className="text-center py-16 text-muted-foreground">
+            <p className="mb-4">문의 내역이 없습니다.</p>
+            <button
+              className="px-6 py-2 bg-primary border-none rounded-md text-white text-base font-semibold cursor-pointer transition-all hover:bg-primary/90"
+              onClick={() => setShowForm(true)}
+            >
+              첫 문의 작성하기
+            </button>
           </div>
         )}
 
         {/* 안내 문구 */}
-        <div className="inquiry-page__notice">
-          <h2>문의 안내</h2>
-          <p>서비스 이용 중 궁금한 점이나 개선 요청사항을 남겨주세요.</p>
-          <p>운영팀이 확인 후 답변을 드립니다.</p>
+        <div className="mt-8 p-6 bg-muted rounded-lg">
+          <span className="block text-lg font-semibold text-foreground mb-2 max-[360px]:text-base">문의 안내</span>
+          <p className="text-sm text-muted-foreground my-1 leading-relaxed">서비스 이용 중 궁금한 점이나 개선 요청사항을 남겨주세요.</p>
+          <p className="text-sm text-muted-foreground my-1 leading-relaxed">운영팀이 확인 후 답변을 드립니다.</p>
         </div>
       </div>
     </div>

@@ -11,7 +11,9 @@ import {
 } from "recharts";
 import { getUserStats, type UserStatsResponse } from "../services/userStatsService";
 import { getStatsHistory, type StatsHistoryResponse } from "../services/statsHistoryService";
-import "./HomePage.css";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Period = "1M" | "3M" | "6M" | "1Y";
 
@@ -79,166 +81,245 @@ function HomePage() {
   };
 
   return (
-    <div className="home-page">
-      <h2>Dashboard</h2>
-      <p className="home-page__description">
-        OpenRun 백오피스 관리 시스템입니다.
-      </p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+        <p className="text-muted-foreground mt-1">
+          OpenRun 백오피스 관리 시스템입니다.
+        </p>
+      </div>
 
       {/* 사용자 통계 섹션 */}
-      <section className="stats-section">
-        <h3>사용자 통계</h3>
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground">사용자 통계</h3>
 
         {loading && (
-          <div className="stats-loading">로딩 중...</div>
+          <div className="py-8 text-center text-muted-foreground">로딩 중...</div>
         )}
 
         {error && (
-          <div className="stats-error">{error}</div>
+          <div className="py-8 text-center text-destructive">{error}</div>
         )}
 
         {stats && !loading && (
-          <>
+          <div className="space-y-4">
             {/* 전체 현황 */}
-            <div className="stats-grid stats-grid--overview">
-              <div className="stat-card stat-card--primary">
-                <div className="stat-card__value">{stats.totalUsers.toLocaleString()}</div>
-                <div className="stat-card__label">전체 사용자</div>
-              </div>
-              <div className="stat-card stat-card--secondary">
-                <div className="stat-card__value">{stats.totalClubs.toLocaleString()}</div>
-                <div className="stat-card__label">전체 클럽</div>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="bg-primary text-primary-foreground border-primary">
+                <CardContent className="pt-6 text-center">
+                  <div className="text-3xl font-bold mb-1">
+                    {stats.totalUsers.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-primary-foreground/90">전체 사용자</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-emerald-500 text-white border-emerald-500">
+                <CardContent className="pt-6 text-center">
+                  <div className="text-3xl font-bold mb-1">
+                    {stats.totalClubs.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-white/90">전체 클럽</div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* 활성 사용자 지표 */}
-            <h4 className="stats-subtitle">활성 사용자</h4>
-            <div className="stats-grid stats-grid--secondary">
-              <div className="stat-card stat-card--small">
-                <div className="stat-card__value">{stats.dau.toLocaleString()}</div>
-                <div className="stat-card__label">DAU (오늘)</div>
-              </div>
-              <div className="stat-card stat-card--small">
-                <div className="stat-card__value">{stats.wau.toLocaleString()}</div>
-                <div className="stat-card__label">WAU (7일)</div>
-              </div>
-              <div className="stat-card stat-card--small">
-                <div className="stat-card__value">{stats.mau.toLocaleString()}</div>
-                <div className="stat-card__label">MAU (30일)</div>
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-3 mt-2">활성 사용자</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-5 text-center">
+                    <div className="text-2xl font-bold mb-1 text-foreground">
+                      {stats.dau.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">DAU (오늘)</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 text-center">
+                    <div className="text-2xl font-bold mb-1 text-foreground">
+                      {stats.wau.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">WAU (7일)</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 text-center">
+                    <div className="text-2xl font-bold mb-1 text-foreground">
+                      {stats.mau.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">MAU (30일)</div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
             {/* 신규 가입자 지표 */}
-            <h4 className="stats-subtitle">신규 가입자</h4>
-            <div className="stats-grid stats-grid--secondary">
-              <div className="stat-card stat-card--small">
-                <div className="stat-card__value">{stats.newUsersToday.toLocaleString()}</div>
-                <div className="stat-card__label">오늘</div>
-              </div>
-              <div className="stat-card stat-card--small">
-                <div className="stat-card__value">{stats.newUsersThisWeek.toLocaleString()}</div>
-                <div className="stat-card__label">이번 주</div>
-              </div>
-              <div className="stat-card stat-card--small">
-                <div className="stat-card__value">{stats.newUsersThisMonth.toLocaleString()}</div>
-                <div className="stat-card__label">이번 달</div>
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-3 mt-2">신규 가입자</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-5 text-center">
+                    <div className="text-2xl font-bold mb-1 text-foreground">
+                      {stats.newUsersToday.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">오늘</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 text-center">
+                    <div className="text-2xl font-bold mb-1 text-foreground">
+                      {stats.newUsersThisWeek.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">이번 주</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-5 text-center">
+                    <div className="text-2xl font-bold mb-1 text-foreground">
+                      {stats.newUsersThisMonth.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">이번 달</div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
-          </>
+          </div>
         )}
       </section>
 
       {/* 통계 히스토리 차트 섹션 */}
-      <section className="chart-section">
-        <div className="chart-header">
-          <h3>통계 추이</h3>
-          <div className="period-selector">
+      <section className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h3 className="text-lg font-semibold text-foreground">통계 추이</h3>
+          <div className="flex gap-1.5">
             {(["1M", "3M", "6M", "1Y"] as Period[]).map((period) => (
-              <button
+              <Button
                 key={period}
-                className={`period-btn ${selectedPeriod === period ? "period-btn--active" : ""}`}
+                size="sm"
+                variant={selectedPeriod === period ? "default" : "outline"}
+                className={cn(
+                  "text-xs px-3",
+                  selectedPeriod === period
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground"
+                )}
                 onClick={() => setSelectedPeriod(period)}
               >
                 {periodLabels[period]}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
 
         {historyLoading && (
-          <div className="chart-loading">로딩 중...</div>
+          <div className="py-8 text-center text-muted-foreground rounded-lg border bg-card">
+            로딩 중...
+          </div>
         )}
 
         {historyError && (
-          <div className="chart-error">{historyError}</div>
+          <div className="py-8 text-center text-destructive rounded-lg border bg-card">
+            {historyError}
+          </div>
         )}
 
         {history && !historyLoading && history.items.length > 0 && (
-          <>
+          <div className="space-y-4">
             {/* 요약 정보 */}
             {history.summary && (
-              <div className="chart-summary">
-                <div className="summary-item">
-                  <span className="summary-label">사용자 증가</span>
-                  <span className={`summary-value ${history.summary.userGrowth >= 0 ? "positive" : "negative"}`}>
-                    {history.summary.userGrowth >= 0 ? "+" : ""}{history.summary.userGrowth.toLocaleString()}
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">클럽 증가</span>
-                  <span className={`summary-value ${history.summary.clubGrowth >= 0 ? "positive" : "negative"}`}>
-                    {history.summary.clubGrowth >= 0 ? "+" : ""}{history.summary.clubGrowth.toLocaleString()}
-                  </span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">평균 DAU</span>
-                  <span className="summary-value">{history.summary.avgDau.toLocaleString()}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">기간 내 신규가입</span>
-                  <span className="summary-value">{history.summary.totalNewUsers.toLocaleString()}</span>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <span className="block text-xs text-muted-foreground mb-1">사용자 증가</span>
+                    <span className={cn(
+                      "text-lg font-bold",
+                      history.summary.userGrowth >= 0 ? "text-emerald-600" : "text-red-500"
+                    )}>
+                      {history.summary.userGrowth >= 0 ? "+" : ""}{history.summary.userGrowth.toLocaleString()}
+                    </span>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <span className="block text-xs text-muted-foreground mb-1">클럽 증가</span>
+                    <span className={cn(
+                      "text-lg font-bold",
+                      history.summary.clubGrowth >= 0 ? "text-emerald-600" : "text-red-500"
+                    )}>
+                      {history.summary.clubGrowth >= 0 ? "+" : ""}{history.summary.clubGrowth.toLocaleString()}
+                    </span>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <span className="block text-xs text-muted-foreground mb-1">평균 DAU</span>
+                    <span className="text-lg font-bold text-foreground">
+                      {history.summary.avgDau.toLocaleString()}
+                    </span>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <span className="block text-xs text-muted-foreground mb-1">기간 내 신규가입</span>
+                    <span className="text-lg font-bold text-foreground">
+                      {history.summary.totalNewUsers.toLocaleString()}
+                    </span>
+                  </CardContent>
+                </Card>
               </div>
             )}
 
             {/* 활성 사용자 차트 */}
-            <div className="chart-container">
-              <h4 className="chart-title">활성 사용자 (DAU / WAU / MAU)</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={formatChartData()} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="dau" name="DAU" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="wau" name="WAU" stroke="#10b981" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="mau" name="MAU" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  활성 사용자 (DAU / WAU / MAU)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={formatChartData()} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="dau" name="DAU" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="wau" name="WAU" stroke="#10b981" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="mau" name="MAU" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
             {/* 누적 사용자/클럽 차트 */}
-            <div className="chart-container">
-              <h4 className="chart-title">누적 현황 (사용자 / 클럽)</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={formatChartData()} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="totalUsers" name="총 사용자" stroke="#6366f1" strokeWidth={2} dot={false} />
-                  <Line yAxisId="right" type="monotone" dataKey="totalClubs" name="총 클럽" stroke="#ec4899" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  누적 현황 (사용자 / 클럽)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={formatChartData()} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line yAxisId="left" type="monotone" dataKey="totalUsers" name="총 사용자" stroke="#6366f1" strokeWidth={2} dot={false} />
+                    <Line yAxisId="right" type="monotone" dataKey="totalClubs" name="총 클럽" stroke="#ec4899" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {history && !historyLoading && history.items.length === 0 && (
-          <div className="chart-empty">
+          <div className="py-12 text-center text-muted-foreground rounded-lg border bg-card">
             아직 수집된 통계 데이터가 없습니다.
           </div>
         )}

@@ -47,11 +47,10 @@ public enum ClubRole {
     }
 
     /**
-     * 회원 관리 권한이 있는지 확인 (역할 변경 등)
-     * - ADMIN: REGULAR ↔ ADMIN 변경 가능
-     * - OWNER: 모든 역할 변경 가능 (OWNER 변경은 별도 소유권 이전 기능)
+     * 회원 관리 권한이 있는지 확인 (역할 변경, 제명 등)
+     * - OWNER만 가능 (OWNER 변경은 별도 소유권 이전 기능)
      */
     public boolean canManageMembers() {
-        return this == ADMIN || this == OWNER;
+        return this == OWNER;
     }
 }

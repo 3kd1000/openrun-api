@@ -183,6 +183,23 @@ export const getMyRecentMatches = async (clubId: number, limit?: number): Promis
 };
 
 /**
+ * 특정 클럽에서의 내 누적 통계 조회
+ */
+export interface MyClubStatsResponse {
+  wins: number;
+  draws: number;
+  losses: number;
+  totalMatches: number;
+}
+
+export const getMyClubStats = async (clubId: number): Promise<MyClubStatsResponse> => {
+  const response = await axiosInstance.get<MyClubStatsResponse>('/users/me/stats', {
+    params: { clubId }
+  });
+  return response.data;
+};
+
+/**
  * 클럽 멤버 프로필 (user + user_profile + membership 통합)
  */
 export interface MemberProfile {

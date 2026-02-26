@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.openrunapi.domain.club.model.ClubRole;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -97,6 +99,18 @@ public interface ClubMemberRepository extends JpaRepository<ClubMember, Long> {
           AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
     """)
     int countActiveByClubId(@Param("clubId") Long clubId);
+
+    /**
+     * 클럽의 ADMIN/OWNER 멤버 userId 목록 조회 (알림 발송용)
+     */
+    @Query("""
+        SELECT cm.user.id
+        FROM ClubMember cm
+        WHERE cm.club.id = :clubId
+          AND cm.status = com.example.openrunapi.domain.club.model.ClubMemberStatus.ACTIVE
+          AND cm.role IN :roles
+    """)
+    List<Long> findUserIdsByClubIdAndRoleIn(@Param("clubId") Long clubId, @Param("roles") List<ClubRole> roles);
 
     /**
      * 사용자의 모든 클럽 멤버십 조회 (탈퇴 처리용)

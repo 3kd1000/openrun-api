@@ -1,6 +1,9 @@
 package com.example.openrunapi.domain.club.service;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.common.service.PermissionService;
+import com.example.openrunapi.infrastructure.objectstorage.ClubLogoUrls;
+import com.example.openrunapi.infrastructure.objectstorage.ObjectStorageService;
 import com.example.openrunapi.domain.audit.dto.ClubAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ClubMemberAuditSnapshot;
 import com.example.openrunapi.domain.audit.dto.ClubPolicyAuditSnapshot;
@@ -30,6 +33,8 @@ import com.example.openrunapi.domain.externalrequest.model.ExternalRequestStatus
 import com.example.openrunapi.domain.externalrequest.model.ExternalRequestType;
 import com.example.openrunapi.domain.externalrequest.repository.ExternalRequestRepository;
 import com.example.openrunapi.domain.user.model.User;
+import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.domain.user.model.UserProfile;
 import com.example.openrunapi.domain.user.model.dto.UserResponse;
 import com.example.openrunapi.domain.user.repository.UserProfileRepository;
@@ -43,8 +48,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,6 +68,10 @@ public class ClubService {
     private final ExternalRequestRepository externalRequestRepository;
     private final PermissionService permissionService;
     private final AuditLogService auditLogService;
+    private final ObjectStorageService objectStorageService;
+    private final NotificationService notificationService;
+
+    private static final Set<String> ALLOWED_LOGO_TYPES = Set.of("image/png", "image/jpeg", "image/webp");
 
     @Transactional
     public ClubResponse createClub(CreateClubRequest request, Long ownerUserId) {
@@ -206,6 +218,7 @@ public class ClubService {
         ClubPolicyAuditSnapshot beforeSnapshot = ClubPolicyAuditSnapshot.from(policy);
 
         policy.updateAwardPolicy(
+                request.getAwardEnabled(),
                 request.getAwardPeriod(),
                 request.getAwardAttendanceEnabled(),
                 request.getAwardPointsEnabled(),
@@ -225,7 +238,7 @@ public class ClubService {
 
         // TODO: 추후 인증 기능 구현 시, currentUserId가 클럽의 소유자(또는 관리자)인지 확인하는 권한 검증 로직 필요
         if (!club.getOwnerUserId().equals(currentUserId)) {
-            throw new SecurityException("클럽을 삭제할 권한이 없습니다.");
+            throw new PermissionDeniedException("클럽을 삭제할 권한이 없습니다.");
         }
 
         clubRepository.deleteById(clubId);
@@ -288,6 +301,22 @@ public class ClubService {
 
         externalRequestRepository.save(externalRequest);
 
+        // 수동 승인 경로: 클럽 ADMIN/OWNER에게 가입 신청 알림
+        if (!isAutoApprove) {
+            try {
+                List<Long> adminIds = clubMemberRepository.findUserIdsByClubIdAndRoleIn(
+                        clubId, List.of(ClubRole.ADMIN, ClubRole.OWNER));
+                if (!adminIds.isEmpty()) {
+                    notificationService.sendNotification(
+                            clubId, adminIds,
+                            "가입 신청", club.getName() + "에 새 가입 신청이 있습니다",
+                            NotificationType.EXTERNAL_REQUEST, clubId, "CLUB");
+                }
+            } catch (Exception e) {
+                // 알림 실패가 가입 신청을 막으면 안 됨
+            }
+        }
+
         return isAutoApprove ? JoinRequestResponse.autoApproved() : JoinRequestResponse.pending();
     }
 
@@ -305,7 +334,7 @@ public class ClubService {
 
         // 권한 체크: 요청자가 클럽 소유자인지 확인
         if (!club.getOwnerUserId().equals(adminId)) {
-            throw new SecurityException("승인 권한이 없습니다.");
+            throw new PermissionDeniedException("승인 권한이 없습니다.");
         }
 
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
@@ -327,7 +356,7 @@ public class ClubService {
 
         // 권한 체크: 요청자가 클럽 소유자인지 확인
         if (!club.getOwnerUserId().equals(adminId)) {
-            throw new SecurityException("거절 권한이 없습니다.");
+            throw new PermissionDeniedException("거절 권한이 없습니다.");
         }
 
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
@@ -555,7 +584,7 @@ public class ClubService {
                 .orElseThrow(() -> new EntityNotFoundException("클럽 멤버를 찾을 수 없습니다."));
 
         if (!currentOwner.isOwner()) {
-            throw new SecurityException("클럽장만 권한을 양도할 수 있습니다.");
+            throw new PermissionDeniedException("클럽장만 권한을 양도할 수 있습니다.");
         }
 
         // 2. 대상자가 ADMIN인지 확인
@@ -585,6 +614,62 @@ public class ClubService {
         auditLogService.logClubUpdate(currentUserId, clubBeforeSnapshot, club);
         auditLogService.logClubMemberUpdate(currentUserId, currentOwnerBefore, currentOwner);
         auditLogService.logClubMemberUpdate(currentUserId, newOwnerBefore, newOwner);
+    }
+
+    // === 클럽 로고 관리 ===
+
+    /**
+     * 클럽 로고 업로드 - ADMIN 이상 가능, 감사 로그 기록
+     */
+    @Transactional
+    public ClubResponse uploadClubLogo(Long clubId, Long userId, MultipartFile file) {
+        permissionService.requireScheduleManagePermission(userId, clubId);
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_LOGO_TYPES.contains(contentType)) {
+            throw new IllegalArgumentException("허용되지 않는 파일 형식입니다. (PNG, JPEG, WEBP만 가능)");
+        }
+        if (file.getSize() > 5L * 1024 * 1024) {
+            throw new IllegalArgumentException("파일 크기는 5MB를 초과할 수 없습니다.");
+        }
+
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("클럽을 찾을 수 없습니다: " + clubId));
+
+        String beforeLogoUrl = club.getLogoUrl();
+
+        try {
+            ClubLogoUrls urls = objectStorageService.uploadClubLogo(clubId, file.getInputStream());
+            club.updateLogo(urls.url512(), urls.url128());
+        } catch (IOException e) {
+            throw new RuntimeException("로고 업로드 중 오류가 발생했습니다.", e);
+        }
+
+        auditLogService.logClubLogoUpload(userId, clubId, beforeLogoUrl, club.getLogoUrl());
+
+        ClubPolicy policy = clubPolicyRepository.findByClubId(clubId).orElse(null);
+        return new ClubResponse(club, policy);
+    }
+
+    /**
+     * 클럽 로고 삭제 - ADMIN 이상 가능, 감사 로그 기록
+     */
+    @Transactional
+    public void deleteClubLogo(Long clubId, Long userId) {
+        permissionService.requireScheduleManagePermission(userId, clubId);
+
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new EntityNotFoundException("클럽을 찾을 수 없습니다: " + clubId));
+
+        String beforeLogoUrl = club.getLogoUrl();
+        if (beforeLogoUrl == null) {
+            return;
+        }
+
+        objectStorageService.deleteClubLogo(clubId);
+        club.clearLogo();
+
+        auditLogService.logClubLogoDelete(userId, clubId, beforeLogoUrl);
     }
 
     private Specification<Club> search(String keyword) {

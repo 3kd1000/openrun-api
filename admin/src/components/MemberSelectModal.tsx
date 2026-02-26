@@ -1,7 +1,26 @@
 import { useState, useEffect, useMemo } from "react";
 import type { ClubMemberInfo } from "../services/notificationService";
 import { getClubMembers } from "../services/notificationService";
-import "./MemberSelectModal.css";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface MemberSelectModalProps {
   clubId: number;
@@ -77,108 +96,92 @@ function MemberSelectModal({
     onConfirm(Array.from(selectedIds));
   };
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  const allFilteredSelected = filteredMembers.length > 0 &&
-    filteredMembers.every((m) => selectedIds.has(m.id));
+  const allFilteredSelected =
+    filteredMembers.length > 0 && filteredMembers.every((m) => selectedIds.has(m.id));
 
   return (
-    <div className="member-modal__backdrop" onClick={handleBackdropClick}>
-      <div className="member-modal">
-        <div className="member-modal__header">
-          <h3>클럽원 선택</h3>
-          <button className="member-modal__close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>클럽원 선택</DialogTitle>
+        </DialogHeader>
 
-        <div className="member-modal__search">
-          <input
+        <div className="space-y-3">
+          <Input
             type="text"
             placeholder="이름 또는 ID로 검색"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoFocus
           />
+
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={allFilteredSelected ? handleDeselectAll : handleSelectAll}
+            >
+              {allFilteredSelected ? "전체 해제" : "전체 선택"}
+            </Button>
+            <span className="text-sm text-muted-foreground">{selectedIds.size}명 선택됨</span>
+          </div>
         </div>
 
-        <div className="member-modal__actions">
-          <button
-            type="button"
-            className="member-modal__action-btn"
-            onClick={allFilteredSelected ? handleDeselectAll : handleSelectAll}
-          >
-            {allFilteredSelected ? "전체 해제" : "전체 선택"}
-          </button>
-          <span className="member-modal__count">
-            {selectedIds.size}명 선택됨
-          </span>
-        </div>
-
-        <div className="member-modal__body">
-          {loading && <p className="member-modal__status">로딩 중...</p>}
-          {error && <p className="member-modal__status member-modal__status--error">{error}</p>}
+        <ScrollArea className="h-64 rounded-md border border-border">
+          {loading && (
+            <p className="text-center text-sm text-muted-foreground py-8">로딩 중...</p>
+          )}
+          {error && (
+            <p className="text-center text-sm text-destructive py-8">{error}</p>
+          )}
           {!loading && !error && filteredMembers.length === 0 && (
-            <p className="member-modal__status">
+            <p className="text-center text-sm text-muted-foreground py-8">
               {searchQuery ? "검색 결과가 없습니다." : "활성 멤버가 없습니다."}
             </p>
           )}
           {!loading && !error && filteredMembers.length > 0 && (
-            <table className="member-modal__table">
-              <thead>
-                <tr>
-                  <th className="member-modal__th-check"></th>
-                  <th>ID</th>
-                  <th>이름</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10"></TableHead>
+                  <TableHead>ID</TableHead>
+                  <TableHead>이름</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredMembers.map((member) => (
-                  <tr
+                  <TableRow
                     key={member.id}
-                    className={selectedIds.has(member.id) ? "selected" : ""}
+                    className={cn("cursor-pointer", selectedIds.has(member.id) && "bg-primary/5")}
                     onClick={() => handleToggle(member.id)}
                   >
-                    <td className="member-modal__td-check">
-                      <input
-                        type="checkbox"
+                    <TableCell className="w-10">
+                      <Checkbox
                         checked={selectedIds.has(member.id)}
-                        onChange={() => handleToggle(member.id)}
+                        onCheckedChange={() => handleToggle(member.id)}
                         onClick={(e) => e.stopPropagation()}
                       />
-                    </td>
-                    <td>{member.id}</td>
-                    <td>{member.name}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>{member.id}</TableCell>
+                    <TableCell>{member.name}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
-        </div>
+        </ScrollArea>
 
-        <div className="member-modal__footer">
-          <button
-            type="button"
-            className="member-modal__cancel-btn"
-            onClick={onClose}
-          >
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
             취소
-          </button>
-          <button
-            type="button"
-            className="member-modal__confirm-btn"
-            onClick={handleConfirm}
-            disabled={selectedIds.size === 0}
-          >
+          </Button>
+          <Button onClick={handleConfirm} disabled={selectedIds.size === 0}>
             선택 완료 ({selectedIds.size}명)
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

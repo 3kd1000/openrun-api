@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.schedule.model.dto;
 
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import com.example.openrunapi.domain.schedule.model.ScheduleTemplate;
 import com.example.openrunapi.domain.schedule.model.TemplateType;
 import jakarta.validation.constraints.Min;
@@ -21,8 +22,8 @@ public class CreateScheduleTemplateRequest {
     @NotNull(message = "템플릿 타입은 필수입니다.")
     private TemplateType templateType;
 
-    @NotBlank(message = "템플릿 이름은 필수입니다.")
-    @Size(max = 5, message = "템플릿 이름은 5자를 초과할 수 없습니다.")
+    @NotBlank(message = "즐겨찾기 이름은 필수입니다.")
+    @Size(max = 20, message = "즐겨찾기 이름은 20자를 초과할 수 없습니다.")
     private String templateName;
 
     // SCHEDULE 타입일 때 필수 (Service에서 검증)
@@ -34,6 +35,17 @@ public class CreateScheduleTemplateRequest {
     private Integer maxCapacity;
 
     private BigDecimal cost;
+
+    @Size(max = 200, message = "코트 주소는 200자를 초과할 수 없습니다.")
+    private String courtAddress;
+
+    @Size(max = 50, message = "지역은 50자를 초과할 수 없습니다.")
+    private String region;
+
+    private MatchType matchType;
+
+    @Min(value = 1, message = "코트 수는 1면 이상이어야 합니다.")
+    private Integer numberOfCourts;
 
     // PARTICIPATION_START 타입일 때 필수 (Service에서 검증)
     @Pattern(regexp = "^매달 ([1-9]|[12][0-9]|3[01])일 ([01][0-9]|2[0-3]):([0-5][0-9])$",
@@ -48,6 +60,10 @@ public class CreateScheduleTemplateRequest {
                 .courtName(this.courtName)
                 .maxCapacity(this.maxCapacity)
                 .cost(this.cost)
+                .courtAddress(this.courtAddress)
+                .region(this.region)
+                .matchType(this.matchType)
+                .numberOfCourts(this.numberOfCourts)
                 .participationStartPattern(this.participationStartPattern)
                 .build();
     }

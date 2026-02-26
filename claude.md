@@ -27,7 +27,8 @@
 - 대진표 자동 생성 (한울 KDK, 무작위, 수동)
 - 소셜 로그인 (Google, Kakao, Naver)
 - FCM 푸시 알림 시스템 (일정/대진표/클럽 알림)
-- Admin 백오피스 (통계 대시보드, 배치 관리, 감사 로그)
+- 1:1 메시지 시스템 (일정 연관 대화, 운영자 DM)
+- Admin 백오피스 (통계 대시보드, 배치 관리, 감사 로그, DM 관리)
 
 ## 🔧 개발 환경
 
@@ -63,25 +64,53 @@ openrun/
 │   └── cronjobs/    # K8s CronJob 배치 작업
 ├── docs/             # 모든 문서 저장소 (git submodule)
 │   ├── guides/      # 작업 가이드 (문서화, 배포 등)
+│   ├── operations/  # 운영 규칙 (역할/권한, 리소스 CRUD, 알림 발송)
 │   ├── infra/       # 인프라 관련
 │   ├── backend/     # 백엔드 관련
 │   └── frontend/    # 프론트엔드 관련
 └── claude.md         # 이 파일
 ```
 
-## 🚀 다음 작업 예정
+## 🚀 작업 현황 (2026-02-26 기준)
 
-- [ ] 이용 가이드 페이지 콘텐츠 작성
+### 다음 작업
+- [ ] Intro 페이지 동영상/스크린샷 업데이트
 
-### ✅ 최근 완료
+### ✅ 완료
 
+- [x] 시작 가이드 리디자인 + 강제 노출: 알림 목업 카드(폰 알림센터 스타일), 로그인/가입 시 1회 강제 노출(startGuideSeen), PwaSetupSheet 삭제 통합, 탐색 기본 탭 club으로 변경
+- [x] 일정생성 통합 (WP1): scheduleType 컬럼 추가, 공개/클럽 일정 폼 통합, 빌드 검증 통과
+- [x] 즐겨찾기 확장: ScheduleTemplate에 courtAddress/region/matchType/numberOfCourts 추가, pill→카드 UI, 3개 제한, 이름 자동생성+편집
+- [x] 어워드 ON/OFF (WP3): ClubPolicy.awardEnabled, ScoreboardPage 탭 조건부, 관리 토글 UI
+- [x] 빈 상태 가이드 (WP4): ClubBallManagePage, ClubManageAwardPage, ScoreboardPage에 EmptyState 적용
+- [x] iPadOS 감지 수정: navigator.platform + maxTouchPoints 조합으로 iPadOS 13+ Safari 대응
+- [x] 화면 일관성 개선: 5개 메인 페이지 헤더 통일 (ClubSelector + 메시지 + 알림벨), 서브페이지 헤더 통일 (ClubCreatePage, PublicScheduleCreatePage, ScheduleRecruitPage)
+- [x] 일정 화면 개선: 제목 "일정 정보" 통일, badge→label-value 변환, 배너 "공개일정/클럽일정" 라벨, 뒤로가기 무한루프 해결
+- [x] 로고 리뉴얼: Emerald 테마 아이콘/horizontal SVG 제작, 테니스공 심 라인 추가 (clipPath), v4 PNG 일괄 교체, 구버전 archive 이동
+- [x] 앱 아이콘/OG 이미지 v4 일괄 교체 (manifest, index.html, og-server, FCM SW, vite.config)
+- [x] 루트 경로(/) → /intro 리다이렉트, 페이지 타이틀 변경
+- [x] 역할/권한 매트릭스 문서화 및 코드 검증 (`docs/operations/role-permission.md`)
+- [x] 리소스 CRUD 규칙 문서화, 알림 발송 규칙 문서화
+- [x] 권한 수정: 일정 삭제/대진 CRUD 권한 체크, 클럽일정 상세 멤버십 체크, 역할 변경 OWNER 전용, 메뉴 가시성 개선
+- [x] Phase B-2: PWA 설치 유도 + 알림 허용 유도 (시작 가이드, MorePage 배너)
+- [x] 더보기 서브페이지 헤더 통일 (AppHeader 서브페이지 모드, 8개 페이지 적용)
+- [x] 더보기 메뉴 정리 (이용가이드/에디터/메시지/문의하기 제거, 순서 변경, 버튼 스타일 개선)
+- [x] 전역 ScrollToTop 추가 (App.tsx, 라우트 전환 시 스크롤 리셋)
+- [x] Phase A: SecurityContext 마이그레이션 (@RequestParam userId → @AuthenticationPrincipal)
+- [x] Phase B-1 + B-3: FCM 알림 7케이스 + 알림 설정 페이지
+- [x] Phase C: 동적 OG 태그 (Express og-server, 카카오톡/SNS 미리보기)
+- [x] 공개일정(Open Schedule) 기능
+- [x] Front UI Stage 1~4: shadcn/ui 점진 전환 (Emerald/Charcoal 4색 시스템)
+- [x] 비로그인 UX 개선: useLoginGuard 훅, 모집 페이지 공개 프로필 permitAll
+- [x] 클럽 가입 신청 취소 기능, 가입관리 페이지 필터 정리
 - [x] FCM 푸시 알림 시스템 구축 (Phase 1: 인프라 + 인앱 UI)
 - [x] 일별 통계 수집 배치 + 차트 대시보드 (Recharts)
 - [x] K8s CronJob 기반 배치 시스템 (중복 실행 방지)
 - [x] 서비스 소개 페이지 (/intro)
 - [x] 클럽 멤버 역할 관리 기능
 - [x] 대진표 생성 알고리즘 개선
-- [x] 모바일 반응형 UI 개선
+- [x] 메시지 시스템 고도화 (일정 배너 링크, 운영자 DM 3개 진입점, Admin DM 관리)
+- [x] Admin 백오피스 shadcn/Tailwind v4 전체 마이그레이션 (인디고 테마)
 
 ## ⚠️ Claude Code 작업 가이드라인
 
@@ -93,6 +122,11 @@ openrun/
 - 임의로 판단하지 말 것 (API 비용 낭비 방지)
 
 자세한 내용: `@docs/guides/claude-code-guidelines.md`
+
+### 대규모 작업 시 세션 관리
+- Plan 승인 후 본격 구현에 들어갈 때, 작업 계획을 memory에 저장하고 `/compact`를 실행하여 컨텍스트를 확보한 후 작업을 시작할 것
+- 기준: 수정 파일 5개 이상 또는 step 10개 이상인 경우
+- 작업 진행 중 중간 지점에서도 컨텍스트가 부족해지면 진행 상황을 memory에 기록 후 `/compact` 실행
 
 ## 📚 문서화 가이드
 
@@ -130,4 +164,4 @@ openrun/
 ---
 
 **프로젝트 상태**: 운영 중 (Production Ready)
-**마지막 업데이트**: 2026-02-07 (일별 통계 배치 + 차트, 서비스 소개 페이지)
+**마지막 업데이트**: 2026-02-24 (Admin shadcn 마이그레이션, 메시징 시스템 고도화, Front UI Stage 1~3)

@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../contexts/NotificationContext";
-import "./NotificationBell.css";
 
 const BellIcon: React.FC = () => (
   <svg
@@ -28,10 +27,14 @@ const NotificationBell: React.FC = () => {
   };
 
   return (
-    <button className="notification-bell" onClick={handleClick} aria-label="알림">
+    <button
+      className="relative flex items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer text-gray-500 p-0 rounded-full transition-colors duration-200 ease-linear hover:bg-gray-100 hover:text-primary"
+      onClick={handleClick}
+      aria-label="알림"
+    >
       <BellIcon />
       {unreadCount > 0 && (
-        <span className="notification-bell__badge">
+        <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-[5px] rounded-[9px] bg-red-500 text-white text-[11px] font-semibold leading-[18px] text-center box-border">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}

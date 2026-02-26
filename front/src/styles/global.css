@@ -5,106 +5,128 @@
   color-scheme: light only;
 }
 
-* {
-  box-sizing: border-box;
-}
+/*
+ * Element 리셋을 @layer base로 감싸서 Tailwind 유틸리티(text-*, mt-*, font-* 등)가
+ * CSS Cascade Layers 규칙에 따라 정상적으로 override 가능하도록 합니다.
+ * (Tailwind v4는 유틸리티를 @layer utilities에 넣으므로, unlayered 규칙이 항상 우선합니다)
+ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  /* min-width 제거: 360px 미만 디바이스도 가로 스크롤 없이 디바이스 너비 사용 */
-  min-height: 100vh;
-  font-family: var(--font-family-base);
-  line-height: var(--line-height-normal);
-  font-weight: var(--font-weight-normal);
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    /* min-width 제거: 360px 미만 디바이스도 가로 스크롤 없이 디바이스 너비 사용 */
+    min-height: 100vh;
+    font-family: var(--font-family-base);
+    line-height: var(--line-height-normal);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
 
-  /* Typography Optimization */
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
+    /* Typography Optimization */
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
 
-/* Links */
-a {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: color var(--transition-base);
-}
+  /* Links */
+  a {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-base);
+  }
 
-a:hover {
-  color: var(--color-primary-hover);
-  text-decoration: underline;
-}
+  a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
 
-/* Headings */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  margin: 0;
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
-}
+  /* Headings */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+  }
 
-h1 {
-  font-size: var(--font-size-2xl);
-}
+  h1 {
+    font-size: var(--font-size-2xl);
+  }
 
-h2 {
-  font-size: var(--font-size-xl);
-}
+  h2 {
+    font-size: var(--font-size-xl);
+  }
 
-h3 {
-  font-size: var(--font-size-l);
-}
+  h3 {
+    font-size: var(--font-size-l);
+  }
 
-p {
-  margin: 0 0 var(--space-m) 0;
-}
+  p {
+    margin: 0 0 var(--space-m) 0;
+  }
 
-/* Lists */
-ul,
-ol {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
+  /* Lists */
+  ul,
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
 
-/* Images */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
+  /* Images */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
 
-/* Buttons - Reset default styles */
-button {
-  font-family: var(--font-family-base);
-  cursor: pointer;
-}
+  /* Buttons - Reset default styles */
+  button {
+    font-family: var(--font-family-base);
+    cursor: pointer;
+  }
 
-button:disabled {
-  cursor: not-allowed;
-}
+  button:disabled {
+    cursor: not-allowed;
+  }
 
-/* Form Elements */
-input,
-select,
-textarea {
-  font-family: var(--font-family-base);
+  /* Form Elements */
+  input,
+  select,
+  textarea {
+    font-family: var(--font-family-base);
+  }
+
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* Focus Outline */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
 }
 
 /* iOS Safari: input/textarea/select focus 시 자동 확대(zoom) 방지
- * - iOS는 폰트가 16px 미만이면 포커스 시 자동 줌을 강제함
- * - 다른 해법(최대확대 제한 viewport)은 접근성/사용성 영향이 커서 지양
+ * - !important 사용하므로 layer 밖에 유지 (!important는 layer 무관하게 동작)
  */
 @supports (-webkit-touch-callout: none) {
   input,
@@ -112,16 +134,6 @@ textarea {
   textarea {
     font-size: 16px !important;
   }
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
 }
 
 /* Selection */
@@ -152,12 +164,6 @@ input[type="number"] {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-secondary);
-}
-
-/* Focus Outline */
-*:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
 }
 
 /* ========== ClubSelector 공통 컨테이너 ========== */

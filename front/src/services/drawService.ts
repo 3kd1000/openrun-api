@@ -26,6 +26,8 @@ export interface ManualGame {
   roundNo: number;
   teamAUserIds: number[];  // Team A 선수 ID [player1, player2]
   teamBUserIds: number[];  // Team B 선수 ID [player1, player2]
+  teamAGuestNames?: string[];  // Team A 게스트 이름
+  teamBGuestNames?: string[];  // Team B 게스트 이름
 }
 
 export interface CreateDrawRequest {
@@ -45,6 +47,10 @@ export interface CreateDrawRequestWithIds {
   groupBUserIds?: number[];
   numberOfTotalPlayer: number;
   manualGames?: ManualGame[];  // MANUAL 타입인 경우 수동 대진 정보
+  guestNames?: string[];  // 게스트 참가자 이름 목록
+  groupAGuestNames?: string[];  // AB 타입: 그룹A 게스트 이름 목록
+  groupBGuestNames?: string[];  // AB 타입: 그룹B 게스트 이름 목록
+  seedGuestNames?: string[];  // SEED 타입: 시드 게스트 이름 목록
 }
 
 export interface UpdateMatchRequest {

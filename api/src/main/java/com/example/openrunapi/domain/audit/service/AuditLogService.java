@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
@@ -57,9 +58,9 @@ public class AuditLogService {
     }
 
     /**
-     * Schedule 수정 로그
+     * Schedule 수정 로그 (별도 트랜잭션으로 실행 - 실패 시 부모 트랜잭션에 영향 없음)
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logScheduleUpdate(Long userId, ScheduleAuditSnapshot before, Schedule afterSchedule) {
         ScheduleAuditSnapshot after = ScheduleAuditSnapshot.from(afterSchedule);
         String changes = buildChangesJson(before, after);
@@ -297,6 +298,41 @@ public class AuditLogService {
 
         saveAuditLog(userId, AuditEntityType.CLUB_NOTICE, notice.getId(),
                 AuditActionType.DELETE, changes, notice.getClub().getId());
+    }
+
+    // === ClubLogo Audit ===
+
+    /**
+     * 클럽 로고 업로드 로그 (ADMIN 이상 수행)
+     */
+    @Transactional
+    public void logClubLogoUpload(Long userId, Long clubId, String beforeLogoUrl, String afterLogoUrl) {
+        Map<String, Object> changes = new HashMap<>();
+        changes.put("before", Map.of("logoUrl", beforeLogoUrl != null ? beforeLogoUrl : ""));
+        changes.put("after", Map.of("logoUrl", afterLogoUrl != null ? afterLogoUrl : ""));
+        try {
+            String changesJson = objectMapper.writeValueAsString(changes);
+            saveAuditLog(userId, AuditEntityType.CLUB_LOGO, clubId,
+                    AuditActionType.UPDATE, changesJson, clubId);
+        } catch (Exception e) {
+            log.error("클럽 로고 업로드 audit log 저장 실패: clubId={}, error={}", clubId, e.getMessage());
+        }
+    }
+
+    /**
+     * 클럽 로고 삭제 로그
+     */
+    @Transactional
+    public void logClubLogoDelete(Long userId, Long clubId, String deletedLogoUrl) {
+        Map<String, Object> changes = new HashMap<>();
+        changes.put("before", Map.of("logoUrl", deletedLogoUrl != null ? deletedLogoUrl : ""));
+        try {
+            String changesJson = objectMapper.writeValueAsString(changes);
+            saveAuditLog(userId, AuditEntityType.CLUB_LOGO, clubId,
+                    AuditActionType.DELETE, changesJson, clubId);
+        } catch (Exception e) {
+            log.error("클럽 로고 삭제 audit log 저장 실패: clubId={}, error={}", clubId, e.getMessage());
+        }
     }
 
     // === Private Helper Methods ===

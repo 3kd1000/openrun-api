@@ -10,10 +10,15 @@ import { postService } from "../../../services/postService";
 import { commentService } from "../../../services/commentService";
 import type { Schedule, MatchType } from "../../../types/schedule";
 import type { Post, Comment } from "../../../types/post";
-import { ArrowLeftIcon, LinkIcon } from "../../../components/common/Icons";
+import {
+  MapPinIcon,
+  CalendarIcon,
+} from "../../../components/common/Icons";
+import { Link2, Users } from "lucide-react";
+import BackButton from "../../../components/common/BackButton";
+import { Button } from "@/components/ui/button";
 import { useToast } from "../../../contexts/ToastContext";
 import { getOpenRunSession } from "../../../utils/openrunSession";
-import "./GuestRecruitPage.css";
 
 const getMatchTypeLabel = (matchType: MatchType | undefined): string => {
   switch (matchType) {
@@ -60,7 +65,6 @@ const GuestRecruitPage: React.FC = () => {
   const isApplied = myReq?.status === "PENDING" || myReq?.status === "APPROVED";
 
   const sanitizeInquiryText = (text: string) => {
-    // 과거 데이터 호환: "[게스트 모집] (바로가기: ...)" 라인이 있으면 제거
     return text
       .replace(/^\[게스트 모집\]\s*\(바로가기:.*\)\s*\n?/m, "[게스트 모집]\n")
       .trim();
@@ -72,7 +76,6 @@ const GuestRecruitPage: React.FC = () => {
       await navigator.clipboard.writeText(url);
       showToast("링크가 복사되었습니다", "success");
     } catch {
-      // fallback
       const ta = document.createElement("textarea");
       ta.value = url;
       document.body.appendChild(ta);
@@ -100,6 +103,13 @@ const GuestRecruitPage: React.FC = () => {
     if (myReq.status === "CANCELLED") return "neutral";
     return "neutral";
   }, [myReq]);
+
+  const statusToneClass = {
+    neutral: "text-muted-foreground",
+    pending: "text-yellow-700",
+    success: "text-green-700",
+    danger: "text-red-700",
+  }[statusTone];
 
   const load = async () => {
     if (!Number.isFinite(cid) || !Number.isFinite(sid)) {
@@ -235,143 +245,171 @@ const GuestRecruitPage: React.FC = () => {
     }
   };
 
+  const outlineBtnClass =
+    "w-full border-[1.5px] border-primary rounded-xl py-3.5 text-base font-bold bg-transparent text-primary cursor-pointer transition-all hover:bg-primary/5 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:border-muted-foreground disabled:text-muted-foreground";
+
   if (loading) {
     return (
-      <div className="guest-recruit-page">
-        <div className="guest-recruit-page__loading">로딩 중...</div>
+      <div className="page-container p-4">
+        <div className="py-6 text-muted-foreground text-center">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="guest-recruit-page">
-      <div className="guest-recruit-page__header">
-        <button className="guest-recruit-page__back-btn" onClick={handleBack}>
-          <ArrowLeftIcon size={20} />
-        </button>
-        <h1 className="guest-recruit-page__title">게스트 모집</h1>
-        <button
-          className="guest-recruit-page__link-btn"
+    <div className="page-container">
+      {/* 헤더 */}
+      <div className="relative flex items-center justify-between py-2 mb-3">
+        <BackButton onClick={handleBack} />
+        <span className="absolute left-1/2 -translate-x-1/2 text-sm font-bold text-foreground pointer-events-none">
+          게스트 모집
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
           onClick={handleCopyLink}
-          type="button"
-          aria-label="링크 복사"
-          title="링크 복사"
         >
-          <LinkIcon size={18} />
-          <span>링크복사</span>
-        </button>
+          <Link2 size={14} className="mr-1" />
+          링크복사
+        </Button>
       </div>
 
-      {error && <div className="guest-recruit-page__error">{error}</div>}
+      {/* 에러 */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
+      {/* 히어로 카드 */}
       {schedule && (
-        <div className="guest-recruit-page__card">
-          <div className="guest-recruit-page__info-list">
-            {/* 클럽명 */}
-            <div className="guest-recruit-page__info-item">
-              <span className="guest-recruit-page__info-label">클럽명</span>
+        <div className="rounded-2xl overflow-hidden border border-border bg-white">
+          {/* 에메랄드 배너 */}
+          <div className="bg-primary px-6 pt-6 pb-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-xl font-bold text-white leading-tight break-words flex-1 min-w-0">
+                {schedule.clubName ?? "클럽"}
+              </h2>
               <button
                 type="button"
-                className="guest-recruit-page__info-value guest-recruit-page__club-link"
-                onClick={() => navigate(`/clubs/${cid}/recruiting`, { state: { from: "guest-recruit" } })}
+                className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/20 text-sm text-white font-medium cursor-pointer transition-colors hover:bg-white/30 border-none"
+                onClick={() =>
+                  navigate(`/clubs/${cid}/recruiting`, {
+                    state: { from: "guest-recruit" },
+                  })
+                }
               >
-                <span>{schedule.clubName ?? "-"}</span>
-                <span className="guest-recruit-page__club-link-indicator">클럽 보기 &gt;</span>
+                클럽 보기 &gt;
               </button>
             </div>
-
-            {/* 일정 */}
-            <div className="guest-recruit-page__info-item">
-              <span className="guest-recruit-page__info-label">일정</span>
-              <span className="guest-recruit-page__info-value">
-                {formatScheduleDateTime(schedule.scheduledAt, schedule.durationMinutes)}
+            <div className="flex items-center gap-4 mt-3 flex-wrap">
+              {schedule.courtName && (
+                <span className="inline-flex items-center gap-1 text-sm text-white/85">
+                  <MapPinIcon size={14} color="currentColor" />
+                  {schedule.courtName}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 text-sm text-white/85">
+                <CalendarIcon size={14} color="currentColor" />
+                {formatScheduleDateTime(
+                  schedule.scheduledAt,
+                  schedule.durationMinutes
+                )}
               </span>
             </div>
+          </div>
 
-            {/* 장소 */}
-            <div className="guest-recruit-page__info-item">
-              <span className="guest-recruit-page__info-label">장소</span>
-              <span className="guest-recruit-page__info-value">
-                {schedule.courtName}
+          {/* 통계 그리드 */}
+          <div className="grid grid-cols-3 border-b border-border">
+            <div className="flex flex-col items-center py-4 border-r border-border">
+              <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                <Users size={14} />
+                <span className="text-xs">현재/정원</span>
+              </div>
+              <span className="text-lg font-bold text-foreground">
+                {schedule.currentParticipants}/{schedule.maxCapacity}명
               </span>
             </div>
-
-            {/* 비용 · 현재/정원 (한 줄) */}
-            <div className="guest-recruit-page__info-row">
-              <div className="guest-recruit-page__info-item guest-recruit-page__info-item--half">
-                <span className="guest-recruit-page__info-label">비용</span>
-                <span className="guest-recruit-page__info-value">
-                  {schedule.cost != null ? `${schedule.cost.toLocaleString()}원` : "-"}
-                </span>
-              </div>
-              <div className="guest-recruit-page__info-item guest-recruit-page__info-item--half">
-                <span className="guest-recruit-page__info-label">현재/정원</span>
-                <span className="guest-recruit-page__info-value guest-recruit-page__info-value--highlight">
-                  {schedule.currentParticipants}/{schedule.maxCapacity}명
-                </span>
-              </div>
+            <div className="flex flex-col items-center py-4 border-r border-border">
+              <span className="text-xs text-muted-foreground mb-1">비용</span>
+              <span className="text-lg font-bold text-foreground">
+                {schedule.cost != null
+                  ? `${schedule.cost.toLocaleString()}원`
+                  : "-"}
+              </span>
             </div>
-
-            {/* 모임타입 (선택안함/NONE이면 숨김) */}
             {schedule.matchType && schedule.matchType !== "NONE" && (
-              <div className="guest-recruit-page__info-item">
-                <span className="guest-recruit-page__info-label">모임타입</span>
-                <span className="guest-recruit-page__info-value">
+              <div className="flex flex-col items-center py-4">
+                <span className="text-xs text-muted-foreground mb-1">
+                  모임타입
+                </span>
+                <span className="text-lg font-bold text-foreground">
                   {getMatchTypeLabel(schedule.matchType)}
                 </span>
               </div>
             )}
-
-            {/* 모집 안내 */}
-            {schedule.guestRecruitNote && (
-              <div className="guest-recruit-page__info-item guest-recruit-page__info-item--block">
-                <span className="guest-recruit-page__info-label">모집 안내</span>
-                <div className="guest-recruit-page__recruit-content">
-                  {schedule.guestRecruitNote}
-                </div>
+            {(!schedule.matchType || schedule.matchType === "NONE") && (
+              <div className="flex flex-col items-center py-4">
+                <span className="text-xs text-muted-foreground mb-1">
+                  모임타입
+                </span>
+                <span className="text-lg font-bold text-muted-foreground">
+                  -
+                </span>
               </div>
+            )}
+          </div>
+
+          {/* 신청 상태 + CTA */}
+          <div className="px-6 py-5">
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <span className="text-sm text-muted-foreground">신청상태</span>
+              <span
+                className={`text-sm font-bold whitespace-nowrap ${statusToneClass}`}
+              >
+                {statusLabel}
+              </span>
+            </div>
+            {!isApplied ? (
+              <button
+                className="w-full rounded-xl py-3.5 text-base font-bold bg-primary text-white cursor-pointer transition-all hover:bg-primary/90 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleApply}
+                disabled={actionLoading}
+                type="button"
+              >
+                신청하기
+              </button>
+            ) : (
+              <button
+                className="w-full rounded-xl py-3.5 text-base font-bold cursor-pointer transition-all border-[1.5px] border-red-500 bg-transparent text-red-600 hover:bg-red-50 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleCancel}
+                disabled={actionLoading}
+                type="button"
+              >
+                신청취소
+              </button>
             )}
           </div>
         </div>
       )}
 
-      <div className="guest-recruit-page__apply">
-        <div className="guest-recruit-page__status-row">
-          <div className="guest-recruit-page__status-label">신청상태</div>
-          <div
-            className={`guest-recruit-page__status-value tone-${statusTone}`}
-          >
-            {statusLabel}
+      {/* 모집 안내 */}
+      {schedule?.guestRecruitNote && (
+        <div className="border border-border rounded-2xl bg-white p-6 mt-4">
+          <div className="text-sm font-bold text-primary mb-3">모집 안내</div>
+          <div className="w-full p-4 bg-sky-50 border border-sky-200 rounded-lg text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+            {schedule.guestRecruitNote}
           </div>
         </div>
-        <div className="guest-recruit-page__apply-actions">
-          {!isApplied ? (
-            <button
-              className="guest-recruit-page__primary"
-              onClick={handleApply}
-              disabled={actionLoading}
-              type="button"
-            >
-              신청하기
-            </button>
-          ) : (
-            <button
-              className="guest-recruit-page__danger"
-              onClick={handleCancel}
-              disabled={actionLoading}
-              type="button"
-            >
-              신청취소
-            </button>
-          )}
-        </div>
-      </div>
+      )}
 
+      {/* 문의하기 (문의글 없을 때) */}
       {!post && (
-        <div className="guest-recruit-page__section">
-          <div className="guest-recruit-page__section-title">문의하기</div>
+        <div className="border border-border rounded-2xl bg-white p-6 mt-4">
+          <div className="text-sm font-bold mb-3">문의하기</div>
           <textarea
-            className="guest-recruit-page__textarea"
+            className="w-full border-[1.5px] border-muted-foreground/30 bg-white rounded-xl p-3 text-sm font-[inherit] min-h-[96px] resize-y mb-3 transition-colors focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
             placeholder={
               "연락 방법/질문/요청사항 등을 자유롭게 작성해주세요.\n문의글은 신청 여부와 무관하게 남길 수 있어요."
             }
@@ -380,9 +418,9 @@ const GuestRecruitPage: React.FC = () => {
             disabled={actionLoading}
           />
           <button
-            className="guest-recruit-page__primary"
+            className={outlineBtnClass}
             onClick={handleCreateInquiry}
-            disabled={actionLoading}
+            disabled={actionLoading || !inquiryContent.trim()}
             type="button"
           >
             문의하기
@@ -390,50 +428,53 @@ const GuestRecruitPage: React.FC = () => {
         </div>
       )}
 
+      {/* 대화 스레드 */}
       {post && (
-        <div className="guest-recruit-page__section">
-          <div className="guest-recruit-page__section-title">대화</div>
-          <div className="guest-recruit-page__thread">
-            <div className="guest-recruit-page__post">
-              <div className="guest-recruit-page__post-content">
+        <div className="border border-border rounded-2xl bg-white p-6 mt-4">
+          <div className="text-sm font-bold mb-3">대화</div>
+          <div className="flex flex-col gap-3">
+            {/* 원본 게시글 */}
+            <div className="border border-border bg-white rounded-xl p-3">
+              <div className="text-sm whitespace-pre-wrap">
                 {sanitizeInquiryText(post.content)}
               </div>
-              <div className="guest-recruit-page__post-meta">
+              <div className="mt-1.5 text-xs text-muted-foreground">
                 {post.author?.name ?? post.guestName ?? "익명"} ·{" "}
                 {new Date(post.createdAt).toLocaleString()}
               </div>
             </div>
 
-            <div className="guest-recruit-page__comments">
-              {comments.length === 0 ? (
-                <div className="guest-recruit-page__hint">
-                  아직 댓글이 없습니다.
-                </div>
-              ) : (
-                comments.map((c) => (
-                  <div key={c.id} className="guest-recruit-page__comment">
-                    <div className="guest-recruit-page__comment-content">
-                      {c.content}
-                    </div>
-                    <div className="guest-recruit-page__comment-meta">
-                      {c.author?.name ?? "익명"} ·{" "}
-                      {new Date(c.createdAt).toLocaleString()}
-                    </div>
+            {/* 댓글 목록 */}
+            {comments.length === 0 ? (
+              <div className="text-xs text-muted-foreground text-center py-2">
+                아직 댓글이 없습니다.
+              </div>
+            ) : (
+              comments.map((c) => (
+                <div
+                  key={c.id}
+                  className="border border-border bg-white rounded-xl p-3"
+                >
+                  <div className="text-sm whitespace-pre-wrap">{c.content}</div>
+                  <div className="mt-1.5 text-xs text-muted-foreground">
+                    {c.author?.name ?? "익명"} ·{" "}
+                    {new Date(c.createdAt).toLocaleString()}
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+              ))
+            )}
 
-            <div className="guest-recruit-page__comment-box">
+            {/* 댓글 입력 */}
+            <div className="mt-1">
               <textarea
-                className="guest-recruit-page__textarea"
+                className="w-full border-[1.5px] border-muted-foreground/30 bg-white rounded-xl p-3 text-sm font-[inherit] min-h-[72px] resize-y mb-3 transition-colors focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
                 placeholder="댓글을 입력하세요"
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
                 disabled={actionLoading}
               />
               <button
-                className="guest-recruit-page__primary"
+                className={outlineBtnClass}
                 onClick={handleCreateComment}
                 disabled={actionLoading || !commentContent.trim()}
                 type="button"

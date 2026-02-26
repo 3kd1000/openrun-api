@@ -6,7 +6,23 @@ import {
   buildFrontendRoute,
   getFrontendLinkLabel,
 } from "../utils/frontendLinkUtils";
-import "./AuditLogDetailModal.css";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface Props {
   log: AuditLogResponse;
@@ -31,11 +47,8 @@ function AuditLogDetailModal({ log, onClose }: Props) {
     if (log.entityType !== "SCHEDULE" && log.entityType !== "SCHEDULE_PARTICIPANT") {
       return null;
     }
-
     if (!log.scheduledAt && !log.courtName) return null;
-
     return {
-      // "26년 2월 15일(일) 18-20시" 형식 (front와 동일)
       scheduledAt: log.scheduledAt
         ? formatScheduleDateTime(log.scheduledAt, log.durationMinutes ?? 120)
         : null,
@@ -54,6 +67,13 @@ function AuditLogDetailModal({ log, onClose }: Props) {
       default:
         return log.actionType;
     }
+  };
+
+  const getActionBadge = () => {
+    if (log.actionType === "CREATE") return <Badge>{getActionLabel()}</Badge>;
+    if (log.actionType === "DELETE")
+      return <Badge variant="destructive">{getActionLabel()}</Badge>;
+    return <Badge variant="secondary">{getActionLabel()}</Badge>;
   };
 
   const allKeys = useMemo(() => {
@@ -78,134 +98,120 @@ function AuditLogDetailModal({ log, onClose }: Props) {
     return JSON.stringify(beforeVal) !== JSON.stringify(afterVal);
   };
 
+  const infoRows = [
+    { label: "ID", value: String(log.id) },
+    { label: "Action", value: getActionBadge() },
+    { label: "Entity", value: `${log.entityType} #${log.entityId}` },
+    { label: "User", value: `${log.userName ?? ""} (ID: ${log.userId})` },
+    { label: "Club", value: `${log.clubName ?? ""} (ID: ${log.clubId})` },
+    { label: "Time", value: formatFullDateTime(log.createdAt) },
+    ...(scheduleInfo?.scheduledAt
+      ? [{ label: "일정", value: scheduleInfo.scheduledAt }]
+      : []),
+    ...(scheduleInfo?.courtName
+      ? [{ label: "코트", value: scheduleInfo.courtName }]
+      : []),
+  ];
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>Audit Log 상세</h3>
-          <button className="modal-close" onClick={onClose}>
-            &times;
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+          <DialogTitle>Audit Log 상세</DialogTitle>
+        </DialogHeader>
 
-        <div className="modal-body">
-          <div className="audit-detail__info">
-            <div className="audit-detail__row">
-              <span className="audit-detail__label">ID:</span>
-              <span>{log.id}</span>
+        <ScrollArea className="flex-1">
+          <div className="px-6 py-4 space-y-6">
+            {/* 기본 정보 */}
+            <div className="grid gap-2">
+              {infoRows.map((row) => (
+                <div key={row.label} className="flex items-start gap-3 text-sm">
+                  <span className="w-16 shrink-0 text-muted-foreground font-medium">
+                    {row.label}
+                  </span>
+                  <span className="break-all">
+                    {typeof row.value === "string" ? row.value : row.value}
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className="audit-detail__row">
-              <span className="audit-detail__label">Action:</span>
-              <span
-                className={`action-badge action-badge--${log.actionType.toLowerCase()}`}
-              >
-                {getActionLabel()}
-              </span>
-            </div>
-            <div className="audit-detail__row">
-              <span className="audit-detail__label">Entity:</span>
-              <span>
-                {log.entityType} #{log.entityId}
-              </span>
-            </div>
-            <div className="audit-detail__row">
-              <span className="audit-detail__label">User:</span>
-              <span>
-                {log.userName} (ID: {log.userId})
-              </span>
-            </div>
-            <div className="audit-detail__row">
-              <span className="audit-detail__label">Club:</span>
-              <span>
-                {log.clubName} (ID: {log.clubId})
-              </span>
-            </div>
-            <div className="audit-detail__row">
-              <span className="audit-detail__label">Time:</span>
-              <span>{formatFullDateTime(log.createdAt)}</span>
-            </div>
-            {/* Schedule 관련 정보 (상단 정보에 포함) */}
-            {scheduleInfo?.scheduledAt && (
-              <div className="audit-detail__row">
-                <span className="audit-detail__label">일정:</span>
-                <span>{scheduleInfo.scheduledAt}</span>
+
+            {/* 프론트엔드 링크 */}
+            {frontendUrl && (
+              <div>
+                <a
+                  href={frontendUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                  🔗 {frontendLinkLabel}
+                </a>
               </div>
             )}
-            {scheduleInfo?.courtName && (
-              <div className="audit-detail__row">
-                <span className="audit-detail__label">코트:</span>
-                <span>{scheduleInfo.courtName}</span>
-              </div>
-            )}
+
+            {/* 변경 내역 */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">변경 내역</h4>
+
+              {log.actionType === "CREATE" && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">생성된 데이터</p>
+                  <pre className="bg-muted rounded-lg p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+                    {JSON.stringify(changes.after, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {log.actionType === "DELETE" && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">삭제된 데이터</p>
+                  <pre className="bg-muted rounded-lg p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+                    {JSON.stringify(changes.before, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {log.actionType === "UPDATE" && (
+                <div className="overflow-x-auto rounded-lg border border-border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>필드</TableHead>
+                        <TableHead>Before</TableHead>
+                        <TableHead>After</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allKeys.map((key) => (
+                        <TableRow
+                          key={key}
+                          className={cn(isChanged(key) && "bg-yellow-50")}
+                        >
+                          <TableCell className="font-mono text-xs font-medium">
+                            {key}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            <pre className="whitespace-pre-wrap break-all font-mono max-w-[200px]">
+                              {formatValue(changes.before?.[key])}
+                            </pre>
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            <pre className="whitespace-pre-wrap break-all font-mono max-w-[200px]">
+                              {formatValue(changes.after?.[key])}
+                            </pre>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
           </div>
-
-          {frontendUrl && (
-            <div className="audit-detail__link-section">
-              <a
-                href={frontendUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="audit-detail__link-btn"
-              >
-                🔗 {frontendLinkLabel}
-              </a>
-            </div>
-          )}
-
-          <h4 className="audit-detail__section-title">변경 내역</h4>
-
-          {log.actionType === "CREATE" && (
-            <div className="audit-detail__single">
-              <h5>생성된 데이터</h5>
-              <pre className="audit-detail__json">
-                {JSON.stringify(changes.after, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          {log.actionType === "DELETE" && (
-            <div className="audit-detail__single">
-              <h5>삭제된 데이터</h5>
-              <pre className="audit-detail__json">
-                {JSON.stringify(changes.before, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          {log.actionType === "UPDATE" && (
-            <div className="audit-detail__comparison">
-              <table className="comparison-table">
-                <thead>
-                  <tr>
-                    <th>필드</th>
-                    <th>Before</th>
-                    <th>After</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allKeys.map((key) => (
-                    <tr
-                      key={key}
-                      className={
-                        isChanged(key) ? "comparison-table__row--changed" : ""
-                      }
-                    >
-                      <td className="comparison-table__key">{key}</td>
-                      <td className="comparison-table__value">
-                        <pre>{formatValue(changes.before?.[key])}</pre>
-                      </td>
-                      <td className="comparison-table__value">
-                        <pre>{formatValue(changes.after?.[key])}</pre>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
   );
 }
 

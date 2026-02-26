@@ -2,7 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axiosInstance from "../../../services/api/axiosInstance";
 import type { Club } from "../../../types/club";
-import { ArrowLeftIcon, LinkIcon } from "../../../components/common/Icons";
+import {
+  MapPinIcon,
+  UsersIcon,
+  CalendarIcon,
+} from "../../../components/common/Icons";
+import { Link2 } from "lucide-react";
+import BackButton from "../../../components/common/BackButton";
+import { Button } from "@/components/ui/button";
 import {
   clubService,
   type ExternalRequestResponse,
@@ -11,13 +18,14 @@ import { postService } from "../../../services/postService";
 import { commentService } from "../../../services/commentService";
 import type { Post, Comment } from "../../../types/post";
 import { getOpenRunSession } from "../../../utils/openrunSession";
+import { useLoginGuard } from "../../../hooks/useLoginGuard";
 import { syncClubList } from "../../../services/api/userApi";
 import { useToast } from "../../../contexts/ToastContext";
-import "./ClubRecruitingPage.css";
 
 const ClubRecruitingPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const requireLogin = useLoginGuard();
   const { clubId } = useParams<{ clubId: string }>();
   const [club, setClub] = useState<Club | null>(null);
   const [joinStatus, setJoinStatus] = useState<
@@ -71,7 +79,7 @@ const ClubRecruitingPage: React.FC = () => {
   }, [clubId, currentUserId]);
 
   const sanitizeJoinInquiryText = (text: string) => {
-    return text.replace(/^\[가입 문의\]\s*\n?/m, "[가입 문의]\n").trim();
+    return text.replace(/^\[가입 문의\]\s*\n?/m, "").trim();
   };
 
   const fetchJoinInquiryThread = useCallback(async () => {
@@ -80,7 +88,10 @@ const ClubRecruitingPage: React.FC = () => {
     try {
       const req = await clubService.getMyJoinRequest(Number(clubId));
       setJoinReq(req);
-      if (req.postId) {
+      if (req && req.status === "PENDING") {
+        setJoinStatus("PENDING");
+      }
+      if (req && req.postId) {
         const p = await postService.getPost(Number(clubId), req.postId);
         setJoinPost(p);
         const cs = await commentService.getComments(Number(clubId), req.postId);
@@ -106,12 +117,7 @@ const ClubRecruitingPage: React.FC = () => {
   }, [clubId, fetchClubDetail, fetchMyMembership, fetchJoinInquiryThread]);
 
   const handleJoinRequest = async () => {
-    if (!currentUserId) {
-      if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-        navigate("/login");
-      }
-      return;
-    }
+    if (!requireLogin()) return;
     if (!confirm("가입 신청하시겠습니까?")) return;
     try {
       const response = await axiosInstance.post<{ autoApproved: boolean; message: string }>(
@@ -139,14 +145,21 @@ const ClubRecruitingPage: React.FC = () => {
     }
   };
 
+  const handleCancelJoinRequest = async () => {
+    if (!clubId) return;
+    if (!confirm("가입 신청을 취소하시겠습니까?")) return;
+    try {
+      await clubService.cancelJoinRequest(Number(clubId));
+      showToast("가입 신청이 취소되었습니다", "success");
+      setJoinStatus("NONE");
+    } catch {
+      showToast("가입 신청 취소에 실패했습니다", "error");
+    }
+  };
+
   const handleCreateJoinInquiry = async () => {
     if (!clubId) return;
-    if (!currentUserId) {
-      if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-        navigate("/login");
-      }
-      return;
-    }
+    if (!requireLogin()) return;
     if (!joinInquiryContent.trim()) return;
     try {
       setActionLoading(true);
@@ -172,12 +185,7 @@ const ClubRecruitingPage: React.FC = () => {
 
   const handleCreateJoinComment = async () => {
     if (!clubId) return;
-    if (!currentUserId) {
-      if (confirm("로그인이 필요합니다. 로그인 페이지로 이동할까요?")) {
-        navigate("/login");
-      }
-      return;
-    }
+    if (!requireLogin()) return;
     if (!joinPost) return;
     if (!joinCommentContent.trim()) return;
     try {
@@ -197,40 +205,43 @@ const ClubRecruitingPage: React.FC = () => {
     }
   };
 
+  // activitySummary 파싱 ("총 X개 일정, Y명 참가")
+  const activityStats = useMemo(() => {
+    if (!club?.activitySummary) return null;
+    const match = club.activitySummary.match(/총\s*(\d+)개\s*일정.*?(\d+)명\s*참가/);
+    if (!match) return null;
+    return { schedules: Number(match[1]), participants: Number(match[2]) };
+  }, [club?.activitySummary]);
+
   if (loading) return <div>Loading...</div>;
   if (!club) return <div>Club not found</div>;
 
+  const outlineBtnClass =
+    "w-full border-[1.5px] border-primary rounded-xl py-3.5 text-base font-bold bg-transparent text-primary cursor-pointer transition-all hover:bg-primary/5 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:border-muted-foreground disabled:text-muted-foreground";
+
   return (
-    <div className="club-recruiting-page">
-      <div className="club-recruiting-page__header">
-        <button
-          className="club-recruiting-page__back-btn"
-          type="button"
+    <div className="page-container">
+      {/* 헤더 */}
+      <div className="relative flex items-center justify-between py-2 mb-3">
+        <BackButton
           onClick={() => {
-            // location.state에서 이전 페이지 정보 확인
             const state = location.state as { fromClubMain?: boolean; from?: string; returnUrl?: string } | null;
             if (state?.returnUrl) {
-              // returnUrl이 있으면 해당 URL로 이동 (검색조건 유지)
               navigate(state.returnUrl);
             } else if (state?.from === "guest-recruit") {
-              // GuestRecruitPage에서 왔으면 뒤로가기
               navigate(-1);
             } else if (state?.fromClubMain) {
               navigate(`/clubs/${clubId}`);
             } else {
-              // 기본: 브라우저 히스토리 뒤로가기 (URL 파라미터 유지)
               navigate(-1);
             }
           }}
-          aria-label="뒤로 가기"
-          title="뒤로 가기"
-        >
-          <ArrowLeftIcon size={20} />
-        </button>
-        <h1 className="club-recruiting-page__title">클럽소개</h1>
-        <button
-          className="club-recruiting-page__link-btn"
-          type="button"
+        />
+        <span className="absolute left-1/2 -translate-x-1/2 text-sm font-bold text-foreground pointer-events-none">클럽 초대</span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
           onClick={async () => {
             const url = `${window.location.origin}/clubs/${clubId}/recruiting`;
             try {
@@ -240,121 +251,130 @@ const ClubRecruitingPage: React.FC = () => {
               prompt("아래 링크를 복사하세요:", url);
             }
           }}
-          aria-label="초대링크 복사"
-          title="초대링크 복사"
         >
-          <LinkIcon size={20} />
-          <span>초대링크복사</span>
-        </button>
+          <Link2 size={14} className="mr-1" />
+          링크복사
+        </Button>
       </div>
 
-      <div className="club-recruiting-page__card">
-        <div className="club-recruiting-page__info-list">
-          {/* 클럽명 */}
-          <div className="club-recruiting-page__info-item">
-            <span className="club-recruiting-page__info-label">클럽명</span>
-            <span className="club-recruiting-page__info-value">
+      {/* 클럽 히어로 카드 */}
+      <div className="rounded-2xl overflow-hidden border border-border bg-white">
+        {/* 에메랄드 배너 */}
+        <div className="bg-primary px-6 pt-6 pb-5">
+          <div className="flex items-center gap-4 mb-2">
+            {club.logoUrl ? (
+              <img
+                src={club.logoUrl}
+                alt={`${club.name} 로고`}
+                className="w-16 h-16 rounded-xl object-cover shrink-0 border-2 border-white/30"
+              />
+            ) : null}
+            <h2 className="text-xl font-bold text-white leading-tight break-words">
               {club.name}
-            </span>
+            </h2>
           </div>
-
-          {/* 클럽소개 */}
-          <div className="club-recruiting-page__info-item">
-            <span className="club-recruiting-page__info-label">클럽소개</span>
-            <span className={`club-recruiting-page__info-value ${!club.description ? "club-recruiting-page__info-value--muted" : ""}`}>
-              {club.description || "-"}
-            </span>
-          </div>
-
-          {/* 활동지역 */}
-          <div className="club-recruiting-page__info-item">
-            <span className="club-recruiting-page__info-label">활동지역</span>
-            <span className={`club-recruiting-page__info-value ${!club.region ? "club-recruiting-page__info-value--muted" : ""}`}>
-              {club.region || "-"}
-            </span>
-          </div>
-
-          {/* 멤버 수 */}
-          <div className="club-recruiting-page__info-item">
-            <span className="club-recruiting-page__info-label">멤버 수</span>
-            <span className="club-recruiting-page__info-value">
+          <div className="flex items-center gap-4">
+            {club.region && (
+              <span className="inline-flex items-center gap-1 text-sm text-white/85">
+                <MapPinIcon size={14} color="currentColor" />
+                {club.region}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 text-sm text-white/85">
+              <UsersIcon size={14} color="currentColor" />
               {club.memberCount ?? 0}명
             </span>
           </div>
-
-          {/* 활동 현황 */}
-          {club.activitySummary && (
-            <div className="club-recruiting-page__info-item">
-              <span className="club-recruiting-page__info-label">활동 현황</span>
-              <span className="club-recruiting-page__info-value club-recruiting-page__info-value--highlight">
-                {club.activitySummary}
-              </span>
-            </div>
-          )}
-
-          {/* 모집 안내글 */}
-          {club.memberRecruitmentOpen && club.memberRecruitmentNote && (
-            <div className="club-recruiting-page__info-item club-recruiting-page__info-item--block">
-              <span className="club-recruiting-page__info-label">모집 안내</span>
-              <div className="club-recruiting-page__recruit-content">
-                {club.memberRecruitmentNote}
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="club-recruiting-page__divider" />
+        {/* 활동 통계 */}
+        {activityStats && (
+          <div className="grid grid-cols-2 border-b border-border">
+            <div className="flex flex-col items-center py-4 border-r border-border">
+              <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                <CalendarIcon size={14} />
+                <span className="text-xs">총 일정</span>
+              </div>
+              <span className="text-lg font-bold text-foreground">
+                {activityStats.schedules}개
+              </span>
+            </div>
+            <div className="flex flex-col items-center py-4">
+              <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                <UsersIcon size={14} />
+                <span className="text-xs">총 참가</span>
+              </div>
+              <span className="text-lg font-bold text-foreground">
+                {activityStats.participants}명
+              </span>
+            </div>
+          </div>
+        )}
 
-        <div className="club-recruiting-page__actions">
+        {/* 가입 신청 */}
+        <div className="px-6 py-5">
           {joinStatus === "ACTIVE" && (
-            <button
-              className="club-recruiting-page__join-btn"
-              disabled
-              type="button"
-            >
+            <button className={outlineBtnClass} disabled type="button">
               이미 가입된 클럽입니다.
             </button>
           )}
           {joinStatus === "PENDING" && (
             <button
-              className="club-recruiting-page__join-btn"
-              disabled
+              className={outlineBtnClass}
+              onClick={handleCancelJoinRequest}
               type="button"
             >
-              가입 대기중
+              가입 대기중 · 신청 취소
             </button>
           )}
           {joinStatus === "NONE" && (
             <button
-              className="club-recruiting-page__join-btn"
+              className="w-full rounded-xl py-3.5 text-base font-bold bg-primary text-white cursor-pointer transition-all hover:bg-primary/90 hover:-translate-y-px"
               onClick={handleJoinRequest}
               type="button"
             >
               가입 신청
             </button>
           )}
-
-          <div className="club-recruiting-page__hint">
-            가입 문의는 운영진이 확인 후 댓글로 답변합니다.
-          </div>
         </div>
       </div>
 
-      <div className="club-recruiting-page__card club-recruiting-page__card--thread">
+      {/* 클럽 소개 */}
+      <div className="border border-border rounded-2xl bg-white p-6 mt-4">
+        <div className="text-sm font-bold mb-3">클럽 소개</div>
+        {club.description ? (
+          <p className="text-sm text-foreground leading-relaxed break-words whitespace-pre-wrap">
+            {club.description}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">아직 클럽 소개가 등록되지 않았습니다.</p>
+        )}
+      </div>
+
+      {/* 모집 안내 */}
+      {club.memberRecruitmentOpen && club.memberRecruitmentNote && (
+        <div className="border border-border rounded-2xl bg-white p-6 mt-4">
+          <div className="text-sm font-bold text-primary mb-3">모집 안내</div>
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+            {club.memberRecruitmentNote}
+          </p>
+        </div>
+      )}
+
+      {/* 가입 문의 섹션 */}
+      <div className="border border-border rounded-2xl bg-white p-6 mt-4">
         {!joinPost ? (
-          <div className="club-recruiting-page__section">
-            <div className="club-recruiting-page__section-title">가입 문의</div>
+          <div>
+            <div className="text-sm font-bold mb-3">가입 문의</div>
             <textarea
-              className="club-recruiting-page__textarea"
-              placeholder={
-                "가입 조건/분위기/참가 방식 등 궁금한 점을 자유롭게 작성해주세요."
-              }
+              className="w-full border-[1.5px] border-muted-foreground/30 bg-white rounded-xl p-3 text-sm font-[inherit] min-h-[96px] resize-y mb-3 transition-colors focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
+              placeholder="가입 조건/분위기/참가 방식 등 궁금한 점을 자유롭게 작성해주세요."
               value={joinInquiryContent}
               onChange={(e) => setJoinInquiryContent(e.target.value)}
               disabled={actionLoading}
             />
             <button
-              className="club-recruiting-page__primary"
+              className={outlineBtnClass}
               onClick={handleCreateJoinInquiry}
               disabled={actionLoading || !joinInquiryContent.trim()}
               type="button"
@@ -363,30 +383,26 @@ const ClubRecruitingPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="club-recruiting-page__section">
-            <div className="club-recruiting-page__section-title">대화</div>
-            <div className="club-recruiting-page__post">
-              <div className="club-recruiting-page__post-content">
-                {sanitizeJoinInquiryText(joinPost.content)}
-              </div>
-              <div className="club-recruiting-page__post-meta">
+          <div>
+            <div className="text-sm font-bold mb-3">대화</div>
+            <div className="border border-border bg-white rounded-xl p-3 mb-3">
+              <div className="text-sm">{sanitizeJoinInquiryText(joinPost.content)}</div>
+              <div className="mt-1.5 text-xs text-muted-foreground">
                 {joinPost.author?.name ?? joinPost.guestName ?? "익명"} ·{" "}
                 {new Date(joinPost.createdAt).toLocaleString()}
               </div>
             </div>
 
-            <div className="club-recruiting-page__comments">
+            <div>
               {joinComments.length === 0 ? (
-                <div className="club-recruiting-page__hint">
+                <div className="text-xs text-muted-foreground leading-snug text-center py-2">
                   아직 댓글이 없습니다.
                 </div>
               ) : (
                 joinComments.map((c) => (
-                  <div key={c.id} className="club-recruiting-page__comment">
-                    <div className="club-recruiting-page__comment-content">
-                      {c.content}
-                    </div>
-                    <div className="club-recruiting-page__comment-meta">
+                  <div key={c.id} className="border border-border bg-white rounded-xl p-3 mb-3">
+                    <div className="text-sm">{c.content}</div>
+                    <div className="mt-1.5 text-xs text-muted-foreground">
                       {c.author?.name ?? "익명"} ·{" "}
                       {new Date(c.createdAt).toLocaleString()}
                     </div>
@@ -395,16 +411,16 @@ const ClubRecruitingPage: React.FC = () => {
               )}
             </div>
 
-            <div className="club-recruiting-page__comment-box">
+            <div className="mt-4">
               <textarea
-                className="club-recruiting-page__textarea club-recruiting-page__textarea--comment"
+                className="w-full border-[1.5px] border-muted-foreground/30 bg-white rounded-xl p-3 text-sm font-[inherit] min-h-[72px] resize-y mb-3 transition-colors focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
                 placeholder="댓글을 입력하세요"
                 value={joinCommentContent}
                 onChange={(e) => setJoinCommentContent(e.target.value)}
                 disabled={actionLoading}
               />
               <button
-                className="club-recruiting-page__primary"
+                className={outlineBtnClass}
                 onClick={handleCreateJoinComment}
                 disabled={actionLoading || !joinCommentContent.trim()}
                 type="button"

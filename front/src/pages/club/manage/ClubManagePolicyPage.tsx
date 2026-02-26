@@ -6,7 +6,6 @@ import type { Club, UpdateClubPolicyRequest } from "../../../types/club";
 import { ArrowLeftIcon } from "../../../components/common/Icons";
 import { FEATURE_FLAGS } from "../../../config/featureFlags";
 import { useToast } from "../../../contexts/ToastContext";
-import "./ClubManagePolicyPage.css";
 
 const ClubManagePolicyPage: React.FC = () => {
   const navigate = useNavigate();
@@ -64,104 +63,153 @@ const ClubManagePolicyPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="club-manage-policy-page">
-        <div className="club-manage-policy-page__loading">로딩 중...</div>
+      <div className="page-container px-3 py-2 min-h-screen">
+        <div className="text-center py-10 text-gray-400">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="club-manage-policy-page">
-      <div className="club-manage-policy-page__header">
+    <div className="page-container px-3 py-2 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between py-2 mb-3">
         <button
-          className="club-manage-policy-page__back-btn"
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
           onClick={handleBack}
         >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-manage-policy-page__title">운영 정책</h1>
-        <div className="club-manage-policy-page__header-spacer" />
+        <span className="flex-1 text-center text-sm font-bold text-foreground">운영 정책</span>
+        <div className="w-9 h-9" />
       </div>
 
-      <div className="club-manage-policy-page__hint">
+      {/* Hint */}
+      <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mb-3">
         클럽의 운영 정책을 설정합니다.
       </div>
 
-      {error && <div className="club-manage-policy-page__error">{error}</div>}
+      {/* Error */}
+      {error && (
+        <div className="px-3 py-2 mb-3 border border-red-400 bg-red-50 text-red-500 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
-      <div className="club-manage-policy-page__section">
+      {/* Section Card */}
+      <div className="bg-white border border-border rounded-xl p-4">
         {/* 자동 가입 승인 */}
-        <div className="club-manage-policy-page__toggle-row">
-          <div className="club-manage-policy-page__toggle-label">
-            <span className="club-manage-policy-page__toggle-title">자동 가입 승인</span>
-            <span className="club-manage-policy-page__toggle-desc">활성화 시 가입 신청이 자동으로 승인됩니다</span>
+        <div className="flex items-center justify-between py-2">
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+            <span className="text-sm font-semibold text-gray-900">자동 가입 승인</span>
+            <span className="text-xs text-gray-400 leading-snug">활성화 시 가입 신청이 자동으로 승인됩니다</span>
           </div>
           <button
             type="button"
-            className={`club-manage-policy-page__toggle ${policy.autoJoinEnabled ? "active" : ""}`}
             onClick={() => setPolicy((p) => ({ ...p, autoJoinEnabled: !p.autoJoinEnabled }))}
             disabled={saving}
             aria-label="자동 가입 승인 토글"
+            className={[
+              "relative w-[52px] h-8 rounded-full border-none cursor-pointer transition-colors duration-300 flex-shrink-0 ml-3",
+              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              policy.autoJoinEnabled
+                ? "bg-gradient-to-br from-[#4CAF50] to-[#45a049]"
+                : "bg-gray-300 hover:bg-gray-400",
+            ].join(" ")}
           >
-            <span className="club-manage-policy-page__toggle-slider" />
+            <span
+              className={[
+                "absolute top-0.5 left-0.5 w-7 h-7 bg-white rounded-full shadow-md transition-transform duration-300",
+                policy.autoJoinEnabled ? "translate-x-5" : "translate-x-0",
+              ].join(" ")}
+            />
           </button>
         </div>
 
         {FEATURE_FLAGS.INTERCLUB_ENABLED && (
           <>
-            <div className="club-manage-policy-page__divider" />
+            <div className="h-px bg-border my-4" />
 
             {/* 교류전 모집 */}
-            <div className="club-manage-policy-page__toggle-row">
-              <div className="club-manage-policy-page__toggle-label">
-                <span className="club-manage-policy-page__toggle-title">교류전 모집</span>
-                <span className="club-manage-policy-page__toggle-desc">활성화 시 다른 클럽에서 교류전 신청 가능</span>
+            <div className="flex items-center justify-between py-2">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <span className="text-sm font-semibold text-gray-900">교류전 모집</span>
+                <span className="text-xs text-gray-400 leading-snug">활성화 시 다른 클럽에서 교류전 신청 가능</span>
               </div>
               <button
                 type="button"
-                className={`club-manage-policy-page__toggle ${policy.interclubRecruitmentOpen ? "active" : ""}`}
                 onClick={() => setPolicy((p) => ({ ...p, interclubRecruitmentOpen: !p.interclubRecruitmentOpen }))}
                 disabled={saving}
                 aria-label="교류전 모집 토글"
+                className={[
+                  "relative w-[52px] h-8 rounded-full border-none cursor-pointer transition-colors duration-300 flex-shrink-0 ml-3",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  policy.interclubRecruitmentOpen
+                    ? "bg-gradient-to-br from-[#4CAF50] to-[#45a049]"
+                    : "bg-gray-300 hover:bg-gray-400",
+                ].join(" ")}
               >
-                <span className="club-manage-policy-page__toggle-slider" />
+                <span
+                  className={[
+                    "absolute top-0.5 left-0.5 w-7 h-7 bg-white rounded-full shadow-md transition-transform duration-300",
+                    policy.interclubRecruitmentOpen ? "translate-x-5" : "translate-x-0",
+                  ].join(" ")}
+                />
               </button>
             </div>
           </>
         )}
 
-        <div className="club-manage-policy-page__divider" />
+        <div className="h-px bg-border my-4" />
 
         {/* 신규회원 모집 */}
-        <div className="club-manage-policy-page__toggle-row">
-          <div className="club-manage-policy-page__toggle-label">
-            <span className="club-manage-policy-page__toggle-title">신규회원 모집</span>
-            <span className="club-manage-policy-page__toggle-desc">활성화 시 클럽 상세에서 가입 신청 가능</span>
+        <div className="flex items-center justify-between py-2">
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+            <span className="text-sm font-semibold text-gray-900">신규회원 모집</span>
+            <span className="text-xs text-gray-400 leading-snug">활성화 시 클럽 상세에서 가입 신청 가능</span>
           </div>
           <button
             type="button"
-            className={`club-manage-policy-page__toggle ${policy.memberRecruitmentOpen ? "active" : ""}`}
             onClick={() => setPolicy((p) => ({ ...p, memberRecruitmentOpen: !p.memberRecruitmentOpen }))}
             disabled={saving}
             aria-label="신규회원 모집 토글"
+            className={[
+              "relative w-[52px] h-8 rounded-full border-none cursor-pointer transition-colors duration-300 flex-shrink-0 ml-3",
+              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              policy.memberRecruitmentOpen
+                ? "bg-gradient-to-br from-[#4CAF50] to-[#45a049]"
+                : "bg-gray-300 hover:bg-gray-400",
+            ].join(" ")}
           >
-            <span className="club-manage-policy-page__toggle-slider" />
+            <span
+              className={[
+                "absolute top-0.5 left-0.5 w-7 h-7 bg-white rounded-full shadow-md transition-transform duration-300",
+                policy.memberRecruitmentOpen ? "translate-x-5" : "translate-x-0",
+              ].join(" ")}
+            />
           </button>
         </div>
 
         {policy.memberRecruitmentOpen && (
           <>
-            <div className="club-manage-policy-page__divider" />
+            <div className="h-px bg-border my-4" />
 
-            <div className="club-manage-policy-page__row">
-              <div className="club-manage-policy-page__row-title">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-semibold text-gray-900">
                 신규회원 모집 안내문
               </div>
-              <div className="club-manage-policy-page__row-desc">
+              <div className="text-xs text-gray-400">
                 클럽 상세 페이지에서 가입 희망자에게 표시됩니다.
               </div>
               <textarea
-                className="club-manage-policy-page__textarea"
+                className={[
+                  "w-full min-h-[100px] px-3 py-2 mt-2 border-[1.5px] border-gray-300 rounded-lg",
+                  "text-sm font-[inherit] text-gray-900 bg-white resize-y box-border",
+                  "focus:outline-none focus:border-primary",
+                  "disabled:opacity-60 disabled:cursor-not-allowed",
+                ].join(" ")}
                 placeholder="가입 조건, 회비, 활동 일정 등 안내 사항을 작성해주세요."
                 value={policy.memberRecruitmentNote ?? ""}
                 onChange={(e) =>
@@ -175,11 +223,12 @@ const ClubManagePolicyPage: React.FC = () => {
         )}
       </div>
 
+      {/* Save Button */}
       <button
-        className="club-manage-policy-page__save"
         type="button"
         onClick={handleSave}
         disabled={saving}
+        className="w-full mt-3 py-3 bg-primary text-white rounded-lg font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {saving ? "저장 중..." : "저장"}
       </button>

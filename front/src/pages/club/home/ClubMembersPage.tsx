@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '../../../services/api/axiosInstance';
-import type { Club } from '../../../types/club';
+import { Button } from '../../../components/ui/button';
 import { ArrowLeftIcon, CrownIcon, StarIcon, UserIcon, SettingsIcon, XIcon, ChevronRightIcon } from '../../../components/common/Icons';
 import { getErrorMessage, logError } from '../../../utils/errorHandler';
-import { canManageClub, normalizeClubRole } from '../../../utils/role';
+import { canManageClub, isClubOwner, normalizeClubRole } from '../../../utils/role';
 import { getOpenRunSession } from '../../../utils/openrunSession';
-import MemberProfileDrawer from '../../../components/MemberProfileDrawer';
+import UserNameWithBadge from '../../../components/common/UserNameWithBadge';
 import { useToast } from '../../../contexts/ToastContext';
-import './ClubMembersPage.css';
 
 // 신규 API 응답 형식: GET /clubs/{clubId}/membership
 interface ClubMembershipResponse {
@@ -44,63 +44,45 @@ const formatJoinedAt = (dateStr: string): string => {
 const ClubMembersPage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
-  const [members, setMembers] = useState<ClubMembershipResponse[]>([]);
-  const [club, setClub] = useState<Club | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = useState(false);
   const [roleDraftByUserId, setRoleDraftByUserId] = useState<Record<number, ClubMembershipResponse["role"]>>({});
   const [saving, setSaving] = useState(false);
   const [kickingUserId, setKickingUserId] = useState<number | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   const { showToast } = useToast();
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
   const canManage = canManageClub(myRole);
-  const isOwner = myRole === 'OWNER';
-  // 역할 변경은 OWNER 전용이지만, 프론트에서는 우선 canManage(ADMIN+)에서 버튼 노출 후
-  // 서버에서 최종 권한(OWNER)으로 한 번 더 막는다.
-  const canEditRoles = canManage;
+  const isOwner = isClubOwner(myRole);
+  const canEditRoles = isOwner;
+
+  // React Query로 멤버 목록 캐싱 (staleTime 1분)
+  const { data: members = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ["club", clubId, "members"] as const,
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/clubs/${clubId}/membership`, {
+        params: { status: 'ACTIVE' },
+      });
+      return res.data as ClubMembershipResponse[];
+    },
+    enabled: !!clubId,
+    staleTime: 1 * 60 * 1000, // 1분: 이 시간 내 재방문 시 API 호출 없이 캐시 반환
+  });
+
+  const error = queryError ? getErrorMessage(queryError) : null;
+
+  // 멤버 데이터가 변경될 때 역할 초안 동기화
+  useEffect(() => {
+    setRoleDraftByUserId(
+      Object.fromEntries(members.map((m) => [m.userId, m.role]))
+    );
+  }, [members]);
 
   const dirtyCount = useMemo(() => {
     const currentByUserId = new Map(members.map((m) => [m.userId, m.role]));
     return Object.entries(roleDraftByUserId).filter(([uid, role]) => currentByUserId.get(Number(uid)) !== role).length;
   }, [members, roleDraftByUserId]);
-
-  useEffect(() => {
-    if (clubId) {
-      loadData();
-    }
-  }, [clubId]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // 클럽 정보와 멤버 목록 동시 조회
-      const [clubResponse, membersResponse] = await Promise.all([
-        axiosInstance.get(`/clubs/${clubId}`),
-        axiosInstance.get(`/clubs/${clubId}/membership`, {
-          params: { status: 'ACTIVE' }
-        })
-      ]);
-
-      setClub(clubResponse.data);
-      setMembers(membersResponse.data);
-      setRoleDraftByUserId(
-        Object.fromEntries(
-          (membersResponse.data as ClubMembershipResponse[]).map((m) => [m.userId, m.role])
-        )
-      );
-    } catch (error: unknown) {
-      logError('클럽원 목록 조회', error);
-      setError(getErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBack = () => {
     navigate(`/clubs/${clubId}`);
@@ -125,7 +107,8 @@ const ClubMembersPage: React.FC = () => {
     try {
       setSaving(true);
       await axiosInstance.patch(`/clubs/${clubId}/members/roles`, { items });
-      await loadData();
+      // 캐시 무효화 후 재요청
+      await queryClient.invalidateQueries({ queryKey: ["club", clubId, "members"] });
       setIsEditMode(false);
       showToast("저장되었습니다", "success");
     } catch (e: unknown) {
@@ -144,7 +127,8 @@ const ClubMembersPage: React.FC = () => {
       setKickingUserId(memberId);
       await axiosInstance.delete(`/clubs/${clubId}/members/${memberId}`);
       showToast("제명되었습니다", "success");
-      await loadData();
+      // 캐시 무효화 후 재요청
+      await queryClient.invalidateQueries({ queryKey: ["club", clubId, "members"] });
     } catch (e: unknown) {
       logError("클럽원 제명", e);
       showToast(getErrorMessage(e), "error");
@@ -155,12 +139,12 @@ const ClubMembersPage: React.FC = () => {
 
   const getRoleIcon = (role: string, size: number = 16) => {
     if (role === 'OWNER') {
-      return <CrownIcon size={size} color="#FFD700" />;
+      return <span className="text-primary"><CrownIcon size={size} /></span>;
     }
     if (role === 'ADMIN') {
-      return <StarIcon size={size} color="#4A90D9" />;
+      return <span className="text-primary/60"><StarIcon size={size} /></span>;
     }
-    return <UserIcon size={size} color="var(--color-text-tertiary)" />;
+    return <span className="text-muted-foreground"><UserIcon size={size} /></span>;
   };
 
   const getRoleName = (role: string) => {
@@ -174,32 +158,59 @@ const ClubMembersPage: React.FC = () => {
     return '정회원';
   };
 
-  // 멤버를 역할순으로 정렬 (OWNER > ADMIN > REGULAR/MEMBER)
-  const sortedMembers = [...members].sort((a, b) => {
-    const roleOrder: Record<string, number> = {
-      OWNER: 0,
-      ADMIN: 1,
-      REGULAR: 2,
-      MEMBER: 2, // legacy
-    };
-    return (roleOrder[a.role] ?? 2) - (roleOrder[b.role] ?? 2);
-  });
+  // 역할에 따른 배지 색상 클래스
+  const getRoleBadgeClass = (role: string) => {
+    if (role === 'OWNER') {
+      return 'text-primary font-medium';
+    }
+    if (role === 'ADMIN') {
+      return 'text-primary/70 font-medium';
+    }
+    return 'text-muted-foreground';
+  };
+
+  // 역할에 따른 아이콘 컨테이너 배경색
+  const getRoleIconBgClass = (role: string) => {
+    if (role === 'OWNER') {
+      return 'bg-primary/10';
+    }
+    if (role === 'ADMIN') {
+      return 'bg-primary/5';
+    }
+    return 'bg-muted';
+  };
+
+  // 멤버를 역할별로 3그룹 분리
+  const ownerMembers = members.filter((m) => m.role === 'OWNER');
+  const adminMembers = members.filter((m) => m.role === 'ADMIN');
+  const regularMembers = members.filter((m) => m.role !== 'OWNER' && m.role !== 'ADMIN');
 
   return (
-    <div className="club-members-page">
+    <div className="page-container p-3 sm:p-4 lg:p-5 bg-gray-50 min-h-screen">
       {/* 헤더 */}
-      <div className="club-members-page__header">
-        <button className="club-members-page__back-btn" onClick={handleBack}>
+      <div className="relative flex items-center justify-between py-2 mb-3">
+        <button
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-members-page__title">
-          {club?.name ? `${club.name} 클럽원` : '클럽원 명단'}
-        </h1>
-        <div className="club-members-page__header-spacer" />
-        {canEditRoles && !loading && !error && (
-          <button
-            className="club-members-page__edit-btn"
-            onClick={() => (isEditMode ? void handleSaveRoles() : setIsEditMode(true))}
+        <span className="absolute left-1/2 -translate-x-1/2 text-sm font-bold text-foreground pointer-events-none">
+          클럽원
+        </span>
+        {/* 편집 버튼이 없을 때도 레이아웃 균형 유지 */}
+        {!loading && !error ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={() => {
+              if (!canEditRoles) {
+                showToast("클럽장만 역할을 변경할 수 있습니다", "info");
+                return;
+              }
+              isEditMode ? void handleSaveRoles() : setIsEditMode(true);
+            }}
             disabled={saving}
             type="button"
           >
@@ -207,114 +218,196 @@ const ClubMembersPage: React.FC = () => {
               dirtyCount > 0 ? `저장(${dirtyCount})` : "완료"
             ) : (
               <>
-                <SettingsIcon size={16} />
-                <span>권한편집</span>
+                <SettingsIcon size={14} className="mr-1" />
+                권한편집
               </>
             )}
-          </button>
+          </Button>
+        ) : (
+          <div className="w-9" />
         )}
       </div>
 
       {/* 멤버 수 요약 */}
       {!loading && !error && (
-        <div className="club-members-page__summary">
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-gray-200 mb-3 text-sm text-gray-500">
           <UserIcon size={16} />
           <span>총 {members.length}명</span>
         </div>
       )}
 
       {/* 콘텐츠 */}
-      <div className="club-members-page__content">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {loading && (
-          <div className="club-members-page__loading">멤버 목록을 불러오는 중...</div>
-        )}
-
-        {error && (
-          <div className="club-members-page__error">{error}</div>
-        )}
-
-        {!loading && !error && members.length === 0 && (
-          <div className="club-members-page__empty">
-            <p className="club-members-page__empty-icon">👥</p>
-            <p className="club-members-page__empty-message">아직 멤버가 없습니다.</p>
+          <div className="px-4 py-8 text-center text-sm text-gray-400">
+            멤버 목록을 불러오는 중...
           </div>
         )}
 
-        {!loading && !error && sortedMembers.length > 0 && (
-          <div className="club-members-page__list">
-            {sortedMembers.map((member) => (
-              <div
-                key={member.memberId}
-                className="club-members-page__item"
-                onClick={() => !isEditMode && setSelectedUserId(member.userId)}
-                style={{ cursor: isEditMode ? 'default' : 'pointer' }}
-              >
-                <div className="club-members-page__item-role-icon">
-                  {getRoleIcon(member.role, 24)}
+        {error && (
+          <div className="px-4 py-8 text-center text-sm text-red-500">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && members.length === 0 && (
+          <div className="px-4 py-8 text-center">
+            <p className="text-3xl mb-3">👥</p>
+            <p className="text-sm text-gray-400 m-0">아직 멤버가 없습니다.</p>
+          </div>
+        )}
+
+        {!loading && !error && members.length > 0 && (
+          <div className="flex flex-col">
+            {/* 클럽장 섹션 */}
+            {ownerMembers.length > 0 && (
+              <>
+                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-muted-foreground">
+                  클럽장 ({ownerMembers.length}명)
                 </div>
-                <div className="club-members-page__item-info">
-                  <div className="club-members-page__item-name">
-                    {member.name}
+                {ownerMembers.map((member) => (
+                  <div
+                    key={member.memberId}
+                    className="flex items-center gap-3 px-3 py-3 border-b border-gray-100 last:border-b-0 min-h-[44px] transition-colors"
+                    onClick={() => !isEditMode && navigate(`/clubs/${clubId}/members/${member.userId}`)}
+                    style={{ cursor: isEditMode ? 'default' : 'pointer' }}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${getRoleIconBgClass(member.role)}`}>
+                      {getRoleIcon(member.role, 24)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 mb-0.5">
+                        <UserNameWithBadge userId={member.userId} userName={member.name} showPrimaryOnly />
+                        <span className={`text-xs ${getRoleBadgeClass(member.role)}`}>{getRoleName(member.role)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+                        {formatTennisStarted(member.tennisStartedAt) && (
+                          <>
+                            <span className="whitespace-nowrap">{formatTennisStarted(member.tennisStartedAt)} 시작</span>
+                            <span className="text-gray-300">·</span>
+                          </>
+                        )}
+                        <span className="whitespace-nowrap">가입 {formatJoinedAt(member.joinedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {!isEditMode && <ChevronRightIcon size={18} color="#999" />}
+                    </div>
                   </div>
-                  <div className="club-members-page__item-role">
-                    {isEditMode && member.role !== "OWNER" ? (
-                      <select
-                        className="club-members-page__role-select"
-                        value={roleDraftByUserId[member.userId] ?? member.role}
-                        onChange={(e) =>
-                          setRoleDraftByUserId((prev) => ({
-                            ...prev,
-                            [member.userId]: e.target.value as ClubMembershipResponse["role"],
-                          }))
-                        }
-                        disabled={saving}
-                      >
-                        <option value="REGULAR">정회원</option>
-                        <option value="ADMIN">운영진</option>
-                      </select>
-                    ) : (
-                      getRoleName(member.role)
-                    )}
-                  </div>
-                  <div className="club-members-page__item-sub-info">
-                    {formatTennisStarted(member.tennisStartedAt) && (
-                      <span>{formatTennisStarted(member.tennisStartedAt)} 시작</span>
-                    )}
-                    <span>가입 {formatJoinedAt(member.joinedAt)}</span>
-                  </div>
+                ))}
+              </>
+            )}
+
+            {/* 운영진 섹션 */}
+            {adminMembers.length > 0 && (
+              <>
+                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-muted-foreground">
+                  운영진 ({adminMembers.length}명)
                 </div>
-                <div className="club-members-page__item-actions">
-                  {isEditMode && isOwner && member.role !== "OWNER" && (
-                    <button
-                      className="club-members-page__item-kick"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleKickMember(member.memberId, member.name);
-                      }}
-                      disabled={kickingUserId === member.memberId}
-                      title="제명 (클럽장 전용)"
-                    >
-                      <XIcon size={18} />
-                    </button>
-                  )}
-                  {!isEditMode && (
-                    <ChevronRightIcon size={18} color="#999" />
-                  )}
+                {adminMembers.map((member) => (
+                  <div
+                    key={member.memberId}
+                    className="flex items-center gap-3 px-3 py-3 border-b border-gray-100 last:border-b-0 min-h-[44px] transition-colors"
+                    onClick={() => !isEditMode && navigate(`/clubs/${clubId}/members/${member.userId}`)}
+                    style={{ cursor: isEditMode ? 'default' : 'pointer' }}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${getRoleIconBgClass(member.role)}`}>
+                      {getRoleIcon(member.role, 24)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 mb-0.5">
+                        <UserNameWithBadge userId={member.userId} userName={member.name} showPrimaryOnly />
+                        <span className={`text-xs ${getRoleBadgeClass(member.role)}`}>{getRoleName(member.role)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+                        {formatTennisStarted(member.tennisStartedAt) && (
+                          <>
+                            <span className="whitespace-nowrap">{formatTennisStarted(member.tennisStartedAt)} 시작</span>
+                            <span className="text-gray-300">·</span>
+                          </>
+                        )}
+                        <span className="whitespace-nowrap">가입 {formatJoinedAt(member.joinedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {!isEditMode && <ChevronRightIcon size={18} color="#999" />}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* 정회원 섹션 */}
+            {regularMembers.length > 0 && (
+              <>
+                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-muted-foreground">
+                  정회원 ({regularMembers.length}명)
                 </div>
-              </div>
-            ))}
+                {regularMembers.map((member) => (
+                  <div
+                    key={member.memberId}
+                    className="flex items-center gap-3 px-3 py-3 border-b border-gray-100 last:border-b-0 min-h-[44px] transition-colors"
+                    onClick={() => !isEditMode && navigate(`/clubs/${clubId}/members/${member.userId}`)}
+                    style={{ cursor: isEditMode ? 'default' : 'pointer' }}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${getRoleIconBgClass(member.role)}`}>
+                      {getRoleIcon(member.role, 24)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 mb-0.5">
+                        <UserNameWithBadge userId={member.userId} userName={member.name} showPrimaryOnly />
+                      </div>
+                      {/* 편집 모드: 역할 변경 드롭다운 */}
+                      {isEditMode && (
+                        <select
+                          className="mt-1 border border-gray-300 bg-white rounded-lg px-2 py-1 text-xs text-gray-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/40"
+                          value={roleDraftByUserId[member.userId] ?? member.role}
+                          onChange={(e) =>
+                            setRoleDraftByUserId((prev) => ({
+                              ...prev,
+                              [member.userId]: e.target.value as ClubMembershipResponse["role"],
+                            }))
+                          }
+                          disabled={saving}
+                        >
+                          <option value="REGULAR">정회원</option>
+                          <option value="ADMIN">운영진</option>
+                        </select>
+                      )}
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+                        {formatTennisStarted(member.tennisStartedAt) && (
+                          <>
+                            <span className="whitespace-nowrap">{formatTennisStarted(member.tennisStartedAt)} 시작</span>
+                            <span className="text-gray-300">·</span>
+                          </>
+                        )}
+                        <span className="whitespace-nowrap">가입 {formatJoinedAt(member.joinedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {isEditMode && isOwner && (
+                        <button
+                          className="flex items-center justify-center w-9 h-9 rounded-lg border-none bg-transparent text-gray-400 cursor-pointer transition-all hover:bg-red-50 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleKickMember(member.memberId, member.name);
+                          }}
+                          disabled={kickingUserId === member.memberId}
+                          title="제명 (클럽장 전용)"
+                        >
+                          <XIcon size={18} />
+                        </button>
+                      )}
+                      {!isEditMode && <ChevronRightIcon size={18} color="#999" />}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>
 
-      {/* 멤버 프로필 드로어 */}
-      {selectedUserId && clubId && (
-        <MemberProfileDrawer
-          clubId={Number(clubId)}
-          userId={selectedUserId}
-          onClose={() => setSelectedUserId(null)}
-        />
-      )}
     </div>
   );
 };

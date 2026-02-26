@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.club.service;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.domain.audit.dto.ClubRuleAuditSnapshot;
 import com.example.openrunapi.domain.audit.service.AuditLogService;
 import com.example.openrunapi.domain.club.model.Club;
@@ -48,7 +49,7 @@ public class ClubRuleService {
 
         // 멤버 확인
         if (!clubMemberRepository.existsByClubIdAndUserId(clubId, userId)) {
-            throw new SecurityException("클럽 멤버만 회칙을 조회할 수 있습니다.");
+            throw new PermissionDeniedException("클럽 멤버만 회칙을 조회할 수 있습니다.");
         }
 
         List<ClubRule> rules = clubRuleRepository.findByClubIdOrderByDisplayOrder(clubId);
@@ -160,7 +161,7 @@ public class ClubRuleService {
             throw new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId);
         }
         if (!clubMemberRepository.existsByClubIdAndUserId(clubId, userId)) {
-            throw new SecurityException("클럽 멤버만 접근할 수 있습니다.");
+            throw new PermissionDeniedException("클럽 멤버만 접근할 수 있습니다.");
         }
         return clubRuleReadRepository.countUnread(clubId, userId);
     }
@@ -174,7 +175,7 @@ public class ClubRuleService {
             throw new EntityNotFoundException("해당 ID의 클럽을 찾을 수 없습니다: " + clubId);
         }
         if (!clubMemberRepository.existsByClubIdAndUserId(clubId, userId)) {
-            throw new SecurityException("클럽 멤버만 접근할 수 있습니다.");
+            throw new PermissionDeniedException("클럽 멤버만 접근할 수 있습니다.");
         }
 
         Long upTo = request != null ? request.getUpToRuleId() : null;
@@ -223,10 +224,10 @@ public class ClubRuleService {
      */
     private void validateRuleManagePermission(Long clubId, Long userId, String action) {
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
-                .orElseThrow(() -> new SecurityException(action + " 권한이 없습니다. 클럽 멤버가 아닙니다."));
+                .orElseThrow(() -> new PermissionDeniedException(action + " 권한이 없습니다. 클럽 멤버가 아닙니다."));
 
         if (!member.getRole().canManageSchedule()) {
-            throw new SecurityException(action + " 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException(action + " 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
     }
 }

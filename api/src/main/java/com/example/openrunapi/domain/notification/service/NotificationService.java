@@ -22,6 +22,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final FcmSenderService fcmSenderService;
+    private final UserNotificationSettingService userNotificationSettingService;
 
     /**
      * Send notification to multiple users (batch)
@@ -37,7 +38,13 @@ public class NotificationService {
             data.put("referenceType", referenceType);
         }
 
+        int sentCount = 0;
         for (Long userId : userIds) {
+            if (!userNotificationSettingService.isNotificationEnabled(userId, type)) {
+                log.debug("Notification skipped for user {} (type={}, setting OFF)", userId, type);
+                continue;
+            }
+
             Notification notification = Notification.builder()
                     .userId(userId)
                     .clubId(clubId)
@@ -49,10 +56,15 @@ public class NotificationService {
                     .build();
 
             notificationRepository.save(notification);
-            fcmSenderService.sendToUser(userId, title, body, data);
+            try {
+                fcmSenderService.sendToUser(userId, title, body, data);
+            } catch (Exception e) {
+                log.warn("Failed to send FCM to user {}: {}", userId, e.getMessage());
+            }
+            sentCount++;
         }
 
-        log.info("Sent notification to {} users (clubId={}): {}", userIds.size(), clubId, title);
+        log.info("Sent notification to {}/{} users (clubId={}): {}", sentCount, userIds.size(), clubId, title);
     }
 
     /**
@@ -89,7 +101,8 @@ public class NotificationService {
     }
 
     public long getUnreadCount(Long userId) {
-        return notificationRepository.countByUserIdAndIsReadFalse(userId);
+        // MESSAGE 타입은 메시지함 아이콘에서 별도로 표시하므로 벨 배지에서 제외
+        return notificationRepository.countByUserIdAndIsReadFalseAndTypeNot(userId, NotificationType.MESSAGE);
     }
 
     @Transactional

@@ -7,7 +7,6 @@ import { normalizeClubRole } from "../../../utils/role";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
 import type { ClubMembership } from "../../../types/club";
 import { useToast } from "../../../contexts/ToastContext";
-import "./ClubTransferOwnershipPage.css";
 
 const CONFIRMATION_TEXT = "클럽장 권한을 양도합니다";
 
@@ -95,51 +94,61 @@ const ClubTransferOwnershipPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="club-transfer-ownership-page">
-        <div className="club-transfer-ownership-page__loading">로딩 중...</div>
+      <div className="page-container px-3 py-2 min-h-screen">
+        <div className="py-10 text-center text-sm text-gray-400">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="club-transfer-ownership-page">
+    <div className="page-container px-3 py-2 min-h-screen">
       {/* 헤더 */}
-      <div className="club-transfer-ownership-page__header">
-        <button className="club-transfer-ownership-page__back-btn" onClick={handleBack}>
+      <div className="flex items-center justify-between py-2 mb-3">
+        <button
+          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground"
+          onClick={handleBack}
+        >
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-transfer-ownership-page__title">클럽장 권한 양도</h1>
-        <div className="club-transfer-ownership-page__header-spacer" />
+        <span className="flex-1 text-center text-sm font-bold text-foreground">클럽장 권한 양도</span>
+        <div className="w-9 h-9" />
       </div>
 
       {/* 경고 메시지 */}
-      <div className="club-transfer-ownership-page__warning">
+      <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm mb-3">
         <AlertTriangleIcon size={20} />
         <span>이 작업은 되돌릴 수 없습니다.</span>
       </div>
 
-      {error && <div className="club-transfer-ownership-page__error">{error}</div>}
+      {/* 에러 메시지 */}
+      {error && (
+        <div className="px-3 py-2 mb-3 bg-red-50 border border-red-300 rounded-xl text-red-600 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* ADMIN 목록 */}
-      <div className="club-transfer-ownership-page__section">
-        <h2 className="club-transfer-ownership-page__section-title">운영진 선택</h2>
+      <div className="bg-white rounded-xl border border-border p-4 mb-3">
+        <h2 className="text-sm font-semibold text-gray-800 m-0 mb-3">운영진 선택</h2>
 
         {adminMembers.length === 0 ? (
-          <div className="club-transfer-ownership-page__empty">
-            <p>권한을 양도할 수 있는 운영진이 없습니다.</p>
-            <p className="club-transfer-ownership-page__empty-hint">
+          <div className="text-center py-6 text-gray-400">
+            <p className="text-sm mb-2">권한을 양도할 수 있는 운영진이 없습니다.</p>
+            <p className="text-xs text-gray-400 leading-relaxed">
               클럽장 권한은 운영진(ADMIN)에게만 양도할 수 있습니다.
               <br />
               먼저 클럽원 관리에서 운영진을 지정해주세요.
             </p>
           </div>
         ) : (
-          <div className="club-transfer-ownership-page__admin-list">
+          <div className="flex flex-col gap-2">
             {adminMembers.map((member) => (
               <label
                 key={member.userId}
-                className={`club-transfer-ownership-page__admin-item ${
-                  selectedUserId === member.userId ? "club-transfer-ownership-page__admin-item--selected" : ""
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                  selectedUserId === member.userId
+                    ? "border-indigo-500 bg-indigo-50"
+                    : "border-transparent bg-gray-50 hover:border-indigo-400"
                 }`}
               >
                 <input
@@ -148,14 +157,14 @@ const ClubTransferOwnershipPage: React.FC = () => {
                   value={member.userId}
                   checked={selectedUserId === member.userId}
                   onChange={() => setSelectedUserId(member.userId)}
-                  className="club-transfer-ownership-page__radio"
+                  className="w-5 h-5 accent-indigo-600 cursor-pointer"
                 />
-                <div className="club-transfer-ownership-page__admin-info">
-                  <span className="club-transfer-ownership-page__admin-name">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-gray-800">
                     {member.name}
                   </span>
                   {member.email && (
-                    <span className="club-transfer-ownership-page__admin-email">
+                    <span className="text-xs text-gray-400">
                       {member.email}
                     </span>
                   )}
@@ -168,14 +177,14 @@ const ClubTransferOwnershipPage: React.FC = () => {
 
       {/* 확인 문구 입력 */}
       {adminMembers.length > 0 && (
-        <div className="club-transfer-ownership-page__section">
-          <h2 className="club-transfer-ownership-page__section-title">확인 문구 입력</h2>
-          <p className="club-transfer-ownership-page__hint">
+        <div className="bg-white rounded-xl border border-border p-4 mb-3">
+          <h2 className="text-sm font-semibold text-gray-800 m-0 mb-3">확인 문구 입력</h2>
+          <p className="text-xs text-gray-400 mb-2">
             "{CONFIRMATION_TEXT}"를 입력하세요
           </p>
           <input
             type="text"
-            className="club-transfer-ownership-page__input"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-indigo-500 transition-colors"
             value={confirmationInput}
             onChange={(e) => setConfirmationInput(e.target.value)}
             placeholder={CONFIRMATION_TEXT}
@@ -186,7 +195,9 @@ const ClubTransferOwnershipPage: React.FC = () => {
       {/* 양도 버튼 */}
       {adminMembers.length > 0 && (
         <button
-          className="club-transfer-ownership-page__submit"
+          className={`w-full py-3 bg-red-500 text-white rounded-lg font-medium text-sm transition-all ${
+            !canSubmit ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600 cursor-pointer"
+          }`}
           onClick={handleTransfer}
           disabled={!canSubmit}
         >

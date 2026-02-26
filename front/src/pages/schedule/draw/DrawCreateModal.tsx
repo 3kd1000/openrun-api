@@ -7,8 +7,6 @@ import type {
   ManualGame,
 } from "../../../services/drawService";
 import { participantService } from "../../../services/participantService";
-import { userService } from "../../../services/userService";
-import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { validateDrawCreation } from "../../../utils/scheduleValidation";
 import type { Schedule } from "../../../types/schedule";
 import DrawGamesList from "../../../components/draw/DrawGamesList";
@@ -16,8 +14,16 @@ import ManualDrawEditor from "../../../components/draw/ManualDrawEditor";
 import { formatDrawAsText } from "../../../utils/DrawFormatUtils";
 import Toast from "../../../components/common/Toast";
 import { CheckIcon, CopyIcon } from "../../../components/common/Icons";
-import "./DrawCreateModal.css";
-import "./DrawViewModal.css";
+import { cn } from "../../../lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
+import { Checkbox } from "../../../components/ui/checkbox";
+import { getOpenRunSession } from "../../../utils/openrunSession";
 
 interface Props {
   scheduleId: number;
@@ -45,11 +51,12 @@ const DrawCreateModal: React.FC<Props> = ({
     setLocalParticipants(participants);
   }, [participants]);
 
-  const confirmedUserIds = useMemo(
+  // confirmedPIds: CONFIRMED 상태 참가자의 participantId(Participant.id) 목록
+  const confirmedPIds = useMemo(
     () =>
       localParticipants
         .filter((p) => p.status === "CONFIRMED")
-        .map((p) => p.userId),
+        .map((p) => p.id),
     [localParticipants]
   );
 
@@ -64,30 +71,40 @@ const DrawCreateModal: React.FC<Props> = ({
   // 선택된 게스트 삭제 가능 여부 (모두 게스트이고 모두 대기열에 있을 때만 true)
   const [canDeleteSelectedGuests, setCanDeleteSelectedGuests] = useState(false);
 
-  // AA 타입: 참가/대기
+  // AA 타입: 참가/대기 (participantId 기반)
   const [confirmedGroup, setConfirmedGroup] = useState<number[]>([]);
   const [waitingGroup, setWaitingGroup] = useState<number[]>([]);
 
-  // AB 타입: 그룹 A/B
+  // AB 타입: 그룹 A/B (participantId 기반)
   const [groupA, setGroupA] = useState<number[]>([]);
   const [groupB, setGroupB] = useState<number[]>([]);
 
-  // SEED 타입: 시드/일반
+  // SEED 타입: 시드/일반 (participantId 기반)
   const [seedPlayers, setSeedPlayers] = useState<number[]>([]);
   const [normalPlayers, setNormalPlayers] = useState<number[]>([]);
 
-  // 체크박스 선택 상태
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  // 체크박스 선택 상태 (participantId 기반)
+  const [selectedPIds, setSelectedPIds] = useState<number[]>([]);
 
   // 대진 생성 결과
   const [drawResult, setDrawResult] = useState<DrawResponse | null>(null);
   const [copied, setCopied] = useState(false);
   const [toastMessage, setToastMessage] = useState<string>("");
 
-  // userId로 userName 가져오기
-  const getUserName = (userId: number): string => {
-    const participant = localParticipants.find((p) => p.userId === userId);
-    return participant?.userName || `User #${userId}`;
+  // participantId로 표시 이름 가져오기
+  const getDisplayName = (pId: number): string => {
+    const participant = localParticipants.find((p) => p.id === pId);
+    if (!participant) return `#${pId}`;
+    if (participant.userId == null) {
+      return participant.guestName || "게스트";
+    }
+    return participant.userName;
+  };
+
+  // participantId가 게스트인지 확인
+  const isGuestParticipant = (pId: number): boolean => {
+    const participant = localParticipants.find((p) => p.id === pId);
+    return participant ? participant.userId == null : false;
   };
 
   // 게스트 추가 핸들러
@@ -96,27 +113,15 @@ const DrawCreateModal: React.FC<Props> = ({
       setAddingGuest(true);
       setError("");
 
-      // 게스트 사용자 목록 조회 (매번 호출)
-      const guestUsers = await userService.getGuestUsers();
-
-      // 현재 참가자 중 게스트 사용자 찾기
-      const currentParticipantIds = localParticipants.map((p) => p.userId);
-      const usedGuestIds = new Set(
-        guestUsers
-          .filter((g) => currentParticipantIds.includes(g.id))
-          .map((g) => g.id)
-      );
-
-      // 아직 추가되지 않은 첫 번째 게스트 찾기
-      const nextGuest = guestUsers.find((g) => !usedGuestIds.has(g.id));
-
-      if (!nextGuest) {
-        setError("더 이상 추가할 수 있는 게스트가 없습니다. (최대 16명)");
+      const name = window.prompt("게스트 이름을 입력하세요");
+      if (!name || name.trim() === "") {
         return;
       }
 
-      // 게스트를 일정에 추가 (대기열 상태로)
-      await participantService.joinSchedule(scheduleId, nextGuest.id);
+      await participantService.addGuestParticipant(
+        scheduleId,
+        name.trim()
+      );
 
       // 참가자 목록 다시 가져오기 (모달은 열린 상태 유지)
       const updatedParticipants = await participantService.getParticipants(
@@ -124,7 +129,7 @@ const DrawCreateModal: React.FC<Props> = ({
       );
       setLocalParticipants(updatedParticipants);
 
-      console.log(`✅ ${nextGuest.name} 추가 완료`);
+      console.log(`✅ 게스트 ${name.trim()} 추가 완료`);
     } catch (err: unknown) {
       console.error("게스트 추가 실패:", err);
       const errorMessage = (
@@ -138,20 +143,23 @@ const DrawCreateModal: React.FC<Props> = ({
 
   // 선택된 게스트들 삭제 핸들러
   const handleRemoveSelectedGuests = async () => {
-    if (!canDeleteSelectedGuests || selectedUsers.length === 0) {
+    if (!canDeleteSelectedGuests || selectedPIds.length === 0) {
       return;
     }
 
-    const guestCount = selectedUsers.length; // 삭제 전 개수 저장
+    const guestCount = selectedPIds.length;
 
     try {
       setError("");
       setLoading(true);
 
-      // 선택된 모든 게스트 삭제
+      // 선택된 게스트 참가자만 삭제 (participantId 기반)
       await Promise.all(
-        selectedUsers.map((userId) =>
-          participantService.cancelParticipation(scheduleId, userId)
+        selectedPIds.map((pId) =>
+          participantService.removeGuestParticipant(
+            scheduleId,
+            pId
+          )
         )
       );
 
@@ -162,7 +170,7 @@ const DrawCreateModal: React.FC<Props> = ({
       setLocalParticipants(updatedParticipants);
 
       // 선택 초기화
-      setSelectedUsers([]);
+      setSelectedPIds([]);
 
       console.log(`✅ ${guestCount}명의 게스트 삭제 완료`);
     } catch (err: unknown) {
@@ -188,121 +196,108 @@ const DrawCreateModal: React.FC<Props> = ({
 
   // 대진 타입 변경 시 초기화
   useEffect(() => {
-    const totalCount = confirmedUserIds.length;
+    const totalCount = confirmedPIds.length;
     const half = Math.ceil(totalCount / 2);
-    const allParticipantIds = localParticipants.map((p) => p.userId);
-    const waitingIds = allParticipantIds.filter(
-      (id) => !confirmedUserIds.includes(id)
-    );
+    const allPIds = localParticipants.map((p) => p.id);
+    const waitingPIds = allPIds.filter((id) => !confirmedPIds.includes(id));
 
     if (drawType === "AA") {
-      // AA: 참가 확정자는 confirmedGroup, 나머지는 waitingGroup
-      setConfirmedGroup(confirmedUserIds);
-      setWaitingGroup(waitingIds);
+      setConfirmedGroup(confirmedPIds);
+      setWaitingGroup(waitingPIds);
       setGroupA([]);
       setGroupB([]);
       setSeedPlayers([]);
       setNormalPlayers([]);
     } else if (drawType === "AB") {
-      // AB: 반반 나누기 + 대기열
-      setGroupA(confirmedUserIds.slice(0, half));
-      setGroupB(confirmedUserIds.slice(half));
-      setWaitingGroup(waitingIds);
+      setGroupA(confirmedPIds.slice(0, half));
+      setGroupB(confirmedPIds.slice(half));
+      setWaitingGroup(waitingPIds);
       setSeedPlayers([]);
       setNormalPlayers([]);
       setConfirmedGroup([]);
     } else if (drawType === "SEED") {
-      // SEED: 시드 수에 맞춰 분할 + 대기열
       const seedCount = getSeedCount(totalCount);
-      setSeedPlayers(confirmedUserIds.slice(0, seedCount));
-      setNormalPlayers(confirmedUserIds.slice(seedCount));
-      setWaitingGroup(waitingIds);
+      setSeedPlayers(confirmedPIds.slice(0, seedCount));
+      setNormalPlayers(confirmedPIds.slice(seedCount));
+      setWaitingGroup(waitingPIds);
       setGroupA([]);
       setGroupB([]);
       setConfirmedGroup([]);
     } else if (drawType === "MANUAL") {
-      // MANUAL: 수동 대진은 ManualDrawEditor에서 처리
-      // 참가 확정자는 confirmedGroup에 유지
-      setConfirmedGroup(confirmedUserIds);
-      setWaitingGroup(waitingIds);
+      setConfirmedGroup(confirmedPIds);
+      setWaitingGroup(waitingPIds);
       setGroupA([]);
       setGroupB([]);
       setSeedPlayers([]);
       setNormalPlayers([]);
     }
-  }, [drawType, localParticipants, confirmedUserIds]);
+  }, [drawType, localParticipants, confirmedPIds]);
 
-  // 선택된 사용자들이 모두 게스트이고 모두 대기열에 있는지 확인
+  // 선택된 참가자들이 모두 게스트이고 모두 대기열에 있는지 확인
   useEffect(() => {
-    if (selectedUsers.length === 0) {
+    if (selectedPIds.length === 0) {
       setCanDeleteSelectedGuests(false);
       return;
     }
 
-    // 선택된 사용자가 모두 게스트인지 확인
-    const allAreGuests = selectedUsers.every((userId) => {
-      const participant = localParticipants.find((p) => p.userId === userId);
-      return participant ? participant.userName.startsWith("게스트") : false;
-    });
+    const allAreGuests = selectedPIds.every((pId) => isGuestParticipant(pId));
 
-    // 선택된 사용자가 모두 대기열에 있는지 확인
-    const allInWaitingGroup = selectedUsers.every((userId) =>
-      waitingGroup.includes(userId)
+    const allInWaitingGroup = selectedPIds.every((pId) =>
+      waitingGroup.includes(pId)
     );
 
-    // 두 조건을 모두 만족하면 게스트 삭제 가능
     setCanDeleteSelectedGuests(allAreGuests && allInWaitingGroup);
-  }, [selectedUsers, waitingGroup, localParticipants]);
+  }, [selectedPIds, waitingGroup, localParticipants]);
 
   // 체크박스 토글
-  const toggleUserSelection = (userId: number) => {
-    setSelectedUsers((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
+  const toggleUserSelection = (pId: number) => {
+    setSelectedPIds((prev) =>
+      prev.includes(pId)
+        ? prev.filter((id) => id !== pId)
+        : [...prev, pId]
     );
   };
 
-  // AA: 선택된 사용자들을 참가/대기열로 이동
+  // AA: 선택된 참가자들을 참가/대기열로 이동
   const moveSelectedToAAGroup = (targetGroup: "CONFIRMED" | "WAITING") => {
-    if (selectedUsers.length === 0) return;
+    if (selectedPIds.length === 0) return;
 
     if (targetGroup === "CONFIRMED") {
       const newConfirmedGroup = [
         ...confirmedGroup,
-        ...selectedUsers.filter((id) => !confirmedGroup.includes(id)),
+        ...selectedPIds.filter((id) => !confirmedGroup.includes(id)),
       ];
       const newWaitingGroup = waitingGroup.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       setConfirmedGroup(newConfirmedGroup);
       setWaitingGroup(newWaitingGroup);
     } else {
       const newWaitingGroup = [
         ...waitingGroup,
-        ...selectedUsers.filter((id) => !waitingGroup.includes(id)),
+        ...selectedPIds.filter((id) => !waitingGroup.includes(id)),
       ];
       const newConfirmedGroup = confirmedGroup.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       setWaitingGroup(newWaitingGroup);
       setConfirmedGroup(newConfirmedGroup);
     }
-    setSelectedUsers([]);
+    setSelectedPIds([]);
   };
 
-  // AB: 선택된 사용자들을 그룹으로 이동 (A, B, 대기열)
+  // AB: 선택된 참가자들을 그룹으로 이동 (A, B, 대기열)
   const moveSelectedToABGroup = (targetGroup: "A" | "B" | "WAITING") => {
-    if (selectedUsers.length === 0) return;
+    if (selectedPIds.length === 0) return;
 
     if (targetGroup === "A") {
       const newGroupA = [
         ...groupA,
-        ...selectedUsers.filter((id) => !groupA.includes(id)),
+        ...selectedPIds.filter((id) => !groupA.includes(id)),
       ];
-      const newGroupB = groupB.filter((id) => !selectedUsers.includes(id));
+      const newGroupB = groupB.filter((id) => !selectedPIds.includes(id));
       const newWaitingGroup = waitingGroup.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       setGroupA(newGroupA);
       setGroupB(newGroupB);
@@ -310,46 +305,45 @@ const DrawCreateModal: React.FC<Props> = ({
     } else if (targetGroup === "B") {
       const newGroupB = [
         ...groupB,
-        ...selectedUsers.filter((id) => !groupB.includes(id)),
+        ...selectedPIds.filter((id) => !groupB.includes(id)),
       ];
-      const newGroupA = groupA.filter((id) => !selectedUsers.includes(id));
+      const newGroupA = groupA.filter((id) => !selectedPIds.includes(id));
       const newWaitingGroup = waitingGroup.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       setGroupA(newGroupA);
       setGroupB(newGroupB);
       setWaitingGroup(newWaitingGroup);
     } else {
-      // WAITING
       const newWaitingGroup = [
         ...waitingGroup,
-        ...selectedUsers.filter((id) => !waitingGroup.includes(id)),
+        ...selectedPIds.filter((id) => !waitingGroup.includes(id)),
       ];
-      const newGroupA = groupA.filter((id) => !selectedUsers.includes(id));
-      const newGroupB = groupB.filter((id) => !selectedUsers.includes(id));
+      const newGroupA = groupA.filter((id) => !selectedPIds.includes(id));
+      const newGroupB = groupB.filter((id) => !selectedPIds.includes(id));
       setWaitingGroup(newWaitingGroup);
       setGroupA(newGroupA);
       setGroupB(newGroupB);
     }
-    setSelectedUsers([]);
+    setSelectedPIds([]);
   };
 
-  // SEED: 선택된 사용자들을 시드/일반/대기열로 이동
+  // SEED: 선택된 참가자들을 시드/일반/대기열로 이동
   const moveSelectedToSeedGroup = (
     targetGroup: "SEED" | "NORMAL" | "WAITING"
   ) => {
-    if (selectedUsers.length === 0) return;
+    if (selectedPIds.length === 0) return;
 
     if (targetGroup === "SEED") {
       const newSeedPlayers = [
         ...seedPlayers,
-        ...selectedUsers.filter((id) => !seedPlayers.includes(id)),
+        ...selectedPIds.filter((id) => !seedPlayers.includes(id)),
       ];
       const newNormalPlayers = normalPlayers.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       const newWaitingGroup = waitingGroup.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       setSeedPlayers(newSeedPlayers);
       setNormalPlayers(newNormalPlayers);
@@ -357,53 +351,49 @@ const DrawCreateModal: React.FC<Props> = ({
     } else if (targetGroup === "NORMAL") {
       const newNormalPlayers = [
         ...normalPlayers,
-        ...selectedUsers.filter((id) => !normalPlayers.includes(id)),
+        ...selectedPIds.filter((id) => !normalPlayers.includes(id)),
       ];
       const newSeedPlayers = seedPlayers.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       const newWaitingGroup = waitingGroup.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       setNormalPlayers(newNormalPlayers);
       setSeedPlayers(newSeedPlayers);
       setWaitingGroup(newWaitingGroup);
     } else {
-      // WAITING
       const newWaitingGroup = [
         ...waitingGroup,
-        ...selectedUsers.filter((id) => !waitingGroup.includes(id)),
+        ...selectedPIds.filter((id) => !waitingGroup.includes(id)),
       ];
       const newSeedPlayers = seedPlayers.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       const newNormalPlayers = normalPlayers.filter(
-        (id) => !selectedUsers.includes(id)
+        (id) => !selectedPIds.includes(id)
       );
       setWaitingGroup(newWaitingGroup);
       setSeedPlayers(newSeedPlayers);
       setNormalPlayers(newNormalPlayers);
     }
-    setSelectedUsers([]);
+    setSelectedPIds([]);
   };
 
   // 대진 생성 (또는 재생성)
   const handleCreateDraw = async () => {
-    // 과거 일정 체크
     const validation = validateDrawCreation(schedule.scheduledAt);
     if (!validation.isValid) {
       setError(validation.errorMessage || "대진 생성에 실패했습니다.");
       return;
     }
 
-    // 최대 인원수 검증
     let totalPlayers = 0;
     if (drawType === "AA") {
       totalPlayers = confirmedGroup.length;
     } else if (drawType === "AB") {
       totalPlayers = groupA.length + groupB.length;
     } else {
-      // drawType === "SEED"
       totalPlayers = seedPlayers.length + normalPlayers.length;
     }
 
@@ -418,33 +408,92 @@ const DrawCreateModal: React.FC<Props> = ({
       setLoading(true);
       setError("");
 
-      // userId 기반으로 대진 생성 (동명이인 문제 해결)
       let requestWithIds: CreateDrawRequestWithIds;
+
       if (drawType === "AA") {
+        const participantsInGroup = confirmedGroup.map(
+          (pId) => localParticipants.find((p) => p.id === pId)!
+        );
+        const registeredUserIds = participantsInGroup
+          .filter((p) => p.userId != null)
+          .map((p) => p.userId!);
+        const guestNamesList = participantsInGroup
+          .filter((p) => p.userId == null)
+          .map((p) => p.guestName || "게스트");
+
         requestWithIds = {
           drawType,
           numberOfTotalPlayer: confirmedGroup.length,
-          userIds: confirmedGroup,
+          userIds: registeredUserIds,
+          guestNames: guestNamesList.length > 0 ? guestNamesList : undefined,
           seedUserIds: [],
           groupAUserIds: [],
           groupBUserIds: [],
         };
       } else if (drawType === "AB") {
+        const allParticipantsInDraw = [...groupA, ...groupB].map(
+          (pId) => localParticipants.find((p) => p.id === pId)!
+        );
+        const registeredUserIds = allParticipantsInDraw
+          .filter((p) => p.userId != null)
+          .map((p) => p.userId!);
+        const guestNamesList = allParticipantsInDraw
+          .filter((p) => p.userId == null)
+          .map((p) => p.guestName || "게스트");
+        const groupARegistered = groupA
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId != null)
+          .map((p) => p.userId!);
+        const groupBRegistered = groupB
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId != null)
+          .map((p) => p.userId!);
+        const groupAGuests = groupA
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId == null)
+          .map((p) => p.guestName || "게스트");
+        const groupBGuests = groupB
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId == null)
+          .map((p) => p.guestName || "게스트");
+
         requestWithIds = {
           drawType,
           numberOfTotalPlayer: groupA.length + groupB.length,
-          userIds: [...groupA, ...groupB],
-          groupAUserIds: groupA,
-          groupBUserIds: groupB,
+          userIds: registeredUserIds,
+          guestNames: guestNamesList.length > 0 ? guestNamesList : undefined,
+          groupAUserIds: groupARegistered,
+          groupBUserIds: groupBRegistered,
+          groupAGuestNames: groupAGuests.length > 0 ? groupAGuests : undefined,
+          groupBGuestNames: groupBGuests.length > 0 ? groupBGuests : undefined,
           seedUserIds: [],
         };
       } else {
-        // drawType === "SEED"
+        // SEED
+        const seedRegistered = seedPlayers
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId != null)
+          .map((p) => p.userId!);
+        const seedGuests = seedPlayers
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId == null)
+          .map((p) => p.guestName || "게스트");
+        const normalRegistered = normalPlayers
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId != null)
+          .map((p) => p.userId!);
+        const normalGuests = normalPlayers
+          .map((pId) => localParticipants.find((p) => p.id === pId)!)
+          .filter((p) => p.userId == null)
+          .map((p) => p.guestName || "게스트");
+
         requestWithIds = {
           drawType,
           numberOfTotalPlayer: seedPlayers.length + normalPlayers.length,
-          userIds: normalPlayers,
-          seedUserIds: seedPlayers,
+          userIds: normalRegistered,
+          guestNames: normalGuests.length > 0 ? normalGuests : undefined,
+          seedUserIds: seedRegistered,
+          seedGuestNames: seedGuests.length > 0 ? seedGuests : undefined,
           groupAUserIds: [],
           groupBUserIds: [],
         };
@@ -468,7 +517,6 @@ const DrawCreateModal: React.FC<Props> = ({
 
   // MANUAL 대진 생성 완료 핸들러
   const handleManualDrawComplete = async (manualGames: ManualGame[]) => {
-    // 과거 일정 체크
     const validation = validateDrawCreation(schedule.scheduledAt);
     if (!validation.isValid) {
       setError(validation.errorMessage || "대진 생성에 실패했습니다.");
@@ -479,17 +527,21 @@ const DrawCreateModal: React.FC<Props> = ({
       setLoading(true);
       setError("");
 
-      // manualGames에서 모든 userId 추출
       const allUserIds = new Set<number>();
+      const allGuestNames = new Set<string>();
+
       manualGames.forEach((g) => {
         g.teamAUserIds.forEach((id) => allUserIds.add(id));
         g.teamBUserIds.forEach((id) => allUserIds.add(id));
+        g.teamAGuestNames?.forEach((name) => allGuestNames.add(name));
+        g.teamBGuestNames?.forEach((name) => allGuestNames.add(name));
       });
 
       const requestWithIds: CreateDrawRequestWithIds = {
         drawType: "MANUAL",
-        numberOfTotalPlayer: allUserIds.size,
+        numberOfTotalPlayer: allUserIds.size + allGuestNames.size,
         userIds: Array.from(allUserIds),
+        guestNames: allGuestNames.size > 0 ? Array.from(allGuestNames) : undefined,
         manualGames,
       };
 
@@ -536,14 +588,11 @@ const DrawCreateModal: React.FC<Props> = ({
 
   // 유효성 검사
   const isValid = (() => {
-    // 공통: 최대 16명
     if (totalSelected > 16) return false;
 
     if (drawType === "AA") {
-      // AA: 최소 4명, 최대 16명, 홀짝 무관
       return totalSelected >= 4 && confirmedGroup.length >= 4;
     } else if (drawType === "AB") {
-      // AB: 최소 8명, 최대 16명, 짝수만, A/B 그룹 비어있지 않아야 함
       return (
         totalSelected >= 8 &&
         totalSelected % 2 === 0 &&
@@ -551,7 +600,6 @@ const DrawCreateModal: React.FC<Props> = ({
         groupB.length > 0
       );
     } else if (drawType === "SEED") {
-      // SEED: 최소 6명, 최대 16명, 홀짝 무관, seed/normal 비어있지 않고 seed 수가 맞아야 함
       return (
         totalSelected >= 6 &&
         seedPlayers.length > 0 &&
@@ -559,123 +607,139 @@ const DrawCreateModal: React.FC<Props> = ({
         seedPlayers.length === getSeedCount(totalSelected)
       );
     } else if (drawType === "MANUAL") {
-      // MANUAL: ManualDrawEditor에서 자체 유효성 검사 (여기선 기본 조건만)
       return confirmedGroup.length >= 4;
     }
 
     return false;
   })();
 
-  // ESC 키로 모달 닫기
-  useEscapeKey(onClose);
+  // 플레이어 카드 렌더링 헬퍼 (participantId 기반)
+  const renderPlayerCard = (pId: number, variant: "" | "seed" | "waiting" = "") => {
+    const isSelected = selectedPIds.includes(pId);
+    return (
+      <div
+        key={pId}
+        className={cn(
+          "p-1 bg-background rounded-sm border border-border text-xs font-medium text-foreground",
+          "flex items-center gap-1 cursor-pointer transition-all min-[769px]:text-sm",
+          "hover:bg-muted hover:-translate-y-px hover:shadow-md",
+          isSelected && variant === "" && "bg-primary/10 border-primary",
+          variant === "seed" && !isSelected && "bg-[var(--color-seed-bg)] font-semibold border-[var(--color-seed-light)]",
+          variant === "seed" && isSelected && "bg-[var(--color-seed-light)] border-[var(--color-seed)] font-semibold",
+          variant === "waiting" && !isSelected && "bg-[var(--color-warning-light)] border-[var(--color-warning)]",
+          variant === "waiting" && isSelected && "bg-[var(--color-warning-bg)] border-[var(--color-warning-hover)]"
+        )}
+        onClick={() => toggleUserSelection(pId)}
+      >
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={() => toggleUserSelection(pId)}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        />
+        <span className="flex-1 select-none overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+          {getDisplayName(pId)}
+        </span>
+      </div>
+    );
+  };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content draw-create-modal modal-nested-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-header">
-          <h2>대진 생성 (한울방식)</h2>
-          <button className="btn-close" onClick={onClose}>
-            &times;
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-[900px] w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
+          <DialogTitle>대진 생성 (한울방식)</DialogTitle>
+        </DialogHeader>
 
-        <div className="draw-create-content">
-          {error && <div className="error-message">{error}</div>}
+        <div className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto min-h-0 max-[768px]:p-3">
+          {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
 
           {/* 대진 타입 선택 */}
-          <div className="form-group">
-            <div className="draw-type-header">
+          <div>
+            <div className="flex items-center justify-between mb-1">
               <label>대진 타입</label>
-              <button
-                type="button"
-                className="btn-toggle-info"
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => setShowDrawTypeInfo(!showDrawTypeInfo)}
                 title={showDrawTypeInfo ? "설명 닫기" : "설명 보기"}
               >
                 {showDrawTypeInfo ? "▲" : "▼"}
-              </button>
+              </Button>
             </div>
-            <div className="draw-type-buttons draw-type-buttons--four">
-              <button
-                type="button"
-                className={`draw-type-btn ${drawType === "AA" ? "active" : ""}`}
+            <div className="grid grid-cols-4 gap-1 max-[768px]:grid-cols-2">
+              <Button
+                variant={drawType === "AA" ? "default" : "outline"}
+                size="sm"
                 onClick={() => setDrawType("AA")}
               >
                 AA (랜덤)
-              </button>
-              <button
-                type="button"
-                className={`draw-type-btn ${drawType === "AB" ? "active" : ""}`}
+              </Button>
+              <Button
+                variant={drawType === "AB" ? "default" : "outline"}
+                size="sm"
                 onClick={() => setDrawType("AB")}
                 disabled={localParticipants.length < 8}
                 title={localParticipants.length < 8 ? "8인 이상일 때 사용 가능" : undefined}
               >
                 AB (그룹별)
-              </button>
-              <button
-                type="button"
-                className={`draw-type-btn ${
-                  drawType === "SEED" ? "active" : ""
-                }`}
+              </Button>
+              <Button
+                variant={drawType === "SEED" ? "default" : "outline"}
+                size="sm"
                 onClick={() => setDrawType("SEED")}
                 disabled={localParticipants.length < 6}
                 title={localParticipants.length < 6 ? "6인 이상일 때 사용 가능" : undefined}
               >
                 SEED (시드)
-              </button>
-              <button
-                type="button"
-                className={`draw-type-btn ${
-                  drawType === "MANUAL" ? "active" : ""
-                }`}
+              </Button>
+              <Button
+                variant={drawType === "MANUAL" ? "default" : "outline"}
+                size="sm"
                 onClick={() => setDrawType("MANUAL")}
                 disabled={localParticipants.length < 4}
                 title={localParticipants.length < 4 ? "4인 이상일 때 사용 가능" : undefined}
               >
                 수동
-              </button>
+              </Button>
             </div>
 
             {/* 대진 타입 설명 (아코디언) */}
             {showDrawTypeInfo && (
-              <div className="draw-type-info">
+              <div className="mt-2 p-3 bg-primary/5 border-l-[3px] border-l-primary rounded-md animate-[slideDown_0.2s_ease-out]">
                 {drawType === "AA" && (
                   <>
-                    <p className="info-description">
+                    <p className="mb-1 text-sm font-medium text-foreground leading-relaxed">
                       매 라운드마다 파트너가 바뀌며 다양한 조합으로 경기
                     </p>
-                    <p className="info-players">참가 인원: 4~16명</p>
+                    <p className="text-sm font-medium text-muted-foreground">참가 인원: 4~16명</p>
                   </>
                 )}
                 {drawType === "AB" && (
                   <>
-                    <p className="info-description">
+                    <p className="mb-1 text-sm font-medium text-foreground leading-relaxed">
                       A/B 그룹으로 나눠 함께 파트너가 될 수 있도록 합니다.
                     </p>
-                    <p className="info-players">
+                    <p className="text-sm font-medium text-muted-foreground">
                       참가 인원: 8, 10, 12, 14, 16명 (그룹별 동일 인원)
                     </p>
                   </>
                 )}
                 {drawType === "SEED" && (
                   <>
-                    <p className="info-description">
+                    <p className="mb-1 text-sm font-medium text-foreground leading-relaxed">
                       시드 플레이어 끼리는 같은 팀으로 배정되지 않습니다.
                     </p>
-                    <p className="info-players">
+                    <p className="text-sm font-medium text-muted-foreground">
                       참가 인원: 6~16명 (시드 개수는 총 인원에 따라 변동)
                     </p>
                   </>
                 )}
                 {drawType === "MANUAL" && (
                   <>
-                    <p className="info-description">
+                    <p className="mb-1 text-sm font-medium text-foreground leading-relaxed">
                       각 게임별로 4명의 선수를 직접 지정합니다.
                     </p>
-                    <p className="info-players">
+                    <p className="text-sm font-medium text-muted-foreground">
                       참가 인원: 4~16명
                     </p>
                   </>
@@ -687,88 +751,60 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* AA 타입: 참가자/대기열 관리 */}
           {drawType === "AA" && (
             <>
-              <div className="move-buttons">
-                <button
-                  type="button"
+              <div className="flex gap-2 mb-3 max-[768px]:gap-1 max-[768px]:mb-2">
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => moveSelectedToAAGroup("CONFIRMED")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1"
                 >
                   참가로 이동
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => moveSelectedToAAGroup("WAITING")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1"
                 >
                   대기열로 이동
-                </button>
+                </Button>
                 {canDeleteSelectedGuests ? (
-                  <button
-                    type="button"
+                  <Button
+                    variant="destructive"
+                    size="sm"
                     onClick={handleRemoveSelectedGuests}
-                    disabled={loading || selectedUsers.length === 0}
-                    className="btn-move-group btn-danger"
+                    disabled={loading || selectedPIds.length === 0}
+                    className="flex-1"
                   >
                     {loading ? "삭제 중..." : "게스트 삭제"}
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleAddGuest}
                     disabled={addingGuest}
-                    className="btn-move-group"
+                    className="flex-1"
                   >
                     {addingGuest ? "추가 중..." : "게스트 추가"}
-                  </button>
+                  </Button>
                 )}
               </div>
 
-              <div className="group-division">
-                <div className="group-box confirmed-group">
-                  <h4>참가 확정 ({confirmedGroup.length}명)</h4>
-                  <div className="player-grid">
-                    {confirmedGroup.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+              <div className="flex flex-col gap-3 items-stretch flex-[2] min-h-0 overflow-hidden">
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-green-600 bg-green-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">참가 확정 ({confirmedGroup.length}명)</div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {confirmedGroup.map((pId) => renderPlayerCard(pId))}
                   </div>
                 </div>
 
-                <div className="group-box waiting-group">
-                  <h4>대기열 ({waitingGroup.length}명)</h4>
-                  <div className="player-grid">
-                    {waitingGroup.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox waiting ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-yellow-400 bg-yellow-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">대기열 ({waitingGroup.length}명)</div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {waitingGroup.map((pId) => renderPlayerCard(pId, "waiting"))}
                   </div>
                 </div>
               </div>
@@ -778,127 +814,75 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* AB 타입: 그룹 A/B 분할 */}
           {drawType === "AB" && (
             <>
-              <div
-                className="move-buttons"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  type="button"
+              <div className="flex gap-2 mb-3 max-[768px]:gap-1 max-[768px]:mb-2">
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => moveSelectedToABGroup("A")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1"
                 >
                   A로 이동
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => moveSelectedToABGroup("B")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1"
                 >
                   B로 이동
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  size="sm"
                   onClick={() => moveSelectedToABGroup("WAITING")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group btn-move-waiting"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   대기로 이동
-                </button>
+                </Button>
                 {canDeleteSelectedGuests ? (
-                  <button
-                    type="button"
+                  <Button
+                    variant="destructive"
+                    size="sm"
                     onClick={handleRemoveSelectedGuests}
-                    disabled={loading || selectedUsers.length === 0}
-                    className="btn-move-group btn-danger"
+                    disabled={loading || selectedPIds.length === 0}
+                    className="flex-1"
                   >
                     {loading ? "삭제 중..." : "게스트 삭제"}
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleAddGuest}
                     disabled={addingGuest}
-                    className="btn-move-group"
+                    className="flex-1"
                   >
                     {addingGuest ? "추가 중..." : "게스트 추가"}
-                  </button>
+                  </Button>
                 )}
               </div>
 
-              <div className="group-division group-division-ab">
-                <div className="group-box group-a">
-                  <h4>그룹 A ({groupA.length}명)</h4>
-                  <div className="player-grid">
-                    {groupA.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+              <div className="flex flex-col gap-3">
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-[#007bff] bg-[#e3f2fd] min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">그룹 A ({groupA.length}명)</div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {groupA.map((pId) => renderPlayerCard(pId))}
                   </div>
                 </div>
 
-                <div className="group-box group-b">
-                  <h4>그룹 B ({groupB.length}명)</h4>
-                  <div className="player-grid">
-                    {groupB.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-[#e91e63] bg-[#fce4ec] min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">그룹 B ({groupB.length}명)</div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {groupB.map((pId) => renderPlayerCard(pId))}
                   </div>
                 </div>
 
-                <div className="group-box waiting-group waiting-group-full">
-                  <h4>대기열 ({waitingGroup.length}명)</h4>
-                  <div className="player-grid">
-                    {waitingGroup.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox waiting ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-yellow-400 bg-yellow-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">대기열 ({waitingGroup.length}명)</div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {waitingGroup.map((pId) => renderPlayerCard(pId, "waiting"))}
                   </div>
                 </div>
               </div>
@@ -908,130 +892,78 @@ const DrawCreateModal: React.FC<Props> = ({
           {/* SEED 타입: 시드/일반 분할 */}
           {drawType === "SEED" && (
             <>
-              <div
-                className="move-buttons"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  type="button"
+              <div className="flex gap-2 mb-3 max-[768px]:gap-1 max-[768px]:mb-2">
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => moveSelectedToSeedGroup("SEED")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1"
                 >
                   시드로 이동
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => moveSelectedToSeedGroup("NORMAL")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1"
                 >
                   일반으로 이동
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  size="sm"
                   onClick={() => moveSelectedToSeedGroup("WAITING")}
-                  disabled={selectedUsers.length === 0}
-                  className="btn-move-group btn-move-waiting"
+                  disabled={selectedPIds.length === 0}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   대기로 이동
-                </button>
+                </Button>
                 {canDeleteSelectedGuests ? (
-                  <button
-                    type="button"
+                  <Button
+                    variant="destructive"
+                    size="sm"
                     onClick={handleRemoveSelectedGuests}
-                    disabled={loading || selectedUsers.length === 0}
-                    className="btn-move-group btn-danger"
+                    disabled={loading || selectedPIds.length === 0}
+                    className="flex-1"
                   >
                     {loading ? "삭제 중..." : "게스트 삭제"}
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleAddGuest}
                     disabled={addingGuest}
-                    className="btn-move-group"
+                    className="flex-1"
                   >
                     {addingGuest ? "추가 중..." : "게스트 추가"}
-                  </button>
+                  </Button>
                 )}
               </div>
 
-              <div className="group-division group-division-seed">
-                <div className="group-box seed-group">
-                  <h4>
+              <div className="flex flex-col gap-3">
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-[#9c27b0] bg-[#f3e5f5] min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">
                     시드 플레이어 ({seedPlayers.length}/
                     {getSeedCount(seedPlayers.length + normalPlayers.length)}명)
-                  </h4>
-                  <div className="player-grid">
-                    {seedPlayers.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox seed ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {seedPlayers.map((pId) => renderPlayerCard(pId, "seed"))}
                   </div>
                 </div>
 
-                <div className="group-box normal-group">
-                  <h4>일반 플레이어 ({normalPlayers.length}명)</h4>
-                  <div className="player-grid">
-                    {normalPlayers.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-primary bg-primary/5 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">일반 플레이어 ({normalPlayers.length}명)</div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {normalPlayers.map((pId) => renderPlayerCard(pId))}
                   </div>
                 </div>
 
-                <div className="group-box waiting-group waiting-group-full">
-                  <h4>대기열 ({waitingGroup.length}명)</h4>
-                  <div className="player-grid">
-                    {waitingGroup.map((userId) => (
-                      <div
-                        key={userId}
-                        className={`player-card-with-checkbox waiting ${
-                          selectedUsers.includes(userId) ? "selected" : ""
-                        }`}
-                        onClick={() => toggleUserSelection(userId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(userId)}
-                          onChange={() => toggleUserSelection(userId)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span>{getUserName(userId)}</span>
-                      </div>
-                    ))}
+                <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-yellow-400 bg-yellow-50 min-h-0 max-h-full flex flex-col overflow-hidden transition-all hover:border-primary hover:bg-primary/5 max-[768px]:max-h-[280px] max-[768px]:overflow-y-auto max-[768px]:shrink-0">
+                  <div className="text-xs font-bold text-muted-foreground mb-3 text-center shrink-0">대기열 ({waitingGroup.length}명)</div>
+                  <div className="grid grid-cols-4 gap-2 content-start max-[359px]:gap-1 flex-1 overflow-y-auto min-h-0">
+                    {waitingGroup.map((pId) => renderPlayerCard(pId, "waiting"))}
                   </div>
                 </div>
               </div>
@@ -1050,51 +982,54 @@ const DrawCreateModal: React.FC<Props> = ({
 
           {/* 대진 생성 결과 */}
           {drawResult && (
-            <div className="draw-result-section">
+            <div className="flex-[0_0_auto] max-h-[35vh] flex flex-col min-h-0 max-[768px]:mt-3 max-[768px]:pt-3 max-[768px]:border-t-2 max-[768px]:border-border max-[768px]:shrink-0">
               <DrawGamesList games={drawResult.games} playerCount={totalSelected} numberOfCourts={schedule.numberOfCourts} />
             </div>
           )}
 
           {/* 액션 버튼 */}
-          <div className="modal-actions">
+          <div className="flex gap-2 mt-auto pt-3 border-t shrink-0 bg-background sticky bottom-0 z-10 max-[768px]:gap-1 max-[768px]:pt-[10px]">
             {!drawResult && drawType !== "MANUAL" ? (
               <>
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   onClick={() => {
-                    onSuccess(); // 부모 갱신
+                    onSuccess();
                     onClose();
                   }}
-                  className="btn-secondary"
                   disabled={loading}
+                  className="flex-1"
                 >
                   취소
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="default"
                   onClick={handleCreateDraw}
-                  className="btn-primary"
                   disabled={loading || !isValid}
+                  className="flex-1"
                 >
                   {loading ? "생성 중..." : "대진 생성"}
-                </button>
+                </Button>
               </>
             ) : !drawResult && drawType === "MANUAL" ? (
-              /* MANUAL 타입은 ManualDrawEditor 내부에서 저장/취소 처리 */
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => {
                   onSuccess();
                   onClose();
                 }}
-                className="btn-secondary"
                 disabled={loading}
+                className="flex-1"
               >
                 취소
-              </button>
+              </Button>
             ) : (
               <>
-                <button type="button" onClick={handleCopy} className="btn-copy">
+                <Button
+                  variant="secondary"
+                  onClick={handleCopy}
+                  className="flex-1"
+                >
                   {copied ? (
                     <>
                       <CheckIcon size={16} />
@@ -1106,32 +1041,31 @@ const DrawCreateModal: React.FC<Props> = ({
                       <span>복사</span>
                     </>
                   )}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   onClick={handleCreateDraw}
-                  className="btn-regenerate"
                   disabled={loading}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
                 >
-                  🔄 재생성
-                </button>
-                <button
-                  type="button"
+                  재생성
+                </Button>
+                <Button
+                  variant="default"
                   onClick={() => {
                     onSuccess();
                     onClose();
                   }}
-                  className="btn-primary"
+                  className="flex-1"
                 >
                   확인
-                </button>
+                </Button>
               </>
             )}
           </div>
         </div>
-      </div>
+      </DialogContent>
       <Toast message={toastMessage} onClose={() => setToastMessage("")} />
-    </div>
+    </Dialog>
   );
 };
 

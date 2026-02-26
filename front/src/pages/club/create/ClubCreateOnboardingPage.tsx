@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeftIcon,
   SettingsIcon,
   EditIcon,
   ChevronRightIcon,
 } from "../../../components/common/Icons";
+import BackButton from "../../../components/common/BackButton";
 import { clubService } from "../../../services/clubService";
+import { userService } from "../../../services/userService";
 import axiosInstance from "../../../services/api/axiosInstance";
 import type { Club } from "../../../types/club";
 import { useToast } from "../../../contexts/ToastContext";
-import "./ClubCreateOnboardingPage.css";
+import { Headphones } from "lucide-react";
 
 const ClubCreateOnboardingPage: React.FC = () => {
   const { showToast } = useToast();
@@ -23,13 +24,22 @@ const ClubCreateOnboardingPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [operatorId, setOperatorId] = useState<number | null>(null);
 
   const fetchClubPolicy = useCallback(async () => {
     if (!id) return;
     try {
       setLoading(true);
-      const res = await axiosInstance.get<Club>(`/clubs/${id}`);
-      setRecruitmentNote(res.data.memberRecruitmentNote ?? "");
+      const [clubRes, operator] = await Promise.allSettled([
+        axiosInstance.get<Club>(`/clubs/${id}`),
+        userService.getOperatorProfile(),
+      ]);
+      if (clubRes.status === "fulfilled") {
+        setRecruitmentNote(clubRes.value.data.memberRecruitmentNote ?? "");
+      }
+      if (operator.status === "fulfilled") {
+        setOperatorId(operator.value.id);
+      }
     } catch (e) {
       console.error("Failed to fetch club policy:", e);
     } finally {
@@ -43,7 +53,7 @@ const ClubCreateOnboardingPage: React.FC = () => {
 
   const handleBack = () => {
     if (!clubId) {
-      navigate("/clubs/explore");
+      navigate("/explore");
       return;
     }
     navigate(`/clubs/${clubId}`);
@@ -71,18 +81,13 @@ const ClubCreateOnboardingPage: React.FC = () => {
 
   if (!id || !Number.isFinite(id)) {
     return (
-      <div className="club-create-onboarding-page">
-        <div className="club-create-onboarding-page__header">
-          <button
-            className="club-create-onboarding-page__back-btn"
-            onClick={() => navigate("/clubs/explore")}
-          >
-            <ArrowLeftIcon size={20} />
-          </button>
-          <h1 className="club-create-onboarding-page__title">클럽 생성 완료</h1>
-          <div className="club-create-onboarding-page__header-spacer" />
+      <div className="page-container">
+        <div className="flex items-center justify-between mb-6">
+          <BackButton onClick={() => navigate("/explore")} />
+          <h1 className="text-sm font-semibold">클럽 만들기 완료</h1>
+          <div className="w-10" />
         </div>
-        <div className="club-create-onboarding-page__error">
+        <div className="p-4 border border-red-500 bg-red-50 text-red-600 rounded-lg">
           클럽 정보를 찾을 수 없습니다.
         </div>
       </div>
@@ -91,48 +96,38 @@ const ClubCreateOnboardingPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="club-create-onboarding-page">
-        <div className="club-create-onboarding-page__header">
-          <button
-            className="club-create-onboarding-page__back-btn"
-            onClick={handleBack}
-          >
-            <ArrowLeftIcon size={20} />
-          </button>
-          <h1 className="club-create-onboarding-page__title">클럽 생성 완료</h1>
-          <div className="club-create-onboarding-page__header-spacer" />
+      <div className="page-container">
+        <div className="flex items-center justify-between mb-6">
+          <BackButton onClick={handleBack} />
+          <h1 className="text-sm font-semibold">클럽 만들기 완료</h1>
+          <div className="w-10" />
         </div>
-        <div className="club-create-onboarding-page__loading">로딩 중...</div>
+        <div className="text-center p-8 text-muted-foreground">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="club-create-onboarding-page">
-      <div className="club-create-onboarding-page__header">
-        <button
-          className="club-create-onboarding-page__back-btn"
-          onClick={handleBack}
-        >
-          <ArrowLeftIcon size={20} />
-        </button>
-        <h1 className="club-create-onboarding-page__title">클럽 생성 완료</h1>
-        <div className="club-create-onboarding-page__header-spacer" />
+    <div className="page-container">
+      <div className="flex items-center justify-between mb-6">
+        <BackButton onClick={handleBack} />
+        <h1 className="text-sm font-semibold">클럽 만들기 완료</h1>
+        <div className="w-10" />
       </div>
 
       {/* 모집글 작성 섹션 */}
-      <div className="club-create-onboarding-page__card">
-        <div className="club-create-onboarding-page__headline">
+      <div className="bg-white border border-border rounded-xl p-6">
+        <div className="text-lg font-semibold mb-1">
           회원 모집글 작성
         </div>
-        <div className="club-create-onboarding-page__sub">
+        <div className="text-sm text-muted-foreground mb-6 leading-relaxed">
           가입 희망자에게 보여줄 모집 안내문을 작성해주세요.
           <br />
           가입 조건, 회비, 활동 일정 등을 안내하면 좋습니다.
         </div>
 
         <textarea
-          className="club-create-onboarding-page__textarea"
+          className="w-full min-h-[100px] px-3 py-2 border border-input rounded-lg text-base font-[inherit] text-foreground bg-background resize-y mb-3 focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="예: 매주 토요일 오전 8시 정기 모임, 월 회비 3만원, 실력 무관 누구나 환영합니다!"
           value={recruitmentNote}
           onChange={(e) => {
@@ -144,7 +139,7 @@ const ClubCreateOnboardingPage: React.FC = () => {
         />
 
         <button
-          className="club-create-onboarding-page__save-btn"
+          className="w-full py-3 px-6 border-none rounded-lg bg-primary text-white font-semibold text-base cursor-pointer hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={handleSaveRecruitmentNote}
           disabled={saving}
         >
@@ -153,20 +148,20 @@ const ClubCreateOnboardingPage: React.FC = () => {
       </div>
 
       {/* 추가 설정 CTA */}
-      <div className="club-create-onboarding-page__card club-create-onboarding-page__card--mt">
-        <div className="club-create-onboarding-page__headline">
+      <div className="bg-white border border-border rounded-xl p-6 mt-4">
+        <div className="text-lg font-semibold mb-1">
           다음 작업을 이어서 진행해보세요
         </div>
-        <div className="club-create-onboarding-page__sub">
+        <div className="text-sm text-muted-foreground mb-6 leading-relaxed">
           가입 승인 방식은 <b>승인 필요</b>, 교류전 모집 상태는 <b>CLOSED</b>로
           시작합니다.
         </div>
 
         <button
-          className="club-create-onboarding-page__cta"
+          className="w-full flex items-center justify-between p-4 rounded-lg border border-border bg-white cursor-pointer mb-3 hover:bg-muted hover:border-primary transition-colors"
           onClick={() => navigate(`/clubs/${clubId}/manage/policy`)}
         >
-          <span className="club-create-onboarding-page__cta-left">
+          <span className="inline-flex items-center gap-3 font-semibold text-foreground">
             <SettingsIcon size={18} />
             운영 정책 설정
           </span>
@@ -174,10 +169,10 @@ const ClubCreateOnboardingPage: React.FC = () => {
         </button>
 
         <button
-          className="club-create-onboarding-page__cta"
+          className="w-full flex items-center justify-between p-4 rounded-lg border border-border bg-white cursor-pointer mb-3 hover:bg-muted hover:border-primary transition-colors"
           onClick={() => navigate(`/clubs/${clubId}/manage/info`)}
         >
-          <span className="club-create-onboarding-page__cta-left">
+          <span className="inline-flex items-center gap-3 font-semibold text-foreground">
             <EditIcon size={18} />
             클럽 정보 수정
           </span>
@@ -185,15 +180,33 @@ const ClubCreateOnboardingPage: React.FC = () => {
         </button>
 
         <button
-          className="club-create-onboarding-page__cta club-create-onboarding-page__cta--secondary"
+          className="w-full flex items-center justify-between p-4 rounded-lg border border-border bg-white cursor-pointer mb-0 hover:bg-muted hover:border-primary transition-colors"
           onClick={() => navigate(`/clubs/${clubId}`)}
         >
-          <span className="club-create-onboarding-page__cta-left">
+          <span className="inline-flex items-center gap-3 font-semibold text-foreground">
             클럽 홈으로 이동
           </span>
           <ChevronRightIcon size={18} />
         </button>
       </div>
+
+      {/* 운영자 문의 */}
+      {operatorId && (
+        <button
+          type="button"
+          className="w-full flex items-center gap-3 p-4 rounded-xl border border-primary/30 bg-primary/5 cursor-pointer transition-colors hover:bg-primary/10 text-left mt-4"
+          onClick={() => navigate(`/messages/${operatorId}`)}
+        >
+          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <Headphones size={16} className="text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-primary">운영자에게 문의하기</div>
+            <p className="text-xs text-muted-foreground">클럽 설정이 막히면 편하게 DM 주세요!</p>
+          </div>
+          <ChevronRightIcon size={16} className="text-primary/50" />
+        </button>
+      )}
     </div>
   );
 };

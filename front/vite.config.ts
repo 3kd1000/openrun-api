@@ -1,25 +1,30 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     VitePWA({
       registerType: "prompt",
       includeAssets: [
-        "icon-192x192.png",
-        "icon-512x512.png",
-        "openrun_logo.jpeg",
+        "icon-192x192-v4.png",
+        "icon-512x512-v4.png",
       ],
       manifest: false, // 이미 수동으로 생성한 manifest.json 사용
       workbox: {
         // Service Worker 업데이트 전략
         skipWaiting: false, // prompt 모드에서는 사용자 확인 후 skipWaiting
         clientsClaim: true, // 새 SW 활성화 즉시 모든 클라이언트 제어
-        // JS/CSS/이미지만 precache (HTML 제외)
+        // JS/CSS/이미지만 precache (HTML 제외 → runtimeCaching NetworkFirst로 처리)
         globPatterns: ["**/*.{js,css,ico,png,svg,jpeg}"],
+        // HTML은 precache에 없으므로 navigateFallback 비활성화
+        // (navigation 요청은 아래 runtimeCaching의 NetworkFirst가 처리)
+        navigateFallback: null,
         // 구버전 캐시 자동 삭제
         cleanupOutdatedCaches: true,
         // firebase-messaging-sw.js는 Workbox에서 제외 (별도 SW로 동작)
@@ -75,6 +80,11 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   server: {
     host: true, // 모든 네트워크 인터페이스에서 접근 허용
     allowedHosts: [
@@ -91,6 +101,15 @@ export default defineConfig({
           "date-vendor": ["date-fns"],
           // 캘린더 라이브러리
           "calendar-vendor": ["react-calendar"],
+          // TanStack Query
+          "query-vendor": ["@tanstack/react-query"],
+          // shadcn/ui 관련 유틸리티
+          "ui-vendor": [
+            "class-variance-authority",
+            "clsx",
+            "tailwind-merge",
+            "lucide-react",
+          ],
         },
       },
     },

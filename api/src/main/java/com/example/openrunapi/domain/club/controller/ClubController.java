@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -206,6 +207,31 @@ public class ClubController {
             @AuthenticationPrincipal UserDetails userDetails) {
         UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
         clubService.kickMember(clubId, currentUserResponse.getId(), memberId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 클럽 로고 업로드 - ADMIN 이상 가능, 감사 로그 기록
+     */
+    @PostMapping("/{clubId}/logo")
+    public ResponseEntity<ClubResponse> uploadClubLogo(
+            @PathVariable Long clubId,
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        ClubResponse response = clubService.uploadClubLogo(clubId, currentUserResponse.getId(), file);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 클럽 로고 삭제 - ADMIN 이상 가능, 감사 로그 기록
+     */
+    @DeleteMapping("/{clubId}/logo")
+    public ResponseEntity<Void> deleteClubLogo(
+            @PathVariable Long clubId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse currentUserResponse = userService.getCurrentUser(userDetails.getUsername());
+        clubService.deleteClubLogo(clubId, currentUserResponse.getId());
         return ResponseEntity.noContent().build();
     }
 

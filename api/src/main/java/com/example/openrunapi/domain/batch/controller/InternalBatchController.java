@@ -5,6 +5,7 @@ import com.example.openrunapi.domain.audit.service.AuditLogMaintenanceService;
 import com.example.openrunapi.domain.batch.model.BatchJobStatus;
 import com.example.openrunapi.domain.batch.service.BatchJobHistoryService;
 import com.example.openrunapi.domain.schedule.service.ScheduleMaintenanceService;
+import com.example.openrunapi.domain.schedule.service.ScheduleReminderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class InternalBatchController {
     private final ScheduleMaintenanceService scheduleMaintenanceService;
     private final AuditLogMaintenanceService auditLogMaintenanceService;
     private final DailyStatsService dailyStatsService;
+    private final ScheduleReminderService scheduleReminderService;
     private final BatchJobHistoryService batchJobHistoryService;
     private final ObjectMapper objectMapper;
 
@@ -106,6 +108,31 @@ public class InternalBatchController {
             return ResponseEntity.ok(Map.of("status", "success", "message", result));
         } catch (Exception e) {
             log.error("[Internal Batch] 일별 통계 수집 배치 실행 실패", e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * 일정 전날 리마인드 알림 발송
+     * K8s CronJob: 매일 KST 09:00 (UTC 00:00)
+     */
+    @PostMapping("/execute/SCHEDULE_REMINDER")
+    public ResponseEntity<Map<String, String>> executeScheduleReminder(
+            @RequestHeader(value = "X-Internal-Key", required = false) String internalKey) {
+
+        if (!validateInternalKey(internalKey)) {
+            log.warn("[Internal Batch] 인증 실패 - SCHEDULE_REMINDER");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("status", "error", "message", "Unauthorized"));
+        }
+
+        log.info("[Internal Batch] 일정 리마인드 배치 실행 시작");
+        try {
+            String result = scheduleReminderService.sendReminders();
+            return ResponseEntity.ok(Map.of("status", "success", "message", result));
+        } catch (Exception e) {
+            log.error("[Internal Batch] 일정 리마인드 배치 실행 실패", e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("status", "error", "message", e.getMessage()));
         }

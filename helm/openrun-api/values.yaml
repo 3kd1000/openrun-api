@@ -71,6 +71,12 @@ flyway:
   enabled: "true"
   locations: "classpath:db/migration"
 
+# OCI Object Storage (비민감 설정 - region/namespace는 공통, bucketName은 환경별 오버라이드)
+oci:
+  region: "ap-chuncheon-1"
+  namespace: "axobo9eov5pd"
+  bucketName: "openrun-club-logos-dev"  # 환경별 values에서 오버라이드
+
 # Actuator 설정
 actuator:
   endpoints: "health,info"

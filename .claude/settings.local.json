@@ -12,7 +12,10 @@
       "Bash(npm run build:*)",
       "Bash(cat:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "mcp__stitch__generate_screen_from_text",
+      "Bash(curl:*)",
+      "Bash(git -C /Users/1111622/study/openrun check-ignore -v admin/src/lib/utils.ts)"
     ],
     "deny": [],
     "ask": []

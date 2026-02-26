@@ -1,13 +1,15 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   awardService,
   type WinnerDetail,
   type MemberAchievement,
   type TierName,
 } from "../services/awardService";
-import type { AwardType } from "../types/club";
+import type { AwardType, Club } from "../types/club";
 import { getOpenRunSession } from "../utils/openrunSession";
+import axiosInstance from "../services/api/axiosInstance";
 
 interface AwardWinnersContextType {
   winnerUserIds: Set<number>;  // 현재 어워드 수상자 ID Set
@@ -49,68 +51,64 @@ interface AwardWinnersProviderProps {
 }
 
 export const AwardWinnersProvider: React.FC<AwardWinnersProviderProps> = ({ children }) => {
-  const [winnerUserIds, setWinnerUserIds] = useState<Set<number>>(new Set());
-  const [winners, setWinners] = useState<WinnerDetail[]>([]);
-  const [achievements, setAchievements] = useState<Map<number, MemberAchievement>>(new Map());
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentClubId, setCurrentClubId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchData = useCallback(async (clubId: number) => {
-    try {
-      setIsLoading(true);
+  // sessionStorage에서 초기값 읽어 즉시 세팅
+  const [currentClubId, setCurrentClubId] = useState<number | null>(() => {
+    const session = getOpenRunSession();
+    return session.currentClubId ? parseInt(session.currentClubId) : null;
+  });
 
-      // 현재 시즌 수상자와 누적 업적 동시 조회
-      const [winnersResponse, achievementsResponse] = await Promise.all([
-        awardService.getCurrentWinners(clubId),
-        awardService.getCumulativeAchievements(clubId),
-      ]);
-
-      // 현재 시즌 수상자
-      setWinnerUserIds(new Set(winnersResponse.winnerUserIds));
-      setWinners(winnersResponse.winners);
-
-      // 누적 업적 Map으로 변환
-      const achievementMap = new Map<number, MemberAchievement>();
-      for (const member of achievementsResponse.members) {
-        achievementMap.set(member.userId, member);
-      }
-      setAchievements(achievementMap);
-    } catch (error) {
-      console.error("Failed to fetch award data:", error);
-      setWinnerUserIds(new Set());
-      setWinners([]);
-      setAchievements(new Map());
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // 클럽 변경 감지 및 데이터 조회
+  // 1초 폴링으로 클럽 변경 감지 (sessionStorage 변경 감지용)
   useEffect(() => {
-    const checkClubChange = () => {
+    const check = () => {
       const session = getOpenRunSession();
       const clubId = session.currentClubId ? parseInt(session.currentClubId) : null;
-
-      if (clubId && clubId !== currentClubId) {
-        setCurrentClubId(clubId);
-        fetchData(clubId);
-      } else if (!clubId && currentClubId) {
-        // 클럽 선택 해제 시 초기화
-        setCurrentClubId(null);
-        setWinnerUserIds(new Set());
-        setWinners([]);
-        setAchievements(new Map());
-      }
+      setCurrentClubId((prev) => (prev !== clubId ? clubId : prev));
     };
-
-    // 초기 체크
-    checkClubChange();
-
-    // 주기적으로 클럽 변경 체크 (session storage 변경 감지용)
-    const interval = setInterval(checkClubChange, 1000);
-
+    const interval = setInterval(check, 1000);
     return () => clearInterval(interval);
-  }, [currentClubId, fetchData]);
+  }, []);
+
+  // React Query로 어워드 데이터 캐싱 (staleTime 5분)
+  const { data: awardsData, isLoading } = useQuery({
+    queryKey: ["awards", currentClubId] as const,
+    queryFn: async () => {
+      // 클럽의 awardEnabled 체크 → OFF이면 빈 데이터 반환
+      const clubRes = await axiosInstance.get<Club>(`/clubs/${currentClubId}`);
+      if (clubRes.data.awardEnabled === false) {
+        return null; // 어워드 비활성화
+      }
+
+      const [winnersResponse, achievementsResponse] = await Promise.all([
+        awardService.getCurrentWinners(currentClubId!),
+        awardService.getCumulativeAchievements(currentClubId!),
+      ]);
+      return { winnersResponse, achievementsResponse };
+    },
+    enabled: !!currentClubId,
+    staleTime: 5 * 60 * 1000, // 5분: 이 시간 내 재방문 시 API 호출 없이 캐시 반환
+    gcTime: 10 * 60 * 1000,   // 10분: 언마운트 후 메모리 유지 시간
+  });
+
+  // 쿼리 데이터에서 상태 파생
+  const winnerUserIds = useMemo(
+    () => (awardsData ? new Set(awardsData.winnersResponse.winnerUserIds) : new Set<number>()),
+    [awardsData]
+  );
+
+  const winners = useMemo(
+    () => awardsData?.winnersResponse.winners ?? [],
+    [awardsData]
+  );
+
+  const achievements = useMemo(
+    () =>
+      awardsData
+        ? new Map(awardsData.achievementsResponse.members.map((m) => [m.userId, m]))
+        : new Map<number, MemberAchievement>(),
+    [awardsData]
+  );
 
   const isWinner = useCallback((userId: number): boolean => {
     return winnerUserIds.has(userId);
@@ -143,11 +141,12 @@ export const AwardWinnersProvider: React.FC<AwardWinnersProviderProps> = ({ chil
     };
   }, [achievements]);
 
+  // 수동 갱신: 캐시 무효화 후 재요청
   const refetch = useCallback(async () => {
     if (currentClubId) {
-      await fetchData(currentClubId);
+      await queryClient.invalidateQueries({ queryKey: ["awards", currentClubId] });
     }
-  }, [currentClubId, fetchData]);
+  }, [currentClubId, queryClient]);
 
   return (
     <AwardWinnersContext.Provider

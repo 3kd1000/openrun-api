@@ -14,6 +14,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByName(String name);
 
+    // 이름 부분 검색 (Admin DM 발송 대상 검색용, 최대 20건)
+    @Query("SELECT u FROM User u WHERE u.isGuest = false AND LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY u.name ASC")
+    List<User> searchByNameKeyword(@Param("keyword") String keyword, org.springframework.data.domain.Pageable pageable);
+
     // 게스트 사용자 목록 조회 (ID 오름차순)
     List<User> findByIsGuestOrderByIdAsc(boolean isGuest);
 

@@ -11,6 +11,7 @@ import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.MatchType;
+import com.example.openrunapi.domain.schedule.model.ScheduleType;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
@@ -19,23 +20,31 @@ import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleGuestRecru
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubRecruitRequest;
 import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleCursorResponse;
+import com.example.openrunapi.domain.schedule.model.dto.CreatePublicScheduleRequest;
+import com.example.openrunapi.domain.schedule.model.dto.PublicScheduleResponse;
 import com.example.openrunapi.domain.schedule.repository.ScheduleRepository;
 import com.example.openrunapi.domain.schedule.repository.ScheduleParticipantRepository;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.repository.ClubRepository;
 import com.example.openrunapi.domain.user.model.User;
 import com.example.openrunapi.domain.user.repository.UserRepository;
+import com.example.openrunapi.common.exception.AuthenticationRequiredException;
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Comparator;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Slf4j
 @Service
@@ -50,6 +59,7 @@ public class ScheduleService {
     private final PermissionService permissionService;
     private final ClubRepository clubRepository;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     /**
      * 일정 생성
@@ -70,6 +80,10 @@ public class ScheduleService {
         }
 
         Schedule schedule = request.toEntity();
+        // 일정 생성자 기록 (클럽일정/공개일정 공통)
+        if (userId != null) {
+            schedule.setCreatedByUserId(userId);
+        }
         Schedule savedSchedule = scheduleRepository.save(schedule);
 
         // Audit 로깅
@@ -98,10 +112,24 @@ public class ScheduleService {
 
     /**
      * 특정 일정 조회 (권한 정보 포함)
+     * - 클럽일정 + 모집 미진행: 멤버만 조회 가능
+     * - 클럽일정 + 모집 중 (게스트/교류전): 비회원도 조회 가능 (ScheduleRecruitPage 플로우 보존)
+     * - 공개일정: 누구나 조회 가능
      */
     public ScheduleResponse getScheduleById(Long scheduleId, Long userId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 클럽일정 + 모집 미진행: 멤버만 조회 가능
+        if (schedule.isClubSchedule()
+                && !Boolean.TRUE.equals(schedule.getGuestRecruitOpen())
+                && !Boolean.TRUE.equals(schedule.getInterclubRecruitOpen())) {
+            if (userId == null) {
+                throw new AuthenticationRequiredException("클럽 일정을 조회하려면 로그인이 필요합니다.");
+            }
+            permissionService.requireClubMembership(userId, schedule.getClubId());
+        }
+
         return new ScheduleResponse(schedule, clubRepository, userRepository, permissionService, userId);
     }
 
@@ -264,8 +292,20 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
+        // 권한 체크: 공개일정은 생성자만, 클럽일정은 생성자 OR ADMIN 이상
+        if (schedule.isPublicSchedule()) {
+            if (!userId.equals(schedule.getCreatedByUserId())) {
+                throw new PermissionDeniedException("일정 생성자만 수정할 수 있습니다.");
+            }
+        } else {
+            if (!userId.equals(schedule.getCreatedByUserId())
+                    && !permissionService.canManageSchedule(userId, schedule.getClubId())) {
+                throw new PermissionDeniedException("일정 수정 권한이 없습니다. 생성자 또는 운영진 이상만 가능합니다.");
+            }
+        }
+
         // Audit용 스냅샷 (수정 전)
-        ScheduleAuditSnapshot beforeSnapshot = userId != null ? ScheduleAuditSnapshot.from(schedule) : null;
+        ScheduleAuditSnapshot beforeSnapshot = ScheduleAuditSnapshot.from(schedule);
 
         // 과거 날짜 체크 (KST 기준)
         if (TimeValidationUtils.isPast(request.getScheduledAt())) {
@@ -318,10 +358,10 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
         }
         if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
-            throw new SecurityException("일정 고정(PIN) 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("일정 고정(PIN) 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         boolean pinned = request != null && Boolean.TRUE.equals(request.getPinned());
@@ -338,10 +378,10 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
         }
         if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
-            throw new SecurityException("게스트 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("게스트 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         Boolean open = request != null ? request.getOpen() : null;
@@ -359,10 +399,10 @@ public class ScheduleService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         if (userId == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
         }
         if (!permissionService.canManageSchedule(userId, schedule.getClubId())) {
-            throw new SecurityException("교류전 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("교류전 모집 설정 권한이 없습니다. 운영진 이상만 가능합니다.");
         }
 
         Boolean open = request != null ? request.getOpen() : null;
@@ -423,12 +463,75 @@ public class ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
-        // Audit 로깅 (삭제 전)
-        if (userId != null) {
-            auditLogService.logScheduleDelete(userId, schedule);
+        // 권한 체크: 공개일정은 생성자만, 클럽일정은 생성자 OR ADMIN 이상
+        if (userId == null) {
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
+        }
+        if (schedule.isPublicSchedule()) {
+            if (!userId.equals(schedule.getCreatedByUserId())) {
+                throw new PermissionDeniedException("일정 생성자만 삭제할 수 있습니다.");
+            }
+        } else {
+            if (!userId.equals(schedule.getCreatedByUserId())
+                    && !permissionService.canManageSchedule(userId, schedule.getClubId())) {
+                throw new PermissionDeniedException("일정 삭제 권한이 없습니다. 생성자 또는 운영진 이상만 가능합니다.");
+            }
         }
 
+        // 경기 결과가 존재하는 일정은 삭제 불가 (랭킹 데이터 보호)
+        if (matchRepository.existsResultByScheduleId(scheduleId)) {
+            throw new IllegalStateException("경기 결과가 존재하는 일정은 삭제할 수 없습니다.");
+        }
+
+        // 참가자에게 일정 삭제 알림 발송 (삭제 전)
+        List<ScheduleParticipant> participants = participantRepository.findByScheduleIdOrderByPositionAsc(scheduleId);
+        List<Long> notifyUserIds = participants.stream()
+                .filter(p -> p.isConfirmed() || p.isWaiting() || p.isPending())
+                .map(ScheduleParticipant::getUserId)
+                .filter(id -> id != null && !id.equals(userId)) // 삭제자 본인 제외
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!notifyUserIds.isEmpty()) {
+            String courtName = schedule.getCourtName();
+            notificationService.sendNotification(
+                    schedule.getClubId(),
+                    notifyUserIds,
+                    "일정이 취소되었습니다",
+                    courtName + " 일정이 취소되었습니다.",
+                    NotificationType.SCHEDULE,
+                    null,  // 삭제된 일정이므로 referenceId null → 알림 클릭 시 /explore로 이동
+                    null
+            );
+        }
+
+        // Audit 로깅 (삭제 전)
+        auditLogService.logScheduleDelete(userId, schedule);
+
         scheduleRepository.delete(schedule);
+    }
+
+    /**
+     * 대진 관리 권한 검증
+     * - 공개일정: 호스트(생성자)만
+     * - 클럽일정: 호스트 OR ADMIN 이상
+     */
+    public void validateDrawManagePermission(Long scheduleId, Long userId) {
+        if (userId == null) {
+            throw new AuthenticationRequiredException("로그인이 필요합니다.");
+        }
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+        if (schedule.isPublicSchedule()) {
+            if (!userId.equals(schedule.getCreatedByUserId())) {
+                throw new PermissionDeniedException("대진 관리는 호스트만 가능합니다.");
+            }
+        } else {
+            if (!userId.equals(schedule.getCreatedByUserId())
+                    && !permissionService.canManageSchedule(userId, schedule.getClubId())) {
+                throw new PermissionDeniedException("대진 관리 권한이 없습니다. 호스트 또는 운영진 이상만 가능합니다.");
+            }
+        }
     }
 
     /**
@@ -456,6 +559,8 @@ public class ScheduleService {
         // 기존 대진이 있으면 삭제 (재생성 대응)
         List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
         if (!existingMatches.isEmpty()) {
+            // 경기 결과가 존재하면 재생성 불가
+            validateNoGameResults(scheduleId);
             log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
             matchRepository.deleteAll(existingMatches);
         }
@@ -472,6 +577,11 @@ public class ScheduleService {
             nameToUserId.put(entry.getValue(), entry.getKey());
         }
 
+        // 게스트 이름 집합 추출
+        Set<String> guestNames = request.getGuestNames() != null
+                ? new HashSet<>(request.getGuestNames())
+                : Collections.emptySet();
+
         Long clubId = scheduleResponse.getClubId();
         LocalDateTime playedAt = scheduleResponse.getScheduledAt();
 
@@ -479,7 +589,7 @@ public class ScheduleService {
         List<Match> matches = new ArrayList<>();
         for (DrawResponse.Game game : drawResponse.getGames()) {
             try {
-                Match match = buildMatchFromGame(game, clubId, scheduleId, playedAt, nameToUserId);
+                Match match = buildMatchFromGame(game, clubId, scheduleId, playedAt, nameToUserId, guestNames);
                 matches.add(match);
             } catch (IllegalArgumentException e) {
                 log.error("게임 {} Match 생성 실패: {}", game.getGameNo(), e.getMessage());
@@ -491,7 +601,7 @@ public class ScheduleService {
         log.info("Match 저장 완료: {} 건", matches.size());
 
         // 참가자 상태 업데이트: 대진에 포함된 선수는 CONFIRMED, 나머지는 WAITING
-        updateParticipantStatusBasedOnDrawWithIds(scheduleId, request);
+        updateParticipantStatusBasedOnDrawWithIds(scheduleId, request, guestNames);
     }
 
     /**
@@ -540,11 +650,12 @@ public class ScheduleService {
     }
 
     /**
-     * userId 기반 참가자 상태 업데이트
+     * userId 기반 참가자 상태 업데이트 (게스트 포함)
      */
-    private void updateParticipantStatusBasedOnDrawWithIds(Long scheduleId, CreateDrawRequestWithIds request) {
+    private void updateParticipantStatusBasedOnDrawWithIds(Long scheduleId, CreateDrawRequestWithIds request,
+                                                            Set<String> participatingGuestNames) {
         log.info("참가자 상태 업데이트 시작 (userId 기반)");
-        log.info("scheduleId: {}, 대진 참여 선수 수: {}", scheduleId, 
+        log.info("scheduleId: {}, 대진 참여 선수 수: {}", scheduleId,
                 (request.getUserIds() != null ? request.getUserIds().size() : 0) +
                 (request.getSeedUserIds() != null ? request.getSeedUserIds().size() : 0) +
                 (request.getGroupAUserIds() != null ? request.getGroupAUserIds().size() : 0) +
@@ -565,21 +676,33 @@ public class ScheduleService {
             participatingUserIds.addAll(request.getGroupBUserIds());
         }
         log.info("대진 참여 userId: {}", participatingUserIds);
+        log.info("대진 참여 게스트: {}", participatingGuestNames);
 
         // 해당 일정의 모든 참가자 조회
         List<com.example.openrunapi.domain.schedule.model.ScheduleParticipant> participants =
                 participantRepository.findByScheduleIdOrderByPositionAsc(scheduleId);
 
         for (com.example.openrunapi.domain.schedule.model.ScheduleParticipant participant : participants) {
-            if (participatingUserIds.contains(participant.getUserId())) {
+            boolean inDraw;
+            if (participant.getUserId() != null) {
+                inDraw = participatingUserIds.contains(participant.getUserId());
+            } else if (participant.getGuestName() != null) {
+                inDraw = participatingGuestNames.contains(participant.getGuestName());
+            } else {
+                inDraw = false;
+            }
+
+            if (inDraw) {
                 if (participant.getStatus() != com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus.CONFIRMED) {
                     participant.confirm();
-                    log.debug("userId={} CONFIRMED로 변경", participant.getUserId());
+                    log.debug("userId={}, guestName={} CONFIRMED로 변경",
+                            participant.getUserId(), participant.getGuestName());
                 }
             } else {
                 if (participant.getStatus() != com.example.openrunapi.domain.schedule.model.ScheduleParticipant.ParticipantStatus.WAITING) {
                     participant.waitlist();
-                    log.debug("userId={} WAITING으로 변경", participant.getUserId());
+                    log.debug("userId={}, guestName={} WAITING으로 변경",
+                            participant.getUserId(), participant.getGuestName());
                 }
             }
         }
@@ -606,6 +729,8 @@ public class ScheduleService {
         // 기존 대진이 있으면 삭제 (재생성 대응)
         List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
         if (!existingMatches.isEmpty()) {
+            // 경기 결과가 존재하면 재생성 불가
+            validateNoGameResults(scheduleId);
             log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
             matchRepository.deleteAll(existingMatches);
         }
@@ -624,7 +749,8 @@ public class ScheduleService {
         List<Match> matches = new ArrayList<>();
         for (DrawResponse.Game game : drawResponse.getGames()) {
             try {
-                Match match = buildMatchFromGame(game, clubId, scheduleId, playedAt, nameToUserId);
+                // 이름 기반 대진은 게스트 없음 (emptySet 전달)
+                Match match = buildMatchFromGame(game, clubId, scheduleId, playedAt, nameToUserId, Collections.emptySet());
                 matches.add(match);
             } catch (IllegalArgumentException e) {
                 log.error("게임 {} Match 생성 실패: {}", game.getGameNo(), e.getMessage());
@@ -669,10 +795,11 @@ public class ScheduleService {
     }
 
     /**
-     * DrawResponse.Game -> Match 엔티티 변환
+     * DrawResponse.Game -> Match 엔티티 변환 (게스트 지원)
      */
     private Match buildMatchFromGame(DrawResponse.Game game, Long clubId, Long scheduleId,
-                                      LocalDateTime playedAt, Map<String, Long> nameToUserId) {
+                                      LocalDateTime playedAt, Map<String, Long> nameToUserId,
+                                      Set<String> guestNames) {
         List<String> teamA = game.getTeamA();
         List<String> teamB = game.getTeamB();
 
@@ -680,13 +807,40 @@ public class ScheduleService {
             throw new IllegalArgumentException("팀은 최소 1명 이상이어야 합니다.");
         }
 
-        Long teamAPlayer1Id = nameToUserId.get(teamA.get(0));
-        Long teamAPlayer2Id = teamA.size() > 1 ? nameToUserId.get(teamA.get(1)) : null;
-        Long teamBPlayer1Id = nameToUserId.get(teamB.get(0));
-        Long teamBPlayer2Id = teamB.size() > 1 ? nameToUserId.get(teamB.get(1)) : null;
+        // TeamA Player1
+        String p1AName = teamA.get(0);
+        Long teamAPlayer1Id = guestNames.contains(p1AName) ? null : nameToUserId.get(p1AName);
+        String teamAPlayer1GuestName = guestNames.contains(p1AName) ? p1AName : null;
 
-        if (teamAPlayer1Id == null || teamBPlayer1Id == null) {
-            throw new IllegalArgumentException("선수 ID를 찾을 수 없습니다.");
+        // TeamA Player2
+        Long teamAPlayer2Id = null;
+        String teamAPlayer2GuestName = null;
+        if (teamA.size() > 1) {
+            String p2AName = teamA.get(1);
+            teamAPlayer2Id = guestNames.contains(p2AName) ? null : nameToUserId.get(p2AName);
+            teamAPlayer2GuestName = guestNames.contains(p2AName) ? p2AName : null;
+        }
+
+        // TeamB Player1
+        String p1BName = teamB.get(0);
+        Long teamBPlayer1Id = guestNames.contains(p1BName) ? null : nameToUserId.get(p1BName);
+        String teamBPlayer1GuestName = guestNames.contains(p1BName) ? p1BName : null;
+
+        // TeamB Player2
+        Long teamBPlayer2Id = null;
+        String teamBPlayer2GuestName = null;
+        if (teamB.size() > 1) {
+            String p2BName = teamB.get(1);
+            teamBPlayer2Id = guestNames.contains(p2BName) ? null : nameToUserId.get(p2BName);
+            teamBPlayer2GuestName = guestNames.contains(p2BName) ? p2BName : null;
+        }
+
+        // 최소 하나의 식별자(ID 또는 게스트 이름)가 있어야 함
+        if (teamAPlayer1Id == null && teamAPlayer1GuestName == null) {
+            throw new IllegalArgumentException("TeamA 첫 번째 선수 ID 또는 게스트 이름을 찾을 수 없습니다: " + p1AName);
+        }
+        if (teamBPlayer1Id == null && teamBPlayer1GuestName == null) {
+            throw new IllegalArgumentException("TeamB 첫 번째 선수 ID 또는 게스트 이름을 찾을 수 없습니다: " + p1BName);
         }
 
         return Match.builder()
@@ -695,8 +849,12 @@ public class ScheduleService {
                 .matchNumber(game.getGameNo())
                 .teamAPlayer1Id(teamAPlayer1Id)
                 .teamAPlayer2Id(teamAPlayer2Id)
+                .teamAPlayer1GuestName(teamAPlayer1GuestName)
+                .teamAPlayer2GuestName(teamAPlayer2GuestName)
                 .teamBPlayer1Id(teamBPlayer1Id)
                 .teamBPlayer2Id(teamBPlayer2Id)
+                .teamBPlayer1GuestName(teamBPlayer1GuestName)
+                .teamBPlayer2GuestName(teamBPlayer2GuestName)
                 .playedAt(playedAt)
                 .isMigrated(false)
                 .build();
@@ -704,11 +862,23 @@ public class ScheduleService {
 
     /**
      * 일정의 대진표 조회 (Match -> DrawResponse 변환)
+     * - 클럽일정 + 모집 미진행: 멤버만 조회 가능
+     * - 클럽일정 + 모집 중 / 공개일정: 누구나 조회 가능
      */
-    public DrawResponse getDrawForSchedule(Long scheduleId) {
+    public DrawResponse getDrawForSchedule(Long scheduleId, Long userId) {
         // 일정 존재 확인
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
+
+        // 클럽일정 + 모집 미진행: 멤버만 조회 가능
+        if (schedule.isClubSchedule()
+                && !Boolean.TRUE.equals(schedule.getGuestRecruitOpen())
+                && !Boolean.TRUE.equals(schedule.getInterclubRecruitOpen())) {
+            if (userId == null) {
+                throw new AuthenticationRequiredException("클럽 대진표를 조회하려면 로그인이 필요합니다.");
+            }
+            permissionService.requireClubMembership(userId, schedule.getClubId());
+        }
 
         // 대진표가 없으면 404
         if (schedule.getDrawType() == null) {
@@ -726,15 +896,15 @@ public class ScheduleService {
                 .sorted(Comparator.comparing(Match::getMatchNumber))
                 .map(match -> {
                     List<String> teamA = new ArrayList<>();
-                    teamA.add(getUserName(match.getTeamAPlayer1Id()));
-                    if (match.getTeamAPlayer2Id() != null) {
-                        teamA.add(getUserName(match.getTeamAPlayer2Id()));
+                    teamA.add(getPlayerDisplayName(match.getTeamAPlayer1Id(), match.getTeamAPlayer1GuestName()));
+                    if (match.getTeamAPlayer2Id() != null || match.getTeamAPlayer2GuestName() != null) {
+                        teamA.add(getPlayerDisplayName(match.getTeamAPlayer2Id(), match.getTeamAPlayer2GuestName()));
                     }
 
                     List<String> teamB = new ArrayList<>();
-                    teamB.add(getUserName(match.getTeamBPlayer1Id()));
-                    if (match.getTeamBPlayer2Id() != null) {
-                        teamB.add(getUserName(match.getTeamBPlayer2Id()));
+                    teamB.add(getPlayerDisplayName(match.getTeamBPlayer1Id(), match.getTeamBPlayer1GuestName()));
+                    if (match.getTeamBPlayer2Id() != null || match.getTeamBPlayer2GuestName() != null) {
+                        teamB.add(getPlayerDisplayName(match.getTeamBPlayer2Id(), match.getTeamBPlayer2GuestName()));
                     }
 
                     return DrawResponse.Game.builder()
@@ -761,6 +931,19 @@ public class ScheduleService {
         return userRepository.findById(userId)
                 .map(User::getName)
                 .orElse("알 수 없음");
+    }
+
+    /**
+     * 선수 표시 이름 조회 (userId 우선, 없으면 guestName, 둘 다 없으면 기본값)
+     */
+    private String getPlayerDisplayName(Long playerId, String guestName) {
+        if (playerId != null) {
+            return getUserName(playerId);
+        }
+        if (guestName != null) {
+            return guestName;
+        }
+        return "알 수 없음";
     }
 
     /**
@@ -853,6 +1036,9 @@ public class ScheduleService {
             throw new IllegalStateException("삭제할 대진표가 존재하지 않습니다.");
         }
 
+        // 경기 결과가 존재하면 대진 삭제 불가
+        validateNoGameResults(scheduleId);
+
         // Match 테이블에서 해당 일정의 모든 매치 삭제
         List<Match> matches = matchRepository.findByScheduleId(scheduleId);
         if (!matches.isEmpty()) {
@@ -868,6 +1054,15 @@ public class ScheduleService {
         log.info("참가자 상태 유지 (선착순 정보 보존)");
 
         log.info("=== 대진표 삭제 완료 ===");
+    }
+
+    /**
+     * 경기 결과가 존재하면 예외 발생 (대진 삭제/재생성 차단용)
+     */
+    private void validateNoGameResults(Long scheduleId) {
+        if (matchRepository.existsResultByScheduleId(scheduleId)) {
+            throw new IllegalStateException("경기 결과가 존재하는 대진표는 삭제하거나 재생성할 수 없습니다.");
+        }
     }
 
     /**
@@ -892,6 +1087,8 @@ public class ScheduleService {
         // 기존 대진이 있으면 삭제 (재생성 대응)
         List<Match> existingMatches = matchRepository.findByScheduleId(scheduleId);
         if (!existingMatches.isEmpty()) {
+            // 경기 결과가 존재하면 재생성 불가
+            validateNoGameResults(scheduleId);
             log.info("기존 대진 {} 건 삭제 후 재생성", existingMatches.size());
             matchRepository.deleteAll(existingMatches);
         }
@@ -911,27 +1108,58 @@ public class ScheduleService {
         List<DrawResponse.Game> responseGames = new ArrayList<>();
 
         for (CreateDrawRequestWithIds.ManualGame game : request.getManualGames()) {
-            // Match 엔티티 생성
-            Match match = Match.builder()
+            // Team A 선수 처리 (등록 회원 + 게스트)
+            List<Long> teamAUserIds = game.getTeamAUserIds() != null ? game.getTeamAUserIds() : List.of();
+            List<String> teamAGuestNames = game.getTeamAGuestNames() != null ? game.getTeamAGuestNames() : List.of();
+            List<Long> teamBUserIds = game.getTeamBUserIds() != null ? game.getTeamBUserIds() : List.of();
+            List<String> teamBGuestNames = game.getTeamBGuestNames() != null ? game.getTeamBGuestNames() : List.of();
+
+            // Match 엔티티 생성 (게스트 이름 포함)
+            Match.MatchBuilder matchBuilder = Match.builder()
                     .clubId(clubId)
                     .scheduleId(scheduleId)
                     .matchNumber(game.getGameNo())
-                    .teamAPlayer1Id(game.getTeamAUserIds().get(0))
-                    .teamAPlayer2Id(game.getTeamAUserIds().size() > 1 ? game.getTeamAUserIds().get(1) : null)
-                    .teamBPlayer1Id(game.getTeamBUserIds().get(0))
-                    .teamBPlayer2Id(game.getTeamBUserIds().size() > 1 ? game.getTeamBUserIds().get(1) : null)
                     .playedAt(playedAt)
-                    .isMigrated(false)
-                    .build();
-            matches.add(match);
+                    .isMigrated(false);
 
-            // DrawResponse.Game 생성
-            List<String> teamANames = game.getTeamAUserIds().stream()
-                    .map(userIdToName::get)
-                    .collect(Collectors.toList());
-            List<String> teamBNames = game.getTeamBUserIds().stream()
-                    .map(userIdToName::get)
-                    .collect(Collectors.toList());
+            // Team A Player 1
+            if (!teamAUserIds.isEmpty()) {
+                matchBuilder.teamAPlayer1Id(teamAUserIds.get(0));
+            } else if (!teamAGuestNames.isEmpty()) {
+                matchBuilder.teamAPlayer1GuestName(teamAGuestNames.get(0));
+            }
+            // Team A Player 2
+            if (teamAUserIds.size() > 1) {
+                matchBuilder.teamAPlayer2Id(teamAUserIds.get(1));
+            } else if (teamAUserIds.size() == 1 && !teamAGuestNames.isEmpty()) {
+                matchBuilder.teamAPlayer2GuestName(teamAGuestNames.get(0));
+            } else if (teamAUserIds.isEmpty() && teamAGuestNames.size() > 1) {
+                matchBuilder.teamAPlayer2GuestName(teamAGuestNames.get(1));
+            }
+            // Team B Player 1
+            if (!teamBUserIds.isEmpty()) {
+                matchBuilder.teamBPlayer1Id(teamBUserIds.get(0));
+            } else if (!teamBGuestNames.isEmpty()) {
+                matchBuilder.teamBPlayer1GuestName(teamBGuestNames.get(0));
+            }
+            // Team B Player 2
+            if (teamBUserIds.size() > 1) {
+                matchBuilder.teamBPlayer2Id(teamBUserIds.get(1));
+            } else if (teamBUserIds.size() == 1 && !teamBGuestNames.isEmpty()) {
+                matchBuilder.teamBPlayer2GuestName(teamBGuestNames.get(0));
+            } else if (teamBUserIds.isEmpty() && teamBGuestNames.size() > 1) {
+                matchBuilder.teamBPlayer2GuestName(teamBGuestNames.get(1));
+            }
+
+            matches.add(matchBuilder.build());
+
+            // DrawResponse.Game 생성 (이름 리스트)
+            List<String> teamANames = new ArrayList<>();
+            teamAUserIds.forEach(id -> teamANames.add(userIdToName.getOrDefault(id, "알 수 없음")));
+            teamANames.addAll(teamAGuestNames);
+            List<String> teamBNames = new ArrayList<>();
+            teamBUserIds.forEach(id -> teamBNames.add(userIdToName.getOrDefault(id, "알 수 없음")));
+            teamBNames.addAll(teamBGuestNames);
 
             responseGames.add(DrawResponse.Game.builder()
                     .gameNo(game.getGameNo())
@@ -957,8 +1185,8 @@ public class ScheduleService {
     private Map<Long, String> buildUserIdToNameMapFromManualGames(List<CreateDrawRequestWithIds.ManualGame> manualGames) {
         Set<Long> allUserIds = new HashSet<>();
         for (CreateDrawRequestWithIds.ManualGame game : manualGames) {
-            allUserIds.addAll(game.getTeamAUserIds());
-            allUserIds.addAll(game.getTeamBUserIds());
+            if (game.getTeamAUserIds() != null) allUserIds.addAll(game.getTeamAUserIds());
+            if (game.getTeamBUserIds() != null) allUserIds.addAll(game.getTeamBUserIds());
         }
 
         Map<Long, String> userIdToName = new HashMap<>();
@@ -972,6 +1200,78 @@ public class ScheduleService {
     }
 
     /**
+     * 공개 일정 생성
+     */
+    @Transactional
+    public ScheduleResponse createPublicSchedule(CreatePublicScheduleRequest request, Long userId) {
+        if (TimeValidationUtils.isPast(request.getScheduledAt())) {
+            throw new IllegalStateException("과거 날짜에는 일정을 생성할 수 없습니다.");
+        }
+
+        Schedule schedule = Schedule.builder()
+                .clubId(null)
+                .scheduleType(ScheduleType.PUBLIC)
+                .courtName(request.getCourtName())
+                .courtAddress(request.getCourtAddress())
+                .region(request.getRegion())
+                .scheduledAt(request.getScheduledAt())
+                .maxCapacity(request.getMaxCapacity())
+                .cost(request.getCost())
+                .description(request.getDescription())
+                .createdByUserId(userId)
+                .matchType(request.getMatchType())
+                .durationMinutes(request.getDurationMinutes())
+                .numberOfCourts(request.getNumberOfCourts())
+                .build();
+
+        Schedule saved = scheduleRepository.save(schedule);
+
+        // Audit 로깅
+        auditLogService.logScheduleCreate(userId, saved);
+
+        // 호스트(생성자)를 첫 번째 CONFIRMED 참가자로 자동 등록
+        Integer nextPosition = participantRepository.getNextPosition(saved.getId());
+        ScheduleParticipant hostParticipant = ScheduleParticipant.builder()
+                .scheduleId(saved.getId())
+                .userId(userId)
+                .status(ScheduleParticipant.ParticipantStatus.CONFIRMED)
+                .position(nextPosition != null ? nextPosition : 1)
+                .build();
+        participantRepository.save(hostParticipant);
+        saved.incrementParticipants();
+
+        log.info("공개 일정 생성 완료: scheduleId={}, createdByUserId={}", saved.getId(), userId);
+        return new ScheduleResponse(saved, clubRepository, userRepository);
+    }
+
+    /**
+     * 공개 일정 목록 조회 (지역/matchType 필터 지원)
+     */
+    public List<PublicScheduleResponse> getPublicSchedules(String region, MatchType matchType, Integer limit) {
+        LocalDateTime now = TimeValidationUtils.getNowKST();
+        int take = (limit == null || limit <= 0) ? 20 : Math.min(limit, 50);
+        Pageable pageable = PageRequest.of(0, take);
+
+        List<Schedule> schedules;
+        if (region != null && !region.isEmpty()) {
+            schedules = scheduleRepository.findPublicSchedulesByRegion(now, region, pageable);
+        } else {
+            schedules = scheduleRepository.findPublicSchedules(now, pageable);
+        }
+
+        // matchType 필터 적용
+        if (matchType != null) {
+            schedules = schedules.stream()
+                    .filter(s -> matchType.equals(s.getMatchType()))
+                    .collect(Collectors.toList());
+        }
+
+        return schedules.stream()
+                .map(s -> new PublicScheduleResponse(s, userRepository))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 수동 대진 기반 참가자 상태 업데이트
      */
     private void updateParticipantStatusBasedOnManualGames(Long scheduleId,
@@ -980,26 +1280,37 @@ public class ScheduleService {
 
         // 대진에 포함된 userId 집합
         Set<Long> participatingUserIds = new HashSet<>();
+        Set<String> participatingGuestNames = new HashSet<>();
         for (CreateDrawRequestWithIds.ManualGame game : manualGames) {
-            participatingUserIds.addAll(game.getTeamAUserIds());
-            participatingUserIds.addAll(game.getTeamBUserIds());
+            if (game.getTeamAUserIds() != null) participatingUserIds.addAll(game.getTeamAUserIds());
+            if (game.getTeamBUserIds() != null) participatingUserIds.addAll(game.getTeamBUserIds());
+            if (game.getTeamAGuestNames() != null) participatingGuestNames.addAll(game.getTeamAGuestNames());
+            if (game.getTeamBGuestNames() != null) participatingGuestNames.addAll(game.getTeamBGuestNames());
         }
-        log.info("대진 참여 userId: {}", participatingUserIds);
+        log.info("대진 참여 userId: {}, guestNames: {}", participatingUserIds, participatingGuestNames);
 
         // 해당 일정의 모든 참가자 조회
         List<ScheduleParticipant> participants =
                 participantRepository.findByScheduleIdOrderByPositionAsc(scheduleId);
 
         for (ScheduleParticipant participant : participants) {
-            if (participatingUserIds.contains(participant.getUserId())) {
+            boolean isInDraw;
+            if (participant.getUserId() != null) {
+                isInDraw = participatingUserIds.contains(participant.getUserId());
+            } else {
+                isInDraw = participant.getGuestName() != null
+                        && participatingGuestNames.contains(participant.getGuestName());
+            }
+
+            if (isInDraw) {
                 if (participant.getStatus() != ScheduleParticipant.ParticipantStatus.CONFIRMED) {
                     participant.confirm();
-                    log.debug("userId={} CONFIRMED로 변경", participant.getUserId());
+                    log.debug("participant={} CONFIRMED로 변경", participant.getId());
                 }
             } else {
                 if (participant.getStatus() != ScheduleParticipant.ParticipantStatus.WAITING) {
                     participant.waitlist();
-                    log.debug("userId={} WAITING으로 변경", participant.getUserId());
+                    log.debug("participant={} WAITING으로 변경", participant.getId());
                 }
             }
         }

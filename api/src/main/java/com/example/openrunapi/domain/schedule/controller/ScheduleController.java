@@ -15,18 +15,31 @@ import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleGuestRecru
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleInterclubRecruitRequest;
 import com.example.openrunapi.domain.schedule.model.dto.PublicRecruitScheduleResponse;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleCursorResponse;
+import com.example.openrunapi.domain.schedule.model.dto.CreatePublicScheduleRequest;
+import com.example.openrunapi.domain.schedule.model.dto.PublicScheduleResponse;
+import com.example.openrunapi.domain.schedule.model.dto.AddGuestParticipantRequest;
+import com.example.openrunapi.domain.schedule.model.dto.UpdateGuestNameRequest;
+import com.example.openrunapi.domain.schedule.model.dto.ParticipantResponse;
+import com.example.openrunapi.domain.schedule.model.MatchType;
 import com.example.openrunapi.domain.schedule.service.ScheduleParticipantService;
 import com.example.openrunapi.domain.schedule.service.ScheduleService;
+import com.example.openrunapi.domain.user.model.dto.UserResponse;
+import com.example.openrunapi.domain.user.service.UserService;
 import com.example.openrunapi.common.service.PermissionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.openrunapi.common.exception.AuthenticationRequiredException;
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -38,6 +51,7 @@ public class ScheduleController {
     private final DrawService drawService;
     private final ScheduleParticipantService participantService;
     private final PermissionService permissionService;
+    private final UserService userService;
 
     /**
      * 일정 생성
@@ -45,7 +59,8 @@ public class ScheduleController {
     @PostMapping
     public ResponseEntity<ScheduleResponse> createSchedule(
             @Valid @RequestBody CreateScheduleRequest request,
-            @RequestParam(required = false) Long userId) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = resolveUserId(userDetails);
         ScheduleResponse response = scheduleService.createSchedule(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -57,11 +72,13 @@ public class ScheduleController {
      */
     @GetMapping
     public ResponseEntity<List<ScheduleResponse>> getAllSchedules(
-            @RequestParam Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) Long clubId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
             @RequestParam(required = false, defaultValue = "false") Boolean upcoming) {
+
+        Long userId = requireUserId(userDetails);
 
         List<ScheduleResponse> responses;
 
@@ -82,7 +99,7 @@ public class ScheduleController {
         } else {
             // 전체 일정 조회는 System Admin만 가능
             if (!permissionService.isSystemAdmin(userId)) {
-                throw new SecurityException("전체 일정 조회는 관리자만 가능합니다.");
+                throw new PermissionDeniedException("전체 일정 조회는 관리자만 가능합니다.");
             }
             responses = scheduleService.getAllSchedules();
         }
@@ -97,11 +114,13 @@ public class ScheduleController {
      */
     @GetMapping("/cursor")
     public ResponseEntity<ScheduleCursorResponse> getSchedulesByCursor(
-            @RequestParam Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam Long clubId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime pivotDate,
             @RequestParam(defaultValue = "FUTURE") String direction,
             @RequestParam(defaultValue = "30") int size) {
+
+        Long userId = requireUserId(userDetails);
 
         // 클럽 멤버십 체크
         permissionService.requireClubMembership(userId, clubId);
@@ -120,12 +139,13 @@ public class ScheduleController {
     }
 
     /**
-     * 특정 일정 조회
+     * 특정 일정 조회 (공개 접근 허용 - recruit 페이지 등)
      */
     @GetMapping("/{scheduleId}")
     public ResponseEntity<ScheduleResponse> getScheduleById(
             @PathVariable Long scheduleId,
-            @RequestParam(required = false) Long userId) { // 권한 체크용 (optional)
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = resolveUserId(userDetails);
         ScheduleResponse response = scheduleService.getScheduleById(scheduleId, userId);
         return ResponseEntity.ok(response);
     }
@@ -137,7 +157,8 @@ public class ScheduleController {
     public ResponseEntity<ScheduleResponse> updateSchedule(
             @PathVariable Long scheduleId,
             @Valid @RequestBody UpdateScheduleRequest request,
-            @RequestParam(required = false) Long userId) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
         ScheduleResponse response = scheduleService.updateSchedule(scheduleId, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -148,21 +169,22 @@ public class ScheduleController {
     @DeleteMapping("/{scheduleId}")
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long scheduleId,
-            @RequestParam(required = false) Long userId) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
         scheduleService.deleteSchedule(scheduleId, userId);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * 일정 PIN(공지성 고정) 설정/해제 - 운영진 이상
-     * - schedules API는 현재 개발 단계로 인증이 완전히 강제되지 않아 userId를 파라미터로 받습니다.
      */
     @PatchMapping("/{scheduleId}/pinned")
     public ResponseEntity<ScheduleResponse> updatePinned(
             @PathVariable Long scheduleId,
-            @RequestParam Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody(required = false) UpdateSchedulePinnedRequest request
     ) {
+        Long userId = requireUserId(userDetails);
         ScheduleResponse response = scheduleService.updatePinned(scheduleId, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -173,9 +195,10 @@ public class ScheduleController {
     @PatchMapping("/{scheduleId}/guest-recruit")
     public ResponseEntity<ScheduleResponse> updateGuestRecruit(
             @PathVariable Long scheduleId,
-            @RequestParam Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody(required = false) UpdateScheduleGuestRecruitRequest request
     ) {
+        Long userId = requireUserId(userDetails);
         ScheduleResponse response = scheduleService.updateGuestRecruit(scheduleId, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -186,9 +209,10 @@ public class ScheduleController {
     @PatchMapping("/{scheduleId}/interclub-recruit")
     public ResponseEntity<ScheduleResponse> updateInterclubRecruit(
             @PathVariable Long scheduleId,
-            @RequestParam Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody(required = false) UpdateScheduleInterclubRecruitRequest request
     ) {
+        Long userId = requireUserId(userDetails);
         ScheduleResponse response = scheduleService.updateInterclubRecruit(scheduleId, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -213,7 +237,8 @@ public class ScheduleController {
      * 내가 참여한 일정 ID 목록 조회
      */
     @GetMapping("/my-participations")
-    public ResponseEntity<List<Long>> getMyParticipations(@RequestParam Long userId) {
+    public ResponseEntity<List<Long>> getMyParticipations(@AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
         List<Long> scheduleIds = scheduleService.getMyParticipatingScheduleIds(userId);
         return ResponseEntity.ok(scheduleIds);
     }
@@ -226,7 +251,8 @@ public class ScheduleController {
     @PostMapping("/participants/batch")
     public ResponseEntity<BatchParticipationResponse> batchParticipation(
             @RequestBody BatchParticipationRequest request,
-            @RequestParam Long userId) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
         BatchParticipationResponse response = participantService.batchParticipation(userId, request);
         return ResponseEntity.ok(response);
     }
@@ -237,7 +263,12 @@ public class ScheduleController {
     @PostMapping("/{scheduleId}/draw")
     public ResponseEntity<DrawResponse> createDrawForSchedule(
             @PathVariable Long scheduleId,
-            @Valid @RequestBody CreateDrawRequest request) {
+            @Valid @RequestBody CreateDrawRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 권한 체크: 호스트 또는 운영진 이상
+        Long userId = requireUserId(userDetails);
+        scheduleService.validateDrawManagePermission(scheduleId, userId);
 
         // 일정 존재 확인 및 조회
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
@@ -258,7 +289,12 @@ public class ScheduleController {
     @PostMapping("/{scheduleId}/draw/with-ids")
     public ResponseEntity<DrawResponse> createDrawForScheduleWithIds(
             @PathVariable Long scheduleId,
-            @Valid @RequestBody CreateDrawRequestWithIds request) {
+            @Valid @RequestBody CreateDrawRequestWithIds request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 권한 체크: 호스트 또는 운영진 이상
+        Long userId = requireUserId(userDetails);
+        scheduleService.validateDrawManagePermission(scheduleId, userId);
 
         // 일정 존재 확인 및 조회
         ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
@@ -287,14 +323,34 @@ public class ScheduleController {
      */
     private CreateDrawRequest convertToCreateDrawRequest(
             CreateDrawRequestWithIds request) {
-        // userId를 userName으로 변환
-        List<String> userNames = scheduleService.convertUserIdsToNames(request.getUserIds());
-        List<String> seedUserNames = request.getSeedUserIds() != null 
-                ? scheduleService.convertUserIdsToNames(request.getSeedUserIds()) : null;
-        List<String> groupAUserNames = request.getGroupAUserIds() != null 
-                ? scheduleService.convertUserIdsToNames(request.getGroupAUserIds()) : null;
-        List<String> groupBUserNames = request.getGroupBUserIds() != null 
-                ? scheduleService.convertUserIdsToNames(request.getGroupBUserIds()) : null;
+        List<String> guestNames = request.getGuestNames() != null ? request.getGuestNames() : List.of();
+
+        // userId를 userName으로 변환 + 게스트 이름 합산
+        List<String> userNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getUserIds()));
+        userNames.addAll(guestNames);
+
+        // SEED 타입: 시드 회원 이름 + 시드 게스트 이름
+        List<String> seedUserNames = null;
+        if (request.getSeedUserIds() != null) {
+            seedUserNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getSeedUserIds()));
+            if (request.getSeedGuestNames() != null) {
+                seedUserNames.addAll(request.getSeedGuestNames());
+            }
+        }
+
+        // AB 타입: 그룹별 회원 이름 + 그룹별 게스트 이름
+        List<String> groupAUserNames = null;
+        List<String> groupBUserNames = null;
+        if (request.getGroupAUserIds() != null && request.getGroupBUserIds() != null) {
+            groupAUserNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getGroupAUserIds()));
+            groupBUserNames = new ArrayList<>(scheduleService.convertUserIdsToNames(request.getGroupBUserIds()));
+            if (request.getGroupAGuestNames() != null) {
+                groupAUserNames.addAll(request.getGroupAGuestNames());
+            }
+            if (request.getGroupBGuestNames() != null) {
+                groupBUserNames.addAll(request.getGroupBGuestNames());
+            }
+        }
 
         return new CreateDrawRequest(
                 userNames,
@@ -310,8 +366,11 @@ public class ScheduleController {
      * 일정의 대진표 조회
      */
     @GetMapping("/{scheduleId}/draw")
-    public ResponseEntity<DrawResponse> getDrawForSchedule(@PathVariable Long scheduleId) {
-        DrawResponse response = scheduleService.getDrawForSchedule(scheduleId);
+    public ResponseEntity<DrawResponse> getDrawForSchedule(
+            @PathVariable Long scheduleId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = resolveUserId(userDetails);
+        DrawResponse response = scheduleService.getDrawForSchedule(scheduleId, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -319,8 +378,166 @@ public class ScheduleController {
      * 일정의 대진표 삭제
      */
     @DeleteMapping("/{scheduleId}/draw")
-    public ResponseEntity<Void> deleteDrawForSchedule(@PathVariable Long scheduleId) {
+    public ResponseEntity<Void> deleteDrawForSchedule(
+            @PathVariable Long scheduleId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // 권한 체크: 호스트 또는 운영진 이상
+        Long userId = requireUserId(userDetails);
+        scheduleService.validateDrawManagePermission(scheduleId, userId);
+
         scheduleService.deleteDrawForSchedule(scheduleId);
         return ResponseEntity.noContent().build();
+    }
+
+    // === 공개 일정 ===
+
+    /**
+     * 공개 일정 생성 (클럽 없이, 호스트가 직접 생성)
+     * POST /api/schedules/public
+     */
+    @PostMapping("/public")
+    public ResponseEntity<ScheduleResponse> createPublicSchedule(
+            @Valid @RequestBody CreatePublicScheduleRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
+        ScheduleResponse response = scheduleService.createPublicSchedule(request, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 공개 일정 목록 조회 (지역/matchType 필터 지원)
+     * GET /api/schedules/public?region=서울&matchType=MENS_DOUBLES&limit=20
+     */
+    @GetMapping("/public")
+    public ResponseEntity<List<PublicScheduleResponse>> getPublicSchedules(
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String matchType,
+            @RequestParam(required = false, defaultValue = "20") Integer limit) {
+        MatchType mt = null;
+        if (matchType != null && !matchType.isEmpty()) {
+            try {
+                mt = MatchType.valueOf(matchType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // 잘못된 matchType은 무시
+            }
+        }
+        List<PublicScheduleResponse> list = scheduleService.getPublicSchedules(region, mt, limit);
+        return ResponseEntity.ok(list);
+    }
+
+    // === 게스트 참가자 관리 ===
+
+    /**
+     * 게스트(비회원) 참가자 추가 (운영진/호스트 전용)
+     * POST /api/schedules/{scheduleId}/participants/guests
+     */
+    @PostMapping("/{scheduleId}/participants/guests")
+    public ResponseEntity<ParticipantResponse> addGuestParticipant(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody AddGuestParticipantRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
+        ParticipantResponse response = participantService.addGuestParticipant(
+                scheduleId, request.getGuestName(), userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 게스트 참가자 삭제 (운영진/호스트 전용)
+     * DELETE /api/schedules/{scheduleId}/participants/guests/{participantId}
+     */
+    @DeleteMapping("/{scheduleId}/participants/guests/{participantId}")
+    public ResponseEntity<Void> removeGuestParticipant(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
+        participantService.removeGuestParticipant(scheduleId, participantId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 게스트 참가자 이름 변경 (운영진/호스트 전용)
+     * PATCH /api/schedules/{scheduleId}/participants/guests/{participantId}/name
+     */
+    @PatchMapping("/{scheduleId}/participants/guests/{participantId}/name")
+    public ResponseEntity<ParticipantResponse> updateGuestName(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @Valid @RequestBody UpdateGuestNameRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
+        ParticipantResponse response = participantService.updateGuestName(
+                scheduleId, participantId, request.getGuestName(), userId);
+        return ResponseEntity.ok(response);
+    }
+
+    // === 공개/클럽 일정 참가 신청/승인/거절 ===
+
+    /**
+     * 공개/클럽 일정 게스트 참가 신청 (로그인 사용자)
+     * POST /api/schedules/{scheduleId}/participants/request
+     */
+    @PostMapping("/{scheduleId}/participants/request")
+    public ResponseEntity<ParticipantResponse> requestJoinPublicSchedule(
+            @PathVariable Long scheduleId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
+        ParticipantResponse response = participantService.requestJoinPublicSchedule(scheduleId, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 공개/클럽 일정 참가 승인 (호스트 또는 운영진 전용)
+     * PATCH /api/schedules/{scheduleId}/participants/{participantId}/approve
+     */
+    @PatchMapping("/{scheduleId}/participants/{participantId}/approve")
+    public ResponseEntity<ParticipantResponse> approveParticipant(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
+        ParticipantResponse response = participantService.approveParticipant(
+                scheduleId, participantId, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 공개 일정 참가 거절 (호스트 전용)
+     * PATCH /api/schedules/{scheduleId}/participants/{participantId}/reject
+     */
+    @PatchMapping("/{scheduleId}/participants/{participantId}/reject")
+    public ResponseEntity<Void> rejectParticipant(
+            @PathVariable Long scheduleId,
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = requireUserId(userDetails);
+        participantService.rejectParticipant(scheduleId, participantId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // === Helper ===
+
+    /**
+     * 인증 필수: UserDetails에서 userId 추출 (null이면 예외)
+     */
+    private Long requireUserId(UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AuthenticationRequiredException("인증이 필요합니다.");
+        }
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        return currentUser.getId();
+    }
+
+    /**
+     * 인증 선택: UserDetails에서 userId 추출 (null이면 null 반환)
+     * - 공개 접근이 허용되는 엔드포인트용 (getScheduleById 등)
+     */
+    private Long resolveUserId(UserDetails userDetails) {
+        if (userDetails == null) {
+            return null;
+        }
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        return currentUser.getId();
     }
 }

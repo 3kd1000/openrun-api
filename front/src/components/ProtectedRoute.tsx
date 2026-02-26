@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isTokenValid } from '../services/firebase';
-import './ProtectedRoute.css';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -77,9 +76,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Firebase 인증 상태 복원 대기 또는 토큰 검증 중에는 대기 UI 표시
   if (!isAuthReady || isChecking) {
     return (
-      <div className="auth-checking">
-        <div className="auth-checking__spinner" />
-        <p className="auth-checking__text">세션 복원 중...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-9 h-9 border-[3px] border-gray-200 border-t-primary rounded-full animate-spin" />
+        <p className="text-muted-foreground text-sm m-0">세션 복원 중...</p>
       </div>
     );
   }

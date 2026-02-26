@@ -8,7 +8,6 @@ import {
   UserPlusIcon,
 } from '../../../../../components/common/Icons';
 import { logError } from '../../../../../utils/errorHandler';
-import './ExternalRequestsWidget.css';
 
 interface ExternalRequestsWidgetProps {
   clubId: number;
@@ -62,16 +61,12 @@ const ExternalRequestsWidget: React.FC<ExternalRequestsWidgetProps> = ({
     }
   };
 
-  const getTypeBadgeClass = (type: string) => {
+  const getTypeBadgeColor = (type: string) => {
     switch (type) {
-      case 'JOIN':
-        return 'external-requests-widget__type-badge--join';
-      case 'GUEST':
-        return 'external-requests-widget__type-badge--guest';
-      case 'INTERCLUB':
-        return 'external-requests-widget__type-badge--interclub';
-      default:
-        return '';
+      case 'JOIN': return 'bg-blue-100 text-blue-700';
+      case 'GUEST': return 'bg-green-100 text-green-700';
+      case 'INTERCLUB': return 'bg-amber-100 text-amber-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -100,21 +95,23 @@ const ExternalRequestsWidget: React.FC<ExternalRequestsWidgetProps> = ({
   };
 
   return (
-    <div className="external-requests-widget">
-      <div className="external-requests-widget__header">
+    <div className="border border-border rounded-xl bg-white p-4">
+      <div className="flex items-center justify-between">
         <button
-          className="external-requests-widget__header-left"
+          className="flex items-center gap-2 bg-transparent border-none py-2 cursor-pointer text-foreground hover:text-primary transition-colors"
           onClick={handleToggleExpand}
         >
           <UserPlusIcon size={16} />
-          <span className="external-requests-widget__title">외부 요청</span>
+          <span className="text-sm font-semibold">외부 요청</span>
           {requests.length > 0 && (
-            <span className="external-requests-widget__count">{requests.length}</span>
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white rounded-full text-xs font-semibold">
+              {requests.length}
+            </span>
           )}
           {isExpanded ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />}
         </button>
         <button
-          className="external-requests-widget__view-all"
+          className="flex items-center gap-2 bg-transparent border-none py-2 px-3 text-muted-foreground text-sm cursor-pointer hover:text-primary transition-colors"
           onClick={handleViewAll}
         >
           전체보기
@@ -123,38 +120,36 @@ const ExternalRequestsWidget: React.FC<ExternalRequestsWidgetProps> = ({
       </div>
 
       {isExpanded && (
-        <div className="external-requests-widget__content">
+        <div className="mt-3">
           {isLoading && (
-            <div className="external-requests-widget__loading">
+            <div className="py-3 text-center text-muted-foreground text-sm">
               불러오는 중...
             </div>
           )}
 
           {!isLoading && requests.length === 0 && (
-            <div className="external-requests-widget__empty">
+            <div className="py-3 text-center text-muted-foreground text-sm">
               대기 중인 요청이 없습니다
             </div>
           )}
 
           {!isLoading && requests.length > 0 && (
-            <div className="external-requests-widget__list">
+            <div className="flex flex-col gap-2">
               {requests.map((request) => (
                 <div
                   key={request.id}
-                  className="external-requests-widget__item"
+                  className="flex items-center gap-3 py-3 px-4 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors text-sm min-h-[44px]"
                   onClick={() => handleItemClick(request)}
                 >
                   <span
-                    className={`external-requests-widget__type-badge ${getTypeBadgeClass(
-                      request.type
-                    )}`}
+                    className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getTypeBadgeColor(request.type)}`}
                   >
                     {getTypeLabel(request.type)}
                   </span>
-                  <span className="external-requests-widget__requester">
+                  <span className="flex-1 text-foreground font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                     {request.requesterName}
                   </span>
-                  <span className="external-requests-widget__date">
+                  <span className="text-muted-foreground text-xs whitespace-nowrap">
                     {formatDate(request.createdAt)}
                   </span>
                 </div>

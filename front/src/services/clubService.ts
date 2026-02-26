@@ -139,6 +139,11 @@ export const clubService = {
     return response.data;
   },
 
+  cancelJoinRequest: async (clubId: number): Promise<ExternalRequestResponse> => {
+    const response = await axiosInstance.delete(`/clubs/${clubId}/join/apply`);
+    return response.data;
+  },
+
   createJoinInquiry: async (clubId: number, content: string): Promise<Post> => {
     const response = await axiosInstance.post(`/clubs/${clubId}/join/inquiry`, { content });
     return response.data;

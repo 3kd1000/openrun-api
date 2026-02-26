@@ -94,13 +94,17 @@ public class AdminNotificationController {
 
     private Page<Notification> findNotifications(Long clubId, NotificationType type, Pageable pageable) {
         if (clubId != null && type != null) {
+            // 타입 명시 요청 - MESSAGE 포함 그대로 조회
             return notificationRepository.findByClubIdAndTypeOrderByCreatedAtDesc(clubId, type, pageable);
         } else if (clubId != null) {
-            return notificationRepository.findByClubIdOrderByCreatedAtDesc(clubId, pageable);
+            // 클럽 필터만 - MESSAGE 제외
+            return notificationRepository.findByClubIdAndTypeNotOrderByCreatedAtDesc(clubId, NotificationType.MESSAGE, pageable);
         } else if (type != null) {
+            // 타입 명시 요청 - MESSAGE 포함 그대로 조회
             return notificationRepository.findByTypeOrderByCreatedAtDesc(type, pageable);
         } else {
-            return notificationRepository.findAllByOrderByCreatedAtDesc(pageable);
+            // 전체 조회 - MESSAGE 제외 (DM 대화 노이즈 제거)
+            return notificationRepository.findAllByTypeNotOrderByCreatedAtDesc(NotificationType.MESSAGE, pageable);
         }
     }
 }

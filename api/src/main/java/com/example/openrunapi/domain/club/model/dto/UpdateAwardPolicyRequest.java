@@ -5,6 +5,7 @@ import lombok.Getter;
 
 @Getter
 public class UpdateAwardPolicyRequest {
+    private Boolean awardEnabled;
     private AwardPeriod awardPeriod;
     private Boolean awardAttendanceEnabled;
     private Boolean awardPointsEnabled;

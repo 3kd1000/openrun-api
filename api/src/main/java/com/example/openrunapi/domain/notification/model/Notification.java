@@ -24,7 +24,7 @@ public class Notification {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "club_id", nullable = false)
+    @Column(name = "club_id")
     private Long clubId;
 
     @Column(nullable = false, length = 255)

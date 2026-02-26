@@ -26,6 +26,13 @@ spec:
         - containerPort: {{ .Values.service.port }}
           name: http
 
+        # 동적 OG 태그 서버 환경변수
+        env:
+        - name: API_INTERNAL_URL
+          value: "http://openrun-api-{{ .Values.environment }}-service:8080/api"
+        - name: SITE_URL
+          value: "{{ .Values.siteUrl }}"
+
         # 리소스 제한
         resources:
           {{- toYaml .Values.resources | nindent 10 }}

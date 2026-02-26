@@ -169,6 +169,19 @@ public class ExternalRequestController {
         return ResponseEntity.ok(res);
     }
 
+    /**
+     * 클럽 가입 신청 취소 (PENDING 상태에서만 가능)
+     */
+    @DeleteMapping("/api/clubs/{clubId}/join/apply")
+    public ResponseEntity<ExternalRequestResponse> cancelJoin(
+            @PathVariable Long clubId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserResponse currentUser = userService.getCurrentUser(userDetails.getUsername());
+        ExternalRequestResponse res = externalRequestService.cancelJoinRequest(clubId, currentUser.getId());
+        return ResponseEntity.ok(res);
+    }
+
     @PostMapping("/api/clubs/{clubId}/external-requests/{requestId}/approve")
     public ResponseEntity<ExternalRequestResponse> approve(
             @PathVariable Long clubId,

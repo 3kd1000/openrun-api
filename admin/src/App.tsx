@@ -9,6 +9,7 @@ import BatchPage from "./pages/BatchPage";
 import InquiryManagePage from "./pages/InquiryManagePage";
 import PushSendPage from "./pages/PushSendPage";
 import NotificationHistoryPage from "./pages/NotificationHistoryPage";
+import DmPage from "./pages/DmPage";
 import LoginPage from "./pages/LoginPage";
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
           <Route path="inquiries" element={<InquiryManagePage />} />
           <Route path="push-send" element={<PushSendPage />} />
           <Route path="notification-history" element={<NotificationHistoryPage />} />
+          <Route path="dm" element={<DmPage />} />
         </Route>
       </Routes>
     </AuthProvider>

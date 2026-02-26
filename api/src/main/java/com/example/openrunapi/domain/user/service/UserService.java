@@ -30,7 +30,10 @@ import com.example.openrunapi.domain.user.model.dto.MyRecentMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.UserTotalStatsResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchResponse;
 import com.example.openrunapi.domain.user.model.dto.MyAllMatchPageResponse;
+import com.example.openrunapi.domain.user.model.dto.UserPublicProfileResponse;
 import com.example.openrunapi.domain.user.model.dto.WithdrawalCheckResponse;
+import com.example.openrunapi.domain.user.model.SystemAdmin;
+import com.example.openrunapi.domain.user.repository.SystemAdminRepository;
 import com.example.openrunapi.domain.user.repository.UserStatisticsRepository;
 import com.example.openrunapi.domain.club.model.Club;
 import com.example.openrunapi.domain.club.service.ClubService;
@@ -72,6 +75,7 @@ public class UserService implements UserDetailsService {
     private final CommentRepository commentRepository;
     private final NotificationRepository notificationRepository;
     private final ClubService clubService;
+    private final SystemAdminRepository systemAdminRepository;
 
     @Override
     @Transactional
@@ -404,6 +408,20 @@ public class UserService implements UserDetailsService {
     }
 
     /**
+     * 사용자의 특정 클럽 통계 조회
+     */
+    public UserTotalStatsResponse getMyClubStats(Long userId, Long clubId) {
+        return userStatisticsRepository.findByUserIdAndClubId(userId, clubId)
+                .map(stats -> UserTotalStatsResponse.builder()
+                        .wins((long) stats.getWins())
+                        .draws((long) stats.getDraws())
+                        .losses((long) stats.getLosses())
+                        .totalMatches((long) stats.getTotalMatches())
+                        .build())
+                .orElse(UserTotalStatsResponse.empty());
+    }
+
+    /**
      * 사용자의 모든 경기 기록 조회 (클럽 무관, 페이징)
      */
     public MyAllMatchPageResponse getMyAllMatches(Long userId, int page, int size) {
@@ -459,6 +477,28 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(userId)
                 .map(User::getName)
                 .orElse("알 수 없음");
+    }
+
+    /**
+     * 사용자 공개 프로필 조회 (다른 사용자가 볼 수 있는 정보)
+     */
+    public UserPublicProfileResponse getUserPublicProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        long publicScheduleCount = scheduleRepository.countPublicSchedulesByCreator(userId);
+
+        return UserPublicProfileResponse.from(user, publicScheduleCount);
+    }
+
+    /**
+     * 운영자 공개 프로필 조회 (system_admins 첫 번째 항목의 유저)
+     */
+    public UserPublicProfileResponse getOperatorProfile() {
+        return systemAdminRepository.findAll().stream()
+                .findFirst()
+                .map(admin -> getUserPublicProfile(admin.getUserId()))
+                .orElseThrow(() -> new UsernameNotFoundException("운영자 계정이 존재하지 않습니다."));
     }
 
     // ==================== 회원 탈퇴 관련 메서드 ====================

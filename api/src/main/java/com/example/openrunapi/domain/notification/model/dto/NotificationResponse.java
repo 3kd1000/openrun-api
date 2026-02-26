@@ -2,6 +2,7 @@ package com.example.openrunapi.domain.notification.model.dto;
 
 import com.example.openrunapi.domain.notification.model.Notification;
 import com.example.openrunapi.domain.notification.model.NotificationType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -17,6 +18,7 @@ public class NotificationResponse {
     private NotificationType type;
     private Long referenceId;
     private String referenceType;
+    @JsonProperty("isRead")
     private boolean isRead;
     private LocalDateTime createdAt;
 

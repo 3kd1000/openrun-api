@@ -26,6 +26,14 @@ public class CreateDrawRequestWithIds {
 
     private List<ManualGame> manualGames; // MANUAL 타입인 경우 수동 대진 정보
 
+    private List<String> guestNames; // 게스트 참가자 이름 목록
+
+    private List<String> groupAGuestNames; // AB 타입: 그룹A 게스트 이름 목록
+
+    private List<String> groupBGuestNames; // AB 타입: 그룹B 게스트 이름 목록
+
+    private List<String> seedGuestNames; // SEED 타입: 시드 게스트 이름 목록
+
     /**
      * 수동 대진 게임 정보
      */
@@ -37,6 +45,7 @@ public class CreateDrawRequestWithIds {
         private Integer roundNo;
         private List<Long> teamAUserIds;  // Team A 선수 ID [player1, player2]
         private List<Long> teamBUserIds;  // Team B 선수 ID [player1, player2]
+        private List<String> teamAGuestNames;  // Team A 게스트 이름 목록
+        private List<String> teamBGuestNames;  // Team B 게스트 이름 목록
     }
 }
-

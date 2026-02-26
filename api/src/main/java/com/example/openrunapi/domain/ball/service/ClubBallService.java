@@ -1,5 +1,6 @@
 package com.example.openrunapi.domain.ball.service;
 
+import com.example.openrunapi.common.exception.PermissionDeniedException;
 import com.example.openrunapi.domain.ball.model.BallTransactionType;
 import com.example.openrunapi.domain.ball.model.ClubBallTransaction;
 import com.example.openrunapi.domain.ball.model.dto.*;
@@ -44,7 +45,7 @@ public class ClubBallService {
     private ClubMember requireMember(Long clubId, Long userId) {
         return clubMemberRepository.findByClubIdAndUserId(clubId, userId)
                 .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)
-                .orElseThrow(() -> new SecurityException("클럽 멤버만 접근할 수 있습니다."));
+                .orElseThrow(() -> new PermissionDeniedException("클럽 멤버만 접근할 수 있습니다."));
     }
 
     /**
@@ -53,7 +54,7 @@ public class ClubBallService {
     private ClubMember requireAdmin(Long clubId, Long userId) {
         ClubMember member = requireMember(clubId, userId);
         if (!member.canManageSchedule()) {
-            throw new SecurityException("운영진 이상만 가능합니다.");
+            throw new PermissionDeniedException("운영진 이상만 가능합니다.");
         }
         return member;
     }
@@ -124,7 +125,7 @@ public class ClubBallService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 일정을 찾을 수 없습니다: " + scheduleId));
 
         if (!schedule.getClubId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 일정은 조회할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 일정은 조회할 수 없습니다.");
         }
 
         return transactionRepository.findByScheduleId(scheduleId).stream()
@@ -150,7 +151,7 @@ public class ClubBallService {
                 .orElseThrow(() -> new EntityNotFoundException("보유자를 찾을 수 없습니다: " + request.toMemberId()));
 
         if (!toMember.getClub().getId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 멤버에게 입고할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 멤버에게 입고할 수 없습니다.");
         }
 
         if (!toMember.getIsBallKeeper()) {
@@ -194,7 +195,7 @@ public class ClubBallService {
                 .orElseThrow(() -> new EntityNotFoundException("도착 보유자를 찾을 수 없습니다."));
 
         if (!fromMember.getClub().getId().equals(clubId) || !toMember.getClub().getId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 멤버 간 배분은 불가능합니다.");
+            throw new PermissionDeniedException("다른 클럽의 멤버 간 배분은 불가능합니다.");
         }
 
         if (!fromMember.getIsBallKeeper() || !toMember.getIsBallKeeper()) {
@@ -237,11 +238,11 @@ public class ClubBallService {
         boolean isAdmin = currentMember.canManageSchedule();
 
         if (!isOwnBalls && !isAdmin) {
-            throw new SecurityException("본인의 공용구이거나 운영진 이상만 사용 기록이 가능합니다.");
+            throw new PermissionDeniedException("본인의 공용구이거나 운영진 이상만 사용 기록이 가능합니다.");
         }
 
         if (!fromMember.getClub().getId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 공용구는 사용할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 공용구는 사용할 수 없습니다.");
         }
 
         if (!fromMember.getIsBallKeeper()) {
@@ -252,7 +253,7 @@ public class ClubBallService {
                 .orElseThrow(() -> new EntityNotFoundException("일정을 찾을 수 없습니다."));
 
         if (!schedule.getClubId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 일정에는 사용할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 일정에는 사용할 수 없습니다.");
         }
 
         // 수량 차감
@@ -285,7 +286,7 @@ public class ClubBallService {
                 .orElseThrow(() -> new EntityNotFoundException("멤버를 찾을 수 없습니다: " + memberId));
 
         if (!member.getClub().getId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 멤버는 수정할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 멤버는 수정할 수 없습니다.");
         }
 
         if (member.getStatus() != ClubMemberStatus.ACTIVE) {
@@ -322,7 +323,7 @@ public class ClubBallService {
                 .orElseThrow(() -> new EntityNotFoundException("거래 기록을 찾을 수 없습니다: " + transactionId));
 
         if (!transaction.getClub().getId().equals(clubId)) {
-            throw new SecurityException("다른 클럽의 거래 기록은 삭제할 수 없습니다.");
+            throw new PermissionDeniedException("다른 클럽의 거래 기록은 삭제할 수 없습니다.");
         }
 
         // USE 타입만 삭제 가능
@@ -336,7 +337,7 @@ public class ClubBallService {
         boolean isAdmin = currentMember.canManageSchedule();
 
         if (!isOwnBalls && !isAdmin) {
-            throw new SecurityException("본인의 사용 기록이거나 운영진 이상만 삭제가 가능합니다.");
+            throw new PermissionDeniedException("본인의 사용 기록이거나 운영진 이상만 삭제가 가능합니다.");
         }
 
         // 수량 복원
@@ -374,7 +375,7 @@ public class ClubBallService {
                     .orElseThrow(() -> new EntityNotFoundException("멤버를 찾을 수 없습니다: " + adjustment.memberId()));
 
             if (!member.getClub().getId().equals(clubId)) {
-                throw new SecurityException("다른 클럽의 멤버는 수정할 수 없습니다.");
+                throw new PermissionDeniedException("다른 클럽의 멤버는 수정할 수 없습니다.");
             }
 
             if (!member.getIsBallKeeper()) {

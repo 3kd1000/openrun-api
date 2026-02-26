@@ -8,47 +8,35 @@ import type {
 export const scheduleTemplateService = {
   // 템플릿 생성
   createTemplate: async (
-    userId: number,
     data: CreateScheduleTemplateRequest
   ): Promise<ScheduleTemplate> => {
-    const response = await axiosInstance.post('/schedule-templates', data, {
-      params: { userId }
-    });
+    const response = await axiosInstance.post('/schedule-templates', data);
     return response.data;
   },
 
   // 사용자의 모든 템플릿 조회
-  getUserTemplates: async (userId: number): Promise<ScheduleTemplate[]> => {
-    const response = await axiosInstance.get('/schedule-templates', {
-      params: { userId }
-    });
+  getUserTemplates: async (): Promise<ScheduleTemplate[]> => {
+    const response = await axiosInstance.get('/schedule-templates');
     return response.data;
   },
 
   // 특정 템플릿 조회
-  getTemplate: async (userId: number, templateId: number): Promise<ScheduleTemplate> => {
-    const response = await axiosInstance.get(`/schedule-templates/${templateId}`, {
-      params: { userId }
-    });
+  getTemplate: async (templateId: number): Promise<ScheduleTemplate> => {
+    const response = await axiosInstance.get(`/schedule-templates/${templateId}`);
     return response.data;
   },
 
   // 템플릿 수정
   updateTemplate: async (
-    userId: number,
     templateId: number,
     data: UpdateScheduleTemplateRequest
   ): Promise<ScheduleTemplate> => {
-    const response = await axiosInstance.put(`/schedule-templates/${templateId}`, data, {
-      params: { userId }
-    });
+    const response = await axiosInstance.put(`/schedule-templates/${templateId}`, data);
     return response.data;
   },
 
   // 템플릿 삭제
-  deleteTemplate: async (userId: number, templateId: number): Promise<void> => {
-    await axiosInstance.delete(`/schedule-templates/${templateId}`, {
-      params: { userId }
-    });
+  deleteTemplate: async (templateId: number): Promise<void> => {
+    await axiosInstance.delete(`/schedule-templates/${templateId}`);
   }
 };

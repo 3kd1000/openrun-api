@@ -10,7 +10,24 @@ import type {
   PageResponse,
 } from "../services/notificationService";
 import { formatShortDateTime } from "../utils/dateUtils";
-import "./NotificationHistoryPage.css";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 const NOTIFICATION_TYPES: { value: NotificationType; label: string }[] = [
   { value: "SYSTEM", label: "시스템" },
@@ -20,6 +37,15 @@ const NOTIFICATION_TYPES: { value: NotificationType; label: string }[] = [
   { value: "EXTERNAL_REQUEST", label: "외부 신청" },
   { value: "REQUEST_RESULT", label: "신청 결과" },
 ];
+
+const TYPE_BADGE_STYLES: Record<string, string> = {
+  SYSTEM: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 border-0",
+  SCHEDULE: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0",
+  DRAW: "bg-amber-100 text-amber-800 hover:bg-amber-100 border-0",
+  CLUB_INVITE: "bg-pink-100 text-pink-800 hover:bg-pink-100 border-0",
+  EXTERNAL_REQUEST: "bg-violet-100 text-violet-800 hover:bg-violet-100 border-0",
+  REQUEST_RESULT: "bg-sky-100 text-sky-800 hover:bg-sky-100 border-0",
+};
 
 function NotificationHistoryPage() {
   const [notifications, setNotifications] = useState<AdminNotificationResponse[]>([]);
@@ -69,96 +95,145 @@ function NotificationHistoryPage() {
   };
 
   return (
-    <div className="noti-history-page">
-      <h2>알림 발송 이력</h2>
-      <p className="noti-history-page__description">
-        발송된 알림 내역을 클럽별, 타입별로 조회합니다.
-      </p>
-
-      <div className="noti-history-page__filters">
-        <select value={clubId} onChange={(e) => setClubId(e.target.value)}>
-          <option value="">클럽 (전체)</option>
-          {clubs.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value as NotificationType | "")}
-        >
-          <option value="">타입 (전체)</option>
-          {NOTIFICATION_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-        <button className="btn-primary" onClick={handleSearch}>
-          조회
-        </button>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">알림 발송 이력</h2>
+        <p className="text-muted-foreground mt-1">
+          발송된 알림 내역을 클럽별, 타입별로 조회합니다.
+        </p>
       </div>
 
-      {error && <div className="noti-history-page__error">{error}</div>}
+      {/* 필터 영역 */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <Select
+          value={clubId || "_all"}
+          onValueChange={(val) => setClubId(val === "_all" ? "" : val)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="클럽 (전체)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">클럽 (전체)</SelectItem>
+            {clubs.map((c) => (
+              <SelectItem key={c.id} value={String(c.id)}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
+        <Select
+          value={type || "_all"}
+          onValueChange={(val) => setType(val === "_all" ? "" : (val as NotificationType))}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="타입 (전체)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">타입 (전체)</SelectItem>
+            {NOTIFICATION_TYPES.map((t) => (
+              <SelectItem key={t.value} value={t.value}>
+                {t.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button onClick={handleSearch}>조회</Button>
+      </div>
+
+      {/* 에러 메시지 */}
+      {error && (
+        <div className="bg-red-50 text-red-800 px-4 py-3 rounded-md text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* 로딩 */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="py-8 text-center text-muted-foreground">로딩 중...</div>
       ) : notifications.length === 0 ? (
-        <div className="noti-history-page__empty">
-          <p>조회된 알림이 없습니다.</p>
+        <div className="py-12 text-center text-muted-foreground rounded-lg border bg-card">
+          조회된 알림이 없습니다.
         </div>
       ) : (
-        <>
-          <div className="noti-history-page__info">
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
             총 {totalElements}건 (페이지 {page + 1} / {totalPages})
-          </div>
-          <table className="noti-history-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>클럽</th>
-                <th>수신자</th>
-                <th>타입</th>
-                <th>제목</th>
-                <th>읽음</th>
-                <th>발송일시</th>
-              </tr>
-            </thead>
-            <tbody>
-              {notifications.map((n) => (
-                <tr key={n.id}>
-                  <td>{n.id}</td>
-                  <td>{n.clubName}</td>
-                  <td>{n.userName} ({n.userId})</td>
-                  <td>
-                    <span className={`type-badge type-badge--${n.type.toLowerCase()}`}>
-                      {n.type}
-                    </span>
-                  </td>
-                  <td title={n.body}>{n.title}</td>
-                  <td>{n.isRead ? "Y" : "N"}</td>
-                  <td>{formatShortDateTime(n.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          </p>
 
-          <div className="noti-history-page__pagination">
-            <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px]">ID</TableHead>
+                  <TableHead>클럽</TableHead>
+                  <TableHead>수신자</TableHead>
+                  <TableHead className="w-[120px]">타입</TableHead>
+                  <TableHead>제목</TableHead>
+                  <TableHead className="w-[60px]">읽음</TableHead>
+                  <TableHead>발송일시</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {notifications.map((n) => (
+                  <TableRow key={n.id}>
+                    <TableCell className="text-muted-foreground text-sm">{n.id}</TableCell>
+                    <TableCell className="max-w-[120px] truncate text-sm">{n.clubName}</TableCell>
+                    <TableCell className="max-w-[160px] truncate text-sm">
+                      {n.userName} ({n.userId})
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={cn(
+                          "text-xs font-semibold",
+                          TYPE_BADGE_STYLES[n.type] ?? "bg-muted text-muted-foreground border-0"
+                        )}
+                      >
+                        {n.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell
+                      className="max-w-[200px] truncate text-sm"
+                      title={n.body}
+                    >
+                      {n.title}
+                    </TableCell>
+                    <TableCell className="text-sm text-center">
+                      {n.isRead ? "Y" : "N"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                      {formatShortDateTime(n.createdAt)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* 페이지네이션 */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+            >
               이전
-            </button>
-            <span>
+            </Button>
+            <span className="text-sm text-muted-foreground">
               {page + 1} / {totalPages}
             </span>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
             >
               다음
-            </button>
+            </Button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

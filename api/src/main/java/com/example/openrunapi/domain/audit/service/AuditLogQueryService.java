@@ -74,9 +74,11 @@ public class AuditLogQueryService {
         String userName = userRepository.findById(auditLog.getUserId())
                 .map(User::getName)
                 .orElse("Unknown");
-        String clubName = clubRepository.findById(auditLog.getClubId())
-                .map(Club::getName)
-                .orElse("Unknown");
+        String clubName = auditLog.getClubId() == null
+                ? "공개일정"
+                : clubRepository.findById(auditLog.getClubId())
+                        .map(Club::getName)
+                        .orElse("Unknown");
 
         // Schedule 정보 조회
         LocalDateTime scheduledAt = null;
@@ -144,6 +146,7 @@ public class AuditLogQueryService {
     private Map<Long, String> getClubNameMap(List<AuditLog> logs) {
         Set<Long> clubIds = logs.stream()
                 .map(AuditLog::getClubId)
+                .filter(id -> id != null)
                 .collect(Collectors.toSet());
 
         return clubRepository.findAllById(clubIds).stream()
@@ -240,9 +243,13 @@ public class AuditLogQueryService {
             }
         }
 
+        String clubName = log.getClubId() == null
+                ? "공개일정"
+                : clubNameMap.getOrDefault(log.getClubId(), "Unknown");
+
         return AuditLogResponse.from(log,
                 userNameMap.getOrDefault(log.getUserId(), "Unknown"),
-                clubNameMap.getOrDefault(log.getClubId(), "Unknown"),
+                clubName,
                 scheduledAt,
                 courtName,
                 durationMinutes);

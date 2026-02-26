@@ -17,7 +17,11 @@ public class ScheduleResponse {
     private final Long id;
     private final Long clubId;
     private final String clubName;
+    private final String scheduleType;
     private final String courtName;
+    private final String courtAddress;
+    private final String region;
+    private final Long createdByUserId;
     private final LocalDateTime scheduledAt;
     private final Integer maxCapacity;
     private final Integer currentParticipants;
@@ -39,7 +43,8 @@ public class ScheduleResponse {
     private final Integer numberOfCourts;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
-    private final Boolean canManageSchedule; // 권한 정보 (nullable, 요청 userId가 없으면 null)
+    private final Boolean isScheduleAdmin;   // 관리자 역할 (클럽: ADMIN/OWNER, 공개: 생성자) — PIN, 모집설정용
+    private final Boolean canManageSchedule; // 편집/삭제/대진 권한 (생성자 OR 관리자)
 
     public ScheduleResponse(Schedule schedule, ClubRepository clubRepository, UserRepository userRepository) {
         this(schedule, clubRepository, userRepository, null, null);
@@ -49,12 +54,16 @@ public class ScheduleResponse {
         this.id = schedule.getId();
         this.clubId = schedule.getClubId();
 
-        // 클럽명 조회 (항상 수행)
-        this.clubName = clubRepository.findById(schedule.getClubId())
-                .map(Club::getName)
-                .orElse(null);
+        this.scheduleType = schedule.getScheduleType() != null ? schedule.getScheduleType().name() : null;
+
+        // 클럽명 조회 (clubId가 null이 아닌 경우에만 수행)
+        this.clubName = schedule.getClubId() != null ?
+                clubRepository.findById(schedule.getClubId()).map(Club::getName).orElse(null) : null;
 
         this.courtName = schedule.getCourtName();
+        this.courtAddress = schedule.getCourtAddress();
+        this.region = schedule.getRegion();
+        this.createdByUserId = schedule.getCreatedByUserId();
         this.scheduledAt = schedule.getScheduledAt();
         this.maxCapacity = schedule.getMaxCapacity();
         this.currentParticipants = schedule.getCurrentParticipants();
@@ -86,10 +95,17 @@ public class ScheduleResponse {
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
 
-        // 권한 체크 (permissionService와 requestUserId가 제공된 경우에만)
+        // 권한 체크 (공개 일정과 클럽 일정 구분)
         if (permissionService != null && requestUserId != null) {
-            this.canManageSchedule = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
+            if (schedule.isPublicSchedule()) {
+                this.isScheduleAdmin = requestUserId.equals(schedule.getCreatedByUserId());
+                this.canManageSchedule = this.isScheduleAdmin;
+            } else {
+                this.isScheduleAdmin = permissionService.canManageSchedule(requestUserId, schedule.getClubId());
+                this.canManageSchedule = requestUserId.equals(schedule.getCreatedByUserId()) || this.isScheduleAdmin;
+            }
         } else {
+            this.isScheduleAdmin = null;
             this.canManageSchedule = null;
         }
     }

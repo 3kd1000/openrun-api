@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import "./IntroPage.css";
+import { CalendarDays, Trophy, Users, Search } from "lucide-react";
 
 const videos = [
   {
@@ -20,6 +20,75 @@ const videos = [
   },
 ];
 
+const features = [
+  {
+    image: "/intro/01_일정조회.png",
+    title: "일정 관리",
+    description: "클럽 일정을 캘린더와 리스트로 한눈에 확인",
+  },
+  {
+    image: "/intro/02_참가신청.png",
+    title: "참가 신청",
+    description: "원하는 일정에 터치 한 번으로 참가 신청",
+  },
+  {
+    image: "/intro/03_일정상세.png",
+    title: "일정 상세",
+    description: "참가자 목록, 코트 정보, 모집 현황 확인",
+  },
+  {
+    image: "/intro/04_대진생성_결과입력.png",
+    title: "대진표 생성",
+    description: "한울방식 / 수동대진 생성, 경기결과 입력",
+  },
+  {
+    image: "/intro/05_랭킹_기록.png",
+    title: "랭킹 & 기록",
+    description: "개인별/시즌별 경기 기록과 랭킹 자동 집계",
+  },
+  {
+    image: "/intro/06_클럽탐색.png",
+    title: "클럽 탐색",
+    description: "지역별, 코트별, 모집 현황 확인",
+  },
+  {
+    image: "/intro/07_클럽메인.png",
+    title: "클럽 홈",
+    description: "클럽 현황, 공지사항, 멤버 조회 등 한눈에",
+  },
+  {
+    image: "/intro/08_공용구관리.png",
+    title: "공용구 관리",
+    description: "공용구 입고, 배분, 재고 현황 관리",
+  },
+];
+
+const featureCards = [
+  {
+    icon: CalendarDays,
+    title: "일정 & 참가",
+    desc: "등록부터 신청, 대기순번까지",
+  },
+  {
+    icon: Trophy,
+    title: "대진표 & 기록",
+    desc: "자동 생성, 결과 입력, 랭킹",
+  },
+  {
+    icon: Users,
+    title: "클럽 관리",
+    desc: "멤버, 공지, 공용구 관리",
+  },
+  {
+    icon: Search,
+    title: "클럽 탐색",
+    desc: "지역별 검색, 게스트 모집",
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  VideoModal                                                          */
+/* ------------------------------------------------------------------ */
 const VideoModal: React.FC<{
   video: { src: string; title: string; description: string };
   onClose: () => void;
@@ -39,9 +108,18 @@ const VideoModal: React.FC<{
   }, [onClose]);
 
   return (
-    <div className="video-modal" onClick={onClose}>
-      <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="video-modal-close" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/90 flex items-center justify-center z-[1000] p-5"
+      onClick={onClose}
+    >
+      <div
+        className="relative max-w-[400px] max-h-[85vh] w-full bg-black rounded-2xl overflow-hidden flex flex-col max-md:max-w-[90vw] max-md:max-h-[80vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="absolute top-3 right-3 w-9 h-9 bg-white/85 border-none rounded-full text-secondary text-lg cursor-pointer z-10 flex items-center justify-center hover:bg-white transition-colors"
+          onClick={onClose}
+        >
           ✕
         </button>
         <video
@@ -51,255 +129,221 @@ const VideoModal: React.FC<{
           controlsList="nodownload"
           playsInline
           onContextMenu={(e) => e.preventDefault()}
-          className="video-modal-player"
+          className="w-full flex-1 min-h-0 object-contain block"
         />
-        <div className="modal-caption">
-          <h3>{video.title}</h3>
-          <p>{video.description}</p>
+        <div className="p-5 text-center bg-white shrink-0">
+          <h3 className="text-xl font-semibold text-secondary mb-2 mt-0">
+            {video.title}
+          </h3>
+          <p className="text-sm text-muted-foreground m-0">
+            {video.description}
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
+/* ------------------------------------------------------------------ */
+/*  IntroPage                                                           */
+/* ------------------------------------------------------------------ */
 const IntroPage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<number | null>(null);
 
-  const features = [
-    {
-      image: "/intro/01_일정조회.png",
-      title: "일정 관리",
-      description: "클럽 일정을 캘린더와 리스트로 한눈에 확인",
-    },
-    {
-      image: "/intro/02_참가신청.png",
-      title: "참가 신청",
-      description: "원하는 일정에 터치 한 번으로 참가 신청",
-    },
-    {
-      image: "/intro/03_일정상세.png",
-      title: "일정 상세",
-      description: "참가자 목록, 코트 정보, 모집 현황, 대기순번 등 확인",
-    },
-    {
-      image: "/intro/04_대진생성_결과입력.png",
-      title: "대진표 생성",
-      description: "한울방식 / 수동대진 생성, 경기결과 입력",
-    },
-    {
-      image: "/intro/05_랭킹_기록.png",
-      title: "랭킹 & 기록",
-      description: "개인별/시즌별 경기 기록과 랭킹 자동 집계",
-    },
-    {
-      image: "/intro/06_클럽탐색.png",
-      title: "클럽 탐색",
-      description: "지역별, 코트별, 모집 현황 확인",
-    },
-    {
-      image: "/intro/07_클럽메인.png",
-      title: "클럽 홈",
-      description: "클럽 현황, 공지사항, 멤버 조회 등 한눈에",
-    },
-    {
-      image: "/intro/08_공용구관리.png",
-      title: "공용구 관리",
-      description: "공용구 입고, 배분, 재고 현황 관리",
-    },
-  ];
-
   return (
-    <div className="intro-page">
-      <div className="intro-container">
-        {/* 헤더 */}
-        <header className="intro-header">
-          <div className="intro-logo">
-            <span className="logo-icon">🎾</span>
-            <h1>OpenRun</h1>
-          </div>
-          <p className="intro-tagline">테니스 클럽을 위한 일정 관리 & 대진표 서비스</p>
-        </header>
+    <div className="min-h-screen bg-background">
 
-        {/* 소개 섹션 */}
-        <section className="intro-about">
-          <h2>안녕하세요!</h2>
-          <div className="about-content">
-            <p>
-              저는 테니스를 즐기는 5년차 동호인이자 개발자로 일하고 있는 직장인입니다.
-              저희 클럽에서 겪었던 불편함들을 해결해 보고자 테니스 클럽 관리 서비스인 <strong>OpenRun</strong>을 개발했습니다. 
-            </p>
-            <p>
-              단체 카톡방, 네이버 밴드, 소모임 등의 어플로 참가 확인하고, 엑셀이나 구글문서로 대진표 만들고,
-              수기로 기록 관리하는 번거로움... 다들 비슷하게 겪고 계시지 않나요?
-            </p>
-            <p>
-              현재 저희 클럽에서는 2026년 1월부터 일정등록, 참가신청, 대진생성, 경기기록 입력 등의 기능을 OpenRun을 통해 활용하고 있습니다.
-              저희 클럽에서만 쓰기에는 아쉽다는 생각이 들어, 비슷한 고민을 하고 계신 다른 클럽들에게도 제공하기로 했습니다.
-            </p>
-            <p>
-              OpenRun은 무료로 이용할 수 있는 <strong>웹서비스</strong>입니다. <br />
-              앱 설치 없이 스마트폰 또는 PC 브라우저로 접속할 수 있고, 홈화면에 바로가기 추가하면 걸리적거리는 주소창 없이 전체화면으로 사용할 수 있습니다.
-            </p>
-            <p>
-              클럽 관리 서비스이다보니, 클럽을 개설 및 가입까지 되어야 전체 기능을 제대로 체험해보실 수 있습니다. 
-              따라서, 저희 클럽에서 사용 중인 실제 화면을 영상과 이미지로 준비했습니다. 
-              아래 주요 기능을 살펴보시고, 클럽 개설이나 운영에 궁금한 점이 있으시면 편하게 문의해 주세요.
-            </p>
-          </div>
-        </section>
+      {/* ── 1. Hero ── */}
+      <section className="bg-gradient-to-b from-secondary to-primary px-6 pt-14 pb-12 text-center">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <span className="text-4xl">🎾</span>
+          <h1 className="text-3xl font-extrabold text-white m-0">OpenRun</h1>
+        </div>
+        <p className="text-lg font-medium text-white mb-2">
+          테니스 클럽 운영, 이제 한곳에서.
+        </p>
+        <p className="text-sm text-white/75 mb-8">
+          일정 관리부터 대진표, 경기 기록까지
+        </p>
+        <div className="flex gap-3 justify-center">
+          <Link
+            to="/login"
+            className="px-6 py-2.5 bg-white text-primary font-bold rounded-full text-sm no-underline hover:bg-white/90 transition-colors"
+          >
+            지금 시작하기
+          </Link>
+          <Link
+            to="/explore"
+            className="px-6 py-2.5 bg-white/20 text-white font-medium rounded-full text-sm no-underline hover:bg-white/30 transition-colors"
+          >
+            둘러보기
+          </Link>
+        </div>
+      </section>
 
-        {/* 사용 예시 영상 */}
-        <section className="intro-videos">
-          <h2>사용 예시</h2>
-          <div className="videos-grid">
-            {videos.map((video, index) => (
+      {/* ── 2. Pain Point ── */}
+      <section className="px-6 py-8 text-center">
+        <p className="text-sm text-muted-foreground leading-relaxed m-0">
+          단톡방으로 참가 확인, 엑셀로 대진표, 수기로 기록 관리...
+          <br />
+          클럽 운영에 필요한 것들,{" "}
+          <span className="font-semibold text-secondary">
+            이제 한곳에서 해결하세요.
+          </span>
+        </p>
+      </section>
+
+      {/* ── 3. Feature Cards ── */}
+      <section id="features" className="px-6 pb-8">
+        <h2 className="text-base font-bold text-secondary mb-4">주요 기능</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {featureCards.map((card, i) => {
+            const Icon = card.icon;
+            return (
               <div
-                key={index}
-                className="video-card"
-                onClick={() => setSelectedVideo(index)}
+                key={i}
+                className="bg-white border border-border rounded-xl p-4"
               >
-                <div className="video-thumbnail">
-                  <video src={`${video.src}#t=0.001`} muted playsInline preload="metadata" />
-                  <div className="video-play-overlay">
-                    <span className="play-icon">▶</span>
-                  </div>
-                </div>
-                <div className="video-info">
-                  <h3>{video.title}</h3>
-                  <p>{video.description}</p>
-                </div>
+                <Icon className="w-5 h-5 text-secondary mb-2" />
+                <h3 className="text-sm font-bold text-secondary mb-1 mt-0">
+                  {card.title}
+                </h3>
+                <p className="text-xs text-muted-foreground m-0 leading-relaxed">
+                  {card.desc}
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
+            );
+          })}
+        </div>
+      </section>
 
-        {/* 기능 소개 갤러리 */}
-        <section className="intro-features">
-          <h2>주요 기능</h2>
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="feature-card"
-                onClick={() => setSelectedImage(index)}
-              >
-                <div className="feature-image-wrapper">
-                  <img
-                    src={feature.image}
-                    alt={feature.title}
-                    className="feature-image"
-                  />
-                </div>
-                <div className="feature-info">
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 왜 무료인가 */}
-        <section className="intro-why-free">
-          <h2>왜 무료인가요?</h2>
-          <div className="why-free-content">
-            <ul>
-              <li>
-                <span>테니스 클럽 관리 서비스에 대한 <strong>재능기부</strong>입니다</span>
-              </li>
-              <li>
-                <span>서버 비용은 제가 부담합니다. (사용자가 많아지면 최소한의 광고가 추가될 수 있어요)</span>
-              </li>
-              <li>
-                <span>유료화 계획 없음, <strong>개인정보 최소 수집, 암호화 저장</strong></span>
-              </li>
-              <li>
-                <span>1인 개발 프로젝트로 부족한 점이 많습니다. 피드백은 언제나 환영합니다.</span>
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        {/* 시작하기 */}
-        <section className="intro-cta">
-          <h2>시작하기</h2>
-          <div className="cta-content">
-            <p>
-              Google, 카카오 계정으로 간편하게 시작할 수 있습니다.
-              <br />
-              클럽을 만들고 멤버들을 초대해 보세요!
-            </p>
-            <div className="cta-buttons">
-              <Link to="/login" className="cta-button primary">
-                지금 시작하기
-              </Link>
-              <Link to="/more/user-guide" className="cta-button secondary">
-                이용 가이드 (준비중)
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* 홈화면 추가 안내 */}
-        <section className="intro-install-tip">
-          <h2>홈 화면에 추가하기</h2>
-          <p className="install-tip-desc">
-            앱 설치 없이, 홈 화면에 추가하면 주소창 없이 전체 화면으로 사용할 수 있습니다.
-          </p>
-          <div className="install-tip-steps">
-            <div className="install-tip-card">
-              <h3>iPhone (Safari)</h3>
-              <ol>
-                <li>Safari에서 OpenRun 접속</li>
-                <li>하단 <strong>공유 버튼</strong> (네모+화살표) 탭</li>
-                <li><strong>"홈 화면에 추가"</strong> 선택</li>
-              </ol>
-            </div>
-            <div className="install-tip-card">
-              <h3>Android (Chrome)</h3>
-              <ol>
-                <li>Chrome에서 OpenRun 접속</li>
-                <li>우측 상단 <strong>메뉴 (⋮)</strong> 탭</li>
-                <li><strong>"홈 화면에 추가"</strong> 선택</li>
-              </ol>
-            </div>
-          </div>
-        </section>
-
-        {/* 문의 */}
-        <section className="intro-contact">
-          <h2>문의하기</h2>
-          <p>
-            궁금한 점이나 피드백이 있으시면 편하게 연락 주세요.
-            <br />
-            <a
-              href="https://open.kakao.com/o/s2uaa3ei"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="contact-link"
+      {/* ── 4a. Media Carousel: Videos ── */}
+      <section className="pb-8">
+        <h2 className="text-base font-bold text-secondary mb-4 px-6">
+          사용 예시
+        </h2>
+        <div
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {videos.map((video, i) => (
+            <div
+              key={i}
+              className="snap-center shrink-0 w-[200px] cursor-pointer"
+              onClick={() => setSelectedVideo(i)}
             >
-              카카오톡 오픈채팅으로 문의하기 →
-            </a>
+              <div className="relative w-full aspect-[9/16] rounded-xl overflow-hidden bg-muted">
+                <video
+                  src={`${video.src}#t=0.001`}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover object-top pointer-events-none"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <span className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-primary text-lg shadow-lg">
+                    ▶
+                  </span>
+                </div>
+              </div>
+              <h3 className="text-sm font-semibold text-secondary mt-2 mb-0.5">
+                {video.title}
+              </h3>
+              <p className="text-xs text-muted-foreground m-0">
+                {video.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 4b. Feature Screenshots Carousel ── */}
+      <section className="pb-8">
+        <h2 className="text-base font-bold text-secondary mb-4 px-6">
+          주요 화면
+        </h2>
+        <div
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {features.map((f, i) => (
+            <div
+              key={i}
+              className="snap-center shrink-0 w-[200px] cursor-pointer"
+              onClick={() => setSelectedImage(i)}
+            >
+              <div className="w-full aspect-[9/16] rounded-xl overflow-hidden bg-muted">
+                <img
+                  src={f.image}
+                  alt={f.title}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <h3 className="text-sm font-semibold text-secondary mt-2 mb-0.5">
+                {f.title}
+              </h3>
+              <p className="text-xs text-muted-foreground m-0">
+                {f.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 5. Free Service + CTA ── */}
+      <section className="px-6 pb-8">
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
+          <span className="inline-block px-3 py-1 bg-primary text-white text-xs font-bold rounded-full mb-3">
+            무료 웹서비스
+          </span>
+          <p className="text-sm text-secondary leading-relaxed mb-1">
+            앱 설치 없이 브라우저로 바로 접속하세요.
           </p>
-        </section>
+          <p className="text-sm text-secondary leading-relaxed mb-5">
+            홈 화면에 추가하면 앱처럼 사용 가능합니다.
+          </p>
+          <Link
+            to="/login"
+            className="block w-full py-3.5 bg-primary text-white text-base font-bold rounded-xl text-center no-underline hover:bg-primary/90 transition-colors"
+          >
+            지금 시작하기
+          </Link>
+        </div>
+      </section>
 
-        {/* 푸터 */}
-        <footer className="intro-footer">
-          <div className="footer-links">
-            <Link to="/more/terms">이용약관</Link>
-            <span>|</span>
-            <Link to="/">대진표 생성 (비회원용)</Link>
-          </div>
-        </footer>
-      </div>
+      {/* ── 6. Footer ── */}
+      <footer className="bg-secondary px-6 py-8 text-center">
+        <a
+          href="https://open.kakao.com/o/s2uaa3ei"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-white font-medium no-underline hover:underline"
+        >
+          카카오톡 오픈채팅으로 문의하기 →
+        </a>
+        <div className="flex gap-3 justify-center mt-4 text-xs text-white/60">
+          <Link
+            to="/more/terms"
+            className="text-white/60 no-underline hover:text-white transition-colors"
+          >
+            이용약관
+          </Link>
+        </div>
+      </footer>
 
-      {/* 이미지 모달 */}
+      {/* ── Image Modal ── */}
       {selectedImage !== null && (
-        <div className="image-modal" onClick={() => setSelectedImage(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-[1000] p-5"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative max-w-[400px] w-full bg-white rounded-2xl overflow-hidden max-md:max-w-[90vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
-              className="modal-close"
+              className="absolute top-3 right-3 w-9 h-9 bg-black/50 border-none rounded-full text-white text-lg cursor-pointer z-10 flex items-center justify-center hover:bg-black/70 transition-colors"
               onClick={() => setSelectedImage(null)}
             >
               ✕
@@ -307,13 +351,19 @@ const IntroPage: React.FC = () => {
             <img
               src={features[selectedImage].image}
               alt={features[selectedImage].title}
+              className="w-full block"
             />
-            <div className="modal-caption">
-              <h3>{features[selectedImage].title}</h3>
-              <p>{features[selectedImage].description}</p>
+            <div className="p-5 text-center">
+              <h3 className="text-xl font-semibold text-secondary mt-0 mb-2">
+                {features[selectedImage].title}
+              </h3>
+              <p className="text-sm text-muted-foreground m-0">
+                {features[selectedImage].description}
+              </p>
             </div>
-            <div className="modal-nav">
+            <div className="flex justify-between items-center px-5 py-4 border-t border-border bg-muted">
               <button
+                className="bg-transparent border-none text-primary text-sm font-semibold cursor-pointer px-4 py-2 rounded-md transition-colors hover:bg-accent"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedImage(
@@ -323,10 +373,11 @@ const IntroPage: React.FC = () => {
               >
                 ← 이전
               </button>
-              <span>
+              <span className="text-sm text-muted-foreground">
                 {selectedImage + 1} / {features.length}
               </span>
               <button
+                className="bg-transparent border-none text-primary text-sm font-semibold cursor-pointer px-4 py-2 rounded-md transition-colors hover:bg-accent"
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedImage(
@@ -341,7 +392,7 @@ const IntroPage: React.FC = () => {
         </div>
       )}
 
-      {/* 비디오 모달 */}
+      {/* ── Video Modal ── */}
       {selectedVideo !== null && (
         <VideoModal
           video={videos[selectedVideo]}

@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "../../../services/api/axiosInstance";
-import type { Club } from "../../../types/club";
 import {
   ArrowLeftIcon,
   InboxIcon,
@@ -13,26 +11,52 @@ import {
   ScaleIcon,
   TrophyIcon,
 } from "../../../components/common/Icons";
+import { Headphones, Lock } from "lucide-react";
 import { getOpenRunSession } from "../../../utils/openrunSession";
-import { normalizeClubRole } from "../../../utils/role";
+import { canManageClub, normalizeClubRole } from "../../../utils/role";
 import { getErrorMessage, logError } from "../../../utils/errorHandler";
-import "./ClubManagePage.css";
+import { userService } from "../../../services/userService";
+import { useToast } from "../../../contexts/ToastContext";
+
+const MenuItem: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  last?: boolean;
+  disabled?: boolean;
+}> = ({ icon, label, onClick, danger, last, disabled }) => (
+  <button
+    className={`flex items-center gap-3 w-full px-4 py-3 min-h-[52px] bg-transparent border-none cursor-pointer transition-colors hover:bg-muted text-sm text-left ${
+      !last ? "border-b border-border" : ""
+    } ${danger ? "text-amber-700" : "text-foreground"} ${disabled ? "opacity-50" : ""}`}
+    onClick={onClick}
+  >
+    <span className={`flex items-center ${danger ? "text-amber-600" : "text-muted-foreground"}`}>
+      {icon}
+    </span>
+    <span className="flex-1">{label}</span>
+    {disabled ? (
+      <Lock size={14} className="text-muted-foreground" />
+    ) : (
+      <ChevronRightIcon size={16} className="text-muted-foreground" />
+    )}
+  </button>
+);
 
 const ClubManagePage: React.FC = () => {
   const navigate = useNavigate();
   const { clubId } = useParams<{ clubId: string }>();
+  const { showToast } = useToast();
 
-  // 클럽 정보
-  const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [operatorId, setOperatorId] = useState<number | null>(null);
 
-  // 권한 체크
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
   const isOwner = myRole === "OWNER";
-
-  // NOTE: 클럽 관리 화면은 딥링크(상세 페이지) 중심으로 통일합니다.
+  const canManage = canManageClub(myRole);
 
   useEffect(() => {
     if (clubId) {
@@ -44,12 +68,8 @@ const ClubManagePage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-
-      const [clubResponse] = await Promise.all([
-        axiosInstance.get(`/clubs/${clubId}`),
-      ]);
-
-      setClub(clubResponse.data);
+      const operator = await userService.getOperatorProfile();
+      setOperatorId(operator.id);
     } catch (error: unknown) {
       logError("클럽 관리 데이터 조회", error);
       setError(getErrorMessage(error));
@@ -62,121 +82,113 @@ const ClubManagePage: React.FC = () => {
     navigate(`/clubs/${clubId}`);
   };
 
+  const handleAdminAction = (path: string) => {
+    if (!canManage) {
+      showToast("운영진 이상만 이용 가능합니다", "info");
+      return;
+    }
+    navigate(path);
+  };
+
   if (loading) {
     return (
-      <div className="club-manage-page">
-        <div className="club-manage-page__loading">로딩 중...</div>
+      <div className="page-container px-3 py-2 min-h-screen">
+        <div className="py-10 text-center text-muted-foreground text-sm">로딩 중...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="club-manage-page">
-        <div className="club-manage-page__header">
-          <button className="club-manage-page__back-btn" onClick={handleBack}>
+      <div className="page-container px-3 py-2 min-h-screen">
+        <div className="flex items-center justify-between py-2 mb-3">
+          <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground" onClick={handleBack}>
             <ArrowLeftIcon size={20} />
           </button>
-          <h1 className="club-manage-page__title">클럽 관리</h1>
-          <div className="club-manage-page__header-spacer" />
+          <span className="flex-1 text-center text-sm font-bold text-foreground">클럽 관리</span>
+          <div className="w-9 h-9" />
         </div>
-        <div className="club-manage-page__error">{error}</div>
+        <div className="py-10 text-center text-red-500 text-sm">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="club-manage-page">
+    <div className="page-container px-3 py-2 min-h-screen">
       {/* 헤더 */}
-      <div className="club-manage-page__header">
-        <button className="club-manage-page__back-btn" onClick={handleBack}>
+      <div className="flex items-center justify-between py-2 mb-3">
+        <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-foreground" onClick={handleBack}>
           <ArrowLeftIcon size={20} />
         </button>
-        <h1 className="club-manage-page__title">
-          {club?.name ? `${club.name} 관리` : "클럽 관리"}
-        </h1>
-        <div className="club-manage-page__header-spacer" />
+        <span className="flex-1 text-center text-sm font-bold text-foreground">
+          클럽 관리
+        </span>
+        <div className="w-9 h-9" />
       </div>
 
-      {/* 운영 설정 바로가기 */}
-      <div className="club-manage-page__section">
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/info`)}
-        >
-          <div className="club-manage-page__menu-left">
-            <EditIcon size={18} />
-            <span>클럽 정보</span>
+      <div className="flex flex-col gap-4">
+        {/* 기본 설정 */}
+        <div>
+          <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">기본 설정</p>
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <MenuItem icon={<EditIcon size={18} />} label="클럽 정보" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/info`)} disabled={!canManage} />
+            <MenuItem icon={<SettingsIcon size={18} />} label="운영 정책" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/policy`)} disabled={!canManage} last />
           </div>
-          <ChevronRightIcon size={18} />
-        </button>
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/policy`)}
-        >
-          <div className="club-manage-page__menu-left">
-            <SettingsIcon size={18} />
-            <span>운영 정책</span>
-          </div>
-          <ChevronRightIcon size={18} />
-        </button>
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/award`)}
-        >
-          <div className="club-manage-page__menu-left">
-            <TrophyIcon size={18} />
-            <span>어워드 관리</span>
-          </div>
-          <ChevronRightIcon size={18} />
-        </button>
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/content`)}
-        >
-          <div className="club-manage-page__menu-left">
-            <FileTextIcon size={18} />
-            <span>공지사항 / 회칙</span>
-          </div>
-          <ChevronRightIcon size={18} />
-        </button>
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/external-requests`)}
-        >
-          <div className="club-manage-page__menu-left">
-            <InboxIcon size={18} />
-            <span>외부 요청 관리</span>
-          </div>
-          <ChevronRightIcon size={18} />
-        </button>
-        <button
-          className="club-manage-page__menu-item"
-          onClick={() => navigate(`/clubs/${clubId}/manage/balls`)}
-        >
-          <div className="club-manage-page__menu-left">
-            <ScaleIcon size={18} />
-            <span>공용구 관리</span>
-          </div>
-          <ChevronRightIcon size={18} />
-        </button>
-      </div>
-
-      {/* 클럽장 전용 메뉴 */}
-      {isOwner && (
-        <div className="club-manage-page__section club-manage-page__section--danger">
-          <button
-            className="club-manage-page__menu-item club-manage-page__menu-item--danger"
-            onClick={() => navigate(`/clubs/${clubId}/manage/transfer-ownership`)}
-          >
-            <div className="club-manage-page__menu-left">
-              <CrownIcon size={18} />
-              <span>클럽장 권한 양도</span>
-            </div>
-            <ChevronRightIcon size={18} />
-          </button>
         </div>
-      )}
+
+        {/* 콘텐츠 관리 */}
+        <div>
+          <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">콘텐츠 관리</p>
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <MenuItem icon={<FileTextIcon size={18} />} label="공지사항 / 회칙" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/content`)} disabled={!canManage} last />
+          </div>
+        </div>
+
+        {/* 회원 관리 */}
+        <div>
+          <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">회원 관리</p>
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <MenuItem icon={<InboxIcon size={18} />} label="가입관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/external-requests`)} disabled={!canManage} last />
+          </div>
+        </div>
+
+        {/* 활동 관리 */}
+        <div>
+          <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">활동 관리</p>
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <MenuItem icon={<TrophyIcon size={18} />} label="어워드 관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/award`)} disabled={!canManage} />
+            <MenuItem icon={<ScaleIcon size={18} />} label="공용구 관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/balls`)} disabled={!canManage} last />
+          </div>
+        </div>
+
+        {/* 클럽장 전용 — 파괴적/민감 행위이므로 OWNER에게만 표시 */}
+        {isOwner && (
+          <div>
+            <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">클럽장 전용</p>
+            <div className="bg-amber-50 rounded-xl border border-amber-200 overflow-hidden">
+              <MenuItem icon={<CrownIcon size={18} />} label="클럽장 권한 양도" onClick={() => navigate(`/clubs/${clubId}/manage/transfer-ownership`)} danger last />
+            </div>
+          </div>
+        )}
+
+        {/* 운영자 문의 */}
+        {operatorId && (
+          <button
+            type="button"
+            className="w-full flex items-center gap-3 p-4 rounded-xl border border-primary/30 bg-primary/5 cursor-pointer transition-colors hover:bg-primary/10 text-left"
+            onClick={() => navigate(`/messages/${operatorId}`)}
+          >
+            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+              <Headphones size={16} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-primary">운영자에게 문의하기</div>
+              <p className="text-xs text-muted-foreground">설정 방법, 기능 안내 등 도움이 필요하면 DM을 보내세요</p>
+            </div>
+            <ChevronRightIcon size={16} className="text-primary/50" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

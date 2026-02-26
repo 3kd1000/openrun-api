@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import Toast from "../../components/common/Toast";
 import axiosInstance from "../../services/api/axiosInstance";
 
-import "./DrawGenerationPage.css"; // 꼭 추가해 주세요!
-
 // API 응답 타입 정의 (CreateDrawResponse에 따라 수정 필요)
 interface Game {
   gameNumber: number;
@@ -228,19 +226,35 @@ const DrawGenerationPage: React.FC = () => {
     }
   };
 
+  /* shared input class */
+  const inputTextClass =
+    "bg-background text-foreground border-[1.5px] border-border rounded-md text-base w-full outline-none transition-[border] h-[46px] px-4 py-2.5 mb-4 box-border placeholder:text-muted-foreground focus:border-[1.7px] focus:border-primary max-md:h-[42px] last:mb-0";
+
   return (
-    <div className="body-bg">
-      <div className="page-container">
-        <div className="logo-wrapper">
-          <img src="/openrun_logo.jpeg" alt="logo" className="logo-img" />
+    <div className="w-full min-h-screen flex justify-center items-start bg-background box-border">
+      <div className="px-6 py-8 max-w-[480px] w-full mx-auto my-9 bg-muted rounded-[24px] shadow-[0_2px_12px_0_rgba(60,60,100,0.06)] font-sans max-md:w-[99vw] max-md:max-w-[99vw] max-md:px-[1vw] max-md:py-6 max-md:m-0 max-md:rounded-none max-md:shadow-none">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <img
+            src="/openrun_logo.jpeg"
+            alt="logo"
+            className="w-[120px] rounded-xl max-md:w-[78px]"
+          />
         </div>
 
-        <div className="sticky-header">
-          <h1>한울방식 대진 생성</h1>
-          <div className="input-row radio-type-row">
-            <span className="input-label">대진 타입</span>
-            <div className="radio-row">
-              <label className="radio-label">
+        {/* Sticky Header */}
+        <div className="sticky top-auto bg-background z-auto px-6 pt-6 pb-4 border-b border-border mb-4 rounded-t-[24px] max-md:px-[6vw] max-md:pt-4 max-md:pb-3">
+          <span className="block text-2xl text-center mb-6 text-foreground font-bold tracking-[-0.5px]">
+            한울방식 대진 생성
+          </span>
+
+          {/* Draw type radio row - flex-row on mobile too */}
+          <div className="flex flex-row items-center gap-6 my-[17px] min-h-[48px] max-md:flex-row max-md:items-center max-md:gap-6">
+            <span className="font-semibold text-foreground/70 min-w-[82px] text-right">
+              대진 타입
+            </span>
+            <div className="flex items-center gap-6 min-h-[40px]">
+              <label className="flex items-center gap-[5px] text-base font-medium cursor-pointer text-foreground bg-none">
                 <input
                   type="radio"
                   value="AA"
@@ -248,10 +262,11 @@ const DrawGenerationPage: React.FC = () => {
                   onChange={(e) =>
                     setDrawType(e.target.value as "AA" | "AB" | "SEED")
                   }
+                  className="m-0 accent-primary align-middle"
                 />
                 AA
               </label>
-              <label className="radio-label">
+              <label className="flex items-center gap-[5px] text-base font-medium cursor-pointer text-foreground bg-none">
                 <input
                   type="radio"
                   value="SEED"
@@ -259,10 +274,11 @@ const DrawGenerationPage: React.FC = () => {
                   onChange={(e) =>
                     setDrawType(e.target.value as "AA" | "AB" | "SEED")
                   }
+                  className="m-0 accent-primary align-middle"
                 />
                 시드
               </label>
-              <label className="radio-label">
+              <label className="flex items-center gap-[5px] text-base font-medium cursor-pointer text-foreground bg-none">
                 <input
                   type="radio"
                   value="AB"
@@ -270,23 +286,31 @@ const DrawGenerationPage: React.FC = () => {
                   onChange={(e) =>
                     setDrawType(e.target.value as "AA" | "AB" | "SEED")
                   }
+                  className="m-0 accent-primary align-middle"
                 />
                 AB
               </label>
             </div>
           </div>
 
-          <div className="input-row player-count-input">
-            <label htmlFor="numberOfTotalPlayer" className="input-label">
+          {/* Player count row */}
+          <div className="flex items-center gap-6 my-[17px] min-h-[48px] max-md:flex-col max-md:items-stretch max-md:gap-[7px] max-md:min-h-0">
+            <label
+              htmlFor="numberOfTotalPlayer"
+              className="font-semibold text-foreground/70 min-w-[82px] text-right"
+            >
               총 인원수
             </label>
-            <div className="player-count-control">
-              <button className="btn-stepper" onClick={handleDecrement}>
+            <div className="flex items-center gap-3 h-[44px] min-w-0 w-full flex-nowrap max-md:h-[42px] max-md:gap-2 max-md:w-full">
+              <button
+                className="flex-shrink-0 w-11 h-11 min-w-[44px] min-h-[44px] rounded-md border-[1.5px] border-primary bg-background text-primary text-[2.4rem] leading-none font-bold flex justify-center items-center cursor-pointer p-0 box-border align-middle active:bg-primary active:text-white"
+                onClick={handleDecrement}
+              >
                 -
               </button>
               <input
                 id="numberOfTotalPlayer"
-                className="input-range"
+                className="flex-1 min-w-[80px] max-w-[150px] h-[7px] m-0 bg-muted rounded cursor-pointer max-md:min-w-0 max-md:w-full"
                 type="range"
                 value={numberOfTotalPlayer === "" ? 8 : numberOfTotalPlayer}
                 onChange={handleNumberOfTotalPlayerChange}
@@ -294,42 +318,42 @@ const DrawGenerationPage: React.FC = () => {
                 max={totalPlayerRange[drawType].max}
                 step={drawType === "AB" ? 2 : 1}
               />
-              <button className="btn-stepper" onClick={handleIncrement}>
+              <button
+                className="flex-shrink-0 w-11 h-11 min-w-[44px] min-h-[44px] rounded-md border-[1.5px] border-primary bg-background text-primary text-[2.4rem] leading-none font-bold flex justify-center items-center cursor-pointer p-0 box-border align-middle active:bg-primary active:text-white"
+                onClick={handleIncrement}
+              >
                 +
               </button>
-              <span className="current-player-count">
+              <span className="font-semibold text-primary min-w-[45px] flex-shrink-0 text-right text-base whitespace-nowrap max-md:ml-auto max-md:static max-md:transform-none">
                 {numberOfTotalPlayer === "" ? 8 : numberOfTotalPlayer}명
               </span>
             </div>
           </div>
         </div>
 
-        <div className="section">
+        {/* Participant inputs section */}
+        <div className="mt-7 mb-6">
           {typeof numberOfTotalPlayer === "number" &&
             numberOfTotalPlayer > 0 && (
               <div>
-                <div className="section-title">참여자 정보 입력</div>
+                <div className="text-base text-foreground font-bold mb-3">
+                  참여자 정보 입력
+                </div>
                 {drawType === "AB" ? (
-                  <div className="input-list-2col">
+                  <div className="flex flex-col gap-[10px] max-md:gap-2">
                     {groupAUserNames.map((nameA, idx) => (
-                      <div className="participant-row" key={idx}>
-                        <div
-                          style={{
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "column",
-                          }}
-                        >
+                      <div className="flex gap-4" key={idx}>
+                        <div className="flex-1 flex flex-col">
                           {idx === 0 && (
                             <div
-                              className="group-title"
+                              className="text-base font-semibold mb-1 text-foreground/70"
                               style={{ marginBottom: 4, fontSize: "0.92rem" }}
                             >
                               그룹 A
                             </div>
                           )}
                           <input
-                            className="input-text"
+                            className={inputTextClass}
                             type="text"
                             placeholder={`그룹 A 참가자 ${idx + 1}`}
                             value={nameA}
@@ -338,23 +362,17 @@ const DrawGenerationPage: React.FC = () => {
                             }
                           />
                         </div>
-                        <div
-                          style={{
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "column",
-                          }}
-                        >
+                        <div className="flex-1 flex flex-col">
                           {idx === 0 && (
                             <div
-                              className="group-title"
+                              className="text-base font-semibold mb-1 text-foreground/70"
                               style={{ marginBottom: 4, fontSize: "0.92rem" }}
                             >
                               그룹 B
                             </div>
                           )}
                           <input
-                            className="input-text"
+                            className={inputTextClass}
                             type="text"
                             placeholder={`그룹 B 참가자 ${idx + 1}`}
                             value={groupBUserNames[idx]}
@@ -369,12 +387,12 @@ const DrawGenerationPage: React.FC = () => {
                 ) : (
                   <>
                     {/* 참가자명 2명씩 한 줄에 배치 */}
-                    <div className="input-list-2col">
+                    <div className="flex flex-col gap-[10px] max-md:gap-2">
                       {groupByTwo(participantNames).map(
                         ([name1, name2], idx) => (
-                          <div className="participant-row" key={idx}>
+                          <div className="flex gap-4" key={idx}>
                             <input
-                              className="input-text"
+                              className={inputTextClass}
                               type="text"
                               placeholder={`참가자 ${idx * 2 + 1}`}
                               value={name1}
@@ -387,7 +405,7 @@ const DrawGenerationPage: React.FC = () => {
                             />
                             {participantNames[idx * 2 + 1] !== undefined && (
                               <input
-                                className="input-text"
+                                className={inputTextClass}
                                 type="text"
                                 placeholder={`참가자 ${idx * 2 + 2}`}
                                 value={name2}
@@ -405,17 +423,17 @@ const DrawGenerationPage: React.FC = () => {
                     </div>
                     {/* 시드 플레이어명도 2명씩 한 줄에 배치 */}
                     {drawType === "SEED" && (
-                      <div id="seed-section">
-                        <div className="group-title">
+                      <div className="mt-4 pt-3 border-t border-dashed border-border">
+                        <div className="text-base font-semibold mb-3 text-foreground/70">
                           시드 플레이어 (
                           {getSeedPlayerCounts(numberOfTotalPlayer).seed}명)
                         </div>
-                        <div className="input-list-2col">
+                        <div className="flex flex-col gap-[10px] max-md:gap-2">
                           {groupByTwo(seedUserNames).map(
                             ([name1, name2], idx) => (
-                              <div className="participant-row" key={idx}>
+                              <div className="flex gap-4" key={idx}>
                                 <input
-                                  className="input-text"
+                                  className={inputTextClass}
                                   type="text"
                                   placeholder={`참가자 ${idx * 2 + 1}`}
                                   value={name1}
@@ -428,7 +446,7 @@ const DrawGenerationPage: React.FC = () => {
                                 />
                                 {seedUserNames[idx * 2 + 1] !== undefined && (
                                   <input
-                                    className="input-text"
+                                    className={inputTextClass}
                                     type="text"
                                     placeholder={`참가자 ${idx * 2 + 2}`}
                                     value={name2}
@@ -452,18 +470,28 @@ const DrawGenerationPage: React.FC = () => {
             )}
         </div>
 
-        <div className="explain-btns-row">
-          <button className="btn-guide" onClick={() => setOpenFaq("about")}>
+        {/* Explain buttons row */}
+        <div className="flex gap-4 justify-center mb-6">
+          <button
+            className="bg-[#dae754] text-[#25201b] border-none rounded-md font-bold text-base py-[9px] px-[22px] cursor-pointer transition-colors active:bg-[#e1b801]"
+            onClick={() => setOpenFaq("about")}
+          >
             서비스 안내
           </button>
-          <button className="btn-type" onClick={() => setOpenFaq("types")}>
+          <button
+            className="bg-[#4cad90] text-white border-none rounded-md font-bold text-base py-[9px] px-[22px] cursor-pointer transition-colors active:bg-[#294994]"
+            onClick={() => setOpenFaq("types")}
+          >
             대진 타입 설명
           </button>
         </div>
+
         {openFaq === "about" && (
-          <div className="accordion-card" style={{ position: "relative" }}>
-            {/* 페이지 소개 텍스트 */}
-            <button className="btn-close" onClick={() => setOpenFaq("")}>
+          <div className="bg-background border-[1.5px] border-primary rounded-xl shadow-[0_4px_16px_0_rgba(60,60,100,0.06)] mb-4 -mt-2 relative animate-[fadeIn_0.2s_ease] p-6 text-foreground text-base leading-relaxed">
+            <button
+              className="absolute top-[10px] right-4"
+              onClick={() => setOpenFaq("")}
+            >
               x
             </button>
             <div style={{ paddingTop: 8, paddingRight: 14 }}>
@@ -492,11 +520,13 @@ const DrawGenerationPage: React.FC = () => {
           </div>
         )}
         {openFaq === "types" && (
-          <div className="accordion-card" style={{ position: "relative" }}>
-            <button className="btn-close" onClick={() => setOpenFaq("")}>
+          <div className="bg-background border-[1.5px] border-primary rounded-xl shadow-[0_4px_16px_0_rgba(60,60,100,0.06)] mb-4 -mt-2 relative animate-[fadeIn_0.2s_ease] p-6 text-foreground text-base leading-relaxed">
+            <button
+              className="absolute top-[10px] right-4"
+              onClick={() => setOpenFaq("")}
+            >
               x
             </button>
-            {/* 타입 설명 텍스트 */}
             <div style={{ paddingTop: 8, paddingRight: 14 }}>
               <br />
               AA: 실력이 비슷한 선수끼리 복식 게임을 진행합니다. 게임마다
@@ -513,21 +543,33 @@ const DrawGenerationPage: React.FC = () => {
           </div>
         )}
 
-        <div className="button-row">
-          <button className="btn" onClick={generateDraw}>
+        {/* Button row */}
+        <div className="my-[30px] mb-3 flex gap-4 justify-center flex-wrap max-md:flex-col max-md:gap-3">
+          <button
+            className="py-2.5 px-6 bg-primary text-white border-none rounded-md text-base font-semibold cursor-pointer transition-colors min-w-[116px] active:bg-primary/90"
+            onClick={generateDraw}
+          >
             대진 생성
           </button>
-          <button className="btn btn-secondary" onClick={resetForm}>
+          <button
+            className="py-2.5 px-6 bg-foreground/60 text-white border-none rounded-md text-base font-semibold cursor-pointer transition-colors min-w-[116px] active:bg-foreground/70"
+            onClick={resetForm}
+          >
             초기화
           </button>
-          <button className="btn btn-outline" onClick={copyToClipboard}>
+          <button
+            className="py-2.5 px-6 bg-background text-primary border-[1.5px] border-primary rounded-md text-base font-semibold cursor-pointer transition-colors min-w-[116px]"
+            onClick={copyToClipboard}
+          >
             클립보드에 복사
           </button>
         </div>
 
         {drawResult && (
-          <div className="result-section">
-            <div className="result-title">생성된 대진 결과</div>
+          <div className="mt-9 border-t border-border pt-6 bg-background text-foreground rounded-lg shadow-[0_2px_8px_0_rgba(60,60,100,0.06)]">
+            <div className="text-lg font-bold text-foreground mb-4">
+              생성된 대진 결과
+            </div>
             {drawResult.games.map((game) => (
               <p key={game.gameNumber}>
                 <strong>게임 {game.gameNumber}:</strong>{" "}
@@ -538,9 +580,16 @@ const DrawGenerationPage: React.FC = () => {
         )}
 
         {shareFormat && (
-          <div className="share-section" ref={resultRef}>
-            <div className="result-title">공유 형식</div>
-            <pre className="share-format-box">{shareFormat}</pre>
+          <div
+            className="mt-9 border-t border-border pt-6 bg-background text-foreground rounded-lg shadow-[0_2px_8px_0_rgba(60,60,100,0.06)]"
+            ref={resultRef}
+          >
+            <div className="text-lg font-bold text-foreground mb-4">
+              공유 형식
+            </div>
+            <pre className="p-4 bg-muted rounded-md font-mono text-base whitespace-pre-wrap break-words overflow-wrap-anywhere overflow-x-auto mt-[7px] text-foreground max-w-full box-border max-md:text-sm">
+              {shareFormat}
+            </pre>
           </div>
         )}
       </div>

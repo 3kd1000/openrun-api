@@ -108,4 +108,34 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long>, JpaSp
      * 특정 클럽에서 pivotDate 이후의 일정 수 조회
      */
     long countByClubIdAndScheduledAtGreaterThanEqual(Long clubId, LocalDateTime pivotDate);
+
+    /**
+     * 공개 일정 목록 조회 (미래 일정, 오름차순)
+     */
+    @Query("SELECT s FROM Schedule s WHERE s.scheduleType = 'PUBLIC' AND s.scheduledAt > :now ORDER BY s.scheduledAt ASC")
+    List<Schedule> findPublicSchedules(@Param("now") LocalDateTime now, Pageable pageable);
+
+    /**
+     * 지역별 공개 일정 목록 조회
+     */
+    @Query("SELECT s FROM Schedule s WHERE s.scheduleType = 'PUBLIC' AND s.scheduledAt > :now AND s.region = :region ORDER BY s.scheduledAt ASC")
+    List<Schedule> findPublicSchedulesByRegion(@Param("now") LocalDateTime now, @Param("region") String region, Pageable pageable);
+
+    /**
+     * 특정 사용자가 생성한 공개 일정 목록 조회
+     */
+    @Query("SELECT s FROM Schedule s WHERE s.scheduleType = 'PUBLIC' AND s.createdByUserId = :userId ORDER BY s.scheduledAt DESC")
+    List<Schedule> findPublicSchedulesByCreator(@Param("userId") Long userId);
+
+    /**
+     * 내일 일정 조회 (리마인드 알림용)
+     */
+    @Query("SELECT s FROM Schedule s WHERE s.scheduledAt >= :start AND s.scheduledAt < :end")
+    List<Schedule> findSchedulesBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    /**
+     * 특정 사용자가 생성한 공개 일정 수 조회
+     */
+    @Query("SELECT COUNT(s) FROM Schedule s WHERE s.scheduleType = 'PUBLIC' AND s.createdByUserId = :userId")
+    long countPublicSchedulesByCreator(@Param("userId") Long userId);
 }

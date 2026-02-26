@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Getter
 @Entity
@@ -39,7 +40,7 @@ public class ScheduleTemplate {
     @Column(name = "template_type", length = 30, nullable = false)
     private TemplateType templateType;
 
-    @Column(name = "template_name", length = 5, nullable = false)
+    @Column(name = "template_name", length = 20, nullable = false)
     private String templateName;
 
     @Column(name = "court_name", length = 100)
@@ -50,6 +51,19 @@ public class ScheduleTemplate {
 
     @Column(name = "cost", precision = 10, scale = 2)
     private BigDecimal cost;
+
+    @Column(name = "court_address", length = 200)
+    private String courtAddress;
+
+    @Column(name = "region", length = 50)
+    private String region;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "match_type", length = 20)
+    private MatchType matchType;
+
+    @Column(name = "number_of_courts")
+    private Integer numberOfCourts;
 
     @Column(name = "participation_start_pattern", length = 50)
     private String participationStartPattern;
@@ -65,13 +79,18 @@ public class ScheduleTemplate {
     @Builder
     public ScheduleTemplate(Long userId, TemplateType templateType, String templateName,
                             String courtName, Integer maxCapacity, BigDecimal cost,
-                            String participationStartPattern) {
+                            String courtAddress, String region, MatchType matchType,
+                            Integer numberOfCourts, String participationStartPattern) {
         this.userId = userId;
         this.templateType = templateType;
         this.templateName = templateName;
         this.courtName = courtName;
         this.maxCapacity = maxCapacity;
         this.cost = cost;
+        this.courtAddress = courtAddress;
+        this.region = region;
+        this.matchType = matchType;
+        this.numberOfCourts = numberOfCourts;
         this.participationStartPattern = participationStartPattern;
     }
 
@@ -80,13 +99,19 @@ public class ScheduleTemplate {
      * templateType은 변경되지 않음
      */
     public void update(String templateName, String courtName, Integer maxCapacity,
-                       BigDecimal cost, String participationStartPattern) {
+                       BigDecimal cost, String courtAddress, String region,
+                       MatchType matchType, Integer numberOfCourts,
+                       String participationStartPattern) {
         this.templateName = templateName;
         // templateType에 따라 관련 필드만 업데이트
         if (this.templateType == TemplateType.SCHEDULE) {
             this.courtName = courtName;
             this.maxCapacity = maxCapacity;
             this.cost = cost;
+            this.courtAddress = courtAddress;
+            this.region = region;
+            this.matchType = matchType;
+            this.numberOfCourts = numberOfCourts;
         } else if (this.templateType == TemplateType.PARTICIPATION_START) {
             this.participationStartPattern = participationStartPattern;
         }
