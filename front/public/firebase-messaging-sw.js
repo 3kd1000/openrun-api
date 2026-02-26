@@ -87,7 +87,7 @@ self.addEventListener("notificationclick", (event) => {
               console.log("[firebase-messaging-sw] navigate 실패, Cache API + postMessage 사용:", e);
               const payload = JSON.stringify({ url: targetUrl, timestamp: Date.now() });
               await caches.open("notification-pending").then(cache =>
-                cache.put("pending-url", new Response(payload))
+                cache.put("/notification-pending-url", new Response(payload))
               );
               client.postMessage({ type: "NOTIFICATION_CLICK", url: targetUrl });
               return client.focus();
@@ -98,7 +98,7 @@ self.addEventListener("notificationclick", (event) => {
         if (clients.openWindow) {
           const payload = JSON.stringify({ url: targetUrl, timestamp: Date.now() });
           await caches.open("notification-pending").then(cache =>
-            cache.put("pending-url", new Response(payload))
+            cache.put("/notification-pending-url", new Response(payload))
           );
           return clients.openWindow(targetUrl);
         }
