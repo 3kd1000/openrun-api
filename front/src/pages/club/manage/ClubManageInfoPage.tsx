@@ -166,14 +166,12 @@ const ClubManageInfoPage: React.FC = () => {
                 </div>
               )}
               <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  className="text-sm font-medium text-primary border border-primary/40 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors disabled:opacity-50"
-                  onClick={() => logoInputRef.current?.click()}
-                  disabled={logoUploading}
+                <label
+                  htmlFor="logo-upload"
+                  className={`text-sm font-medium text-primary border border-primary/40 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors cursor-pointer text-center ${logoUploading ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   {logoUploading ? "처리 중..." : "로고 변경"}
-                </button>
+                </label>
                 {logoUrl && (
                   <button
                     type="button"
@@ -188,6 +186,7 @@ const ClubManageInfoPage: React.FC = () => {
             </div>
             <p className="text-xs text-muted-foreground mt-2">PNG, JPG, WebP · 최대 5MB · 정사각형 이미지 권장</p>
             <input
+              id="logo-upload"
               ref={logoInputRef}
               type="file"
               accept="image/png,image/jpeg,image/webp"
