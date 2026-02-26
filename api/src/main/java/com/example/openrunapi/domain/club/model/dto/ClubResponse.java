@@ -30,6 +30,7 @@ public class ClubResponse {
     private final LocalDateTime createdAt;
 
     // 어워드 정책 필드
+    private final Boolean awardEnabled;
     private final String awardPeriod;
     private final Boolean awardAttendanceEnabled;
     private final Boolean awardPointsEnabled;
@@ -58,6 +59,7 @@ public class ClubResponse {
             this.interclubRecruitmentOpen = policy.getInterclubRecruitmentOpen();
             this.memberRecruitmentOpen = policy.getMemberRecruitmentOpen();
             this.memberRecruitmentNote = policy.getMemberRecruitmentNote();
+            this.awardEnabled = policy.getAwardEnabled();
             this.awardPeriod = policy.getAwardPeriod() != null ? policy.getAwardPeriod().name() : null;
             this.awardAttendanceEnabled = policy.getAwardAttendanceEnabled();
             this.awardPointsEnabled = policy.getAwardPointsEnabled();
@@ -68,6 +70,7 @@ public class ClubResponse {
             this.interclubRecruitmentOpen = false;
             this.memberRecruitmentOpen = true;
             this.memberRecruitmentNote = null;
+            this.awardEnabled = true;
             this.awardPeriod = "HALF_YEAR";
             this.awardAttendanceEnabled = true;
             this.awardPointsEnabled = true;

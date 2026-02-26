@@ -7,8 +7,9 @@ import {
   type MemberAchievement,
   type TierName,
 } from "../services/awardService";
-import type { AwardType } from "../types/club";
+import type { AwardType, Club } from "../types/club";
 import { getOpenRunSession } from "../utils/openrunSession";
+import axiosInstance from "../services/api/axiosInstance";
 
 interface AwardWinnersContextType {
   winnerUserIds: Set<number>;  // 현재 어워드 수상자 ID Set
@@ -73,6 +74,12 @@ export const AwardWinnersProvider: React.FC<AwardWinnersProviderProps> = ({ chil
   const { data: awardsData, isLoading } = useQuery({
     queryKey: ["awards", currentClubId] as const,
     queryFn: async () => {
+      // 클럽의 awardEnabled 체크 → OFF이면 빈 데이터 반환
+      const clubRes = await axiosInstance.get<Club>(`/clubs/${currentClubId}`);
+      if (clubRes.data.awardEnabled === false) {
+        return null; // 어워드 비활성화
+      }
+
       const [winnersResponse, achievementsResponse] = await Promise.all([
         awardService.getCurrentWinners(currentClubId!),
         awardService.getCumulativeAchievements(currentClubId!),

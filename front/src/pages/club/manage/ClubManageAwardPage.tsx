@@ -10,6 +10,8 @@ import {
 } from "../../../services/awardService";
 import type { Club, UpdateAwardPolicyRequest, AwardRankingResponse, AwardType } from "../../../types/club";
 import { ArrowLeftIcon, CheckIcon, Trash2Icon, EditIcon, XIcon } from "../../../components/common/Icons";
+import { Trophy } from "lucide-react";
+import EmptyState from "../../../components/openrun/empty-state";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAwardWinners } from "../../../contexts/AwardWinnersContext";
 
@@ -26,6 +28,7 @@ const ClubManageAwardPage: React.FC = () => {
 
   // 정책 설정 상태
   const [policy, setPolicy] = useState<UpdateAwardPolicyRequest>({
+    awardEnabled: true,
     awardPeriod: "HALF_YEAR",
     awardAttendanceEnabled: true,
     awardPointsEnabled: true,
@@ -57,6 +60,7 @@ const ClubManageAwardPage: React.FC = () => {
         setLoading(true);
         const res = await axiosInstance.get<Club>(`/clubs/${clubId}`);
         const newPolicy = {
+          awardEnabled: res.data.awardEnabled !== false,
           awardPeriod: res.data.awardPeriod ?? "HALF_YEAR",
           awardAttendanceEnabled: res.data.awardAttendanceEnabled ?? true,
           awardPointsEnabled: res.data.awardPointsEnabled ?? true,
@@ -393,7 +397,40 @@ const ClubManageAwardPage: React.FC = () => {
             클럽의 어워드 정책을 설정합니다.
           </div>
 
-          <div className="bg-white border border-border rounded-xl p-4">
+          {/* 어워드 기능 글로벌 ON/OFF */}
+          <div className="bg-white border border-border rounded-xl p-4 mb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <span className="text-sm font-semibold text-gray-900">어워드 기능 사용</span>
+                <span className="text-xs text-gray-400 leading-snug">
+                  OFF 시 기록 탭의 어워드와 이름 옆 배지가 숨겨집니다.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPolicy((p) => ({ ...p, awardEnabled: !p.awardEnabled }))}
+                disabled={saving}
+                aria-label="어워드 기능 토글"
+                className={[
+                  "relative w-[52px] h-8 rounded-full border-none cursor-pointer transition-colors duration-300 flex-shrink-0 ml-3",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  policy.awardEnabled
+                    ? "bg-gradient-to-br from-[#4CAF50] to-[#45a049]"
+                    : "bg-gray-300 hover:bg-gray-400",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "absolute top-0.5 left-0.5 w-7 h-7 bg-white rounded-full shadow-md transition-transform duration-300",
+                    policy.awardEnabled ? "translate-x-5" : "translate-x-0",
+                  ].join(" ")}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className={["bg-white border border-border rounded-xl p-4 transition-opacity", !policy.awardEnabled ? "opacity-50 pointer-events-none" : ""].join(" ")}>
             {/* 정산 주기 */}
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-900">정산 주기</span>
@@ -550,6 +587,13 @@ const ClubManageAwardPage: React.FC = () => {
             기간별 수상자를 선정하고 확정합니다.
           </div>
 
+          {!policy.awardEnabled && (
+            <div className="text-center py-10 px-4 bg-gray-50 border border-border rounded-xl mb-4">
+              <p className="text-sm text-gray-500 font-medium">어워드 기능이 비활성화되어 있습니다.</p>
+              <p className="text-xs text-gray-400 mt-1">정책 설정 탭에서 어워드 기능을 켜주세요.</p>
+            </div>
+          )}
+
           {/* 기간 선택 */}
           <div className="flex items-center gap-3 mb-4 px-3 py-2 bg-gray-50 rounded-lg">
             <label className="text-sm font-semibold text-gray-900 whitespace-nowrap">
@@ -670,9 +714,11 @@ const ClubManageAwardPage: React.FC = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="py-6 text-center text-sm text-gray-400">
-                            해당 기간에 데이터가 없습니다.
-                          </div>
+                          <EmptyState
+                            icon={Trophy}
+                            title="아직 후보가 없어요"
+                            description="클럽 활동이 쌓이면 상위 3명이 후보로 올라옵니다"
+                          />
                         )}
 
                         {/* 확정/수정 버튼 */}

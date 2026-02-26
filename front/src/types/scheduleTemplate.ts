@@ -8,6 +8,10 @@ export interface ScheduleTemplate {
   courtName?: string;
   maxCapacity?: number;
   cost?: number;
+  courtAddress?: string;
+  region?: string;
+  matchType?: string | null;
+  numberOfCourts?: number;
   participationStartPattern?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -19,6 +23,10 @@ export interface CreateScheduleTemplateRequest {
   courtName?: string;
   maxCapacity?: number;
   cost?: number;
+  courtAddress?: string;
+  region?: string;
+  matchType?: string | null;
+  numberOfCourts?: number;
   participationStartPattern?: string | null;
 }
 
@@ -27,5 +35,9 @@ export interface UpdateScheduleTemplateRequest {
   courtName?: string;
   maxCapacity?: number;
   cost?: number;
+  courtAddress?: string;
+  region?: string;
+  matchType?: string | null;
+  numberOfCourts?: number;
   participationStartPattern?: string | null;
 }

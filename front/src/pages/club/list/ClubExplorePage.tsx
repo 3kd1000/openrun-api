@@ -87,7 +87,7 @@ const resolveInitialTab = (tabParam: string | null, stateTab?: string): TabType 
   if (tabParam === "club" || tabParam === "member") return "club";
   if (tabParam === "schedule" || tabParam === "guest" || tabParam === "open") return "schedule";
   if (stateTab === "member" || stateTab === "club") return "club";
-  return "schedule";
+  return "club";
 };
 
 const ClubExplorePage: React.FC = () => {

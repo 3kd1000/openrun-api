@@ -218,6 +218,7 @@ public class ClubService {
         ClubPolicyAuditSnapshot beforeSnapshot = ClubPolicyAuditSnapshot.from(policy);
 
         policy.updateAwardPolicy(
+                request.getAwardEnabled(),
                 request.getAwardPeriod(),
                 request.getAwardAttendanceEnabled(),
                 request.getAwardPointsEnabled(),

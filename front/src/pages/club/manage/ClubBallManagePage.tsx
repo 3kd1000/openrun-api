@@ -16,7 +16,8 @@ import type {
 import type { ClubMembership } from '../../../types/club';
 import type { Schedule } from '../../../types/schedule';
 import { ArrowLeftIcon } from '../../../components/common/Icons';
-import { PackagePlus, ArrowLeftRight, UserCheck, ClipboardList } from 'lucide-react';
+import { PackagePlus, ArrowLeftRight, UserCheck, ClipboardList, Package, Receipt } from 'lucide-react';
+import EmptyState from '../../../components/openrun/empty-state';
 import { getOpenRunSession } from '../../../utils/openrunSession';
 import { normalizeClubRole } from '../../../utils/role';
 import { getErrorMessage, logError } from '../../../utils/errorHandler';
@@ -1064,10 +1065,11 @@ const ClubBallManagePage: React.FC = () => {
         {activeTab === 'keepers' && summary && (
           <div className="p-3">
             {summary.keepers.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                아직 공용구 보유자가 없습니다.
-                {isAdmin && ' 상단의 "보유자 지정" 버튼을 눌러 보유자를 지정해주세요.'}
-              </div>
+              <EmptyState
+                icon={Package}
+                title="공용구를 시작해볼까요?"
+                description="보유자를 지정하고 입고를 등록하면 공용구 관리를 시작할 수 있어요"
+              />
             ) : isEditMode ? (
               // 재고관리 모드
               <div className="flex flex-col gap-2">
@@ -1136,9 +1138,11 @@ const ClubBallManagePage: React.FC = () => {
         {activeTab === 'transactions' && (
           <div className="p-3">
             {transactions.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                거래 내역이 없습니다.
-              </div>
+              <EmptyState
+                icon={Receipt}
+                title="거래 내역이 없습니다"
+                description="입고나 배분을 등록하면 여기에 기록됩니다"
+              />
             ) : (
               <>
                 <div className="flex flex-col gap-2">

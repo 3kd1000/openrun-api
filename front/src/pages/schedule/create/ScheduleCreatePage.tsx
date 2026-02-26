@@ -140,6 +140,8 @@ export default function ScheduleCreatePage() {
           reservedByUserId: data.reservedByUserId,
           participationStartAt: data.participationStartAt,
           matchType: data.matchType,
+          courtAddress: data.courtAddress?.trim() || undefined,
+          region: data.region?.trim() || undefined,
         };
 
         await scheduleService.createSchedule(requestData);

@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ScheduleTemplateService {
 
-    private static final int MAX_TEMPLATES_PER_TYPE = 5;
+    private static final int MAX_TEMPLATES_PER_TYPE = 3;
     private static final Pattern PATTERN_REGEX = Pattern.compile(
             "^매달 ([1-9]|[12][0-9]|3[01])일 ([01][0-9]|2[0-3]):([0-5][0-9])$"
     );
@@ -46,7 +46,7 @@ public class ScheduleTemplateService {
         long currentCount = templateRepository.countByUserIdAndTemplateType(userId, request.getTemplateType());
         if (currentCount >= MAX_TEMPLATES_PER_TYPE) {
             throw new IllegalStateException(
-                    String.format("%s 템플릿은 최대 %d개까지 생성 가능합니다.",
+                    String.format("%s 즐겨찾기는 최대 %d개까지 생성 가능합니다.",
                             getTemplateTypeDisplayName(request.getTemplateType()), MAX_TEMPLATES_PER_TYPE)
             );
         }
@@ -117,6 +117,10 @@ public class ScheduleTemplateService {
                 request.getCourtName(),
                 request.getMaxCapacity(),
                 request.getCost(),
+                request.getCourtAddress(),
+                request.getRegion(),
+                request.getMatchType(),
+                request.getNumberOfCourts(),
                 request.getParticipationStartPattern()
         );
 

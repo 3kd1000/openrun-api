@@ -39,6 +39,9 @@ public class ClubPolicy {
     private String memberRecruitmentNote;
 
     // 어워드 정책 필드들
+    @Column(name = "award_enabled", nullable = false)
+    private Boolean awardEnabled = true;  // 어워드 기능 글로벌 ON/OFF
+
     @Enumerated(EnumType.STRING)
     @Column(name = "award_period", nullable = false, length = 20)
     private AwardPeriod awardPeriod = AwardPeriod.HALF_YEAR;
@@ -90,11 +93,15 @@ public class ClubPolicy {
      * 어워드 정책 업데이트
      */
     public void updateAwardPolicy(
+            Boolean awardEnabled,
             AwardPeriod awardPeriod,
             Boolean awardAttendanceEnabled,
             Boolean awardPointsEnabled,
             Boolean awardBookingEnabled
     ) {
+        if (awardEnabled != null) {
+            this.awardEnabled = awardEnabled;
+        }
         if (awardPeriod != null) {
             this.awardPeriod = awardPeriod;
         }

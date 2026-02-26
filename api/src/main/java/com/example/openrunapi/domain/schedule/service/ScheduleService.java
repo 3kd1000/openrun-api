@@ -11,6 +11,7 @@ import com.example.openrunapi.domain.match.repository.MatchRepository;
 import com.example.openrunapi.domain.schedule.model.Schedule;
 import com.example.openrunapi.domain.schedule.model.ScheduleParticipant;
 import com.example.openrunapi.domain.schedule.model.MatchType;
+import com.example.openrunapi.domain.schedule.model.ScheduleType;
 import com.example.openrunapi.domain.schedule.model.dto.CreateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.UpdateScheduleRequest;
 import com.example.openrunapi.domain.schedule.model.dto.ScheduleResponse;
@@ -1209,6 +1210,7 @@ public class ScheduleService {
 
         Schedule schedule = Schedule.builder()
                 .clubId(null)
+                .scheduleType(ScheduleType.PUBLIC)
                 .courtName(request.getCourtName())
                 .courtAddress(request.getCourtAddress())
                 .region(request.getRegion())

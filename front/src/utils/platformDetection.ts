@@ -4,7 +4,8 @@
  */
 
 export const isIOS = (): boolean =>
-  /iphone|ipad|ipod/i.test(navigator.userAgent);
+  /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 export const isAndroid = (): boolean =>
   /android/i.test(navigator.userAgent);

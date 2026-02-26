@@ -8,6 +8,8 @@ import { getOpenRunSession } from "../../utils/openrunSession";
 import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
 import { awardService, type AwardPeriodOption } from "../../services/awardService";
 import UserNameWithBadge from "../../components/common/UserNameWithBadge";
+import { Trophy, Search, Award, User } from "lucide-react";
+import EmptyState from "../../components/openrun/empty-state";
 import { cn } from "../../lib/utils";
 
 interface RankingEntry {
@@ -88,6 +90,7 @@ const ScoreboardPage: React.FC = () => {
   const currentUserName = session.userName;
 
   // Tab 4: Awards (어워드)
+  const [awardEnabled, setAwardEnabled] = useState<boolean>(true);
   const [awardRankings, setAwardRankings] = useState<AwardRankingResponse[]>([]);
   const [awardLoading, setAwardLoading] = useState(false);
   const [awardError, setAwardError] = useState<string | null>(null);
@@ -113,7 +116,11 @@ const ScoreboardPage: React.FC = () => {
     if (!hasClub && (activeTab === "ranking" || activeTab === "matches" || activeTab === "awards")) {
       setActiveTab("personal");
     }
-  }, [hasClub, activeTab]);
+    // 어워드 비활성화 상태에서 어워드 탭이면 랭킹으로 전환
+    if (!awardEnabled && activeTab === "awards") {
+      setActiveTab("ranking");
+    }
+  }, [hasClub, activeTab, awardEnabled]);
 
 
   // Tab 1: Fetch rankings
@@ -300,6 +307,16 @@ const ScoreboardPage: React.FC = () => {
       // 첫 로드 시 클럽 정보에서 award period 가져오기
       if (periodOptions.length === 0) {
         const clubResponse = await axiosInstance.get<Club>(`/clubs/${selectedClubId}`);
+        const isEnabled = clubResponse.data.awardEnabled !== false;
+        setAwardEnabled(isEnabled);
+
+        // 어워드 비활성화 시 데이터 로드 스킵
+        if (!isEnabled) {
+          setAwardLoading(false);
+          isLoadingAwardRef.current = false;
+          return;
+        }
+
         const period = clubResponse.data.awardPeriod || "HALF_YEAR";
         setClubAwardPeriod(period);
 
@@ -483,18 +500,20 @@ const ScoreboardPage: React.FC = () => {
               <ClipboardListIcon size={20} />
               <span>경기기록</span>
             </button>
-            <button
-              className={cn(
-                "flex items-center justify-center gap-1 px-4 py-3 bg-transparent border-b-2 border-transparent text-sm font-semibold text-muted-foreground cursor-pointer transition-all -mb-[2px] min-h-[44px]",
-                "hover:text-foreground/70",
-                "max-md:flex-1 max-md:px-1 max-md:py-2 max-md:text-xs max-md:min-h-[40px] max-md:gap-0.5",
-                activeTab === "awards" && "text-primary border-b-primary"
-              )}
-              onClick={() => setActiveTab("awards")}
-            >
-              <StarIcon size={20} />
-              <span>어워드</span>
-            </button>
+            {awardEnabled && (
+              <button
+                className={cn(
+                  "flex items-center justify-center gap-1 px-4 py-3 bg-transparent border-b-2 border-transparent text-sm font-semibold text-muted-foreground cursor-pointer transition-all -mb-[2px] min-h-[44px]",
+                  "hover:text-foreground/70",
+                  "max-md:flex-1 max-md:px-1 max-md:py-2 max-md:text-xs max-md:min-h-[40px] max-md:gap-0.5",
+                  activeTab === "awards" && "text-primary border-b-primary"
+                )}
+                onClick={() => setActiveTab("awards")}
+              >
+                <StarIcon size={20} />
+                <span>어워드</span>
+              </button>
+            )}
           </>
         )}
         <button
@@ -584,13 +603,11 @@ const ScoreboardPage: React.FC = () => {
               <p>❌ {error}</p>
             </div>
           ) : rankings.length === 0 ? (
-            <div className="text-center py-[60px] px-4 text-muted-foreground">
-              <div className="flex justify-center mb-3">
-                <TrophyIcon size={64} color="var(--color-text-secondary)" />
-              </div>
-              <p>아직 경기 기록이 없습니다.</p>
-              <p className="text-muted-foreground/60 text-sm">경기를 등록하면 랭킹이 표시됩니다!</p>
-            </div>
+            <EmptyState
+              icon={Trophy}
+              title="아직 경기 기록이 없습니다"
+              description="대진표에서 경기 결과를 입력하면 랭킹이 집계됩니다"
+            />
           ) : (
             <div className="overflow-x-auto rounded-lg shadow-md border border-border">
               <table className="w-full border-collapse bg-white text-[13px] text-foreground max-md:text-xs">
@@ -682,21 +699,15 @@ const ScoreboardPage: React.FC = () => {
                 <p>❌ {matchesError}</p>
               </div>
             ) : matches.length === 0 ? (
-              <div className="text-center py-[60px] px-4 text-muted-foreground">
-                <div className="flex justify-center mb-3">
-                  <SearchIcon size={64} color="var(--color-text-secondary)" />
-                </div>
-                <p className="text-base font-semibold text-foreground mb-1">
-                  {playerName || dateRange !== "all"
-                    ? "검색 결과가 없습니다"
-                    : "경기 기록 검색"}
-                </p>
-                <p className="text-sm">
-                  {playerName || dateRange !== "all"
-                    ? "선수 이름이나 기간을 변경하여 다시 검색해보세요"
-                    : "선수 이름을 입력하고 검색 버튼을 눌러 경기 기록을 조회하세요"}
-                </p>
-              </div>
+              <EmptyState
+                icon={Search}
+                title={playerName || dateRange !== "all"
+                  ? "검색 결과가 없습니다"
+                  : "경기 기록 검색"}
+                description={playerName || dateRange !== "all"
+                  ? "선수 이름이나 기간을 변경하여 다시 검색해보세요"
+                  : "선수 이름을 입력하고 검색 버튼을 눌러 경기 기록을 조회하세요"}
+              />
             ) : (
               <>
                 {/* 총 건수 표시 */}
@@ -827,13 +838,11 @@ const ScoreboardPage: React.FC = () => {
               <p>{awardError}</p>
             </div>
           ) : awardRankings.length === 0 ? (
-            <div className="text-center py-[60px] px-4 text-muted-foreground">
-              <div className="flex justify-center mb-3">
-                <StarIcon size={64} color="var(--color-text-secondary)" />
-              </div>
-              <p className="text-base font-semibold text-foreground mb-1">수상 기록이 없습니다</p>
-              <p className="text-sm">해당 기간의 수상 기록이 아직 등록되지 않았습니다</p>
-            </div>
+            <EmptyState
+              icon={Award}
+              title="수상 기록이 없습니다"
+              description="어워드 관리에서 수상자를 선정할 수 있습니다"
+            />
           ) : (
             <div className="flex flex-col gap-2 max-md:gap-1">
               {awardRankings.map((award) => (
@@ -928,13 +937,11 @@ const ScoreboardPage: React.FC = () => {
               {/* 경기 목록 */}
               <div className="min-h-[200px]">
                 {personalMatches.length === 0 ? (
-                  <div className="text-center py-[60px] px-4 text-muted-foreground">
-                    <div className="flex justify-center mb-3">
-                      <UserIcon size={64} color="var(--color-text-secondary)" />
-                    </div>
-                    <p className="text-base font-semibold text-foreground mb-1">아직 경기 기록이 없습니다</p>
-                    <p className="text-sm">경기에 참여하면 여기에 기록이 표시됩니다</p>
-                  </div>
+                  <EmptyState
+                    icon={User}
+                    title="아직 경기 기록이 없습니다"
+                    description="대진표 경기에 참여하면 기록이 쌓입니다"
+                  />
                 ) : (
                   <>
                     <div className="flex justify-between items-center py-2 mb-2 text-muted-foreground text-sm">

@@ -1,9 +1,11 @@
 export type MatchType = 'NONE' | 'MEN_DOUBLES' | 'WOMEN_DOUBLES' | 'MIXED_DOUBLES' | 'SINGLES' | null;
+export type ScheduleType = 'PUBLIC' | 'CLUB';
 
 export interface Schedule {
   id: number;
   clubId: number | null;
   clubName?: string;
+  scheduleType?: ScheduleType;
   courtName: string;
   courtAddress?: string;
   region?: string;
@@ -34,7 +36,7 @@ export interface Schedule {
 }
 
 export interface CreateScheduleRequest {
-  clubId: number;
+  clubId?: number | null;
   courtName: string;
   scheduledAt: string; // ISO 8601 format: "2025-12-25T14:00:00"
   durationMinutes?: number; // 소요시간(분), 기본값 120
@@ -45,6 +47,8 @@ export interface CreateScheduleRequest {
   reservedByUserId?: number;
   participationStartAt?: string | null; // ISO 8601 format: "2025-12-25T14:00:00"
   matchType?: MatchType;
+  courtAddress?: string;
+  region?: string;
 }
 
 export interface Participant {

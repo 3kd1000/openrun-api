@@ -11,6 +11,7 @@ import axiosInstance from "../../services/api/axiosInstance";
 import { webauthnService } from "../../services/webauthnService";
 import { syncClubList } from "../../services/api/userApi";
 import { getOpenRunSession, setOpenRunSession, hasJoinedClub, setAutoLoginEnabled as saveAutoLoginSetting } from "../../utils/openrunSession";
+import { getOpenRunUiSettings } from "../../utils/openrunUiSettings";
 import AuthLoadingScreen from "../../components/AuthLoadingScreen";
 
 interface UserInfo {
@@ -39,6 +40,15 @@ const LoginPage: React.FC = () => {
       console.log(`✅ 저장된 URL로 이동: ${returnUrl}`);
       sessionStorage.removeItem('returnUrl'); // 사용 후 제거
       navigate(returnUrl, { replace: true });
+      return;
+    }
+
+    // 시작 가이드 미확인 → 가이드 페이지로 우회
+    const uiSettings = getOpenRunUiSettings();
+    if (!uiSettings.startGuideSeen) {
+      const destination = hasJoinedClub() ? "/schedules/club" : "/explore";
+      console.log(`📖 시작 가이드 미확인 → /install-guide (destination: ${destination})`);
+      navigate("/install-guide", { replace: true, state: { destination } });
       return;
     }
 

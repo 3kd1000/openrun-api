@@ -17,6 +17,10 @@ public class ScheduleTemplateResponse {
     private final String courtName;
     private final Integer maxCapacity;
     private final BigDecimal cost;
+    private final String courtAddress;
+    private final String region;
+    private final String matchType;
+    private final Integer numberOfCourts;
     private final String participationStartPattern;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
@@ -29,6 +33,10 @@ public class ScheduleTemplateResponse {
         this.courtName = template.getCourtName();
         this.maxCapacity = template.getMaxCapacity();
         this.cost = template.getCost();
+        this.courtAddress = template.getCourtAddress();
+        this.region = template.getRegion();
+        this.matchType = template.getMatchType() != null ? template.getMatchType().name() : null;
+        this.numberOfCourts = template.getNumberOfCourts();
         this.participationStartPattern = template.getParticipationStartPattern();
         this.createdAt = template.getCreatedAt();
         this.updatedAt = template.getUpdatedAt();

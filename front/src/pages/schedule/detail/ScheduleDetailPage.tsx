@@ -463,6 +463,8 @@ export default function ScheduleDetailPage() {
     reservedByUserId?: number;
     participationStartAt: string | null;
     matchType?: MatchType;
+    courtAddress?: string;
+    region?: string;
   }) => {
     if (!schedule) {
       setError("일정 정보를 불러오는 중입니다.");
@@ -504,6 +506,8 @@ export default function ScheduleDetailPage() {
         reservedByUserId: data.reservedByUserId,
         participationStartAt: data.participationStartAt,
         matchType: data.matchType,
+        courtAddress: data.courtAddress,
+        region: data.region,
       };
 
       await scheduleService.updateSchedule(schedule.id, requestData);
@@ -592,6 +596,8 @@ export default function ScheduleDetailPage() {
             reservedByUserId: formData.reservedByUserId,
             participationStartAt: schedule.participationStartAt || null,
             matchType: formData.matchType,
+            courtAddress: schedule.courtAddress || "",
+            region: schedule.region || "",
           }}
           onSubmit={handleEditSubmit}
           onCancel={() => setIsEditMode(false)}
@@ -739,11 +745,19 @@ export default function ScheduleDetailPage() {
             </p>
           </div>
 
-          {/* 주소 (공개 일정에서 courtAddress가 있는 경우) */}
+          {/* 주소 */}
           {schedule.courtAddress && (
             <div>
               <span className="text-xs text-muted-foreground">주소</span>
               <p className="text-sm font-medium">{schedule.courtAddress}</p>
+            </div>
+          )}
+
+          {/* 지역 */}
+          {schedule.region && (
+            <div>
+              <span className="text-xs text-muted-foreground">지역</span>
+              <p className="text-sm font-medium">{schedule.region}</p>
             </div>
           )}
 
@@ -923,7 +937,6 @@ export default function ScheduleDetailPage() {
                     <UserNameWithBadge
                       userId={p.userId}
                       userName={p.userName}
-                      awardTypes={p.awardTypes}
                     />
                     {(p.asGuest || p.userId === null) && (
                       <Badge
@@ -954,7 +967,6 @@ export default function ScheduleDetailPage() {
                     <UserNameWithBadge
                       userId={p.userId}
                       userName={p.userName}
-                      awardTypes={p.awardTypes}
                     />
                     {(p.asGuest || p.userId === null) && (
                       <Badge

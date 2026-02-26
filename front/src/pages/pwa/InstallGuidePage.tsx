@@ -1,52 +1,39 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { usePwaInstall } from "../../contexts/PwaInstallContext";
 import { useNotification } from "../../contexts/NotificationContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { isAndroid, isIOS, isMobile } from "../../utils/platformDetection";
+import { isAndroid, isIOS } from "../../utils/platformDetection";
 import { isFcmSupported } from "../../services/fcmService";
+import { setOpenRunUiSettings } from "../../utils/openrunUiSettings";
 import { AppHeader } from "../../components/common/AppHeader";
 
-/* ── SVG 일러스트: 전체화면(주소창 없음) ── */
-const FullscreenIllustration: React.FC = () => (
-  <svg width="100%" height="100" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="40" y="8" width="80" height="104" rx="12" fill="white" stroke="#e2e8f0" strokeWidth="2" />
-    <rect x="44" y="18" width="72" height="86" rx="2" fill="#ecfdf5" />
-    <rect x="50" y="24" width="60" height="8" rx="2" fill="#059669" opacity="0.7" />
-    <rect x="50" y="36" width="40" height="4" rx="1" fill="#94a3b8" opacity="0.5" />
-    <rect x="50" y="44" width="55" height="4" rx="1" fill="#94a3b8" opacity="0.4" />
-    <rect x="50" y="52" width="35" height="4" rx="1" fill="#94a3b8" opacity="0.3" />
-    <rect x="44" y="92" width="72" height="12" fill="#f8fafc" />
-    <circle cx="60" cy="98" r="3" fill="#059669" />
-    <circle cx="80" cy="98" r="3" fill="#cbd5e1" />
-    <circle cx="100" cy="98" r="3" fill="#cbd5e1" />
-    <path d="M28 30 L38 30 M28 30 L28 40" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
-    <path d="M132 30 L122 30 M132 30 L132 40" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
-    <path d="M28 90 L38 90 M28 90 L28 80" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
-    <path d="M132 90 L122 90 M132 90 L132 80" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
+/* ── 알림 목업 데이터 (실제 백엔드 발송 문구 기준) ── */
+const NOTIFICATION_MOCKUPS = [
+  {
+    icon: "bell",
+    label: "일정 리마인드",
+    body: "내일 양재코트 일정이 있습니다 (14:00)",
+    time: "방금 전",
+    color: "bg-primary/15 text-primary",
+  },
+  {
+    icon: "users",
+    label: "가입 신청",
+    body: "오픈런 테니스클럽에 새 가입 신청이 있습니다",
+    time: "1시간 전",
+    color: "bg-blue-100 text-blue-600",
+  },
+  {
+    icon: "confirm",
+    label: "참가 확정",
+    body: "양재코트 일정 대기상태에서 참가확정으로 변경되었습니다",
+    time: "2시간 전",
+    color: "bg-amber-100 text-amber-600",
+  },
+];
 
-/* ── SVG 일러스트: 푸시 알림 ── */
-const NotificationIllustration: React.FC = () => (
-  <svg width="100%" height="100" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="40" y="8" width="80" height="104" rx="12" fill="white" stroke="#e2e8f0" strokeWidth="2" />
-    <rect x="44" y="18" width="72" height="86" rx="2" fill="#f8fafc" />
-    <rect x="48" y="24" width="64" height="28" rx="6" fill="white" stroke="#e2e8f0" strokeWidth="1" />
-    <circle cx="58" cy="34" r="5" fill="#059669" opacity="0.2" />
-    <path d="M56 34 L60 34 M58 32 L58 36" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" />
-    <rect x="66" y="30" width="40" height="3" rx="1" fill="#334155" opacity="0.7" />
-    <rect x="66" y="36" width="30" height="2.5" rx="1" fill="#94a3b8" opacity="0.5" />
-    <rect x="66" y="42" width="35" height="2.5" rx="1" fill="#94a3b8" opacity="0.4" />
-    <rect x="48" y="58" width="64" height="4" rx="1" fill="#94a3b8" opacity="0.2" />
-    <rect x="48" y="66" width="50" height="4" rx="1" fill="#94a3b8" opacity="0.15" />
-    <rect x="48" y="74" width="58" height="4" rx="1" fill="#94a3b8" opacity="0.1" />
-    <circle cx="128" cy="20" r="14" fill="#059669" opacity="0.1" />
-    <path d="M128 13 C124 13 121 16 121 20 C121 25 119 26 119 26 L137 26 C137 26 135 25 135 20 C135 16 132 13 128 13 Z" stroke="#059669" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M126 26 C126 28 127 29 128 29 C129 29 130 28 130 26" stroke="#059669" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-    <circle cx="134" cy="14" r="3" fill="#ef4444" />
-  </svg>
-);
+
 
 /* ── iOS 공유 아이콘 ── */
 const IosShareIcon: React.FC = () => (
@@ -63,7 +50,7 @@ const DiagnosticRow: React.FC<{
   status: "ok" | "warn" | "error";
   text: string;
 }> = ({ label, status, text }) => {
-  const icon = status === "ok" ? "✅" : status === "warn" ? "⚠️" : "❌";
+  const icon = status === "ok" ? "\u2705" : status === "warn" ? "\u26A0\uFE0F" : "\u274C";
   return (
     <div className="flex items-center justify-between py-1.5">
       <span className="text-xs text-muted-foreground">{label}</span>
@@ -74,12 +61,25 @@ const DiagnosticRow: React.FC<{
 
 const InstallGuidePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isPwa, canInstallNatively, triggerInstall } = usePwaInstall();
   const { needsPermission, permissionRevoked, requestPushPermission } = useNotification();
   const { user } = useAuth();
 
+  /* ── 목적지 (로그인 흐름에서 전달받음) ── */
+  const state = location.state as { destination?: string } | null;
+
+  const handleConfirm = () => {
+    setOpenRunUiSettings({ startGuideSeen: true });
+    if (state?.destination) {
+      navigate(state.destination, { replace: true });
+    } else {
+      navigate(-1);
+    }
+  };
+
   /* ── 진단 정보 계산 ── */
-  const deviceLabel = isAndroid() ? "Android" : isIOS() ? "iPhone" : "데스크탑";
+  const deviceLabel = isAndroid() ? "Android" : isIOS() ? "iOS" : "데스크탑";
 
   const installStatus: "ok" | "warn" = isPwa ? "ok" : "warn";
   const installText = isPwa ? "설치 완료" : "미설치";
@@ -99,7 +99,7 @@ const InstallGuidePage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted">
-      <AppHeader title="앱 설치 가이드" onBack={() => navigate(-1)} />
+      <AppHeader title="시작 가이드" onBack={() => navigate(-1)} />
 
       <div className="flex-1 overflow-y-auto pb-24 max-w-[600px] mx-auto w-full">
         {/* Hero */}
@@ -115,33 +115,43 @@ const InstallGuidePage: React.FC = () => {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-foreground mb-1.5">
-              OpenRun을 앱으로 설치하세요
+              OpenRun을 100% 활용하세요
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              홈 화면에 추가하면 더 빠르고<br />편하게 사용할 수 있어요
+              앱 설치와 알림 설정으로<br />더 편하게 사용할 수 있어요
             </p>
           </div>
         </div>
 
-        {/* 혜택 카드 - 모바일에서만 표시 */}
-        {isMobile() && (
-          <div className="grid grid-cols-2 gap-2.5 px-4 mb-4">
-            <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-background p-3 shadow-sm">
-              <FullscreenIllustration />
-              <div className="text-center">
-                <div className="text-sm font-bold text-foreground">전체화면 사용</div>
-                <div className="text-xs text-muted-foreground mt-0.5">주소창 없이 앱처럼 사용</div>
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-background p-3 shadow-sm">
-              <NotificationIllustration />
-              <div className="text-center">
-                <div className="text-sm font-bold text-foreground">푸시 알림</div>
-                <div className="text-xs text-muted-foreground mt-0.5">일정 변경, 대진표 알림 수신</div>
-              </div>
+        {/* 알림 목업 카드 */}
+        <div className="px-4 mb-4">
+          <div className="bg-background rounded-xl border border-border p-4 shadow-sm">
+            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-primary/10 rounded-full">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+              </span>
+              알림으로 놓치지 마세요
+            </h3>
+            <div className="flex flex-col gap-1.5">
+              {NOTIFICATION_MOCKUPS.map((mock, i) => (
+                <div key={i} className="bg-muted/50 rounded-lg px-3 py-2">
+                  {/* 헤더: 앱아이콘 + 앱이름 + 시간 */}
+                  <div className="flex items-center gap-1.5">
+                    <img src="/icon-512x512-v4.png" alt="" className="w-4 h-4 rounded" />
+                    <span className="text-[10px] text-muted-foreground font-medium">OpenRun</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto">{mock.time}</span>
+                  </div>
+                  {/* 본문: 제목 + 내용 */}
+                  <p className="text-[12px] font-semibold text-foreground leading-tight">{mock.label}</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">{mock.body}</p>
+                </div>
+              ))}
             </div>
           </div>
-        )}
+        </div>
 
         {/* Android 바로 설치 버튼 - canInstallNatively일 때만 */}
         {!isPwa && isAndroid() && canInstallNatively && (
@@ -259,16 +269,6 @@ const InstallGuidePage: React.FC = () => {
           </div>
         </div>
 
-        {/* 하단 안내 */}
-        <div className="px-4 mb-3">
-          <div className="p-3 bg-primary/5 rounded-xl text-center">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              앱 설치 후 알림을 허용하면<br />
-              일정 변경, 대진표 생성 등 중요한 알림을 받을 수 있어요
-            </p>
-          </div>
-        </div>
-
         {/* 내 기기 진단 결과 */}
         <div className="px-4 mb-4">
           <div className="bg-background rounded-xl border border-border p-4 shadow-sm">
@@ -315,7 +315,7 @@ const InstallGuidePage: React.FC = () => {
       {/* Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 max-w-[600px] mx-auto p-4 bg-background/80 backdrop-blur-md border-t border-border z-40">
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleConfirm}
           className="w-full py-3 bg-primary text-primary-foreground rounded-xl text-sm font-bold shadow-lg transition-transform active:scale-[0.98]"
         >
           확인했어요

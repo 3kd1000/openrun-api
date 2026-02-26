@@ -17,6 +17,7 @@ public class ScheduleResponse {
     private final Long id;
     private final Long clubId;
     private final String clubName;
+    private final String scheduleType;
     private final String courtName;
     private final String courtAddress;
     private final String region;
@@ -52,6 +53,8 @@ public class ScheduleResponse {
     public ScheduleResponse(Schedule schedule, ClubRepository clubRepository, UserRepository userRepository, PermissionService permissionService, Long requestUserId) {
         this.id = schedule.getId();
         this.clubId = schedule.getClubId();
+
+        this.scheduleType = schedule.getScheduleType() != null ? schedule.getScheduleType().name() : null;
 
         // 클럽명 조회 (clubId가 null이 아닌 경우에만 수행)
         this.clubName = schedule.getClubId() != null ?

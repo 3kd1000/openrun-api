@@ -349,7 +349,7 @@ const MorePage: React.FC = () => {
             <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
               <PhoneIcon size={20} />
             </span>
-            <span className="flex-1 text-sm text-foreground no-underline font-medium">앱 설치 가이드</span>
+            <span className="flex-1 text-sm text-foreground no-underline font-medium">시작 가이드</span>
           </div>
           {isLoggedIn && (
             <div

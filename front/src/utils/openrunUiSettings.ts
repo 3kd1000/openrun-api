@@ -11,8 +11,8 @@ export interface OpenRunUiSettingsV1 {
   version: 1;
   scheduleViewMode?: "calendar" | "list";
   clubExploreExpanded?: Record<string, boolean>;
-  /** PwaSetupSheet가 이미 표시되었는지 (가입 직후 1회만 표시) */
-  pwaSetupShown?: boolean;
+  /** 시작 가이드 확인 여부 (최소 1회 열람 강제) */
+  startGuideSeen?: boolean;
 }
 
 function safeJsonParse<T>(value: string | null): T | null {

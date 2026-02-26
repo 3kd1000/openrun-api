@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { ContactVisibility } from "../../services/api/userApi";
 import {
@@ -16,11 +16,6 @@ import {
   validatePhoneNumber as validatePhone,
   formatPhoneNumber,
 } from "../../utils/contactUtils";
-import { getOpenRunUiSettings } from "../../utils/openrunUiSettings";
-import { isPWA } from "../../utils/platformDetection";
-import { usePwaInstall } from "../../contexts/PwaInstallContext";
-import { useNotification } from "../../contexts/NotificationContext";
-import { PwaSetupSheet } from "../../components/pwa/PwaSetupSheet";
 import { cn } from "@/lib/utils";
 
 interface LocationState {
@@ -74,12 +69,6 @@ const SetupProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
-
-  // PWA 설치 유도
-  const { isPwa } = usePwaInstall();
-  const { needsPermission } = useNotification();
-  const [showPwaSetup, setShowPwaSetup] = useState(false);
-  const destinationRef = useRef<{ path: string; options?: object } | null>(null);
 
   // 기존 사용자 정보 불러오기
   useEffect(() => {
@@ -215,22 +204,10 @@ const SetupProfilePage: React.FC = () => {
 
       console.log("✅ 프로필 설정 완료:", updatedUser);
 
-      // 네비게이션 대상 결정
+      // 네비게이션 대상 결정 → 시작 가이드로 이동 (가이드에서 설치/알림 유도 통합 처리)
       const session = getOpenRunSession();
-      const dest = session.currentClubId
-        ? { path: "/schedules/club", options: undefined as object | undefined }
-        : { path: "/explore", options: { replace: true, state: { defaultTab: "member" } } };
-
-      // PwaSetupSheet 표시 여부 판단 (1회만)
-      const uiSettings = getOpenRunUiSettings();
-      const shouldShowPwaSetup = !uiSettings.pwaSetupShown && (!isPwa || needsPermission);
-
-      if (shouldShowPwaSetup) {
-        destinationRef.current = dest;
-        setShowPwaSetup(true);
-      } else {
-        navigate(dest.path, dest.options);
-      }
+      const finalDest = session.currentClubId ? "/schedules/club" : "/explore";
+      navigate("/install-guide", { replace: true, state: { destination: finalDest } });
     } catch (err: unknown) {
       console.error("❌ 프로필 설정 실패:", err);
       const errorMessage =
@@ -579,14 +556,6 @@ const SetupProfilePage: React.FC = () => {
         </p>
       </div>
 
-      <PwaSetupSheet
-        open={showPwaSetup}
-        onComplete={() => {
-          setShowPwaSetup(false);
-          const dest = destinationRef.current;
-          if (dest) navigate(dest.path, dest.options);
-        }}
-      />
     </div>
   );
 };

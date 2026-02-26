@@ -97,6 +97,10 @@ public class Schedule {
     @Column(name = "region", length = 50)
     private String region;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "schedule_type", nullable = false, length = 10)
+    private ScheduleType scheduleType;
+
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
 
@@ -116,7 +120,8 @@ public class Schedule {
     public Schedule(Long clubId, String courtName, LocalDateTime scheduledAt,
                     Integer maxCapacity, BigDecimal cost, String description, Long reservedByUserId,
                     LocalDateTime participationStartAt, MatchType matchType, Integer durationMinutes,
-                    Integer numberOfCourts, String courtAddress, String region, Long createdByUserId) {
+                    Integer numberOfCourts, String courtAddress, String region, Long createdByUserId,
+                    ScheduleType scheduleType) {
         this.clubId = clubId;
         this.courtName = courtName;
         this.scheduledAt = scheduledAt;
@@ -131,6 +136,7 @@ public class Schedule {
         this.courtAddress = courtAddress;
         this.region = region;
         this.createdByUserId = createdByUserId;
+        this.scheduleType = scheduleType != null ? scheduleType : ScheduleType.CLUB;
     }
 
     public void update(String courtName, LocalDateTime scheduledAt,
@@ -230,10 +236,10 @@ public class Schedule {
     }
 
     public boolean isPublicSchedule() {
-        return this.clubId == null;
+        return this.scheduleType == ScheduleType.PUBLIC;
     }
 
     public boolean isClubSchedule() {
-        return this.clubId != null;
+        return this.scheduleType == ScheduleType.CLUB;
     }
 }
