@@ -71,26 +71,28 @@ openrun/
 └── claude.md         # 이 파일
 ```
 
-## 🚀 작업 현황 (2026-02-25 기준)
+## 🚀 작업 현황 (2026-02-26 기준)
 
 ### 다음 작업
-- [ ] 앱 설치 가이드 일러스트 → 실제 스크린샷 교체 (폰 테스트 후 결정)
-- [ ] 이용 가이드 페이지 콘텐츠 작성
 - [ ] Intro 페이지 동영상/스크린샷 업데이트
 
 ### ✅ 완료
 
+- [x] 시작 가이드 리디자인 + 강제 노출: 알림 목업 카드(폰 알림센터 스타일), 로그인/가입 시 1회 강제 노출(startGuideSeen), PwaSetupSheet 삭제 통합, 탐색 기본 탭 club으로 변경
+- [x] 일정생성 통합 (WP1): scheduleType 컬럼 추가, 공개/클럽 일정 폼 통합, 빌드 검증 통과
+- [x] 즐겨찾기 확장: ScheduleTemplate에 courtAddress/region/matchType/numberOfCourts 추가, pill→카드 UI, 3개 제한, 이름 자동생성+편집
+- [x] 어워드 ON/OFF (WP3): ClubPolicy.awardEnabled, ScoreboardPage 탭 조건부, 관리 토글 UI
+- [x] 빈 상태 가이드 (WP4): ClubBallManagePage, ClubManageAwardPage, ScoreboardPage에 EmptyState 적용
+- [x] iPadOS 감지 수정: navigator.platform + maxTouchPoints 조합으로 iPadOS 13+ Safari 대응
 - [x] 화면 일관성 개선: 5개 메인 페이지 헤더 통일 (ClubSelector + 메시지 + 알림벨), 서브페이지 헤더 통일 (ClubCreatePage, PublicScheduleCreatePage, ScheduleRecruitPage)
 - [x] 일정 화면 개선: 제목 "일정 정보" 통일, badge→label-value 변환, 배너 "공개일정/클럽일정" 라벨, 뒤로가기 무한루프 해결
 - [x] 로고 리뉴얼: Emerald 테마 아이콘/horizontal SVG 제작, 테니스공 심 라인 추가 (clipPath), v4 PNG 일괄 교체, 구버전 archive 이동
-- [x] 네비게이션 테니스공 아이콘 심 라인 clipPath 적용
 - [x] 앱 아이콘/OG 이미지 v4 일괄 교체 (manifest, index.html, og-server, FCM SW, vite.config)
 - [x] 루트 경로(/) → /intro 리다이렉트, 페이지 타이틀 변경
 - [x] 역할/권한 매트릭스 문서화 및 코드 검증 (`docs/operations/role-permission.md`)
-- [x] 리소스 CRUD 규칙 문서화 (`docs/operations/resource-rules.md`)
-- [x] 알림 발송 규칙 문서화 (`docs/operations/notification-rules.md`)
+- [x] 리소스 CRUD 규칙 문서화, 알림 발송 규칙 문서화
 - [x] 권한 수정: 일정 삭제/대진 CRUD 권한 체크, 클럽일정 상세 멤버십 체크, 역할 변경 OWNER 전용, 메뉴 가시성 개선
-- [x] Phase B-2: PWA 설치 유도 + 알림 허용 유도 (InstallGuidePage, PwaSetupSheet, MorePage 배너)
+- [x] Phase B-2: PWA 설치 유도 + 알림 허용 유도 (시작 가이드, MorePage 배너)
 - [x] 더보기 서브페이지 헤더 통일 (AppHeader 서브페이지 모드, 8개 페이지 적용)
 - [x] 더보기 메뉴 정리 (이용가이드/에디터/메시지/문의하기 제거, 순서 변경, 버튼 스타일 개선)
 - [x] 전역 ScrollToTop 추가 (App.tsx, 라우트 전환 시 스크롤 리셋)

@@ -99,7 +99,10 @@ const InstallGuidePage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-muted">
-      <AppHeader title="시작 가이드" onBack={() => navigate(-1)} />
+      <AppHeader
+        title="시작 가이드"
+        {...(!state?.destination && { onBack: () => navigate(-1) })}
+      />
 
       <div className="flex-1 overflow-y-auto pb-24 max-w-[600px] mx-auto w-full">
         {/* Hero */}
