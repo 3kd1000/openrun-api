@@ -23,6 +23,7 @@ import {
   UsersIcon,
   UserIcon,
   PhoneIcon,
+  CompassIcon,
 } from "../../components/common/Icons";
 import { AppHeader } from "../../components/common/AppHeader";
 import { ClubSelector } from "../../components/ClubSelector";
@@ -347,7 +348,7 @@ const MorePage: React.FC = () => {
             onClick={() => navigate("/install-guide")}
           >
             <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
-              <PhoneIcon size={20} />
+              <CompassIcon size={20} />
             </span>
             <span className="flex-1 text-sm text-foreground no-underline font-medium">시작 가이드</span>
           </div>
