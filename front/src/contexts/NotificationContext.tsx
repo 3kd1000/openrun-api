@@ -116,8 +116,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           if (isFcmSupported() && Notification.permission === "granted") {
             const success = await initFcmToken();
             if (!success) {
-              // 토큰 초기화 실패 (PWA 재설치 등) → 배너 표시하여 사용자 제스처로 재등록 유도
-              setNeedsPermission(true);
+              // SW 업데이트 중 일시적 실패일 수 있으므로 3초 후 재시도
+              await new Promise(resolve => setTimeout(resolve, 3000));
+              const retrySuccess = await initFcmToken();
+              if (!retrySuccess) {
+                // 재시도 후에도 실패 (PWA 재설치 등) → 배너 표시하여 사용자 제스처로 재등록 유도
+                setNeedsPermission(true);
+              }
             }
           }
         }

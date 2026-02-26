@@ -70,7 +70,7 @@ function App() {
   const clearPendingNotificationCache = async () => {
     try {
       const cache = await caches.open("notification-pending");
-      await cache.delete("pending-url");
+      await cache.delete("/notification-pending-url");
     } catch { /* ignore */ }
   };
 
@@ -94,10 +94,10 @@ function App() {
     const checkPendingNotificationUrl = async () => {
       try {
         const cache = await caches.open("notification-pending");
-        const response = await cache.match("pending-url");
+        const response = await cache.match("/notification-pending-url");
         if (response) {
           const data = await response.json();
-          await cache.delete("pending-url");
+          await cache.delete("/notification-pending-url");
           // 30초 이내 저장된 URL만 사용 (오래된 알림 무시)
           if (data?.url?.startsWith("/") && Date.now() - data.timestamp < PENDING_URL_TTL) {
             navigate(data.url);
