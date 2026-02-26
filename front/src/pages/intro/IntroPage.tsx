@@ -155,11 +155,13 @@ const IntroPage: React.FC = () => {
     <div className="min-h-screen bg-background">
 
       {/* ── 1. Hero ── */}
-      <section className="bg-gradient-to-b from-secondary to-primary px-6 pt-14 pb-12 text-center">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <span className="text-4xl">🎾</span>
-          <h1 className="text-3xl font-extrabold text-white m-0">OpenRun</h1>
-        </div>
+      <section className="bg-secondary px-6 pt-14 pb-12 text-center">
+        <img
+          src="/icon-192x192-v4.png"
+          alt="OpenRun"
+          className="w-20 h-20 mx-auto mb-3 rounded-2xl"
+        />
+        <h1 className="text-3xl font-extrabold text-white m-0 mb-2">OpenRun</h1>
         <p className="text-lg font-medium text-white mb-2">
           테니스 클럽 운영, 이제 한곳에서.
         </p>
@@ -169,7 +171,7 @@ const IntroPage: React.FC = () => {
         <div className="flex gap-3 justify-center">
           <Link
             to="/login"
-            className="px-6 py-2.5 bg-white text-primary font-bold rounded-full text-sm no-underline hover:bg-white/90 transition-colors"
+            className="px-6 py-2.5 bg-primary text-white font-bold rounded-full text-sm no-underline hover:bg-primary/90 transition-colors"
           >
             지금 시작하기
           </Link>
