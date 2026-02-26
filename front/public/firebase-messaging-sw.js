@@ -72,7 +72,7 @@ self.addEventListener("notificationclick", (event) => {
 
   // FCM SW는 /firebase-cloud-messaging-push-scope 스코프이므로
   // PWA 메인 윈도우를 제어하지 않아 client.navigate()가 실패할 수 있음
-  // → navigate 실패 시 postMessage로 프론트에 URL 전달
+  // → Cache API에 pending URL을 저장하여 앱이 열릴 때/복귀할 때 확인
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
@@ -83,15 +83,23 @@ self.addEventListener("notificationclick", (event) => {
               await client.navigate(targetUrl);
               return client.focus();
             } catch (e) {
-              // navigate 실패 (스코프 불일치) → postMessage로 URL 전달
-              console.log("[firebase-messaging-sw] navigate 실패, postMessage 사용:", e);
+              // navigate 실패 (스코프 불일치) → Cache API + postMessage 이중 보장
+              console.log("[firebase-messaging-sw] navigate 실패, Cache API + postMessage 사용:", e);
+              const payload = JSON.stringify({ url: targetUrl, timestamp: Date.now() });
+              await caches.open("notification-pending").then(cache =>
+                cache.put("pending-url", new Response(payload))
+              );
               client.postMessage({ type: "NOTIFICATION_CLICK", url: targetUrl });
               return client.focus();
             }
           }
         }
-        // 열려있는 창이 없으면 새 창 열기
+        // 열려있는 창이 없으면 Cache에 저장 후 새 창 열기
         if (clients.openWindow) {
+          const payload = JSON.stringify({ url: targetUrl, timestamp: Date.now() });
+          await caches.open("notification-pending").then(cache =>
+            cache.put("pending-url", new Response(payload))
+          );
           return clients.openWindow(targetUrl);
         }
       })

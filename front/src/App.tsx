@@ -66,15 +66,59 @@ function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // 푸시 알림 클릭 시 SW에서 postMessage로 전달한 URL로 네비게이션
+  // 푸시 알림 클릭 시 Cache API에 저장된 pending URL을 정리하는 헬퍼
+  const clearPendingNotificationCache = async () => {
+    try {
+      const cache = await caches.open("notification-pending");
+      await cache.delete("pending-url");
+    } catch { /* ignore */ }
+  };
+
+  // 푸시 알림 클릭 시 SW에서 postMessage로 전달한 URL로 네비게이션 (앱이 포그라운드일 때)
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "NOTIFICATION_CLICK" && event.data?.url) {
+        // postMessage로 처리 완료 → Cache API의 중복 항목 정리
+        clearPendingNotificationCache();
         navigate(event.data.url);
       }
     };
     navigator.serviceWorker?.addEventListener("message", handler);
     return () => navigator.serviceWorker?.removeEventListener("message", handler);
+  }, [navigate]);
+
+  // 푸시 알림 클릭 시 Cache API에 저장된 pending URL 확인 (앱이 꺼져있거나 백그라운드일 때)
+  useEffect(() => {
+    const PENDING_URL_TTL = 30_000; // 30초 이내만 유효
+
+    const checkPendingNotificationUrl = async () => {
+      try {
+        const cache = await caches.open("notification-pending");
+        const response = await cache.match("pending-url");
+        if (response) {
+          const data = await response.json();
+          await cache.delete("pending-url");
+          // 30초 이내 저장된 URL만 사용 (오래된 알림 무시)
+          if (data?.url?.startsWith("/") && Date.now() - data.timestamp < PENDING_URL_TTL) {
+            navigate(data.url);
+          }
+        }
+      } catch {
+        // Cache API 미지원 또는 파싱 실패 무시
+      }
+    };
+
+    // 마운트 시 확인 (앱이 꺼져있다가 열린 경우)
+    checkPendingNotificationUrl();
+
+    // 화면 복귀 시 확인 (앱이 백그라운드였다가 포커스된 경우)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkPendingNotificationUrl();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [navigate]);
 
   // "/" 경로와 "/setup-profile", "/intro"에서는 Navigation 숨김
