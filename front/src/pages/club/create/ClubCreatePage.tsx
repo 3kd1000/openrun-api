@@ -115,14 +115,12 @@ const ClubCreatePage: React.FC = () => {
                 </div>
               )}
               <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  className="text-sm font-medium text-primary border border-primary/40 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors disabled:opacity-50"
-                  onClick={() => logoInputRef.current?.click()}
-                  disabled={loading}
+                <label
+                  htmlFor="logo-create"
+                  className={`text-sm font-medium text-primary border border-primary/40 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors cursor-pointer text-center ${loading ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   {logoPreview ? "로고 변경" : "로고 선택"}
-                </button>
+                </label>
                 {logoPreview && (
                   <button
                     type="button"
@@ -137,6 +135,7 @@ const ClubCreatePage: React.FC = () => {
             </div>
             <p className="text-xs text-muted-foreground mt-2">PNG, JPG, WebP · 최대 5MB</p>
             <input
+              id="logo-create"
               ref={logoInputRef}
               type="file"
               accept="image/png,image/jpeg,image/webp"

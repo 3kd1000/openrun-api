@@ -114,7 +114,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           setNeedsPermission(false);
           // 현재 브라우저에서 권한이 있으면 포그라운드 수신을 위해 초기화
           if (isFcmSupported() && Notification.permission === "granted") {
-            await initFcmToken();
+            const success = await initFcmToken();
+            if (!success) {
+              // 토큰 초기화 실패 (PWA 재설치 등) → 배너 표시하여 사용자 제스처로 재등록 유도
+              setNeedsPermission(true);
+            }
           }
         }
       } else {
