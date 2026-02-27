@@ -111,9 +111,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           setNeedsPermission(false);
         } else {
           setPermissionRevoked(false);
-          setNeedsPermission(false);
-          // 현재 브라우저에서 권한이 있으면 포그라운드 수신을 위해 초기화
           if (isFcmSupported() && Notification.permission === "granted") {
+            // 현재 브라우저에서 권한이 있으면 포그라운드 수신을 위해 초기화
+            setNeedsPermission(false);
             const success = await initFcmToken();
             if (!success) {
               // SW 업데이트 중 일시적 실패일 수 있으므로 3초 후 재시도
@@ -124,6 +124,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
                 setNeedsPermission(true);
               }
             }
+          } else if (isFcmSupported()) {
+            // 권한이 "default" (PWA 재설치 등) → 배너 표시하여 권한 요청 유도
+            setNeedsPermission(true);
+          } else {
+            setNeedsPermission(false);
           }
         }
       } else {
