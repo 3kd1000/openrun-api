@@ -423,7 +423,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
           onChange={(e) =>
             setFormData({ ...formData, courtName: e.target.value })
           }
-          placeholder="예: 양재 테니스장"
+          placeholder="예: 올림픽공원 테니스장 센터코트"
           required
         />
       </div>
@@ -437,7 +437,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
           onChange={(e) =>
             setFormData({ ...formData, courtAddress: e.target.value })
           }
-          placeholder="예: 서울시 성동구 서울숲2길 32"
+          placeholder="예: 서울시 송파구 올림픽로 424"
         />
       </div>
 
