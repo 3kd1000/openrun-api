@@ -240,7 +240,7 @@ const ParticipantManagementModal: React.FC<Props> = ({
                           : isSelected
                             ? "hover:bg-muted hover:border-border hover:translate-x-0.5"
                             : "",
-                        !isSelected && "opacity-60"
+                        !isSelected && "opacity-80"
                       )}
                     >
                       <Checkbox

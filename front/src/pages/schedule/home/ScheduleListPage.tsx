@@ -49,8 +49,8 @@ const capacityFilterStyles: Record<CapacityFilter, { base: string; active: strin
     label: "신청 가능",
   },
   full: {
-    base: "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100",
-    active: "bg-gray-500 text-white border-gray-600",
+    base: "bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100",
+    active: "bg-rose-500 text-white border-rose-600",
     label: "마감/초과",
   },
   participated: {

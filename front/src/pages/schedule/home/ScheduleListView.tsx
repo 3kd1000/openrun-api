@@ -90,13 +90,13 @@ const ScheduleListView: React.FC<ScheduleListViewProps> = ({
         // 신청완료 + 마감 동시 상태: 테두리로 구분
         const isParticipatedAndFull = isParticipating && isFull;
 
-        // Card 테두리/배경 클래스 결정 (2색 체계: emerald + gray)
+        // Card 테두리/배경 클래스 결정 (3색 체계: white + rose + emerald)
         const cardBorderClass = isParticipatedAndFull
-          ? "bg-emerald-50 border-[3px] border-gray-400"
+          ? "bg-emerald-50 border-[3px] border-rose-300"
           : isParticipating
           ? "bg-emerald-50 border-emerald-300"
           : isFull
-          ? "bg-gray-100 border-gray-400"
+          ? "bg-rose-50 border-rose-300"
           : "border-gray-300";
 
         // 개인일정 모드: 참가 상태 뱃지
