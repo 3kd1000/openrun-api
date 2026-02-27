@@ -77,7 +77,9 @@ function App() {
   // 푸시 알림 클릭 시 SW에서 postMessage로 전달한 URL로 네비게이션 (앱이 포그라운드일 때)
   useEffect(() => {
     const handler = (event: MessageEvent) => {
+      console.log("[App] postMessage 수신:", JSON.stringify(event.data));
       if (event.data?.type === "NOTIFICATION_CLICK" && event.data?.url) {
+        console.log("[App] postMessage → navigate:", event.data.url);
         // postMessage로 처리 완료 → Cache API의 중복 항목 정리
         clearPendingNotificationCache();
         navigate(event.data.url);
@@ -95,25 +97,33 @@ function App() {
       try {
         const cache = await caches.open("notification-pending");
         const response = await cache.match("/notification-pending-url");
+        console.log("[App] Cache API 확인 - 항목 존재:", !!response);
         if (response) {
           const data = await response.json();
           await cache.delete("/notification-pending-url");
+          const age = Date.now() - data.timestamp;
+          console.log("[App] Cache 데이터:", JSON.stringify(data), "경과:", age, "ms");
           // 30초 이내 저장된 URL만 사용 (오래된 알림 무시)
-          if (data?.url?.startsWith("/") && Date.now() - data.timestamp < PENDING_URL_TTL) {
+          if (data?.url?.startsWith("/") && age < PENDING_URL_TTL) {
+            console.log("[App] Cache API → navigate:", data.url);
             navigate(data.url);
+          } else {
+            console.log("[App] Cache 만료 또는 유효하지 않음 (TTL:", PENDING_URL_TTL, ")");
           }
         }
-      } catch {
-        // Cache API 미지원 또는 파싱 실패 무시
+      } catch (e) {
+        console.log("[App] Cache API 오류:", e);
       }
     };
 
     // 마운트 시 확인 (앱이 꺼져있다가 열린 경우)
+    console.log("[App] 마운트 시 Cache API 확인");
     checkPendingNotificationUrl();
 
     // 화면 복귀 시 확인 (앱이 백그라운드였다가 포커스된 경우)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
+        console.log("[App] visibilitychange → visible, Cache API 확인");
         checkPendingNotificationUrl();
       }
     };
