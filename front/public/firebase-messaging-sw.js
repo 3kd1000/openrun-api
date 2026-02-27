@@ -2,6 +2,10 @@
 // 백그라운드 푸시 알림 수신 처리
 /* eslint-disable no-undef */
 
+// 새 SW 배포 시 즉시 활성화 (구 SW 대기 없이)
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+
 importScripts(
   "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
 );

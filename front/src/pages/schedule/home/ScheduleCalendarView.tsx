@@ -238,11 +238,11 @@ const ScheduleCalendarView: React.FC<Props> = ({
                 key={schedule.id}
                 className={cn(
                   "flex items-center gap-0.5 rounded-sm text-[10px] md:text-xs cursor-pointer border px-1 py-px transition-all whitespace-nowrap overflow-hidden",
-                  // 정원 상태 색상 (2색 체계: emerald + gray)
+                  // 정원 상태 색상 (3색 체계: white + rose + emerald)
                   !isParticipated && !isFull && "bg-transparent text-gray-800 border-gray-300 hover:bg-gray-50",
-                  isFull && !isParticipated && "bg-gray-100 text-gray-600 border-gray-400 hover:bg-gray-200",
+                  isFull && !isParticipated && "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100",
                   isParticipated && !isFull && "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100",
-                  isParticipatedAndFull && "bg-emerald-50 text-emerald-800 border-2 border-gray-400 hover:bg-emerald-100",
+                  isParticipatedAndFull && "bg-emerald-50 text-emerald-800 border-2 border-rose-300 hover:bg-emerald-100",
                   isPast && "opacity-40 hover:opacity-60",
                 )}
                 onClick={(e) => {

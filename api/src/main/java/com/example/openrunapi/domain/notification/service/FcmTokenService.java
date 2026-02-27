@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,6 +21,8 @@ import java.util.stream.Collectors;
 public class FcmTokenService {
 
     private final FcmDeviceTokenRepository fcmDeviceTokenRepository;
+
+    private static final int MAX_TOKENS_PER_USER = 5;
 
     @Transactional
     public void registerToken(Long userId, RegisterTokenRequest request) {
@@ -33,9 +36,16 @@ public class FcmTokenService {
             existing.get().updateToken(request.getToken(), request.getDeviceInfo());
             log.info("Updated FCM token for user: {} ({})", userId, deviceType);
         } else {
-            // 같은 디바이스 타입의 기존 토큰 삭제 (디바이스 타입별 단일 토큰 유지)
-            fcmDeviceTokenRepository.deleteByUserIdAndDeviceType(userId, deviceType);
-            log.info("Deleted existing {} tokens for user: {}", deviceType, userId);
+            // 사용자의 전체 토큰 수 확인 → 상한 초과 시 가장 오래된 토큰 삭제
+            List<FcmDeviceToken> allTokens = fcmDeviceTokenRepository.findByUserId(userId);
+            if (allTokens.size() >= MAX_TOKENS_PER_USER) {
+                allTokens.stream()
+                        .min(Comparator.comparing(FcmDeviceToken::getUpdatedAt))
+                        .ifPresent(oldest -> {
+                            fcmDeviceTokenRepository.delete(oldest);
+                            log.info("Deleted oldest FCM token for user: {} (limit: {})", userId, MAX_TOKENS_PER_USER);
+                        });
+            }
 
             // 새 토큰 생성
             FcmDeviceToken token = FcmDeviceToken.builder()
