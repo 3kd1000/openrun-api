@@ -80,14 +80,10 @@ const getDeviceType = (): "MOBILE" | "DESKTOP" => {
  * 백엔드에 FCM 토큰 등록
  */
 export const registerTokenToServer = async (token: string): Promise<void> => {
-  try {
-    const deviceInfo = `${navigator.userAgent.substring(0, 200)}`;
-    const deviceType = getDeviceType();
-    await axiosInstance.post("/fcm/tokens", { token, deviceInfo, deviceType });
-    console.log("[FCM] 서버에 토큰 등록 완료 (deviceType:", deviceType, ")");
-  } catch (error) {
-    console.error("[FCM] 서버 토큰 등록 실패:", error);
-  }
+  const deviceInfo = `${navigator.userAgent.substring(0, 200)}`;
+  const deviceType = getDeviceType();
+  await axiosInstance.post("/fcm/tokens", { token, deviceInfo, deviceType });
+  console.log("[FCM] 서버에 토큰 등록 완료 (deviceType:", deviceType, ")");
 };
 
 /**
