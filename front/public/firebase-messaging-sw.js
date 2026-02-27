@@ -46,7 +46,8 @@ messaging.onBackgroundMessage((payload) => {
 
 // 알림 클릭 처리
 self.addEventListener("notificationclick", (event) => {
-  console.log("[firebase-messaging-sw] 알림 클릭:", event.notification);
+  console.log("[SW-click] 알림 클릭 시작");
+  console.log("[SW-click] notification.data:", JSON.stringify(event.notification.data));
   event.notification.close();
 
   const data = event.notification.data || {};
@@ -74,6 +75,8 @@ self.addEventListener("notificationclick", (event) => {
     targetUrl = `/messages/${data.referenceId}`;
   }
 
+  console.log("[SW-click] targetUrl:", targetUrl);
+
   // FCM SW는 /firebase-cloud-messaging-push-scope 스코프이므로
   // PWA 메인 윈도우를 제어하지 않아 client.navigate()가 실패할 수 있음
   // → Cache API에 pending URL을 저장하여 앱이 열릴 때/복귀할 때 확인
@@ -81,29 +84,35 @@ self.addEventListener("notificationclick", (event) => {
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then(async (clientList) => {
+        console.log("[SW-click] 열린 윈도우 수:", clientList.length);
         for (const client of clientList) {
+          console.log("[SW-click] client.url:", client.url, "origin:", self.location.origin);
           if (client.url.includes(self.location.origin) && "focus" in client) {
             try {
               await client.navigate(targetUrl);
+              console.log("[SW-click] navigate 성공");
               return client.focus();
             } catch (e) {
               // navigate 실패 (스코프 불일치) → Cache API + postMessage 이중 보장
-              console.log("[firebase-messaging-sw] navigate 실패, Cache API + postMessage 사용:", e);
+              console.log("[SW-click] navigate 실패:", e.message);
               const payload = JSON.stringify({ url: targetUrl, timestamp: Date.now() });
               await caches.open("notification-pending").then(cache =>
                 cache.put("/notification-pending-url", new Response(payload))
               );
+              console.log("[SW-click] Cache API 저장 완료, postMessage 전송");
               client.postMessage({ type: "NOTIFICATION_CLICK", url: targetUrl });
               return client.focus();
             }
           }
         }
         // 열려있는 창이 없으면 Cache에 저장 후 새 창 열기
+        console.log("[SW-click] 열린 창 없음, openWindow 사용");
         if (clients.openWindow) {
           const payload = JSON.stringify({ url: targetUrl, timestamp: Date.now() });
           await caches.open("notification-pending").then(cache =>
             cache.put("/notification-pending-url", new Response(payload))
           );
+          console.log("[SW-click] Cache API 저장 완료, openWindow:", targetUrl);
           return clients.openWindow(targetUrl);
         }
       })

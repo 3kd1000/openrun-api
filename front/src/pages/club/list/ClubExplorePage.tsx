@@ -430,7 +430,7 @@ const ClubExplorePage: React.FC = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="검색어 입력"
+                    placeholder="검색"
                     value={guestKeyword}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -586,7 +586,7 @@ const ClubExplorePage: React.FC = () => {
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="검색어 입력"
+                    placeholder="검색"
                     value={clubKeyword}
                     onChange={(e) => {
                       const value = e.target.value;
