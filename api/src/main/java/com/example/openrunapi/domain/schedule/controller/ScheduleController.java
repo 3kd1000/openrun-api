@@ -271,7 +271,7 @@ public class ScheduleController {
         scheduleService.validateDrawManagePermission(scheduleId, userId);
 
         // 일정 존재 확인 및 조회
-        ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
+        ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId, userId);
 
         // 대진 생성 (draw_statistics 자동 증가 포함)
         DrawResponse response = drawService.generateDrawSequence(request, scheduleResponse.getNumberOfCourts());
@@ -297,7 +297,7 @@ public class ScheduleController {
         scheduleService.validateDrawManagePermission(scheduleId, userId);
 
         // 일정 존재 확인 및 조회
-        ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId);
+        ScheduleResponse scheduleResponse = scheduleService.getScheduleById(scheduleId, userId);
 
         // MANUAL 타입: DrawService 우회, 직접 Match 저장
         if (request.getDrawType() == DrawType.MANUAL) {
