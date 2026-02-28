@@ -35,6 +35,9 @@ public class FcmDeviceToken {
     @Column(name = "device_type", nullable = false, length = 20)
     private DeviceType deviceType;
 
+    @Column(name = "device_identifier", length = 50)
+    private String deviceIdentifier;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -44,11 +47,12 @@ public class FcmDeviceToken {
     private LocalDateTime updatedAt;
 
     @Builder
-    public FcmDeviceToken(Long userId, String token, String deviceInfo, DeviceType deviceType) {
+    public FcmDeviceToken(Long userId, String token, String deviceInfo, DeviceType deviceType, String deviceIdentifier) {
         this.userId = userId;
         this.token = token;
         this.deviceInfo = deviceInfo;
         this.deviceType = deviceType != null ? deviceType : DeviceType.UNKNOWN;
+        this.deviceIdentifier = deviceIdentifier;
     }
 
     public void updateToken(String token, String deviceInfo) {
