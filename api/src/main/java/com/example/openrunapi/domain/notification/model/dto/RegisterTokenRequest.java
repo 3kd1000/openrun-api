@@ -14,6 +14,7 @@ public class RegisterTokenRequest {
     private String token;
     private String deviceInfo;
     private DeviceType deviceType;
+    private String deviceIdentifier;
 
     /**
      * deviceType이 null인 경우 deviceInfo에서 추정

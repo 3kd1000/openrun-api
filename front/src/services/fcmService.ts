@@ -8,7 +8,35 @@ import { isMobile } from "../utils/platformDetection";
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
+// Device Identifier: 같은 물리 디바이스를 식별하여 stale 토큰 교체 시 다른 디바이스와 충돌 방지
+const FCM_DEVICE_ID_KEY = "fcm_device_id";
+// 토큰 캐싱: 토큰이 변경되지 않았으면 registerTokenToServer 호출 스킵
+const FCM_TOKEN_CACHE_KEY = "fcm_token_cache";
+
 let messagingInstance: ReturnType<typeof getMessaging> | null = null;
+
+/**
+ * 디바이스 고유 식별자 (UUID) — 같은 물리 디바이스를 구분하여 토큰 교체 시 충돌 방지
+ */
+const getOrCreateDeviceId = (): string => {
+  let deviceId = localStorage.getItem(FCM_DEVICE_ID_KEY);
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+    localStorage.setItem(FCM_DEVICE_ID_KEY, deviceId);
+  }
+  return deviceId;
+};
+
+/**
+ * 토큰 캐싱: 동일 토큰이면 서버 등록 스킵
+ */
+const getCachedToken = (): string | null => {
+  return localStorage.getItem(FCM_TOKEN_CACHE_KEY);
+};
+
+const cacheToken = (token: string): void => {
+  localStorage.setItem(FCM_TOKEN_CACHE_KEY, token);
+};
 
 /**
  * FCM 지원 여부 확인
@@ -78,11 +106,22 @@ const getDeviceType = (): "MOBILE" | "DESKTOP" => {
 
 /**
  * 백엔드에 FCM 토큰 등록
+ * - 캐시된 토큰과 동일하면 서버 호출 스킵
+ * - deviceIdentifier로 같은 디바이스의 stale 토큰 교체
  */
 export const registerTokenToServer = async (token: string): Promise<void> => {
-  const deviceInfo = `${navigator.userAgent.substring(0, 200)}`;
+  // 캐시된 토큰과 동일하면 서버 등록 스킵
+  const cached = getCachedToken();
+  if (cached === token) {
+    console.log("[FCM] 캐시된 토큰과 동일 — 서버 등록 스킵");
+    return;
+  }
+
+  const deviceInfo = navigator.userAgent.substring(0, 200);
   const deviceType = getDeviceType();
-  await axiosInstance.post("/fcm/tokens", { token, deviceInfo, deviceType });
+  const deviceIdentifier = getOrCreateDeviceId();
+  await axiosInstance.post("/fcm/tokens", { token, deviceInfo, deviceType, deviceIdentifier });
+  cacheToken(token);
   console.log("[FCM] 서버에 토큰 등록 완료 (deviceType:", deviceType, ")");
 };
 

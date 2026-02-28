@@ -107,8 +107,15 @@ const ScheduleListPage: React.FC = () => {
     new Set()
   );
   const [toastMessage, setToastMessage] = useState("");
-  // 캘린더에서 현재 보고 있는 월 상태 관리
-  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+  // 캘린더에서 현재 보고 있는 월 상태 관리 (네비게이션 후 복귀 시 유지)
+  const [calendarDate, setCalendarDate] = useState<Date>(() => {
+    const saved = sessionStorage.getItem("openrun_calendar_date");
+    if (saved) {
+      const d = new Date(saved);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return new Date();
+  });
   const todayScheduleRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
 
@@ -380,6 +387,11 @@ const ScheduleListPage: React.FC = () => {
   useEffect(() => {
     setOpenRunUiSettings({ scheduleViewMode: viewMode });
   }, [viewMode]);
+
+  // 캘린더 월 변경 시 sessionStorage에 저장 (뒤로가기 복귀 시 유지)
+  useEffect(() => {
+    sessionStorage.setItem("openrun_calendar_date", calendarDate.toISOString());
+  }, [calendarDate]);
 
   // 리스트뷰 진입 시 오늘 날짜로 스크롤
   useEffect(() => {
