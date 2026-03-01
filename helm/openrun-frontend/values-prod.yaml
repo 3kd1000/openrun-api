@@ -38,6 +38,10 @@ ingress:
     enabled: true
     secretName: openrun-tls-secret
 
+# Secrets (API와 동일한 K8s Secret 참조)
+secrets:
+  name: openrun-secrets-prod
+
 # Image Pull Secret
 imagePullSecret:
   name: ghcr-pull-secret

@@ -7,7 +7,11 @@ const app = express();
 const PORT = process.env.PORT || 80;
 const API_URL = process.env.API_INTERNAL_URL || 'http://localhost:8080/api';
 const SITE_URL = process.env.SITE_URL || 'https://front.openrun.app';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og_image_v4.png`;
+const INTERNAL_KEY = process.env.INTERNAL_KEY || '';
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og_image_v5.png`;
+
+// 내부 OG API URL (API_URL: .../api → .../internal/og)
+const INTERNAL_OG_URL = API_URL.replace(/\/api$/, '/internal/og');
 
 // index.html 템플릿 로드 (서버 시작 시 1회)
 const distPath = path.join(__dirname, 'dist');
@@ -35,9 +39,11 @@ const OG_ROUTES = [
   { pattern: /^\/clubs\/\d+\/interclub-recruit\/(\d+)$/, type: 'schedule', idIndex: 1 },
 ];
 
-// --- API 데이터 fetch ---
-async function fetchJson(url) {
-  const response = await fetch(url);
+// --- API 데이터 fetch (내부 OG API + X-Internal-Key 인증) ---
+async function fetchOgData(path) {
+  const response = await fetch(`${INTERNAL_OG_URL}${path}`, {
+    headers: { 'X-Internal-Key': INTERNAL_KEY },
+  });
   if (!response.ok) throw new Error(`API ${response.status}`);
   return response.json();
 }
@@ -92,7 +98,7 @@ function injectOgTags(html, og) {
 // --- 동적 OG 이미지 엔드포인트 (크롤러가 og:image URL로 직접 요청) ---
 app.get('/og-image/schedule/:id', async (req, res) => {
   try {
-    const data = await fetchJson(`${API_URL}/schedules/${req.params.id}`);
+    const data = await fetchOgData(`/schedules/${req.params.id}`);
     const imageBuffer = await generateScheduleOgImage(data);
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=600'); // 10분 CDN 캐시
@@ -106,7 +112,7 @@ app.get('/og-image/schedule/:id', async (req, res) => {
 
 app.get('/og-image/club/:id', async (req, res) => {
   try {
-    const data = await fetchJson(`${API_URL}/clubs/${req.params.id}`);
+    const data = await fetchOgData(`/clubs/${req.params.id}`);
     const imageBuffer = await generateClubOgImage(data);
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=600');
@@ -129,11 +135,11 @@ app.get('*', async (req, res, next) => {
 
     const resourceId = match[route.idIndex];
     try {
-      const apiPath = route.type === 'club'
-        ? `${API_URL}/clubs/${resourceId}`
-        : `${API_URL}/schedules/${resourceId}`;
+      const ogPath = route.type === 'club'
+        ? `/clubs/${resourceId}`
+        : `/schedules/${resourceId}`;
 
-      const data = await fetchJson(apiPath);
+      const data = await fetchOgData(ogPath);
       const ogData = route.type === 'club'
         ? buildClubOgData(data, req.path, resourceId)
         : buildScheduleOgData(data, req.path, resourceId);
@@ -161,8 +167,9 @@ app.get('*', (req, res) => {
 initBackground().then(() => {
   app.listen(PORT, () => {
     console.log(`[OG Server] Running on port ${PORT}`);
-    console.log(`[OG Server] API: ${API_URL}`);
+    console.log(`[OG Server] Internal OG API: ${INTERNAL_OG_URL}`);
     console.log(`[OG Server] Site: ${SITE_URL}`);
+    console.log(`[OG Server] Internal Key: ${INTERNAL_KEY ? 'configured' : 'NOT SET'}`);
     console.log(`[OG Server] Dynamic OG images enabled`);
   });
 }).catch((err) => {
