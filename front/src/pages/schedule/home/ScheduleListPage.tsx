@@ -393,7 +393,7 @@ const ScheduleListPage: React.FC = () => {
     sessionStorage.setItem("openrun_calendar_date", calendarDate.toISOString());
   }, [calendarDate]);
 
-  // 리스트뷰 진입 시 오늘 날짜로 스크롤
+  // 리스트뷰 진입 시 오늘 날짜로 스크롤 (뒤로가기 시에는 이전 위치 복원)
   useEffect(() => {
     if (
       viewMode === "list" &&
@@ -401,6 +401,16 @@ const ScheduleListPage: React.FC = () => {
       !filterDate &&
       location.pathname.startsWith("/schedules/")
     ) {
+      // 일정상세에서 뒤로가기 시 저장된 스크롤 위치 복원
+      const savedScrollY = sessionStorage.getItem("schedule_list_scroll_y");
+      if (savedScrollY) {
+        sessionStorage.removeItem("schedule_list_scroll_y");
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(savedScrollY));
+        });
+        return;
+      }
+
       let attemptCount = 0;
       const maxAttempts = 10;
       const timers: ReturnType<typeof setTimeout>[] = [];
@@ -448,6 +458,8 @@ const ScheduleListPage: React.FC = () => {
   };
 
   const handleScheduleClick = (schedule: Schedule) => {
+    // 뒤로가기 시 스크롤 위치 복원을 위해 현재 위치 저장
+    sessionStorage.setItem("schedule_list_scroll_y", String(window.scrollY));
     // 상세 풀페이지로 이동
     navigate(`/schedules/${schedule.id}`, {
       state: { returnUrl: location.pathname + location.search },
