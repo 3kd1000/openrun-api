@@ -1059,7 +1059,7 @@ export default function ScheduleDetailPage() {
                 : undefined
             }
           >
-            {loading ? "취소 중..." : "신청취소"}
+            {loading ? "취소중" : "취소"}
           </Button>
         ) : (
           <Button
@@ -1075,7 +1075,7 @@ export default function ScheduleDetailPage() {
               ).isValid
             }
           >
-            {loading ? "신청 중..." : "참가신청"}
+            {loading ? "신청중" : "신청"}
           </Button>
         )}
 
@@ -1090,7 +1090,7 @@ export default function ScheduleDetailPage() {
               : undefined
           }
         >
-          삭제하기
+          삭제
         </Button>
 
         <Button
@@ -1111,7 +1111,15 @@ export default function ScheduleDetailPage() {
                 : undefined
           }
         >
-          수정하기
+          수정
+        </Button>
+
+        <Button
+          variant="outline"
+          className="flex-1 border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+          onClick={handleGoBack}
+        >
+          뒤로
         </Button>
       </div>
 

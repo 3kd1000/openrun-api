@@ -22,42 +22,42 @@ const videos = [
 
 const features = [
   {
-    image: "/intro/01_일정조회.png",
+    image: "/intro/01_일정조회(캘린더)_v2.png",
     title: "일정 관리",
     description: "클럽 일정을 캘린더와 리스트로 한눈에 확인",
   },
   {
-    image: "/intro/02_참가신청.png",
+    image: "/intro/02_참가신청_v2.png",
     title: "참가 신청",
     description: "원하는 일정에 터치 한 번으로 참가 신청",
   },
   {
-    image: "/intro/03_일정상세.png",
+    image: "/intro/03_일정상세_v2.png",
     title: "일정 상세",
     description: "참가자 목록, 코트 정보, 모집 현황 확인",
   },
   {
-    image: "/intro/04_대진생성_결과입력.png",
+    image: "/intro/04_대진결과입력_v2.png",
     title: "대진표 생성",
     description: "한울방식 / 수동대진 생성, 경기결과 입력",
   },
   {
-    image: "/intro/05_랭킹_기록.png",
+    image: "/intro/05_랭킹_기록_v2.png",
     title: "랭킹 & 기록",
     description: "개인별/시즌별 경기 기록과 랭킹 자동 집계",
   },
   {
-    image: "/intro/06_클럽탐색.png",
+    image: "/intro/07_클럽탐색_v2.png",
     title: "클럽 탐색",
     description: "지역별, 코트별, 모집 현황 확인",
   },
   {
-    image: "/intro/07_클럽메인.png",
+    image: "/intro/06_클럽메인_v2.png",
     title: "클럽 홈",
     description: "클럽 현황, 공지사항, 멤버 조회 등 한눈에",
   },
   {
-    image: "/intro/08_공용구관리.png",
+    image: "/intro/08_공용구관리_v2.png",
     title: "공용구 관리",
     description: "공용구 입고, 배분, 재고 현황 관리",
   },
@@ -341,7 +341,7 @@ const IntroPage: React.FC = () => {
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="relative max-w-[400px] w-full bg-white rounded-2xl overflow-hidden max-md:max-w-[90vw]"
+            className="relative max-w-[400px] w-full max-h-[85vh] bg-white rounded-2xl overflow-hidden flex flex-col max-md:max-w-[90vw]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -353,7 +353,7 @@ const IntroPage: React.FC = () => {
             <img
               src={features[selectedImage].image}
               alt={features[selectedImage].title}
-              className="w-full block"
+              className="w-full block min-h-0 object-contain flex-1"
             />
             <div className="p-5 text-center">
               <h3 className="text-xl font-semibold text-secondary mt-0 mb-2">

@@ -385,15 +385,6 @@ const DrawViewModal: React.FC<Props> = ({
               onCancel={() => setIsEditingDraw(false)}
             />
           ) : drawResult ? (
-            <div className={cn(
-              "flex-[0_1_auto] min-h-0 flex flex-col overflow-hidden",
-              "[&>.dgc-games-list]:block [&>.dgc-games-list]:min-h-0 [&>.dgc-games-list]:overflow-y-auto",
-              "[&_.dgc-round-group]:shrink-0",
-              "[&_.dgc-round-games]:block [&_.dgc-round-games]:overflow-visible",
-              "[&_.dgc-game-number]:min-w-[35px]",
-              "max-[768px]:[&_.dgc-game-content]:text-[13px]",
-              "max-[768px]:[&>.dgc-games-list]:max-h-none"
-            )}>
               <DrawGamesList
                 games={drawResult.games}
                 playerCount={confirmedParticipantCount}
@@ -402,19 +393,16 @@ const DrawViewModal: React.FC<Props> = ({
                 onScoreChange={handleScoreChange}
                 matchScores={matchScores}
                 onResetResult={handleResetResult}
+                className="block min-h-0 overflow-y-auto max-[768px]:max-h-none"
               />
-            </div>
+
           ) : null}
 
           {/* 액션 버튼 - 대진 수정 모드가 아닐 때만 표시 */}
           {!isEditingDraw && (
-            <div className={cn(
-              "grid gap-2 pt-3 border-t mt-3 shrink-0",
-              "grid-cols-4",
-              "max-[768px]:pt-1.5 max-[768px]:mt-1.5 max-[768px]:gap-1.5",
-              "max-[425px]:grid-cols-2 max-[425px]:gap-1.5"
-            )}>
+            <div className="flex gap-1.5 pt-3 border-t mt-3 shrink-0 max-[768px]:pt-1.5 max-[768px]:mt-1.5">
               <div
+                className="flex-1"
                 title={
                   !canManageDraw
                     ? "대진 관리는 호스트 또는 관리자만 가능합니다."
@@ -432,16 +420,19 @@ const DrawViewModal: React.FC<Props> = ({
                 </Button>
               </div>
               {canEditDraw && (
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsEditingDraw(true)}
-                  disabled={isEditMode}
-                  className="w-full"
-                >
-                  대진수정
-                </Button>
+                <div className="flex-1">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsEditingDraw(true)}
+                    disabled={isEditMode}
+                    className="w-full"
+                  >
+                    수정
+                  </Button>
+                </div>
               )}
               <div
+                className="flex-1"
                 title={
                   isPublicSchedule
                     ? "공개일정에서는 경기 결과를 입력할 수 없습니다"
@@ -456,17 +447,19 @@ const DrawViewModal: React.FC<Props> = ({
                   disabled={!drawResult || saving || isFutureSchedule || isPublicSchedule}
                   className="w-full"
                 >
-                  {saving ? "저장 중..." : isEditMode ? "입력완료" : "결과입력"}
+                  {saving ? "저장중" : isEditMode ? "완료" : "결과"}
                 </Button>
               </div>
-              <Button
-                variant="default"
-                onClick={onClose}
-                disabled={isEditMode}
-                className="w-full"
-              >
-                확인
-              </Button>
+              <div className="flex-1">
+                <Button
+                  variant="default"
+                  onClick={onClose}
+                  disabled={isEditMode}
+                  className="w-full"
+                >
+                  확인
+                </Button>
+              </div>
             </div>
           )}
         </div>
