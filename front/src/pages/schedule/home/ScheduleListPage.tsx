@@ -420,6 +420,8 @@ const ScheduleListPage: React.FC = () => {
           if (restoreAttempt < maxRestoreAttempts) {
             restoreTimers.push(setTimeout(tryRestore, 100));
           } else {
+            // 최대 시도 후에도 높이 부족 → 가능한 만큼 스크롤하고 ref 해제
+            scrollRestoredRef.current = false;
             window.scrollTo(0, targetY);
           }
         };

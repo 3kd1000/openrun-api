@@ -130,15 +130,34 @@ const ScoreboardPage: React.FC = () => {
         setHasMore(s.hasMore || false);
         setTotalElements(s.totalElements || 0);
         setActiveTab("matches");
-        requestAnimationFrame(() => {
-          window.scrollTo(0, s.scrollY || 0);
-        });
+        // 데이터 렌더링 후 스크롤 복원 (높이 확보될 때까지 retry)
+        const targetY = s.scrollY || 0;
+        let attempt = 0;
+        const maxAttempts = 10;
+        const timers: ReturnType<typeof setTimeout>[] = [];
+        const tryRestore = () => {
+          attempt++;
+          if (document.documentElement.scrollHeight >= targetY + window.innerHeight * 0.5) {
+            window.scrollTo(0, targetY);
+            return;
+          }
+          if (attempt < maxAttempts) {
+            timers.push(setTimeout(tryRestore, 100));
+          } else {
+            window.scrollTo(0, targetY);
+          }
+        };
+        requestAnimationFrame(() => tryRestore());
+        timers.push(setTimeout(tryRestore, 100));
+        timers.push(setTimeout(tryRestore, 300));
+        timers.push(setTimeout(tryRestore, 500));
       } catch { /* parse error 무시 */ }
     }
   }, []);
 
-  // 클럽 가입 여부에 따라 기본 탭 설정
+  // 클럽 가입 여부에 따라 기본 탭 설정 (복원 중이면 스킵)
   useEffect(() => {
+    if (restoredRef.current) return;
     // 클럽에 가입하지 않았는데 클럽 전용 탭이면 personal로 전환
     if (!hasClub && (activeTab === "ranking" || activeTab === "matches" || activeTab === "awards")) {
       setActiveTab("personal");
