@@ -15,7 +15,7 @@ const ClubTransferOwnershipPage: React.FC = () => {
   const { showToast } = useToast();
   const { clubId } = useParams<{ clubId: string }>();
 
-  const [adminMembers, setAdminMembers] = useState<ClubMembership[]>([]);
+  const [candidates, setCandidates] = useState<ClubMembership[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [confirmationInput, setConfirmationInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -34,11 +34,11 @@ const ClubTransferOwnershipPage: React.FC = () => {
     }
 
     if (clubId) {
-      loadAdminMembers();
+      loadCandidates();
     }
   }, [clubId, isOwner]);
 
-  const loadAdminMembers = async () => {
+  const loadCandidates = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -47,13 +47,13 @@ const ClubTransferOwnershipPage: React.FC = () => {
         params: { status: "ACTIVE" },
       });
 
-      // ADMIN만 필터링
-      const admins = response.data.filter(
-        (member: ClubMembership) => member.role === "ADMIN"
+      // OWNER 본인 제외한 모든 ACTIVE 멤버
+      const members = response.data.filter(
+        (member: ClubMembership) => member.role !== "OWNER"
       );
-      setAdminMembers(admins);
+      setCandidates(members);
     } catch (error: unknown) {
-      logError("운영진 목록 조회", error);
+      logError("클럽원 목록 조회", error);
       setError(getErrorMessage(error));
     } finally {
       setLoading(false);
@@ -129,20 +129,18 @@ const ClubTransferOwnershipPage: React.FC = () => {
 
       {/* ADMIN 목록 */}
       <div className="bg-white rounded-xl border border-border p-4 mb-3">
-        <h2 className="text-sm font-semibold text-gray-800 m-0 mb-3">운영진 선택</h2>
+        <h2 className="text-sm font-semibold text-gray-800 m-0 mb-3">양도 대상 선택</h2>
 
-        {adminMembers.length === 0 ? (
+        {candidates.length === 0 ? (
           <div className="text-center py-6 text-gray-400">
-            <p className="text-sm mb-2">권한을 양도할 수 있는 운영진이 없습니다.</p>
+            <p className="text-sm mb-2">권한을 양도할 수 있는 클럽원이 없습니다.</p>
             <p className="text-xs text-gray-400 leading-relaxed">
-              클럽장 권한은 운영진(ADMIN)에게만 양도할 수 있습니다.
-              <br />
-              먼저 클럽원 관리에서 운영진을 지정해주세요.
+              클럽에 다른 멤버가 없어 양도할 수 없습니다.
             </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {adminMembers.map((member) => (
+            {candidates.map((member) => (
               <label
                 key={member.userId}
                 className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border-2 ${
@@ -162,6 +160,9 @@ const ClubTransferOwnershipPage: React.FC = () => {
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-semibold text-gray-800">
                     {member.name}
+                    {member.role === "ADMIN" && (
+                      <span className="ml-1.5 text-xs font-medium text-emerald-600">운영진</span>
+                    )}
                   </span>
                   {member.email && (
                     <span className="text-xs text-gray-400">
@@ -176,7 +177,7 @@ const ClubTransferOwnershipPage: React.FC = () => {
       </div>
 
       {/* 확인 문구 입력 */}
-      {adminMembers.length > 0 && (
+      {candidates.length > 0 && (
         <div className="bg-white rounded-xl border border-border p-4 mb-3">
           <h2 className="text-sm font-semibold text-gray-800 m-0 mb-3">확인 문구 입력</h2>
           <p className="text-xs text-gray-400 mb-2">
@@ -193,7 +194,7 @@ const ClubTransferOwnershipPage: React.FC = () => {
       )}
 
       {/* 양도 버튼 */}
-      {adminMembers.length > 0 && (
+      {candidates.length > 0 && (
         <button
           className={`w-full py-3 bg-red-500 text-white rounded-lg font-medium text-sm transition-all ${
             !canSubmit ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600 cursor-pointer"

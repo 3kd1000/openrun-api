@@ -49,15 +49,32 @@ const MyClubsPage: React.FC = () => {
     }
   };
 
-  const handleLeaveClub = async (clubId: number, clubName: string) => {
-    if (!confirm(`'${clubName}' 클럽에서 탈퇴하시겠습니까?`)) {
-      return;
+  const handleLeaveClub = async (club: MyClub) => {
+    const isOwner = club.role === "OWNER";
+
+    if (isOwner) {
+      if (club.memberCount <= 1) {
+        // OWNER + 혼자 → 클럽 삭제 확인
+        if (!confirm(`'${club.name}' 클럽의 마지막 멤버입니다.\n탈퇴 시 클럽이 삭제됩니다. 계속하시겠습니까?`)) {
+          return;
+        }
+      } else {
+        // OWNER + 다른 멤버 있음 → 양도 안내
+        if (confirm(`클럽장은 바로 탈퇴할 수 없습니다.\n클럽장 권한을 다른 멤버에게 양도하시겠습니까?`)) {
+          navigate(`/clubs/${club.id}/manage/transfer-ownership`);
+        }
+        return;
+      }
+    } else {
+      if (!confirm(`'${club.name}' 클럽에서 탈퇴하시겠습니까?`)) {
+        return;
+      }
     }
 
-    setLeavingClubId(clubId);
+    setLeavingClubId(club.id);
     try {
-      await axiosInstance.delete(`/clubs/${clubId}/members/me`);
-      showToast("클럽 탈퇴가 완료되었습니다", "success");
+      await axiosInstance.delete(`/clubs/${club.id}/members/me`);
+      showToast(isOwner ? "클럽이 삭제되었습니다" : "클럽 탈퇴가 완료되었습니다", "success");
       loadClubs(); // 목록 새로고침
       await syncClubList(); // 세션 clubList 업데이트
     } catch (error: unknown) {
@@ -94,8 +111,12 @@ const MyClubsPage: React.FC = () => {
                 className="bg-card border border-border rounded-md p-6 max-[768px]:p-4 max-[425px]:p-3 max-[359px]:p-3 transition-all duration-200 hover:shadow-md hover:border-primary"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="shrink-0 w-12 h-12 max-[768px]:w-11 max-[768px]:h-11 max-[425px]:w-10 max-[425px]:h-10 max-[359px]:w-9 max-[359px]:h-9 flex items-center justify-center bg-muted rounded-full text-muted-foreground">
-                    <UsersIcon size={22} />
+                  <div className="shrink-0 w-12 h-12 max-[768px]:w-11 max-[768px]:h-11 max-[425px]:w-10 max-[425px]:h-10 max-[359px]:w-9 max-[359px]:h-9 flex items-center justify-center bg-muted rounded-full text-muted-foreground overflow-hidden">
+                    {club.logoUrl ? (
+                      <img src={club.logoUrl} alt={club.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <UsersIcon size={22} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-lg max-[768px]:text-base max-[425px]:text-sm max-[359px]:text-sm font-semibold text-foreground mb-1">
@@ -107,8 +128,12 @@ const MyClubsPage: React.FC = () => {
                         />
                       )}
                     </div>
+                    <div className="text-xs text-muted-foreground">
+                      {club.role === "OWNER" ? "클럽장" : club.role === "ADMIN" ? "운영진" : "정회원"}
+                      {" · "}멤버 {club.memberCount}명
+                    </div>
                     {isNotEmpty(club.description) && (
-                      <div className="text-sm max-[425px]:text-sm max-[359px]:text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">{club.description}</div>
+                      <div className="text-sm max-[425px]:text-sm max-[359px]:text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap mt-0.5">{club.description}</div>
                     )}
                   </div>
                 </div>
@@ -121,7 +146,7 @@ const MyClubsPage: React.FC = () => {
                   </button>
                   <button
                     className="px-4 py-2 max-[425px]:px-3 max-[425px]:py-1 max-[359px]:px-3 max-[359px]:py-1 rounded-sm text-sm max-[425px]:text-sm max-[359px]:text-sm font-semibold cursor-pointer transition-all duration-200 border border-destructive bg-card text-destructive min-w-[80px] max-[768px]:min-w-[70px] max-[425px]:min-w-[60px] max-[359px]:min-w-[55px] enabled:hover:bg-destructive enabled:hover:text-white enabled:hover:-translate-y-px enabled:hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => handleLeaveClub(club.id, club.name)}
+                    onClick={() => handleLeaveClub(club)}
                     disabled={leavingClubId === club.id}
                   >
                     {leavingClubId === club.id ? "처리중..." : "탈퇴"}

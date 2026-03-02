@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../services/api/axiosInstance";
 import { clubService } from "../../../services/clubService";
+import { syncClubList } from "../../../services/api/userApi";
 import type { CreateClubRequest } from "../../../types/club";
 import RegionSelector from "../../../components/common/RegionSelector";
 import { AppHeader } from "../../../components/common/AppHeader";
@@ -62,6 +63,9 @@ const ClubCreatePage: React.FC = () => {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
+
+      // 세션의 clubList에 새 클럽 반영 (ClubMainPage 멤버십 검증용)
+      await syncClubList();
 
       // 생성 직후 온보딩(CTA) 화면으로 이동
       navigate(`/clubs/${created.id}/manage/onboarding`);

@@ -237,7 +237,7 @@ public class ClubController {
 
     /**
      * 클럽장 권한 양도 (OWNER만 가능)
-     * - ADMIN에게만 양도 가능
+     * - ACTIVE 멤버 누구에게든 양도 가능
      * - 기존 OWNER → ADMIN, 새 OWNER → OWNER로 역할 변경
      */
     @PostMapping("/{clubId}/transfer-ownership")
