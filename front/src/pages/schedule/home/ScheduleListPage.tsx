@@ -393,24 +393,56 @@ const ScheduleListPage: React.FC = () => {
     sessionStorage.setItem("openrun_calendar_date", calendarDate.toISOString());
   }, [calendarDate]);
 
-  // 리스트뷰 진입 시 오늘 날짜로 스크롤 (뒤로가기 시에는 이전 위치 복원)
+  // 일정상세에서 복귀 시 저장된 스크롤 위치 복원 (필터/뷰모드 무관)
+  const scrollRestoredRef = useRef(false);
   useEffect(() => {
+    if (scrollRestoredRef.current) return;
+    if (
+      viewMode === "list" &&
+      (schedules.length > 0 || personalSchedules.length > 0) &&
+      location.pathname.startsWith("/schedules/")
+    ) {
+      const savedScrollY = sessionStorage.getItem("schedule_list_scroll_y");
+      if (savedScrollY) {
+        scrollRestoredRef.current = true;
+        sessionStorage.removeItem("schedule_list_scroll_y");
+        const targetY = parseInt(savedScrollY);
+        let restoreAttempt = 0;
+        const maxRestoreAttempts = 10;
+        const restoreTimers: ReturnType<typeof setTimeout>[] = [];
+
+        const tryRestore = () => {
+          restoreAttempt++;
+          if (document.documentElement.scrollHeight >= targetY + window.innerHeight * 0.5) {
+            window.scrollTo(0, targetY);
+            return;
+          }
+          if (restoreAttempt < maxRestoreAttempts) {
+            restoreTimers.push(setTimeout(tryRestore, 100));
+          } else {
+            window.scrollTo(0, targetY);
+          }
+        };
+
+        requestAnimationFrame(() => tryRestore());
+        restoreTimers.push(setTimeout(tryRestore, 100));
+        restoreTimers.push(setTimeout(tryRestore, 300));
+        restoreTimers.push(setTimeout(tryRestore, 500));
+
+        return () => restoreTimers.forEach(clearTimeout);
+      }
+    }
+  }, [viewMode, schedules.length, personalSchedules.length, location.pathname]);
+
+  // 리스트뷰 진입 시 오늘 날짜로 스크롤 (복원이 없을 때만)
+  useEffect(() => {
+    if (scrollRestoredRef.current) return;
     if (
       viewMode === "list" &&
       (schedules.length > 0 || personalSchedules.length > 0) &&
       !filterDate &&
       location.pathname.startsWith("/schedules/")
     ) {
-      // 일정상세에서 뒤로가기 시 저장된 스크롤 위치 복원
-      const savedScrollY = sessionStorage.getItem("schedule_list_scroll_y");
-      if (savedScrollY) {
-        sessionStorage.removeItem("schedule_list_scroll_y");
-        requestAnimationFrame(() => {
-          window.scrollTo(0, parseInt(savedScrollY));
-        });
-        return;
-      }
-
       let attemptCount = 0;
       const maxAttempts = 10;
       const timers: ReturnType<typeof setTimeout>[] = [];
@@ -458,9 +490,7 @@ const ScheduleListPage: React.FC = () => {
   };
 
   const handleScheduleClick = (schedule: Schedule) => {
-    // 뒤로가기 시 스크롤 위치 복원을 위해 현재 위치 저장
     sessionStorage.setItem("schedule_list_scroll_y", String(window.scrollY));
-    // 상세 풀페이지로 이동
     navigate(`/schedules/${schedule.id}`, {
       state: { returnUrl: location.pathname + location.search },
     });
