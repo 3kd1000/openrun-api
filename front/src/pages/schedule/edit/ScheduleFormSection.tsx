@@ -173,7 +173,8 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
     if (isPublicSchedule) return;
     const fetchClubMembers = async () => {
       try {
-        const currentClubId = initialData?.clubId || 1;
+        const currentClubId = initialData?.clubId;
+        if (!currentClubId) return;
         const members = await clubService.getClubMembers(currentClubId);
         setClubMembers(members);
 

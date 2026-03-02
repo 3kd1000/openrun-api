@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
 import type { AwardRankingResponse, AwardRankingEntry, AwardType, AwardPeriod, Club } from "../../types/club";
@@ -30,7 +31,10 @@ interface ScoreboardResponse {
 
 type TabType = "ranking" | "matches" | "awards" | "personal";
 
+const MATCH_SEARCH_STORAGE_KEY = "scoreboard_match_search";
+
 const ScoreboardPage: React.FC = () => {
+  const navigate = useNavigate();
   // 클럽 선택 상태는 ClubLayout에서 관리하므로 세션에서만 읽음
   const session = getOpenRunSession();
   const selectedClubId = session.currentClubId ? parseInt(session.currentClubId) : null;
@@ -73,6 +77,7 @@ const ScoreboardPage: React.FC = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const isLoadingMatchesRef = useRef(false);
   const PAGE_SIZE = 20;
+  const restoredRef = useRef(false);
 
   // Tab 3: Personal record (개인기록)
   const [personalStats, setPersonalStats] = useState<UserTotalStats | null>(null);
@@ -107,11 +112,52 @@ const ScoreboardPage: React.FC = () => {
     return name;
   };
 
-  const clubId = selectedClubId || 1; // selectedClubId가 없으면 1 사용
   const isLoadingRef = useRef(false);
 
-  // 클럽 가입 여부에 따라 기본 탭 설정
+  // 경기기록 검색 상태 복원 (일정상세에서 복귀 시)
   useEffect(() => {
+    if (restoredRef.current) return;
+    const saved = sessionStorage.getItem(MATCH_SEARCH_STORAGE_KEY);
+    if (saved) {
+      restoredRef.current = true;
+      sessionStorage.removeItem(MATCH_SEARCH_STORAGE_KEY);
+      try {
+        const s = JSON.parse(saved);
+        setPlayerName(s.playerName || "");
+        setDateRange(s.dateRange || "all");
+        setMatches(s.matches || []);
+        setCurrentPage(s.currentPage || 0);
+        setHasMore(s.hasMore || false);
+        setTotalElements(s.totalElements || 0);
+        setActiveTab("matches");
+        // 데이터 렌더링 후 스크롤 복원 (높이 확보될 때까지 retry)
+        const targetY = s.scrollY || 0;
+        let attempt = 0;
+        const maxAttempts = 10;
+        const timers: ReturnType<typeof setTimeout>[] = [];
+        const tryRestore = () => {
+          attempt++;
+          if (document.documentElement.scrollHeight >= targetY + window.innerHeight * 0.5) {
+            window.scrollTo(0, targetY);
+            return;
+          }
+          if (attempt < maxAttempts) {
+            timers.push(setTimeout(tryRestore, 100));
+          } else {
+            window.scrollTo(0, targetY);
+          }
+        };
+        requestAnimationFrame(() => tryRestore());
+        timers.push(setTimeout(tryRestore, 100));
+        timers.push(setTimeout(tryRestore, 300));
+        timers.push(setTimeout(tryRestore, 500));
+      } catch { /* parse error 무시 */ }
+    }
+  }, []);
+
+  // 클럽 가입 여부에 따라 기본 탭 설정 (복원 중이면 스킵)
+  useEffect(() => {
+    if (restoredRef.current) return;
     // 클럽에 가입하지 않았는데 클럽 전용 탭이면 personal로 전환
     if (!hasClub && (activeTab === "ranking" || activeTab === "matches" || activeTab === "awards")) {
       setActiveTab("personal");
@@ -125,7 +171,7 @@ const ScoreboardPage: React.FC = () => {
 
   // Tab 1: Fetch rankings
   const fetchScoreboard = useCallback(async () => {
-    if (isLoadingRef.current) return;
+    if (isLoadingRef.current || !selectedClubId) return;
 
     isLoadingRef.current = true;
     try {
@@ -154,7 +200,7 @@ const ScoreboardPage: React.FC = () => {
       }
 
       const response = await axiosInstance.get<ScoreboardResponse>(
-        `/clubs/${clubId}/scoreboard`,
+        `/clubs/${selectedClubId}/scoreboard`,
         { params }
       );
       setRankings(response.data.rankings);
@@ -165,12 +211,12 @@ const ScoreboardPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [clubId, selectedYear, sortBy, genderFilter]);
+  }, [selectedClubId, selectedYear, sortBy, genderFilter]);
 
   // Tab 2: Fetch matches (페이징 지원)
   const fetchMatches = useCallback(
     async (searchPlayerName?: string, page: number = 0, append: boolean = false) => {
-      if (isLoadingMatchesRef.current) return;
+      if (isLoadingMatchesRef.current || !selectedClubId) return;
 
       isLoadingMatchesRef.current = true;
       try {
@@ -215,7 +261,7 @@ const ScoreboardPage: React.FC = () => {
         if (dateRange !== "all") params.endDate = endDate;
 
         const response = await axiosInstance.get<MatchPageResponse>(
-          `/clubs/${clubId}/matches/paged`,
+          `/clubs/${selectedClubId}/matches/paged`,
           { params }
         );
 
@@ -238,7 +284,7 @@ const ScoreboardPage: React.FC = () => {
         isLoadingMatchesRef.current = false;
       }
     },
-    [clubId, dateRange]
+    [selectedClubId, dateRange]
   );
 
   // 더 불러오기
@@ -718,16 +764,32 @@ const ScoreboardPage: React.FC = () => {
                   {matches.map((match) => {
                     const future = isFutureMatch(match);
                     const completed = isCompletedMatch(match);
+                    const isDraw = completed && match.result === "DRAW";
 
                     return (
                       <div
                         key={match.id}
                         className={cn(
                           "relative border rounded-lg p-4 bg-white transition-colors text-xs md:text-sm max-md:p-3",
+                          match.scheduleId && "cursor-pointer",
                           future && "border-primary hover:border-primary/80 hover:bg-primary/5",
-                          completed && "border-[#28a745] hover:border-[#28a745]/80 hover:bg-[#28a745]/5",
-                          !future && !completed && "border-[#ffc107] hover:border-[#ffc107]/80 hover:bg-[#ffc107]/5"
+                          completed && !isDraw && "border-[var(--color-emerald)] hover:bg-[var(--color-emerald-bg)]",
+                          isDraw && "border-amber-500 hover:bg-amber-50",
+                          !future && !completed && "border-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)]"
                         )}
+                        onClick={() => {
+                          if (match.scheduleId) {
+                            try {
+                              sessionStorage.setItem(MATCH_SEARCH_STORAGE_KEY, JSON.stringify({
+                                playerName, dateRange, matches, currentPage, hasMore, totalElements,
+                                scrollY: window.scrollY,
+                              }));
+                            } catch { /* QuotaExceededError 무시 */ }
+                            navigate(`/schedules/${match.scheduleId}`, {
+                              state: { returnUrl: "/scoreboard" },
+                            });
+                          }
+                        }}
                       >
                       <div className="flex items-center justify-between mb-2 pb-2 border-b border-border max-md:mb-1 max-md:pb-1">
                         <div className="text-primary font-semibold flex-1 flex items-center gap-1">
@@ -737,21 +799,26 @@ const ScoreboardPage: React.FC = () => {
                         {future && (
                           <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-primary text-white ml-1">예정</span>
                         )}
-                        {completed && (
-                          <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-[#28a745] text-white ml-1">완료</span>
+                        {completed && !isDraw && (
+                          <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-[var(--color-emerald)] text-white ml-1">완료</span>
+                        )}
+                        {isDraw && (
+                          <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-amber-500 text-white ml-1">무승부</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 p-2 bg-muted rounded max-md:gap-0.5 max-md:p-1">
+                      <div className="flex items-center gap-2 p-2 bg-[var(--color-bg-secondary)] rounded max-md:gap-0.5 max-md:p-1">
                         <div
                           className={cn(
                             "flex-1 flex items-center gap-1 px-2 py-1 rounded bg-white transition-colors max-md:px-1 max-md:py-0.5 max-md:gap-0.5 max-md:min-w-0",
-                            completed && match.result === "TEAM_A_WIN" && "bg-[#f0fff4] border-l-[3px] border-l-[#28a745]",
-                            completed && match.result === "TEAM_B_WIN" && "bg-[#fff5f5] border-l-[3px] border-l-destructive opacity-90"
+                            completed && match.result === "TEAM_A_WIN" && "bg-[var(--color-emerald-light)] border-l-[3px] border-l-[var(--color-emerald)]",
+                            isDraw && "bg-amber-100 border-l-[3px] border-l-amber-500",
+                            completed && match.result === "TEAM_B_WIN" && "border-l-[3px] border-l-transparent"
                           )}
                         >
                           <span className={cn(
                             "flex-1 font-medium whitespace-nowrap overflow-hidden text-ellipsis min-w-0",
-                            completed && match.result === "TEAM_A_WIN" && "text-[#28a745] font-bold"
+                            completed && match.result === "TEAM_A_WIN" && "text-[var(--color-emerald-dark)] font-bold",
+                            isDraw && "text-amber-800 font-bold"
                           )}>
                             <UserNameWithBadge userId={match.teamAPlayer1Id} userName={match.teamAPlayer1Name} />
                             {match.teamAPlayer2Id && match.teamAPlayer2Name &&
@@ -760,29 +827,31 @@ const ScoreboardPage: React.FC = () => {
                           {completed &&
                             match.teamAScore !== undefined &&
                             match.teamBScore !== undefined && (
-                              <span className="font-bold text-muted-foreground px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-gray-200 rounded max-md:min-w-[20px]">
+                              <span className="font-bold text-[var(--color-text-secondary)] px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-[var(--color-bg-tertiary)] rounded max-md:min-w-[20px]">
                                 {match.teamAScore}
                               </span>
                             )}
                         </div>
-                        <div className="text-muted-foreground px-1 font-bold max-[359px]:px-0.5 shrink-0">VS</div>
+                        <div className="text-[var(--color-text-tertiary)] px-1 font-bold max-[359px]:px-0.5 shrink-0">VS</div>
                         <div
                           className={cn(
                             "flex-1 flex items-center gap-1 px-2 py-1 rounded bg-white transition-colors max-md:px-1 max-md:py-0.5 max-md:gap-0.5 max-md:min-w-0",
-                            completed && match.result === "TEAM_B_WIN" && "bg-[#f0fff4] border-l-[3px] border-l-[#28a745]",
-                            completed && match.result === "TEAM_A_WIN" && "bg-[#fff5f5] border-l-[3px] border-l-destructive opacity-90"
+                            completed && match.result === "TEAM_B_WIN" && "bg-[var(--color-emerald-light)] border-l-[3px] border-l-[var(--color-emerald)]",
+                            isDraw && "bg-amber-100 border-l-[3px] border-l-amber-500",
+                            completed && match.result === "TEAM_A_WIN" && "border-l-[3px] border-l-transparent"
                           )}
                         >
                           {completed &&
                             match.teamAScore !== undefined &&
                             match.teamBScore !== undefined && (
-                              <span className="font-bold text-muted-foreground px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-gray-200 rounded max-md:min-w-[20px]">
+                              <span className="font-bold text-[var(--color-text-secondary)] px-1 py-0.5 min-w-[24px] text-center shrink-0 bg-[var(--color-bg-tertiary)] rounded max-md:min-w-[20px]">
                                 {match.teamBScore}
                               </span>
                             )}
                           <span className={cn(
                             "flex-1 font-medium whitespace-nowrap overflow-hidden text-ellipsis min-w-0",
-                            completed && match.result === "TEAM_B_WIN" && "text-[#28a745] font-bold"
+                            completed && match.result === "TEAM_B_WIN" && "text-[var(--color-emerald-dark)] font-bold",
+                            isDraw && "text-amber-800 font-bold"
                           )}>
                             <UserNameWithBadge userId={match.teamBPlayer1Id} userName={match.teamBPlayer1Name} />
                             {match.teamBPlayer2Id && match.teamBPlayer2Name &&

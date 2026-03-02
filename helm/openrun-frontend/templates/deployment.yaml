@@ -32,6 +32,11 @@ spec:
           value: "http://openrun-api-{{ .Values.environment }}-service:8080/api"
         - name: SITE_URL
           value: "{{ .Values.siteUrl }}"
+        - name: INTERNAL_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secrets.name }}
+              key: INTERNAL_BATCH_KEY
 
         # 리소스 제한
         resources:
