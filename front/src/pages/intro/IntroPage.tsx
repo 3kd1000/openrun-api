@@ -4,20 +4,26 @@ import { CalendarDays, Trophy, Users, Search } from "lucide-react";
 
 const videos = [
   {
-    src: "/intro/video/03_schedule_quick.mp4",
+    src: "/intro/video/04_create_pwa.mp4",
+    title: "PWA 앱 설치",
+    description: "알림기능, 주소창 없는 전체화면",
+  },
+  {
+    src: "/intro/video/01_create_club.mp4",
+    title: "클럽 관리",
+    description: "클럽 생성, 멤버 초대, 공용구 관리",
+  },
+  {
+    src: "/intro/video/02_create_schedule.mp4",
     title: "일정 & 참가 신청",
     description: "일정 확인부터 참가 신청까지 한 번에",
   },
   {
-    src: "/intro/video/01_draw_ranking.mp4",
-    title: "대진표 & 랭킹",
-    description: "대진표 자동 생성, 경기 결과 입력, 랭킹 확인",
+    src: "/intro/video/03_create_draw.mp4",
+      title: "대진표 생성",
+      description: "대진표 자동 생성, 수동 편집, 경기 결과 입력",
   },
-  {
-    src: "/intro/video/02_club.mp4",
-    title: "클럽 관리",
-    description: "클럽 관리, 멤버 초대, 공용구 관리",
-  },
+
 ];
 
 const features = [
