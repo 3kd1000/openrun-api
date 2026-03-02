@@ -75,10 +75,11 @@ public class InternalOgController {
                 .map(club -> ResponseEntity.ok(Map.of(
                         "id", club.getId(),
                         "name", nullSafe(club.getName()),
-                        "region", nullSafe(club.getRegion()),
+                        "region", nullSafe(club.getRegionDisplay()),
                         "description", nullSafe(club.getDescription()),
                         "memberCount", club.getMemberCount() != null ? club.getMemberCount() : 0,
-                        "logoUrl", nullSafe(club.getLogoUrl())
+                        "logoUrl", nullSafe(club.getLogoUrl()),
+                        "activitySummary", nullSafe(club.getActivitySummary())
                 )))
                 .orElse(ResponseEntity.notFound().build());
     }

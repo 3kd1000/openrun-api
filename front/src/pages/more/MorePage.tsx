@@ -477,17 +477,17 @@ const MorePage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="bg-secondary rounded-md p-3 mb-3">
-                  <p className="text-xs text-muted-foreground mb-1 leading-relaxed">• 모든 클럽 멤버십이 삭제됩니다</p>
-                  <p className="text-xs text-muted-foreground mb-1 leading-relaxed">• 경기 기록은 익명화되어 유지됩니다</p>
-                  <p className="text-xs text-muted-foreground mb-0 leading-relaxed">• 작성한 게시글/댓글은 익명으로 표시됩니다</p>
+                <div className="bg-muted rounded-md p-3 mb-3">
+                  <p className="text-xs text-foreground/70 mb-1 leading-relaxed">• 모든 클럽 멤버십이 삭제됩니다</p>
+                  <p className="text-xs text-foreground/70 mb-1 leading-relaxed">• 경기 기록은 익명화되어 유지됩니다</p>
+                  <p className="text-xs text-foreground/70 mb-0 leading-relaxed">• 작성한 게시글/댓글은 익명으로 표시됩니다</p>
                 </div>
               </div>
             )}
 
             <div className="flex gap-3 mt-4">
               <button
-                className="flex-1 p-3 bg-secondary text-foreground border border-border rounded-md text-sm font-medium cursor-pointer transition-all hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 p-3 bg-secondary text-white border border-border rounded-md text-sm font-medium cursor-pointer transition-all hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setShowWithdrawModal(false)}
                 disabled={isWithdrawing}
               >
@@ -495,7 +495,7 @@ const MorePage: React.FC = () => {
               </button>
               {withdrawalCheck?.canWithdraw && (
                 <button
-                  className="flex-1 p-3 bg-destructive text-destructive-foreground border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 p-3 bg-destructive text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleWithdraw}
                   disabled={isWithdrawing}
                 >

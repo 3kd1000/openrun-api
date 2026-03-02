@@ -638,7 +638,7 @@ export default function ScheduleDetailPage() {
             disabled={loading}
           >
             <Pin size={14} className="mr-1" />
-            고정 {schedule.pinned ? "ON" : "OFF"}
+            {schedule.pinned ? "고정 해제" : "일정 고정"}
           </Button>
           <Button
             variant="outline"
@@ -653,7 +653,7 @@ export default function ScheduleDetailPage() {
             disabled={loading}
           >
             <Users size={14} className="mr-1" />
-            게스트 {schedule.guestRecruitOpen ? "ON" : "OFF"}
+            {schedule.guestRecruitOpen ? "게스트 모집 중단" : "게스트 모집"}
           </Button>
           {FEATURE_FLAGS.INTERCLUB_ENABLED && (
             <Button
@@ -669,7 +669,7 @@ export default function ScheduleDetailPage() {
               disabled={loading}
             >
               <Swords size={14} className="mr-1" />
-              교류전 {schedule.interclubRecruitOpen ? "ON" : "OFF"}
+              {schedule.interclubRecruitOpen ? "교류전 모집 중단" : "교류전 모집"}
             </Button>
           )}
         </div>

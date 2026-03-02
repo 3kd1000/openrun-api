@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { generateScheduleOgImage, generateClubOgImage, initBackground } = require('./og-image-generator.cjs');
+// 일정 OG 이미지: og_image_v5.png 사용 (generateScheduleOgImage 비활성화)
+// 클럽 OG 이미지: 동적 템플릿 생성 (로고 + 클럽 정보)
+const { generateClubOgTemplate, initBackground } = require('./og-image-generator.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -55,12 +57,12 @@ function buildClubOgData(club, requestUrl, resourceId) {
   return {
     title: `${club.name} - 테니스 클럽 가입하기`,
     description: description.length > 100 ? description.substring(0, 100) + '...' : description,
-    image: club.logoUrl || `${SITE_URL}/og-image/club/${resourceId}`,
+    image: `${SITE_URL}/og-image/club/${resourceId}`,
     url: `${SITE_URL}${requestUrl}`,
   };
 }
 
-function buildScheduleOgData(schedule, requestUrl, resourceId) {
+function buildScheduleOgData(schedule, requestUrl) {
   // 날짜 포맷: MM/DD(요일) HH:mm
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   const dt = new Date(schedule.scheduledAt);
@@ -77,7 +79,7 @@ function buildScheduleOgData(schedule, requestUrl, resourceId) {
   return {
     title: `${schedule.courtName} - ${dateStr}`,
     description: `${clubLabel} | ${participants}`,
-    image: `${SITE_URL}/og-image/schedule/${resourceId}`,
+    image: DEFAULT_OG_IMAGE,
     url: `${SITE_URL}${requestUrl}`,
   };
 }
@@ -95,27 +97,28 @@ function injectOgTags(html, og) {
     .replace(/(<meta name="description" content=")[^"]*("\s*\/?>)/, `$1${og.description}$2`);
 }
 
-// --- 동적 OG 이미지 엔드포인트 (크롤러가 og:image URL로 직접 요청) ---
-app.get('/og-image/schedule/:id', async (req, res) => {
-  try {
-    const data = await fetchOgData(`/schedules/${req.params.id}`);
-    const imageBuffer = await generateScheduleOgImage(data);
-    res.set('Content-Type', 'image/png');
-    res.set('Cache-Control', 'public, max-age=600'); // 10분 CDN 캐시
-    res.send(imageBuffer);
-  } catch (err) {
-    console.error(`[OG Image] Failed to generate schedule/${req.params.id}:`, err.message);
-    // 실패 시 정적 이미지로 리다이렉트
-    res.redirect(DEFAULT_OG_IMAGE);
-  }
-});
+// --- 동적 OG 이미지 엔드포인트 ---
+// 일정: 비활성화 (og_image_v5.png 사용)
+// app.get('/og-image/schedule/:id', async (req, res) => {
+//   try {
+//     const data = await fetchOgData(`/schedules/${req.params.id}`);
+//     const imageBuffer = await generateScheduleOgImage(data);
+//     res.set('Content-Type', 'image/png');
+//     res.set('Cache-Control', 'public, max-age=600');
+//     res.send(imageBuffer);
+//   } catch (err) {
+//     console.error(`[OG Image] Failed to generate schedule/${req.params.id}:`, err.message);
+//     res.redirect(DEFAULT_OG_IMAGE);
+//   }
+// });
 
+// 클럽: 활성화 (로고 + 클럽 정보 템플릿)
 app.get('/og-image/club/:id', async (req, res) => {
   try {
     const data = await fetchOgData(`/clubs/${req.params.id}`);
-    const imageBuffer = await generateClubOgImage(data);
+    const imageBuffer = await generateClubOgTemplate(data);
     res.set('Content-Type', 'image/png');
-    res.set('Cache-Control', 'public, max-age=600');
+    res.set('Cache-Control', 'public, max-age=600'); // 10분 CDN 캐시
     res.send(imageBuffer);
   } catch (err) {
     console.error(`[OG Image] Failed to generate club/${req.params.id}:`, err.message);
@@ -142,7 +145,7 @@ app.get('*', async (req, res, next) => {
       const data = await fetchOgData(ogPath);
       const ogData = route.type === 'club'
         ? buildClubOgData(data, req.path, resourceId)
-        : buildScheduleOgData(data, req.path, resourceId);
+        : buildScheduleOgData(data, req.path);
 
       return res.send(injectOgTags(indexHtml, ogData));
     } catch (err) {
@@ -170,7 +173,8 @@ initBackground().then(() => {
     console.log(`[OG Server] Internal OG API: ${INTERNAL_OG_URL}`);
     console.log(`[OG Server] Site: ${SITE_URL}`);
     console.log(`[OG Server] Internal Key: ${INTERNAL_KEY ? 'configured' : 'NOT SET'}`);
-    console.log(`[OG Server] Dynamic OG images enabled`);
+    console.log(`[OG Server] Club OG images: dynamic template enabled`);
+    console.log(`[OG Server] Schedule OG images: static (og_image_v5.png)`);
   });
 }).catch((err) => {
   console.error('[OG Server] Failed to initialize background:', err);

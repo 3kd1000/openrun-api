@@ -541,6 +541,14 @@ const ScheduleListPage: React.FC = () => {
     if (newMode === "calendar") {
       setFilterDate(null);
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (newMode === "list") {
+      // 캘린더에서 다른 월을 보고 있었을 수 있으므로 오늘 기준으로 재조회
+      setFilterDate(null);
+      if (scheduleMode === "club") {
+        loadClubSchedules();
+      } else {
+        loadPersonalSchedules();
+      }
     }
   };
 
