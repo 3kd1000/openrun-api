@@ -405,9 +405,16 @@ public class ClubService {
         ClubMember member = clubMemberRepository.findByClubIdAndUserId(clubId, userId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 클럽의 멤버가 아닙니다."));
 
-        // 클럽 소유자(OWNER 역할)는 탈퇴 불가
+        // OWNER인 경우: 혼자남은 경우만 탈퇴+삭제, 다른 멤버 있으면 양도 필요
         if (member.isOwner()) {
-            throw new IllegalStateException("클럽 소유자는 탈퇴할 수 없습니다. 클럽을 삭제하거나 소유권을 이전하세요.");
+            int currentCount = club.getMemberCount() != null ? club.getMemberCount() : 0;
+            if (currentCount <= 1) {
+                // 혼자 남은 OWNER → 클럽 삭제
+                clubMemberRepository.delete(member);
+                clubRepository.deleteById(clubId);
+                return;
+            }
+            throw new IllegalStateException("클럽장은 다른 멤버가 있을 때 탈퇴할 수 없습니다. 클럽장 권한을 양도한 후 탈퇴하세요.");
         }
 
         // ACTIVE 멤버가 탈퇴하면 멤버 수 감소
@@ -573,7 +580,7 @@ public class ClubService {
 
     /**
      * 클럽장 권한 양도 - OWNER만 가능
-     * - 현재 OWNER가 ADMIN에게 클럽장 권한을 양도
+     * - 현재 OWNER가 ACTIVE 멤버 누구에게든 클럽장 권한을 양도
      * - 기존 OWNER → ADMIN, 새 OWNER → OWNER로 역할 변경
      * - Club.ownerUserId도 함께 변경
      */
@@ -587,12 +594,15 @@ public class ClubService {
             throw new PermissionDeniedException("클럽장만 권한을 양도할 수 있습니다.");
         }
 
-        // 2. 대상자가 ADMIN인지 확인
+        // 2. 대상자가 ACTIVE 멤버인지 확인 (OWNER 본인 제외)
         ClubMember newOwner = clubMemberRepository.findByClubIdAndUserId(clubId, request.getNewOwnerUserId())
                 .orElseThrow(() -> new EntityNotFoundException("대상 멤버를 찾을 수 없습니다."));
 
-        if (newOwner.getRole() != ClubRole.ADMIN) {
-            throw new IllegalArgumentException("운영진(ADMIN)에게만 클럽장 권한을 양도할 수 있습니다.");
+        if (newOwner.getStatus() != ClubMemberStatus.ACTIVE) {
+            throw new IllegalArgumentException("활동 중인 멤버에게만 클럽장 권한을 양도할 수 있습니다.");
+        }
+        if (newOwner.getUser().getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("본인에게는 클럽장 권한을 양도할 수 없습니다.");
         }
 
         // 3. Club.ownerUserId 변경

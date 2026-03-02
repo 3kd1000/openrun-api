@@ -62,6 +62,8 @@ export interface MyClub {
   name: string;
   description: string | null;
   role: string;  // 해당 클럽에서 나의 역할 (OWNER, ADMIN, REGULAR)
+  logoUrl: string | null;
+  memberCount: number;
   createdAt: string;
 }
 
