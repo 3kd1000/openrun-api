@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation, useParams } from "react-router-dom";
 import { getMyClubs, type MyClub } from "../services/api/userApi";
 import { ClubSelector } from "../components/ClubSelector";
 import { AppHeader } from "../components/common/AppHeader";
-import { getOpenRunSession, setOpenRunSession } from "../utils/openrunSession";
+import { getOpenRunSession, setOpenRunSession, updateClubList } from "../utils/openrunSession";
 import { useAuth } from "../contexts/AuthContext";
 import { normalizeClubRole } from "../utils/role";
 
@@ -46,6 +46,9 @@ export const ClubLayout: React.FC = () => {
       setIsLoading(true);
       const data = await getMyClubs();
       setClubs(data);
+
+      // localStorage clubList도 동기화 (stale 방지)
+      updateClubList(data.map(c => ({ id: c.id, name: c.name })));
 
       // 클럽이 있는데 선택된 클럽이 없으면 첫 번째 클럽 자동 선택
       // ⚠️ setClubs는 비동기이므로 최신 data를 직접 전달

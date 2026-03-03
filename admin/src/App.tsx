@@ -10,6 +10,7 @@ import InquiryManagePage from "./pages/InquiryManagePage";
 import PushSendPage from "./pages/PushSendPage";
 import NotificationHistoryPage from "./pages/NotificationHistoryPage";
 import DmPage from "./pages/DmPage";
+import ClubManagePage from "./pages/ClubManagePage";
 import LoginPage from "./pages/LoginPage";
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
           }
         >
           <Route index element={<HomePage />} />
+          <Route path="clubs" element={<ClubManagePage />} />
           <Route path="audit-logs" element={<AuditLogPage />} />
           <Route path="award-winners" element={<AwardWinnerPage />} />
           <Route path="batch" element={<BatchPage />} />

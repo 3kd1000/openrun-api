@@ -16,7 +16,9 @@ import { ArrowLeft } from "lucide-react";
 
 const formatTime = (dateStr: string) => {
   try {
-    return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: ko });
+    // 서버가 UTC로 저장하므로 timezone 없는 문자열은 UTC로 해석
+    const normalized = dateStr.endsWith("Z") ? dateStr : dateStr + "Z";
+    return formatDistanceToNow(new Date(normalized), { addSuffix: true, locale: ko });
   } catch {
     return dateStr;
   }
@@ -202,7 +204,7 @@ function DmPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] gap-4">
+    <div className="flex flex-col h-[calc(100vh-5.5rem)] md:h-[calc(100vh-3rem)] gap-4">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">DM 관리</h2>
@@ -216,7 +218,7 @@ function DmPage() {
         {/* 좌측: 대화 목록 (모바일에서 showThread가 true이면 숨김) */}
         <div
           className={cn(
-            "w-64 shrink-0 border-r border-border flex flex-col",
+            "w-full md:w-64 shrink-0 border-r border-border flex flex-col",
             showThread ? "hidden md:flex" : "flex"
           )}
         >
@@ -247,7 +249,7 @@ function DmPage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{conv.lastMessage}</div>
                     <div className="text-[0.65rem] text-muted-foreground/70 mt-0.5">{formatTime(conv.lastMessageAt)}</div>
                   </div>
                 </button>
