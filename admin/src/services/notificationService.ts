@@ -113,6 +113,32 @@ export async function getSchedulesByClub(
   return data;
 }
 
+/** 일정 참가자 응답 */
+export interface ScheduleParticipant {
+  id: number;
+  scheduleId: number;
+  userId: number | null;
+  userName: string;
+  guestName: string | null;
+  isRegistered: boolean;
+  status: string;
+  position: number | null;
+  joinedAt: string;
+  asGuest: boolean;
+}
+
+/**
+ * 일정 참가자 목록 조회 (Admin)
+ */
+export async function getScheduleParticipants(
+  scheduleId: number
+): Promise<ScheduleParticipant[]> {
+  const { data } = await api.get<ScheduleParticipant[]>(
+    `/admin/schedules/${scheduleId}/participants`
+  );
+  return data;
+}
+
 /**
  * 클럽의 ACTIVE 멤버 userId 목록 조회 (전체 선택용)
  */

@@ -8,6 +8,7 @@ import { Menu } from "lucide-react";
 
 const navItems = [
   { to: "/", label: "Dashboard", end: true },
+  { to: "/clubs", label: "클럽 관리" },
   { to: "/audit-logs", label: "Audit Logs" },
   { to: "/batch", label: "배치 작업" },
   { to: "/award-winners", label: "어워드 수상자" },
