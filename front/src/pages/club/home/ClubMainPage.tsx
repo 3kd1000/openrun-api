@@ -375,8 +375,21 @@ const ClubMainPage: React.FC = () => {
 
       // URL의 clubId가 세션의 clubList에 있는지 사전 검증
       const currentSession = getOpenRunSession();
-      const clubList = currentSession.clubList ?? [];
-      const isValidClub = clubList.some(c => String(c.id) === clubId);
+      let clubList = currentSession.clubList ?? [];
+      let isValidClub = clubList.some(c => String(c.id) === clubId);
+
+      // clubList에 없으면 → 서버에서 최신 목록 동기화 후 재검증
+      if (!isValidClub) {
+        console.log(`⚠️ clubList에 ${clubId} 없음 → syncClubList 시도`);
+        try {
+          await syncClubList();
+          const refreshed = getOpenRunSession();
+          clubList = refreshed.clubList ?? [];
+          isValidClub = clubList.some(c => String(c.id) === clubId);
+        } catch {
+          // 동기화 실패 시 기존 로직으로 진행
+        }
+      }
 
       if (!isValidClub) {
         console.log(`⚠️ 권한 없는 클럽 접근: ${clubId}`);
@@ -422,11 +435,20 @@ const ClubMainPage: React.FC = () => {
     } catch (error: unknown) {
       logError("클럽 정보 조회", error);
       if (axios.isAxiosError(error) && error.response?.status === 403) {
-        // 클럽 멤버가 아님 → 세션 정리 후 클럽 탐색 페이지로 이동
-        console.log("⚠️ 클럽 멤버가 아님 → 세션 정리 후 클럽 탐색 페이지로 이동");
-        setOpenRunSession({ currentClubId: undefined, currentClubRole: undefined });
-        showToast("클럽 정보를 조회할 권한이 없습니다", "error");
-        navigate("/explore", { replace: true, state: { defaultTab: "member" } });
+        // 클럽 멤버가 아님 → clubList 갱신 후 유효한 클럽으로 이동
+        console.log("⚠️ 403 에러 → clubList 갱신 후 리다이렉트");
+        try { await syncClubList(); } catch { /* ignore */ }
+        const refreshed = getOpenRunSession();
+        const freshList = refreshed.clubList ?? [];
+        if (freshList.length > 0) {
+          setOpenRunSession({ currentClubId: String(freshList[0].id) });
+          showToast("해당 클럽에 가입되어 있지 않습니다", "error");
+          navigate(`/clubs/${freshList[0].id}`, { replace: true });
+        } else {
+          setOpenRunSession({ currentClubId: undefined, currentClubRole: undefined });
+          showToast("가입한 클럽이 없습니다", "error");
+          navigate("/explore", { replace: true, state: { defaultTab: "member" } });
+        }
         return;
       } else {
         showToast(getErrorMessage(error), "error");
