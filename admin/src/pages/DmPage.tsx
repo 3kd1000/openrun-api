@@ -218,11 +218,11 @@ function DmPage() {
         {/* 좌측: 대화 목록 (모바일에서 showThread가 true이면 숨김) */}
         <div
           className={cn(
-            "w-full md:w-64 shrink-0 border-r border-border flex flex-col",
+            "w-full md:w-64 shrink-0 border-r border-border flex flex-col min-h-0",
             showThread ? "hidden md:flex" : "flex"
           )}
         >
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 overflow-hidden">
             {loadingConvs ? (
               <div className="p-6 text-center text-sm text-muted-foreground">로딩 중...</div>
             ) : conversations.length === 0 ? (

@@ -397,9 +397,11 @@ const DrawCreateModal: React.FC<Props> = ({
       totalPlayers = seedPlayers.length + normalPlayers.length;
     }
 
-    if (totalPlayers > schedule.maxCapacity) {
+    // DrawPattern 기준 최대 인원 체크 (AA/SEED: 4~16, AB: 8~16)
+    const drawMaxPlayers = 16;
+    if (totalPlayers > drawMaxPlayers) {
       setToastMessage(
-        `최대 인원수(${schedule.maxCapacity}명)를 초과했습니다. 현재 선택된 인원: ${totalPlayers}명`
+        `대진 최대 인원(${drawMaxPlayers}명)을 초과했습니다. 현재 선택된 인원: ${totalPlayers}명`
       );
       return;
     }
