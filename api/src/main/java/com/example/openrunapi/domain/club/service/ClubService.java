@@ -222,7 +222,9 @@ public class ClubService {
                 request.getAwardPeriod(),
                 request.getAwardAttendanceEnabled(),
                 request.getAwardPointsEnabled(),
-                request.getAwardBookingEnabled()
+                request.getAwardBookingEnabled(),
+                request.getRankingPeriod(),
+                request.getRankingCustomSeasons()
         );
 
         // Audit: 변경 로그 기록

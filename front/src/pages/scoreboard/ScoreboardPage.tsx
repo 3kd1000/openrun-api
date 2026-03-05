@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
-import type { AwardRankingResponse, AwardRankingEntry, AwardType, AwardPeriod, Club } from "../../types/club";
+import type { AwardRankingResponse, AwardRankingEntry, AwardType, AwardPeriod, RankingPeriod, RankingCustomSeason, Club } from "../../types/club";
 import { format } from "date-fns";
 import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon, StarIcon, MedalIcon } from "../../components/common/Icons";
 import { getOpenRunSession } from "../../utils/openrunSession";
@@ -48,15 +48,11 @@ const ScoreboardPage: React.FC = () => {
   });
 
   // Tab 1: Rankings
-  const START_YEAR = 2025; // 시작 연도 (하드코딩)
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(() => {
-    const currentYear = new Date().getFullYear();
-    // 현재 연도가 시작 연도 이상이면 현재 연도, 아니면 시작 연도
-    return currentYear >= START_YEAR ? currentYear : START_YEAR;
-  });
+  const [rankingPeriodOptions, setRankingPeriodOptions] = useState<AwardPeriodOption[]>([]);
+  const [selectedRankingPeriodIndex, setSelectedRankingPeriodIndex] = useState(0);
   const [sortBy, setSortBy] = useState<"points" | "totalMatches" | "winRate">(
     "points"
   );
@@ -169,19 +165,46 @@ const ScoreboardPage: React.FC = () => {
   }, [hasClub, activeTab, awardEnabled]);
 
 
+  // 클럽 정보에서 랭킹 주기 옵션 초기화
+  useEffect(() => {
+    if (!selectedClubId) return;
+    const loadRankingPeriod = async () => {
+      try {
+        const clubResponse = await axiosInstance.get<Club>(`/clubs/${selectedClubId}`);
+        const rankingPeriod: RankingPeriod = (clubResponse.data.rankingPeriod as RankingPeriod) || "YEARLY";
+        let customSeasons: RankingCustomSeason[] | undefined;
+        if (rankingPeriod === "CUSTOM" && clubResponse.data.rankingCustomSeasons) {
+          try {
+            customSeasons = JSON.parse(clubResponse.data.rankingCustomSeasons);
+          } catch { /* parse error 무시 */ }
+        }
+        const options = awardService.generateRankingPeriodOptions(rankingPeriod, 6, customSeasons);
+        setRankingPeriodOptions(options);
+        setSelectedRankingPeriodIndex(0);
+      } catch (err) {
+        console.error("Failed to load ranking period:", err);
+        // 기본값으로 YEARLY 옵션 생성
+        const options = awardService.generateRankingPeriodOptions("YEARLY", 6);
+        setRankingPeriodOptions(options);
+      }
+    };
+    loadRankingPeriod();
+  }, [selectedClubId]);
+
   // Tab 1: Fetch rankings
   const fetchScoreboard = useCallback(async () => {
-    if (isLoadingRef.current || !selectedClubId) return;
+    if (isLoadingRef.current || !selectedClubId || rankingPeriodOptions.length === 0) return;
+
+    const selectedPeriod = rankingPeriodOptions[selectedRankingPeriodIndex];
+    if (!selectedPeriod) return;
 
     isLoadingRef.current = true;
     try {
       setLoading(true);
       setError(null);
 
-      // 연도 선택에 따라 기간 설정
-      // 해당 연도의 1월 1일 00:00:00 ~ 12월 31일 23:59:59
-      const startDate = new Date(selectedYear, 0, 1, 0, 0, 0).toISOString();
-      const endDate = new Date(selectedYear, 11, 31, 23, 59, 59).toISOString();
+      const startDate = new Date(selectedPeriod.startDate + "T00:00:00").toISOString();
+      const endDate = new Date(selectedPeriod.endDate + "T23:59:59").toISOString();
 
       const params: {
         startDate: string;
@@ -211,7 +234,7 @@ const ScoreboardPage: React.FC = () => {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [selectedClubId, selectedYear, sortBy, genderFilter]);
+  }, [selectedClubId, rankingPeriodOptions, selectedRankingPeriodIndex, sortBy, genderFilter]);
 
   // Tab 2: Fetch matches (페이징 지원)
   const fetchMatches = useCallback(
@@ -579,33 +602,22 @@ const ScoreboardPage: React.FC = () => {
       {/* Tab 1: Rankings */}
       {activeTab === "ranking" && (
         <div className="min-h-[200px]">
-          {/* 연도, 성별 및 정렬 필터 */}
+          {/* 기간, 성별 및 정렬 필터 */}
           <div className="flex flex-wrap gap-3 mb-4 p-3 bg-white rounded-lg border border-border max-md:p-2 max-md:mb-3 max-md:gap-2">
             <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">
-              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:hidden">연도:</label>
+              <label className="text-sm font-semibold text-muted-foreground whitespace-nowrap max-md:hidden">기간:</label>
               <select
-                value={selectedYear}
+                value={selectedRankingPeriodIndex}
                 onChange={(e) => {
-                  const year = parseInt(e.target.value);
-                  setSelectedYear(year);
+                  setSelectedRankingPeriodIndex(Number(e.target.value));
                 }}
                 className="px-3 py-2 border border-border rounded text-sm cursor-pointer max-md:flex-1 max-md:px-2 max-md:py-1 max-md:text-xs max-md:min-w-0"
               >
-                {(() => {
-                  const currentYear = new Date().getFullYear();
-                  const years: number[] = [];
-
-                  // 시작 연도부터 현재 연도까지 역순 (현재 연도가 먼저)
-                  for (let year = currentYear; year >= START_YEAR; year--) {
-                    years.push(year);
-                  }
-
-                  return years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}년
-                    </option>
-                  ));
-                })()}
+                {rankingPeriodOptions.map((option, index) => (
+                  <option key={index} value={index}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-2 max-md:flex-1 max-md:min-w-0">

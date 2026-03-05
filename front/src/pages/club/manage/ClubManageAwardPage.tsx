@@ -8,14 +8,14 @@ import {
   type AwardWinnerResponse,
   type SaveAwardWinnerRequest,
 } from "../../../services/awardService";
-import type { Club, UpdateAwardPolicyRequest, AwardRankingResponse, AwardType } from "../../../types/club";
+import type { Club, UpdateAwardPolicyRequest, AwardRankingResponse, AwardType, RankingPeriod, RankingCustomSeason } from "../../../types/club";
 import { ArrowLeftIcon, CheckIcon, Trash2Icon, EditIcon, XIcon } from "../../../components/common/Icons";
 import { Trophy } from "lucide-react";
 import EmptyState from "../../../components/openrun/empty-state";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAwardWinners } from "../../../contexts/AwardWinnersContext";
 
-type TabType = "policy" | "winners";
+type TabType = "ranking" | "policy" | "winners";
 
 const ClubManageAwardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const ClubManageAwardPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
 
   // 탭 상태
-  const [activeTab, setActiveTab] = useState<TabType>("policy");
+  const [activeTab, setActiveTab] = useState<TabType>("ranking");
 
   // 정책 설정 상태
   const [policy, setPolicy] = useState<UpdateAwardPolicyRequest>({
@@ -33,10 +33,16 @@ const ClubManageAwardPage: React.FC = () => {
     awardAttendanceEnabled: true,
     awardPointsEnabled: true,
     awardBookingEnabled: true,
+    rankingPeriod: "YEARLY",
+    rankingCustomSeasons: null,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 랭킹 주기 상태
+  const [customSeasons, setCustomSeasons] = useState<RankingCustomSeason[]>([]);
+  const [customSeasonError, setCustomSeasonError] = useState<string | null>(null);
 
   // 수상자 관리 상태
   const [periodOptions, setPeriodOptions] = useState<AwardPeriodOption[]>([]);
@@ -59,14 +65,22 @@ const ClubManageAwardPage: React.FC = () => {
       try {
         setLoading(true);
         const res = await axiosInstance.get<Club>(`/clubs/${clubId}`);
-        const newPolicy = {
+        const rankingPeriod: RankingPeriod = (res.data.rankingPeriod as RankingPeriod) || "YEARLY";
+        let parsedSeasons: RankingCustomSeason[] = [];
+        if (res.data.rankingCustomSeasons) {
+          try { parsedSeasons = JSON.parse(res.data.rankingCustomSeasons); } catch { /* ignore */ }
+        }
+        const newPolicy: UpdateAwardPolicyRequest = {
           awardEnabled: res.data.awardEnabled !== false,
           awardPeriod: res.data.awardPeriod ?? "HALF_YEAR",
           awardAttendanceEnabled: res.data.awardAttendanceEnabled ?? true,
           awardPointsEnabled: res.data.awardPointsEnabled ?? true,
           awardBookingEnabled: res.data.awardBookingEnabled ?? true,
+          rankingPeriod,
+          rankingCustomSeasons: res.data.rankingCustomSeasons ?? null,
         };
         setPolicy(newPolicy);
+        setCustomSeasons(parsedSeasons);
 
         // 기간 옵션 생성
         const options = awardService.generatePeriodOptions(
@@ -138,15 +152,78 @@ const ClubManageAwardPage: React.FC = () => {
     }
   }, [activeTab, selectedPeriodIndex, loadRankingsAndWinners]);
 
+  // 커스텀 시즌 유효성 검증
+  const validateCustomSeasons = (seasons: RankingCustomSeason[]): { valid: boolean; message: string } => {
+    if (seasons.length === 0) return { valid: false, message: "최소 1개의 시즌이 필요합니다." };
+
+    // 12개월 커버 확인
+    const covered = new Set<number>();
+    for (const s of seasons) {
+      if (s.startMonth <= s.endMonth) {
+        for (let m = s.startMonth; m <= s.endMonth; m++) covered.add(m);
+      } else {
+        // 연도 경계: startMonth~12, 1~endMonth
+        for (let m = s.startMonth; m <= 12; m++) covered.add(m);
+        for (let m = 1; m <= s.endMonth; m++) covered.add(m);
+      }
+    }
+    if (covered.size < 12) {
+      const missing = [];
+      for (let m = 1; m <= 12; m++) if (!covered.has(m)) missing.push(m);
+      return { valid: false, message: `${missing.join(", ")}월이 커버되지 않았습니다.` };
+    }
+
+    // 이름 필수
+    for (const s of seasons) {
+      if (!s.name.trim()) return { valid: false, message: "시즌 이름을 입력해주세요." };
+    }
+
+    return { valid: true, message: "" };
+  };
+
+  // 커스텀 시즌 추가
+  const handleAddSeason = () => {
+    setCustomSeasons(prev => [...prev, { name: "", startMonth: 1, endMonth: 1 }]);
+  };
+
+  // 커스텀 시즌 삭제
+  const handleRemoveSeason = (index: number) => {
+    setCustomSeasons(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 커스텀 시즌 수정
+  const handleUpdateSeason = (index: number, field: keyof RankingCustomSeason, value: string | number) => {
+    setCustomSeasons(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
+
   const handleBack = () => navigate(`/clubs/${clubId}/manage`);
 
   // 정책 저장
   const handleSavePolicy = async () => {
     if (!clubId) return;
+
+    // 커스텀 시즌 유효성 검증
+    if (policy.rankingPeriod === "CUSTOM") {
+      const validation = validateCustomSeasons(customSeasons);
+      if (!validation.valid) {
+        setCustomSeasonError(validation.message);
+        return;
+      }
+    }
+
+    // 커스텀 시즌 JSON 직렬화
+    const policyToSave: UpdateAwardPolicyRequest = {
+      ...policy,
+      rankingCustomSeasons: policy.rankingPeriod === "CUSTOM"
+        ? JSON.stringify(customSeasons)
+        : policy.rankingCustomSeasons,
+    };
+
     try {
       setSaving(true);
       setError(null);
-      await clubService.updateAwardPolicy(Number(clubId), policy);
+      setCustomSeasonError(null);
+      await clubService.updateAwardPolicy(Number(clubId), policyToSave);
       showToast("저장되었습니다", "success");
 
       // 기간 옵션 재생성 (정책이 변경될 수 있으므로)
@@ -353,12 +430,23 @@ const ClubManageAwardPage: React.FC = () => {
         >
           <ArrowLeftIcon size={20} />
         </button>
-        <span className="flex-1 text-center text-sm font-bold text-foreground">어워드 관리</span>
+        <span className="flex-1 text-center text-sm font-bold text-foreground">랭킹 & 어워드 설정</span>
         <div className="w-9 h-9" />
       </div>
 
       {/* 탭 네비게이션 */}
       <div className="flex gap-2 bg-muted/50 p-0.5 rounded mb-3">
+        <button
+          className={[
+            "flex-1 py-1.5 rounded text-sm font-medium transition-all",
+            activeTab === "ranking"
+              ? "bg-white text-primary font-semibold shadow-sm"
+              : "text-muted-foreground",
+          ].join(" ")}
+          onClick={() => setActiveTab("ranking")}
+        >
+          랭킹
+        </button>
         <button
           className={[
             "flex-1 py-1.5 rounded text-sm font-medium transition-all",
@@ -368,7 +456,7 @@ const ClubManageAwardPage: React.FC = () => {
           ].join(" ")}
           onClick={() => setActiveTab("policy")}
         >
-          정책 설정
+          어워드
         </button>
         <button
           className={[
@@ -379,7 +467,7 @@ const ClubManageAwardPage: React.FC = () => {
           ].join(" ")}
           onClick={() => setActiveTab("winners")}
         >
-          수상자 관리
+          수상자
         </button>
       </div>
 
@@ -390,7 +478,123 @@ const ClubManageAwardPage: React.FC = () => {
         </div>
       )}
 
-      {/* 탭 1: 정책 설정 */}
+      {/* 탭 1: 랭킹 설정 */}
+      {activeTab === "ranking" && (
+        <>
+          <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mb-3">
+            기록 탭의 랭킹 집계 기간을 설정합니다.
+          </div>
+
+          <div className="bg-white border border-border rounded-xl p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-gray-900">랭킹 집계 주기</span>
+              <span className="text-xs text-gray-400 leading-snug">
+                기록 탭의 랭킹을 집계하는 기간입니다.
+              </span>
+              {/* 주기 선택 버튼 */}
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {([
+                  { value: "MONTHLY" as RankingPeriod, label: "월별" },
+                  { value: "QUARTERLY" as RankingPeriod, label: "분기별" },
+                  { value: "HALF_YEAR" as RankingPeriod, label: "반기" },
+                  { value: "YEARLY" as RankingPeriod, label: "연간" },
+                  { value: "CUSTOM" as RankingPeriod, label: "커스텀" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={[
+                      "py-1.5 px-3 rounded-lg border text-sm font-semibold cursor-pointer transition-all",
+                      "disabled:opacity-60 disabled:cursor-not-allowed",
+                      policy.rankingPeriod === opt.value
+                        ? "bg-primary border-primary text-white"
+                        : "bg-gray-50 border-border text-gray-900 hover:bg-gray-100",
+                    ].join(" ")}
+                    onClick={() => setPolicy((p) => ({ ...p, rankingPeriod: opt.value }))}
+                    disabled={saving}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 커스텀 시즌 편집기 */}
+            {policy.rankingPeriod === "CUSTOM" && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <span className="text-sm font-semibold text-gray-900">시즌 목록</span>
+                <div className="flex flex-col gap-2 mt-2">
+                  {customSeasons.map((season, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      <input
+                        type="text"
+                        value={season.name}
+                        onChange={(e) => handleUpdateSeason(idx, "name", e.target.value)}
+                        placeholder="시즌 이름"
+                        className="flex-1 py-1 px-2 border border-border rounded text-sm min-w-0"
+                        disabled={saving}
+                      />
+                      <select
+                        value={season.startMonth}
+                        onChange={(e) => handleUpdateSeason(idx, "startMonth", Number(e.target.value))}
+                        className="py-1 px-1.5 border border-border rounded text-sm"
+                        disabled={saving}
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                          <option key={m} value={m}>{m}월</option>
+                        ))}
+                      </select>
+                      <span className="text-xs text-gray-400">~</span>
+                      <select
+                        value={season.endMonth}
+                        onChange={(e) => handleUpdateSeason(idx, "endMonth", Number(e.target.value))}
+                        className="py-1 px-1.5 border border-border rounded text-sm"
+                        disabled={saving}
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                          <option key={m} value={m}>{m}월</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSeason(idx)}
+                        disabled={saving}
+                        className="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors"
+                      >
+                        <Trash2Icon size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={handleAddSeason}
+                    disabled={saving}
+                    className="w-full py-2 border border-dashed border-border rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                  >
+                    + 시즌 추가
+                  </button>
+                </div>
+                {customSeasonError && (
+                  <p className="mt-2 text-xs text-red-500">{customSeasonError}</p>
+                )}
+                <p className="mt-2 text-xs text-gray-400">12개월을 빠짐없이 커버해야 합니다.</p>
+              </div>
+            )}
+          </div>
+
+          {/* 저장 버튼 */}
+          <button
+            type="button"
+            onClick={handleSavePolicy}
+            disabled={saving}
+            className="w-full mt-3 py-3 bg-primary text-white rounded-lg font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {saving ? "저장 중..." : "저장"}
+          </button>
+        </>
+      )}
+
+      {/* 탭 2: 어워드 설정 */}
       {activeTab === "policy" && (
         <>
           <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mb-3">
