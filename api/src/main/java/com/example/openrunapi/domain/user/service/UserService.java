@@ -41,6 +41,10 @@ import com.example.openrunapi.domain.award.repository.AwardWinnerRepository;
 import com.example.openrunapi.domain.post.repository.PostRepository;
 import com.example.openrunapi.domain.post.repository.CommentRepository;
 import com.example.openrunapi.domain.notification.repository.NotificationRepository;
+import com.example.openrunapi.domain.calendar.model.CalendarConnection;
+import com.example.openrunapi.domain.calendar.model.CalendarProvider;
+import com.example.openrunapi.domain.calendar.service.CalendarService;
+import com.example.openrunapi.domain.calendar.service.GoogleCalendarClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import com.google.firebase.auth.FirebaseAuth;
@@ -76,6 +80,8 @@ public class UserService implements UserDetailsService {
     private final NotificationRepository notificationRepository;
     private final ClubService clubService;
     private final SystemAdminRepository systemAdminRepository;
+    private final CalendarService calendarService;
+    private final GoogleCalendarClient googleCalendarClient;
 
     @Override
     @Transactional
@@ -595,6 +601,14 @@ public class UserService implements UserDetailsService {
 
         // 9. 알림 삭제 (개인정보)
         notificationRepository.deleteAllByUserId(userId);
+
+        // 9.5. 캘린더 연동 해제 + 서브 캘린더 삭제
+        java.util.List<CalendarConnection> calendarConnections = calendarService.disconnectAll(userId);
+        for (CalendarConnection conn : calendarConnections) {
+            if (conn.getProvider() == CalendarProvider.GOOGLE) {
+                googleCalendarClient.deleteSubCalendar(conn);
+            }
+        }
 
         // 10. OAuth 제공자 정보 삭제
         userOAuthProviderRepository.deleteByUserId(userId);
