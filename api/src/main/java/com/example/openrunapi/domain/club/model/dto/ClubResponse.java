@@ -36,6 +36,10 @@ public class ClubResponse {
     private final Boolean awardPointsEnabled;
     private final Boolean awardBookingEnabled;
 
+    // 랭킹 정책 필드
+    private final String rankingPeriod;
+    private final String rankingCustomSeasons;
+
     /**
      * Club + ClubPolicy를 함께 받는 생성자 (권장)
      */
@@ -64,6 +68,8 @@ public class ClubResponse {
             this.awardAttendanceEnabled = policy.getAwardAttendanceEnabled();
             this.awardPointsEnabled = policy.getAwardPointsEnabled();
             this.awardBookingEnabled = policy.getAwardBookingEnabled();
+            this.rankingPeriod = policy.getRankingPeriod() != null ? policy.getRankingPeriod().name() : "YEARLY";
+            this.rankingCustomSeasons = policy.getRankingCustomSeasons();
         } else {
             // ClubPolicy가 없으면 기본값 사용
             this.autoJoinEnabled = false;
@@ -75,6 +81,8 @@ public class ClubResponse {
             this.awardAttendanceEnabled = true;
             this.awardPointsEnabled = true;
             this.awardBookingEnabled = true;
+            this.rankingPeriod = "YEARLY";
+            this.rankingCustomSeasons = null;
         }
     }
 

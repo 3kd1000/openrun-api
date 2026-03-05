@@ -156,7 +156,7 @@ const ClubManagePage: React.FC = () => {
         <div>
           <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">활동 관리</p>
           <div className="bg-white rounded-xl border border-border overflow-hidden">
-            <MenuItem icon={<TrophyIcon size={18} />} label="어워드 관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/award`)} disabled={!canManage} />
+            <MenuItem icon={<TrophyIcon size={18} />} label="랭킹 & 어워드 설정" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/award`)} disabled={!canManage} />
             <MenuItem icon={<ScaleIcon size={18} />} label="공용구 관리" onClick={() => handleAdminAction(`/clubs/${clubId}/manage/balls`)} disabled={!canManage} last />
           </div>
         </div>

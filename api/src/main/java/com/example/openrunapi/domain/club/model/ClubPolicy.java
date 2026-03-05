@@ -55,6 +55,13 @@ public class ClubPolicy {
     @Column(name = "award_booking_enabled", nullable = false)
     private Boolean awardBookingEnabled = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ranking_period", nullable = false, length = 20)
+    private RankingPeriod rankingPeriod = RankingPeriod.YEARLY;
+
+    @Column(name = "ranking_custom_seasons", columnDefinition = "TEXT")
+    private String rankingCustomSeasons;
+
     @CreatedDate
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -97,7 +104,9 @@ public class ClubPolicy {
             AwardPeriod awardPeriod,
             Boolean awardAttendanceEnabled,
             Boolean awardPointsEnabled,
-            Boolean awardBookingEnabled
+            Boolean awardBookingEnabled,
+            RankingPeriod rankingPeriod,
+            String rankingCustomSeasons
     ) {
         if (awardEnabled != null) {
             this.awardEnabled = awardEnabled;
@@ -114,5 +123,9 @@ public class ClubPolicy {
         if (awardBookingEnabled != null) {
             this.awardBookingEnabled = awardBookingEnabled;
         }
+        if (rankingPeriod != null) {
+            this.rankingPeriod = rankingPeriod;
+        }
+        this.rankingCustomSeasons = rankingCustomSeasons;
     }
 }

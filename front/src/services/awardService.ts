@@ -1,5 +1,5 @@
 import axiosInstance from "./api/axiosInstance";
-import type { AwardRankingResponse, AwardType, AwardPeriod } from "../types/club";
+import type { AwardRankingResponse, AwardType, AwardPeriod, RankingPeriod, RankingCustomSeason } from "../types/club";
 
 export interface AwardPeriodOption {
   label: string;
@@ -354,5 +354,137 @@ export const awardService = {
   getTierName(tier: number): TierName {
     const validTier = Math.min(5, Math.max(1, tier)) as TierLevel;
     return TIER_CONFIG[validTier].name;
+  },
+
+  /**
+   * 랭킹 주기별 기간 옵션 생성
+   * 어워드와 달리 현재 진행 중인 기간을 첫 번째로 포함
+   */
+  generateRankingPeriodOptions(
+    periodType: RankingPeriod,
+    count: number = 6,
+    customSeasons?: RankingCustomSeason[]
+  ): AwardPeriodOption[] {
+    const options: AwardPeriodOption[] = [];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1~12
+
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const lastDay = (year: number, month: number) =>
+      new Date(year, month, 0).getDate();
+
+    if (periodType === "MONTHLY") {
+      let year = currentYear;
+      let month = currentMonth;
+      for (let i = 0; i < count; i++) {
+        options.push({
+          label: `${year}년 ${month}월`,
+          startDate: `${year}-${pad(month)}-01`,
+          endDate: `${year}-${pad(month)}-${lastDay(year, month)}`,
+        });
+        month--;
+        if (month < 1) { month = 12; year--; }
+      }
+    } else if (periodType === "QUARTERLY") {
+      const currentQ = Math.ceil(currentMonth / 3);
+      let year = currentYear;
+      let q = currentQ;
+      const qLabels = ["1분기", "2분기", "3분기", "4분기"];
+      for (let i = 0; i < count; i++) {
+        const startMonth = (q - 1) * 3 + 1;
+        const endMonth = q * 3;
+        options.push({
+          label: `${year}년 ${qLabels[q - 1]}`,
+          startDate: `${year}-${pad(startMonth)}-01`,
+          endDate: `${year}-${pad(endMonth)}-${lastDay(year, endMonth)}`,
+        });
+        q--;
+        if (q < 1) { q = 4; year--; }
+      }
+    } else if (periodType === "HALF_YEAR") {
+      const isFirstHalf = currentMonth <= 6;
+      let year = currentYear;
+      let first = isFirstHalf;
+      for (let i = 0; i < count; i++) {
+        if (first) {
+          options.push({
+            label: `${year}년 상반기`,
+            startDate: `${year}-01-01`,
+            endDate: `${year}-06-30`,
+          });
+          first = false;
+          year--;
+        } else {
+          options.push({
+            label: `${year}년 하반기`,
+            startDate: `${year}-07-01`,
+            endDate: `${year}-12-31`,
+          });
+          first = true;
+        }
+      }
+    } else if (periodType === "YEARLY") {
+      for (let i = 0; i < count; i++) {
+        const year = currentYear - i;
+        options.push({
+          label: `${year}년`,
+          startDate: `${year}-01-01`,
+          endDate: `${year}-12-31`,
+        });
+      }
+    } else if (periodType === "CUSTOM" && customSeasons && customSeasons.length > 0) {
+      // 현재 날짜가 속하는 시즌 찾기, 그 시즌부터 과거 순으로 나열
+      const findCurrentSeasonIndex = (): number => {
+        for (let i = 0; i < customSeasons.length; i++) {
+          const s = customSeasons[i];
+          if (s.startMonth <= s.endMonth) {
+            // 같은 연도 시즌 (예: 2~5월)
+            if (currentMonth >= s.startMonth && currentMonth <= s.endMonth) return i;
+          } else {
+            // 연도 경계 시즌 (예: 12~1월)
+            if (currentMonth >= s.startMonth || currentMonth <= s.endMonth) return i;
+          }
+        }
+        return 0;
+      };
+
+      const currentIdx = findCurrentSeasonIndex();
+      let year = currentYear;
+      let idx = currentIdx;
+
+      for (let i = 0; i < count; i++) {
+        const season = customSeasons[idx];
+        const isWrapAround = season.startMonth > season.endMonth;
+
+        let startYear = year;
+        let endYear = year;
+        if (isWrapAround) {
+          // 연도 경계: 현재월이 endMonth 이하면 시작은 전년도
+          if (i === 0 && currentMonth <= season.endMonth) {
+            startYear = year - 1;
+          } else {
+            endYear = year + 1;
+            // 첫 번째가 아닌 경우 과거로 이동 중이므로 endYear = year, startYear = year -1 이 아니라
+            // 이미 year가 감소되어 있으므로 endYear = year + 1
+          }
+        }
+
+        options.push({
+          label: `${startYear} ${season.name} (${season.startMonth}~${season.endMonth}월)`,
+          startDate: `${startYear}-${pad(season.startMonth)}-01`,
+          endDate: `${endYear}-${pad(season.endMonth)}-${lastDay(endYear, season.endMonth)}`,
+        });
+
+        // 과거로 이동
+        idx--;
+        if (idx < 0) {
+          idx = customSeasons.length - 1;
+          year--;
+        }
+      }
+    }
+
+    return options;
   },
 };
