@@ -462,6 +462,7 @@ public class UserService implements UserDetailsService {
                 .matchId(match.getId())
                 .clubId(match.getClubId())
                 .clubName(clubName)
+                .scheduleId(match.getScheduleId())
                 .playedAt(match.getPlayedAt())
                 .teamAPlayer1Name(getUserName(match.getTeamAPlayer1Id()))
                 .teamAPlayer2Name(match.getTeamAPlayer2Id() != null ? getUserName(match.getTeamAPlayer2Id()) : null)

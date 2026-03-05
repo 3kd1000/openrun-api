@@ -126,7 +126,8 @@ export const awardService = {
    */
   generatePeriodOptions(
     periodType: "HALF_YEAR" | "YEARLY",
-    count: number = 5
+    count: number = 5,
+    clubCreatedAt?: string
   ): AwardPeriodOption[] {
     const options: AwardPeriodOption[] = [];
     const now = new Date();
@@ -178,6 +179,12 @@ export const awardService = {
           endDate: `${year}-12-31`,
         });
       }
+    }
+
+    // 클럽 생성일 이전 시즌 필터링
+    if (clubCreatedAt) {
+      const createdDate = clubCreatedAt.substring(0, 10);
+      return options.filter((opt) => opt.endDate >= createdDate);
     }
 
     return options;
@@ -363,7 +370,8 @@ export const awardService = {
   generateRankingPeriodOptions(
     periodType: RankingPeriod,
     count: number = 6,
-    customSeasons?: RankingCustomSeason[]
+    customSeasons?: RankingCustomSeason[],
+    clubCreatedAt?: string
   ): AwardPeriodOption[] {
     const options: AwardPeriodOption[] = [];
     const now = new Date();
@@ -483,6 +491,12 @@ export const awardService = {
           year--;
         }
       }
+    }
+
+    // 클럽 생성일 이전 시즌 필터링
+    if (clubCreatedAt) {
+      const createdDate = clubCreatedAt.substring(0, 10); // YYYY-MM-DD
+      return options.filter((opt) => opt.endDate >= createdDate);
     }
 
     return options;

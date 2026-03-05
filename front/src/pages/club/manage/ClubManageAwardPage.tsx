@@ -82,10 +82,11 @@ const ClubManageAwardPage: React.FC = () => {
         setPolicy(newPolicy);
         setCustomSeasons(parsedSeasons);
 
-        // 기간 옵션 생성
+        // 기간 옵션 생성 (클럽 생성일 이전 시즌 제외)
         const options = awardService.generatePeriodOptions(
           newPolicy.awardPeriod as "HALF_YEAR" | "YEARLY",
-          6
+          6,
+          res.data.createdAt
         );
         setPeriodOptions(options);
       } catch (e) {
