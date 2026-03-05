@@ -337,6 +337,13 @@ const IntroPage: React.FC = () => {
           >
             이용약관
           </Link>
+          <span>|</span>
+          <Link
+            to="/privacy"
+            className="text-white/60 no-underline hover:text-white transition-colors"
+          >
+            개인정보처리방침
+          </Link>
         </div>
       </footer>
 
