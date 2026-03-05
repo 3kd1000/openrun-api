@@ -10,6 +10,7 @@ import {
 import type { AwardType, Club } from "../types/club";
 import { getOpenRunSession } from "../utils/openrunSession";
 import axiosInstance from "../services/api/axiosInstance";
+import { useAuth } from "./AuthContext";
 
 interface AwardWinnersContextType {
   winnerUserIds: Set<number>;  // 현재 어워드 수상자 ID Set
@@ -52,6 +53,7 @@ interface AwardWinnersProviderProps {
 
 export const AwardWinnersProvider: React.FC<AwardWinnersProviderProps> = ({ children }) => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // sessionStorage에서 초기값 읽어 즉시 세팅
   const [currentClubId, setCurrentClubId] = useState<number | null>(() => {
@@ -86,7 +88,7 @@ export const AwardWinnersProvider: React.FC<AwardWinnersProviderProps> = ({ chil
       ]);
       return { winnersResponse, achievementsResponse };
     },
-    enabled: !!currentClubId && !!getOpenRunSession().userId,
+    enabled: !!currentClubId && !!user,
     staleTime: 5 * 60 * 1000, // 5분: 이 시간 내 재방문 시 API 호출 없이 캐시 반환
     gcTime: 10 * 60 * 1000,   // 10분: 언마운트 후 메모리 유지 시간
   });
