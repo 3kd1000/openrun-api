@@ -20,6 +20,7 @@ public class MyAllMatchResponse {
     private Long matchId;
     private Long clubId;
     private String clubName;
+    private Long scheduleId;
     private LocalDateTime playedAt;
 
     // Team A

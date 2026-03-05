@@ -71,13 +71,15 @@ openrun/
 └── claude.md         # 이 파일
 ```
 
-## 🚀 작업 현황 (2026-02-26 기준)
+## 🚀 작업 현황 (2026-03-05 기준)
 
 ### 다음 작업
 - [ ] Intro 페이지 동영상/스크린샷 업데이트
+- [ ] Kakao TalkCalendar 연동 (심사 승인 후)
 
 ### ✅ 완료
 
+- [x] 외부 캘린더 연동 (Google Calendar): OAuth 연동, CalendarConnection/CalendarEvent 엔티티, 참가 확정/취소/일정수정/삭제 시 자동 동기화, CalendarSettingsPage UI
 - [x] 시작 가이드 리디자인 + 강제 노출: 알림 목업 카드(폰 알림센터 스타일), 로그인/가입 시 1회 강제 노출(startGuideSeen), PwaSetupSheet 삭제 통합, 탐색 기본 탭 club으로 변경
 - [x] 일정생성 통합 (WP1): scheduleType 컬럼 추가, 공개/클럽 일정 폼 통합, 빌드 검증 통과
 - [x] 즐겨찾기 확장: ScheduleTemplate에 courtAddress/region/matchType/numberOfCourts 추가, pill→카드 UI, 3개 제한, 이름 자동생성+편집

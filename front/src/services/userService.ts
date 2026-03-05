@@ -18,6 +18,7 @@ export interface MyAllMatch {
   matchId: number;
   clubId: number;
   clubName: string;
+  scheduleId: number | null;
   playedAt: string;
   teamAPlayer1Name: string;
   teamAPlayer2Name: string | null;

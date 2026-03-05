@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
 import type { AwardRankingResponse, AwardRankingEntry, AwardType, AwardPeriod, RankingPeriod, RankingCustomSeason, Club } from "../../types/club";
@@ -32,6 +32,7 @@ interface ScoreboardResponse {
 type TabType = "ranking" | "matches" | "awards" | "personal";
 
 const MATCH_SEARCH_STORAGE_KEY = "scoreboard_match_search";
+const PERSONAL_SEARCH_STORAGE_KEY = "scoreboard_personal_search";
 
 const ScoreboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ const ScoreboardPage: React.FC = () => {
   const currentUserName = session.userName;
 
   // Tab 4: Awards (어워드)
-  const [awardEnabled, setAwardEnabled] = useState<boolean>(true);
+  const [awardEnabled, setAwardEnabled] = useState<boolean | null>(null);
   const [awardRankings, setAwardRankings] = useState<AwardRankingResponse[]>([]);
   const [awardLoading, setAwardLoading] = useState(false);
   const [awardError, setAwardError] = useState<string | null>(null);
@@ -149,6 +150,41 @@ const ScoreboardPage: React.FC = () => {
         timers.push(setTimeout(tryRestore, 500));
       } catch { /* parse error 무시 */ }
     }
+    // 개인기록 상태 복원 (일정상세에서 복귀 시)
+    const savedPersonal = sessionStorage.getItem(PERSONAL_SEARCH_STORAGE_KEY);
+    if (savedPersonal) {
+      restoredRef.current = true;
+      sessionStorage.removeItem(PERSONAL_SEARCH_STORAGE_KEY);
+      try {
+        const s = JSON.parse(savedPersonal);
+        setPersonalMatches(s.personalMatches || []);
+        setPersonalPage(s.personalPage || 0);
+        setPersonalHasMore(s.personalHasMore || false);
+        setPersonalTotalElements(s.personalTotalElements || 0);
+        if (s.personalStats) setPersonalStats(s.personalStats);
+        setActiveTab("personal");
+        const targetY = s.scrollY || 0;
+        let attempt = 0;
+        const maxAttempts = 10;
+        const timers: ReturnType<typeof setTimeout>[] = [];
+        const tryRestore = () => {
+          attempt++;
+          if (document.documentElement.scrollHeight >= targetY + window.innerHeight * 0.5) {
+            window.scrollTo(0, targetY);
+            return;
+          }
+          if (attempt < maxAttempts) {
+            timers.push(setTimeout(tryRestore, 100));
+          } else {
+            window.scrollTo(0, targetY);
+          }
+        };
+        requestAnimationFrame(() => tryRestore());
+        timers.push(setTimeout(tryRestore, 100));
+        timers.push(setTimeout(tryRestore, 300));
+        timers.push(setTimeout(tryRestore, 500));
+      } catch { /* parse error 무시 */ }
+    }
   }, []);
 
   // 클럽 가입 여부에 따라 기본 탭 설정 (복원 중이면 스킵)
@@ -158,8 +194,8 @@ const ScoreboardPage: React.FC = () => {
     if (!hasClub && (activeTab === "ranking" || activeTab === "matches" || activeTab === "awards")) {
       setActiveTab("personal");
     }
-    // 어워드 비활성화 상태에서 어워드 탭이면 랭킹으로 전환
-    if (!awardEnabled && activeTab === "awards") {
+    // 어워드 비활성화 상태에서 어워드 탭이면 랭킹으로 전환 (null=로딩중은 무시)
+    if (awardEnabled === false && activeTab === "awards") {
       setActiveTab("ranking");
     }
   }, [hasClub, activeTab, awardEnabled]);
@@ -178,9 +214,13 @@ const ScoreboardPage: React.FC = () => {
             customSeasons = JSON.parse(clubResponse.data.rankingCustomSeasons);
           } catch { /* parse error 무시 */ }
         }
-        const options = awardService.generateRankingPeriodOptions(rankingPeriod, 6, customSeasons);
+        const clubCreatedAt = clubResponse.data.createdAt;
+        const options = awardService.generateRankingPeriodOptions(rankingPeriod, 6, customSeasons, clubCreatedAt);
         setRankingPeriodOptions(options);
         setSelectedRankingPeriodIndex(0);
+        // 어워드 활성화 여부도 여기서 설정 (탭 표시용)
+        setAwardEnabled(clubResponse.data.awardEnabled !== false);
+
       } catch (err) {
         console.error("Failed to load ranking period:", err);
         // 기본값으로 YEARLY 옵션 생성
@@ -389,8 +429,9 @@ const ScoreboardPage: React.FC = () => {
         const period = clubResponse.data.awardPeriod || "HALF_YEAR";
         setClubAwardPeriod(period);
 
-        // 기간 옵션 생성
-        const options = awardService.generatePeriodOptions(period, 6);
+        // 기간 옵션 생성 (클럽 생성일 이전 시즌 제외)
+        const clubCreatedAt = clubResponse.data.createdAt;
+        const options = awardService.generatePeriodOptions(period, 6, clubCreatedAt);
         setPeriodOptions(options);
       }
 
@@ -1032,7 +1073,23 @@ const ScoreboardPage: React.FC = () => {
                       {personalMatches.map((match) => (
                         <div
                           key={match.matchId}
-                          className="relative border border-[#28a745] rounded-lg p-4 bg-white transition-colors text-xs md:text-sm max-md:p-3 hover:border-[#28a745]/80 hover:bg-[#28a745]/5"
+                          className={cn(
+                            "relative border border-[#28a745] rounded-lg p-4 bg-white transition-colors text-xs md:text-sm max-md:p-3 hover:border-[#28a745]/80 hover:bg-[#28a745]/5",
+                            match.scheduleId && "cursor-pointer"
+                          )}
+                          onClick={() => {
+                            if (match.scheduleId) {
+                              try {
+                                sessionStorage.setItem(PERSONAL_SEARCH_STORAGE_KEY, JSON.stringify({
+                                  personalMatches, personalPage, personalHasMore, personalTotalElements, personalStats,
+                                  scrollY: window.scrollY,
+                                }));
+                              } catch { /* QuotaExceededError 무시 */ }
+                              navigate(`/schedules/${match.scheduleId}`, {
+                                state: { returnUrl: "/scoreboard" },
+                              });
+                            }
+                          }}
                         >
                           <div className="flex items-center justify-between mb-2 pb-2 border-b border-border max-md:mb-1 max-md:pb-1">
                             <div className="text-primary font-semibold flex-1 flex items-center gap-1">

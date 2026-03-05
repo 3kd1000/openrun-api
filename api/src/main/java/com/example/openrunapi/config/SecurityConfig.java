@@ -65,6 +65,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/guests").permitAll() // 게스트 목록 조회
                         .requestMatchers("/api/users/operator-profile").permitAll() // 운영자 프로필 조회 (인증 불필요)
                         .requestMatchers(HttpMethod.GET, "/api/users/*/public-profile").permitAll() // 사용자 공개 프로필 (호스트 정보 등)
+                        // Calendar API - OAuth callback은 공개 (Google 리다이렉트), 나머지는 인증 필요
+                        .requestMatchers("/api/calendar/google/callback").permitAll()
+                        .requestMatchers("/api/calendar/**").authenticated()
                         .requestMatchers("/api/fcm/tokens/**").authenticated() // FCM 토큰 관리 API (로그인 필요)
                         .requestMatchers("/api/notifications/**").authenticated() // 알림 API (로그인 필요)
                         // 그 외 모든 API 요청은 인증 필요

@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.openrunapi.domain.calendar.service.CalendarSyncService;
 import com.example.openrunapi.domain.club.model.ClubRole;
 import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.notification.model.NotificationType;
@@ -45,6 +46,7 @@ public class ScheduleParticipantService {
     private final MatchRepository matchRepository;
     private final NotificationService notificationService;
     private final ClubMemberRepository clubMemberRepository;
+    private final CalendarSyncService calendarSyncService;
 
     /**
      * 일정 참가 신청
@@ -116,7 +118,12 @@ public class ScheduleParticipantService {
         // 9. Audit 로깅
         auditLogService.logParticipantCreate(userId, savedParticipant, schedule.getClubId());
 
-        // 10. userName 포함된 Response 반환 (user는 위에서 이미 조회함)
+        // 10. 외부 캘린더 동기화 (CONFIRMED 상태일 때만)
+        if (status == ParticipantStatus.CONFIRMED) {
+            calendarSyncService.onParticipantConfirmed(userId, scheduleId);
+        }
+
+        // 11. userName 포함된 Response 반환 (user는 위에서 이미 조회함)
         return new ParticipantResponse(savedParticipant, user.getName());
     }
 
@@ -227,10 +234,15 @@ public class ScheduleParticipantService {
         boolean wasConfirmed = participant.isConfirmed();
         participantRepository.delete(participant);
 
-        // 5. Schedule의 currentParticipants 감소
+        // 5. 외부 캘린더 이벤트 삭제
+        if (wasConfirmed) {
+            calendarSyncService.onParticipantCancelled(userId, scheduleId);
+        }
+
+        // 6. Schedule의 currentParticipants 감소
         schedule.decrementParticipants();
 
-        // 6. 대진에 포함된 사용자가 취소하는 경우에만 무효화
+        // 7. 대진에 포함된 사용자가 취소하는 경우에만 무효화
         invalidateDrawIfUserInDraw(schedule, userId);
 
         // 7. CONFIRMED 상태였다면 대기 중인 사람을 CONFIRMED로 변경
@@ -821,6 +833,11 @@ public class ScheduleParticipantService {
                 : (participant.getGuestName() != null ? participant.getGuestName() : "알 수 없음");
 
         log.info("공개 일정 참가 승인: scheduleId={}, participantId={}, status={}", scheduleId, participantId, participant.getStatus());
+
+        // 외부 캘린더 동기화 (CONFIRMED 상태일 때만)
+        if (participant.isConfirmed() && participant.getUserId() != null) {
+            calendarSyncService.onParticipantConfirmed(participant.getUserId(), scheduleId);
+        }
 
         // 참가 승인 알림 발송 (신청자에게)
         if (participant.getUserId() != null) {

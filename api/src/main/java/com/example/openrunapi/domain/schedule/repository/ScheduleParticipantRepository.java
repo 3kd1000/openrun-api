@@ -78,6 +78,13 @@ public interface ScheduleParticipantRepository extends JpaRepository<SchedulePar
     Long calculateWaitingNumber(@Param("scheduleId") Long scheduleId, @Param("joinedAt") java.time.LocalDateTime joinedAt);
 
     /**
+     * 특정 사용자가 CONFIRMED 상태이고, 일정이 미래인 scheduleId 목록 조회 (캘린더 초기 동기화용)
+     */
+    @Query("SELECT sp.scheduleId FROM ScheduleParticipant sp JOIN Schedule s ON sp.scheduleId = s.id " +
+           "WHERE sp.userId = :userId AND sp.status = 'CONFIRMED' AND s.scheduledAt > :now")
+    List<Long> findFutureConfirmedScheduleIds(@Param("userId") Long userId, @Param("now") java.time.LocalDateTime now);
+
+    /**
      * 탈퇴한 사용자의 참가 기록 익명화 (user_id를 null로 설정)
      */
     @Modifying

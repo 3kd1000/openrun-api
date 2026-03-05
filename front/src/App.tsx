@@ -28,6 +28,7 @@ import ClubNoticeManagePage from "./pages/club/manage/ClubNoticeManagePage";
 import ClubTransferOwnershipPage from "./pages/club/manage/ClubTransferOwnershipPage";
 import ClubBallManagePage from "./pages/club/manage/ClubBallManagePage";
 import TermsOfServicePage from "./pages/more/TermsOfServicePage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import LicensePage from "./pages/more/LicensePage";
 import OAuthProvidersPage from "./pages/more/OAuthProvidersPage";
 import MyClubsPage from "./pages/more/MyClubsPage";
@@ -38,6 +39,7 @@ import InquiryPage from "./pages/more/InquiryPage";
 import ProfileEditPage from "./pages/more/ProfileEditPage";
 import NotificationPage from "./pages/notification/NotificationPage";
 import NotificationSettingsPage from "./pages/more/NotificationSettingsPage";
+import CalendarSettingsPage from "./pages/more/CalendarSettingsPage";
 import IntroPage from "./pages/intro/IntroPage";
 import InstallGuidePage from "./pages/pwa/InstallGuidePage";
 import MessageListPage from "./pages/message/MessageListPage";
@@ -163,6 +165,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/intro" element={<IntroPage />} />
               <Route path="/more/terms" element={<TermsOfServicePage />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
               <Route path="/more/license" element={<LicensePage />} />
               <Route path="/explore" element={<ClubExplorePage />} />
               <Route
@@ -341,6 +344,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <NotificationSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/more/calendar-settings"
+                element={
+                  <ProtectedRoute>
+                    <CalendarSettingsPage />
                   </ProtectedRoute>
                 }
               />

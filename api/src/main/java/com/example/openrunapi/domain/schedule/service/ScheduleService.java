@@ -36,9 +36,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.openrunapi.domain.calendar.service.CalendarSyncService;
 import com.example.openrunapi.domain.notification.model.NotificationType;
 import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -60,6 +63,7 @@ public class ScheduleService {
     private final ClubRepository clubRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final CalendarSyncService calendarSyncService;
 
     /**
      * 일정 생성
@@ -346,6 +350,14 @@ public class ScheduleService {
             auditLogService.logScheduleUpdate(userId, beforeSnapshot, schedule);
         }
 
+        // 외부 캘린더 동기화 (트랜잭션 커밋 후 실행 — @Async가 구 데이터를 읽는 문제 방지)
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                calendarSyncService.onScheduleUpdated(scheduleId);
+            }
+        });
+
         return new ScheduleResponse(schedule, clubRepository, userRepository);
     }
 
@@ -504,6 +516,9 @@ public class ScheduleService {
                     null
             );
         }
+
+        // 외부 캘린더 이벤트 삭제 (삭제 전)
+        calendarSyncService.onScheduleDeleted(scheduleId);
 
         // Audit 로깅 (삭제 전)
         auditLogService.logScheduleDelete(userId, schedule);
