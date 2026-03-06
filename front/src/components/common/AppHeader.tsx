@@ -33,9 +33,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ children, showBell = true,
   // 서브페이지 모드: 백버튼 + 중앙 제목
   if (onBack) {
     return (
-      <header className="flex items-center justify-between px-4 py-1 bg-white border-b border-gray-200 min-h-[48px]">
+      <header className="relative flex items-center justify-between px-4 py-1 bg-white border-b border-gray-200 min-h-[48px]">
         <button
-          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-foreground"
+          className="z-10 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-foreground"
           onClick={onBack}
           aria-label="뒤로가기"
         >
@@ -43,8 +43,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ children, showBell = true,
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="flex-1 text-center text-sm font-bold text-foreground">{title}</span>
-        {rightElement || <div className="w-9 h-9" />}
+        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground pointer-events-none">{title}</span>
+        {rightElement ? <div className="z-10">{rightElement}</div> : <div className="w-9 h-9" />}
       </header>
     );
   }
