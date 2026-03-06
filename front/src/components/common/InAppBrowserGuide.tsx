@@ -62,7 +62,7 @@ export default function InAppBrowserGuide({ message, onClose }: InAppBrowserGuid
 
           <button
             type="button"
-            className="w-full py-2 text-xs text-muted-foreground bg-transparent border-none cursor-pointer hover:text-foreground transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border border-border bg-background text-foreground text-sm font-medium cursor-pointer transition-colors hover:bg-muted"
             onClick={onClose}
           >
             닫기

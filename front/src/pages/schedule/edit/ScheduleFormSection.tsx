@@ -71,6 +71,8 @@ interface ScheduleFormSectionProps {
   loading: boolean;
   error: string;
   submitButtonText?: string;
+  /** 위저드에서 넘어온 경우 즐겨찾기 저장 유도 */
+  highlightTemplateSave?: boolean;
 }
 
 export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
@@ -83,6 +85,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
   loading,
   error,
   submitButtonText = mode === "create" ? "생성" : "저장",
+  highlightTemplateSave = false,
 }) => {
   // 초기 날짜 및 시간 분리 (기본값: +3시간 뒤 정시, 자정 넘어가면 내일)
   const now = new Date();
@@ -356,6 +359,7 @@ export const ScheduleFormSection: React.FC<ScheduleFormSectionProps> = ({
             matchType: formData.matchType || undefined,
             numberOfCourts: formData.numberOfCourts,
           }}
+          highlightSave={highlightTemplateSave}
         />
       )}
 
