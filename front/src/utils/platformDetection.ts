@@ -29,3 +29,10 @@ export const isIOSSafari = (): boolean => {
 };
 
 export const isMobile = (): boolean => isIOS() || isAndroid();
+
+/**
+ * 인앱 브라우저 감지 (카카오톡, 네이버, 인스타그램, 페이스북, LINE 등)
+ * Google OAuth가 인앱 브라우저에서 차단됨 (403 disallowed_useragent)
+ */
+export const isInAppBrowser = (): boolean =>
+  /kakaotalk|naver\(|instagram|fbav|fban|line\//i.test(navigator.userAgent);

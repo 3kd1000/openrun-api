@@ -38,6 +38,7 @@ import WidgetSettingsModal, {
 import { cn } from "@/lib/utils";
 import { clubService } from "../../../services/clubService";
 import { syncClubList } from "../../../services/api/userApi";
+import MemberInviteGuide from "../../../components/openrun/member-invite-guide";
 
 // 신규 위젯 ID 타입 (board 제거, 신규 위젯 추가)
 type ClubWidgetId =
@@ -66,6 +67,12 @@ const ClubMainPage: React.FC = () => {
   const session = getOpenRunSession();
   const clubId = clubIdParam ?? session.currentClubId;
   const userIdStr = session.userId ? String(session.userId) : null;
+
+  // 클럽원 초대 가이드 dismiss 상태
+  const [inviteGuideDismissed, setInviteGuideDismissed] = useState(() => {
+    if (!clubId) return true;
+    return getClubSettings(String(clubId)).onboarding?.inviteGuideDismissed ?? false;
+  });
 
   const [myRole, setMyRole] = useState<ClubRoleOrUnknown>(() => {
     const session = getOpenRunSession();
@@ -625,7 +632,7 @@ const ClubMainPage: React.FC = () => {
           className="flex-1 flex flex-col items-center justify-center gap-1 py-2 bg-transparent border-none rounded-lg text-muted-foreground cursor-pointer transition-colors hover:bg-muted hover:text-primary [&_svg]:w-5 [&_svg]:h-5"
           onClick={() => {
             if (!canManage) {
-              showToast("운영진 이상만 이용 가능합니다", "info");
+              showToast("운영진 이상만 이용 가능합니다", "warning");
               return;
             }
             navigate(`/clubs/${clubId}/manage/external-requests`);
@@ -652,6 +659,17 @@ const ClubMainPage: React.FC = () => {
           <span className="text-[11px] leading-none whitespace-nowrap">클럽관리</span>
         </button>
       </div>
+
+      {/* 클럽원 초대 가이드 (오너 혼자일 때) */}
+      {club && club.memberCount === 1 && !inviteGuideDismissed && (
+        <MemberInviteGuide
+          clubId={String(clubId)}
+          onDismiss={() => {
+            setInviteGuideDismissed(true);
+            setClubSettings(String(clubId), { onboarding: { inviteGuideDismissed: true } });
+          }}
+        />
+      )}
 
       {/* 위젯 영역 */}
       <div className="flex flex-col gap-4 mb-4">

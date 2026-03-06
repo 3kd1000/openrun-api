@@ -394,7 +394,7 @@ const MorePage: React.FC = () => {
           </div>
           <div
             className="flex items-center gap-3 p-3 bg-background border border-border rounded-md mb-2 transition-all cursor-pointer min-h-[52px] hover:bg-muted hover:border-primary hover:-translate-y-px"
-            onClick={() => navigate("/privacy")}
+            onClick={() => navigate("/more/privacy")}
           >
             <span className="w-6 h-6 inline-flex items-center justify-center text-muted-foreground shrink-0">
               <ShieldIcon size={20} />

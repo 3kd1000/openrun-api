@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { BookOpen } from "lucide-react";
 import { AppHeader } from "../../../components/common/AppHeader";
 import { scheduleService } from "../../../services/scheduleService";
 import type { CreateScheduleRequest } from "../../../types/schedule";
@@ -10,6 +11,8 @@ import ScheduleFormSection, {
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { useToast } from "../../../contexts/ToastContext";
 import { cn } from "../../../lib/utils";
+import { getOpenRunUiSettings, setOpenRunUiSettings } from "../../../utils/openrunUiSettings";
+import ScheduleTypeWizard, { type WizardData } from "./ScheduleTypeWizard";
 
 export default function ScheduleCreatePage() {
   const navigate = useNavigate();
@@ -30,6 +33,13 @@ export default function ScheduleCreatePage() {
   const isPublicRoute = location.pathname.includes("/public/");
   const hasClub = !!(clubIdParam !== "null" && clubIdParam) || !!session.currentClubId;
   const [isPublic, setIsPublic] = useState(isPublicRoute || !hasClub);
+  const [showWizard, setShowWizard] = useState(() => {
+    if (isPublicRoute) return false;
+    return !getOpenRunUiSettings().scheduleWizardSeen;
+  });
+
+  // 위저드에서 받은 데이터
+  const [wizardData, setWizardData] = useState<WizardData | null>(null);
 
   const currentClubId = clubIdParam && clubIdParam !== "null"
     ? parseInt(clubIdParam)
@@ -37,25 +47,49 @@ export default function ScheduleCreatePage() {
     ? parseInt(session.currentClubId)
     : 0;
 
-  const clubInitialData = {
-    clubId: currentClubId,
-    ...(dateParam ? { scheduledAt: `${dateParam}T06:00:00` } : {}),
-    courtName: "",
-    maxCapacity: 4,
-    cost: undefined,
-    description: "",
-    reservedByUserId: undefined,
-    participationStartAt: null,
-  };
+  // initialData 생성: 위저드 데이터가 있으면 반영
+  const buildInitialData = () => {
+    if (wizardData) {
+      const region = [wizardData.regionDepth1, wizardData.regionDepth2].filter(Boolean).join(" ") || undefined;
+      return {
+        clubId: isPublic ? undefined : currentClubId,
+        scheduledAt: `${wizardData.selectedDate}T${wizardData.selectedTime}:00`,
+        durationMinutes: wizardData.durationMinutes,
+        courtName: wizardData.courtName,
+        maxCapacity: wizardData.maxCapacity,
+        numberOfCourts: wizardData.numberOfCourts,
+        cost: wizardData.cost,
+        description: wizardData.description,
+        matchType: wizardData.matchType,
+        courtAddress: wizardData.courtAddress || undefined,
+        region,
+        reservedByUserId: undefined,
+        participationStartAt: null,
+      };
+    }
 
-  const publicInitialData = {
-    ...(dateParam ? { scheduledAt: `${dateParam}T06:00:00` } : {}),
-    courtName: "",
-    maxCapacity: 4,
-    cost: undefined,
-    description: "",
-    courtAddress: "",
-    region: "",
+    // 위저드 없이 진입한 경우 기본 데이터
+    if (isPublic) {
+      return {
+        ...(dateParam ? { scheduledAt: `${dateParam}T06:00:00` } : {}),
+        courtName: "",
+        maxCapacity: 4,
+        cost: undefined,
+        description: "",
+        courtAddress: "",
+        region: "",
+      };
+    }
+    return {
+      clubId: currentClubId,
+      ...(dateParam ? { scheduledAt: `${dateParam}T06:00:00` } : {}),
+      courtName: "",
+      maxCapacity: 4,
+      cost: undefined,
+      description: "",
+      reservedByUserId: undefined,
+      participationStartAt: null,
+    };
   };
 
   const handleGoBack = () => {
@@ -156,9 +190,51 @@ export default function ScheduleCreatePage() {
     }
   };
 
+  if (showWizard) {
+    return (
+      <ScheduleTypeWizard
+        hasClub={hasClub}
+        defaultDate={dateParam || undefined}
+        onComplete={(data, dontShowAgain) => {
+          setIsPublic(data.isPublic);
+          setWizardData(data);
+          if (dontShowAgain) {
+            setOpenRunUiSettings({ scheduleWizardSeen: true });
+          }
+          setShowWizard(false);
+        }}
+        onSkip={(dontShowAgain) => {
+          if (dontShowAgain) {
+            setOpenRunUiSettings({ scheduleWizardSeen: true });
+          }
+          setShowWizard(false);
+        }}
+        onBack={handleGoBack}
+      />
+    );
+  }
+
+  const initialData = buildInitialData();
+
   return (
     <div className="page-container">
-      <AppHeader title="일정 등록" onBack={handleGoBack} />
+      <AppHeader
+        title="일정 등록"
+        onBack={handleGoBack}
+        rightElement={
+          <button
+            type="button"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+            onClick={() => {
+              setWizardData(null);
+              setShowWizard(true);
+            }}
+          >
+            <BookOpen size={14} />
+            가이드 보기
+          </button>
+        }
+      />
 
       {/* 공개/클럽 세그먼트 버튼 */}
       <div className="mb-4 flex rounded-lg border border-border overflow-hidden">
@@ -191,16 +267,17 @@ export default function ScheduleCreatePage() {
       </div>
 
       <ScheduleFormSection
-        key={isPublic ? "public" : "club"}
+        key={`${isPublic ? "public" : "club"}-${wizardData ? "wizard" : "default"}`}
         mode="create"
         currentUserId={currentUserId}
         isPublicSchedule={isPublic}
-        initialData={isPublic ? publicInitialData : clubInitialData}
+        initialData={initialData}
         onSubmit={handleSubmit}
         onCancel={handleGoBack}
         loading={loading}
         error={error}
         submitButtonText={isPublic ? "일정 만들기" : "생성"}
+        highlightTemplateSave={!!wizardData}
       />
     </div>
   );

@@ -28,6 +28,7 @@ import ScheduleListView, { type DisplayScheduleItem } from "./ScheduleListView";
 import DrawViewModal from "../draw/DrawViewModal";
 import Toast from "../../../components/common/Toast";
 import { getOpenRunSession, hasJoinedClub } from "../../../utils/openrunSession";
+import { canManageClub, normalizeClubRole } from "../../../utils/role";
 import {
   getOpenRunUiSettings,
   setOpenRunUiSettings,
@@ -63,7 +64,7 @@ const capacityFilterStyles: Record<CapacityFilter, { base: string; active: strin
 const ScheduleListPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { user: firebaseUser, isAuthReady } = useAuth();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [personalSchedules, setPersonalSchedules] = useState<
@@ -788,6 +789,7 @@ const ScheduleListPage: React.FC = () => {
           participants={drawParticipants}
           onClose={handleDrawViewModalClose}
           onSuccess={handleDrawViewModalSuccess}
+          canManageDraw={canManageClub(normalizeClubRole(getOpenRunSession().currentClubRole))}
         />
       )}
 

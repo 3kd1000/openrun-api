@@ -13,6 +13,8 @@ export interface OpenRunUiSettingsV1 {
   clubExploreExpanded?: Record<string, boolean>;
   /** 시작 가이드 확인 여부 (최소 1회 열람 강제) */
   startGuideSeen?: boolean;
+  /** 일정 생성 유형 선택 위저드 확인 여부 */
+  scheduleWizardSeen?: boolean;
 }
 
 function safeJsonParse<T>(value: string | null): T | null {

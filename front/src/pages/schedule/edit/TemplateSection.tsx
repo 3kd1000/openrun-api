@@ -37,6 +37,9 @@ interface TemplateSectionProps {
     numberOfCourts?: number;
     participationStartPattern?: string | null;
   };
+
+  /** 위저드에서 넘어온 경우 저장 유도 안내 표시 */
+  highlightSave?: boolean;
 }
 
 export const TemplateSection: React.FC<TemplateSectionProps> = ({
@@ -46,6 +49,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
   onTemplateSelect,
   onTemplateDeselect,
   saveFormData,
+  highlightSave = false,
 }) => {
   const [templates, setTemplates] = useState<ScheduleTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
@@ -367,31 +371,42 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
 
         {/* 저장 / 덮어쓰기 카드 */}
         {showSaveCard && (
-          <div
-            className={cn(
-              "flex items-center gap-2 py-2 px-3 md:py-1.5 md:px-2.5 border border-dashed rounded-lg transition-all",
-              canSave
-                ? "border-emerald-400 bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
-                : "border-border bg-muted/30 cursor-not-allowed"
+          <>
+            {highlightSave && canSave && !selectedTemplateId && (
+              <p className="text-[11px] text-primary font-medium px-1">
+                입력한 정보를 즐겨찾기로 저장하면 다음에 바로 불러올 수 있어요!
+              </p>
             )}
-            onClick={canSave ? (selectedTemplateId ? handleOverwrite : handleCreateNew) : undefined}
-          >
-            <span className={cn(
-              "flex-1 text-[13px] md:text-xs font-medium truncate",
-              canSave ? "text-emerald-700" : "text-muted-foreground"
-            )}>
-              {loading
-                ? "저장 중..."
-                : selectedTemplateId
-                  ? "현재 설정으로 덮어쓰기"
+            <div
+              className={cn(
+                "flex items-center gap-2 py-2 px-3 md:py-1.5 md:px-2.5 border border-dashed rounded-lg transition-all",
+                highlightSave && canSave && !selectedTemplateId
+                  ? "border-primary bg-primary/5 hover:bg-primary/10 cursor-pointer ring-1 ring-primary/20"
                   : canSave
-                    ? `${autoName} 으로 저장`
-                    : templateType === "SCHEDULE"
-                      ? "코트명을 입력하면 저장할 수 있습니다"
-                      : "패턴을 설정하면 저장할 수 있습니다"
-              }
-            </span>
-          </div>
+                    ? "border-emerald-400 bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
+                    : "border-border bg-muted/30 cursor-not-allowed"
+              )}
+              onClick={canSave ? (selectedTemplateId ? handleOverwrite : handleCreateNew) : undefined}
+            >
+              <span className={cn(
+                "flex-1 text-[13px] md:text-xs font-medium truncate",
+                highlightSave && canSave && !selectedTemplateId
+                  ? "text-primary"
+                  : canSave ? "text-emerald-700" : "text-muted-foreground"
+              )}>
+                {loading
+                  ? "저장 중..."
+                  : selectedTemplateId
+                    ? "현재 설정으로 덮어쓰기"
+                    : canSave
+                      ? `${autoName} 으로 저장`
+                      : templateType === "SCHEDULE"
+                        ? "코트명을 입력하면 저장할 수 있습니다"
+                        : "패턴을 설정하면 저장할 수 있습니다"
+                }
+              </span>
+            </div>
+          </>
         )}
       </div>
 
