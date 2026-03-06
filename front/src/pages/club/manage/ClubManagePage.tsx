@@ -84,7 +84,7 @@ const ClubManagePage: React.FC = () => {
 
   const handleAdminAction = (path: string) => {
     if (!canManage) {
-      showToast("운영진 이상만 이용 가능합니다", "info");
+      showToast("운영진 이상만 이용 가능합니다", "warning");
       return;
     }
     navigate(path);

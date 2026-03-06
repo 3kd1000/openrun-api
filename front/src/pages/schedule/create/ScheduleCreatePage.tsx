@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { HelpCircle } from "lucide-react";
 import { AppHeader } from "../../../components/common/AppHeader";
 import { scheduleService } from "../../../services/scheduleService";
 import type { CreateScheduleRequest } from "../../../types/schedule";
@@ -10,6 +11,8 @@ import ScheduleFormSection, {
 import { getOpenRunSession } from "../../../utils/openrunSession";
 import { useToast } from "../../../contexts/ToastContext";
 import { cn } from "../../../lib/utils";
+import { getOpenRunUiSettings, setOpenRunUiSettings } from "../../../utils/openrunUiSettings";
+import ScheduleTypeWizard from "./ScheduleTypeWizard";
 
 export default function ScheduleCreatePage() {
   const navigate = useNavigate();
@@ -30,6 +33,10 @@ export default function ScheduleCreatePage() {
   const isPublicRoute = location.pathname.includes("/public/");
   const hasClub = !!(clubIdParam !== "null" && clubIdParam) || !!session.currentClubId;
   const [isPublic, setIsPublic] = useState(isPublicRoute || !hasClub);
+  const [showWizard, setShowWizard] = useState(() => {
+    if (isPublicRoute) return false;
+    return !getOpenRunUiSettings().scheduleWizardSeen;
+  });
 
   const currentClubId = clubIdParam && clubIdParam !== "null"
     ? parseInt(clubIdParam)
@@ -156,37 +163,63 @@ export default function ScheduleCreatePage() {
     }
   };
 
+  if (showWizard) {
+    return (
+      <ScheduleTypeWizard
+        hasClub={hasClub}
+        onSelect={(selectedIsPublic, dontShowAgain) => {
+          setIsPublic(selectedIsPublic);
+          if (dontShowAgain) {
+            setOpenRunUiSettings({ scheduleWizardSeen: true });
+          }
+          setShowWizard(false);
+        }}
+        onBack={handleGoBack}
+      />
+    );
+  }
+
   return (
     <div className="page-container">
       <AppHeader title="일정 등록" onBack={handleGoBack} />
 
-      {/* 공개/클럽 세그먼트 버튼 */}
-      <div className="mb-4 flex rounded-lg border border-border overflow-hidden">
+      {/* 공개/클럽 세그먼트 버튼 + 가이드 다시보기 */}
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex-1 flex rounded-lg border border-border overflow-hidden">
+          <button
+            type="button"
+            className={cn(
+              "flex-1 py-2 text-sm font-medium transition-colors",
+              !isPublic
+                ? "bg-primary text-white"
+                : "bg-background text-muted-foreground",
+              !hasClub && "opacity-40 cursor-not-allowed"
+            )}
+            onClick={() => hasClub && setIsPublic(false)}
+            disabled={!hasClub}
+          >
+            클럽일정
+          </button>
+          <button
+            type="button"
+            className={cn(
+              "flex-1 py-2 text-sm font-medium transition-colors",
+              isPublic
+                ? "bg-primary text-white"
+                : "bg-background text-muted-foreground"
+            )}
+            onClick={() => setIsPublic(true)}
+          >
+            공개일정
+          </button>
+        </div>
         <button
           type="button"
-          className={cn(
-            "flex-1 py-2 text-sm font-medium transition-colors",
-            !isPublic
-              ? "bg-primary text-white"
-              : "bg-background text-muted-foreground",
-            !hasClub && "opacity-40 cursor-not-allowed"
-          )}
-          onClick={() => hasClub && setIsPublic(false)}
-          disabled={!hasClub}
+          className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+          onClick={() => setShowWizard(true)}
+          title="일정 유형 가이드 보기"
         >
-          클럽일정
-        </button>
-        <button
-          type="button"
-          className={cn(
-            "flex-1 py-2 text-sm font-medium transition-colors",
-            isPublic
-              ? "bg-primary text-white"
-              : "bg-background text-muted-foreground"
-          )}
-          onClick={() => setIsPublic(true)}
-        >
-          공개일정
+          <HelpCircle size={18} />
         </button>
       </div>
 

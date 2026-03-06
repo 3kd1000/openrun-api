@@ -339,7 +339,7 @@ const IntroPage: React.FC = () => {
           </Link>
           <span>|</span>
           <Link
-            to="/privacy"
+            to="/more/privacy"
             className="text-white/60 no-underline hover:text-white transition-colors"
           >
             개인정보처리방침

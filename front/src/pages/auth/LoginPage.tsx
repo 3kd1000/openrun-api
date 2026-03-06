@@ -12,6 +12,8 @@ import { webauthnService } from "../../services/webauthnService";
 import { syncClubList } from "../../services/api/userApi";
 import { getOpenRunSession, setOpenRunSession, hasJoinedClub, setAutoLoginEnabled as saveAutoLoginSetting } from "../../utils/openrunSession";
 import { getOpenRunUiSettings } from "../../utils/openrunUiSettings";
+import { isInAppBrowser } from "../../utils/platformDetection";
+import InAppBrowserGuide from "../../components/common/InAppBrowserGuide";
 import AuthLoadingScreen from "../../components/AuthLoadingScreen";
 
 interface UserInfo {
@@ -32,6 +34,7 @@ const LoginPage: React.FC = () => {
   const [registering, setRegistering] = useState(false);
   const [autoLoginEnabled, setAutoLoginEnabled] = useState(true); // 기본값: 자동 로그인 사용
   const [isCheckingSession, setIsCheckingSession] = useState(true); // 세션 확인 중 여부
+  const [showInAppGuide, setShowInAppGuide] = useState(false);
 
   // 로그인 후 원래 페이지로 돌아가기
   const navigateAfterLogin = () => {
@@ -241,6 +244,11 @@ const LoginPage: React.FC = () => {
 
   // 구글 로그인 처리
   const handleGoogleSignIn = async () => {
+    if (isInAppBrowser()) {
+      setShowInAppGuide(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -502,6 +510,12 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-muted flex items-center justify-center p-4 overflow-y-auto">
+      {showInAppGuide && (
+        <InAppBrowserGuide
+          message="인앱 브라우저에서는 Google 로그인이 지원되지 않습니다. 외부 브라우저에서 다시 시도해주세요."
+          onClose={() => setShowInAppGuide(false)}
+        />
+      )}
       <main className="w-full max-w-[420px] bg-background rounded-2xl shadow-xl overflow-hidden flex flex-col">
         {/* Brand */}
         <div className="flex flex-col items-center pt-10 pb-6 px-8">

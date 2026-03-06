@@ -22,6 +22,9 @@ export type ClubSettingsV1 = {
         noticesExpanded?: boolean;
         rulesExpanded?: boolean;
       };
+      onboarding?: {
+        inviteGuideDismissed?: boolean;
+      };
     }
   >;
 };
@@ -74,6 +77,10 @@ export function setClubSettings(
     rulesPage: {
       ...(current.rulesPage ?? {}),
       ...(patch.rulesPage ?? {}),
+    },
+    onboarding: {
+      ...(current.onboarding ?? {}),
+      ...(patch.onboarding ?? {}),
     },
   };
   writeAll(all);

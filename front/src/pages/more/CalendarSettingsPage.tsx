@@ -5,6 +5,8 @@ import {
   calendarService,
   type CalendarConnectionItem,
 } from "../../services/calendarService";
+import { isInAppBrowser } from "../../utils/platformDetection";
+import InAppBrowserGuide from "../../components/common/InAppBrowserGuide";
 
 const CalendarSettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +14,7 @@ const CalendarSettingsPage: React.FC = () => {
   const [connections, setConnections] = useState<CalendarConnectionItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showInAppGuide, setShowInAppGuide] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -42,6 +45,11 @@ const CalendarSettingsPage: React.FC = () => {
   );
 
   const handleGoogleConnect = async () => {
+    if (isInAppBrowser()) {
+      setShowInAppGuide(true);
+      return;
+    }
+
     setIsConnecting(true);
     try {
       const authUrl = await calendarService.getGoogleAuthUrl();
@@ -66,6 +74,12 @@ const CalendarSettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-140px)]">
+      {showInAppGuide && (
+        <InAppBrowserGuide
+          message="인앱 브라우저에서는 Google 캘린더 연동이 지원되지 않습니다. 외부 브라우저에서 다시 시도해주세요."
+          onClose={() => setShowInAppGuide(false)}
+        />
+      )}
       <AppHeader title="외부 캘린더 연동" onBack={() => navigate(-1)} />
       <div className="max-w-[600px] mx-auto p-4">
         {isLoading ? (

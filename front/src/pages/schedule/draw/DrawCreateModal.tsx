@@ -23,7 +23,7 @@ import {
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { getOpenRunSession } from "../../../utils/openrunSession";
+
 
 interface Props {
   scheduleId: number;

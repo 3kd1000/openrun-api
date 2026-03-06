@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
 import type { AwardRankingResponse, AwardRankingEntry, AwardType, AwardPeriod, RankingPeriod, RankingCustomSeason, Club } from "../../types/club";
 import { format } from "date-fns";
-import { TrophyIcon, CalendarIcon, SearchIcon, ClipboardListIcon, UserIcon, StarIcon, MedalIcon } from "../../components/common/Icons";
+import { TrophyIcon, CalendarIcon, ClipboardListIcon, UserIcon, StarIcon, MedalIcon } from "../../components/common/Icons";
 import { getOpenRunSession } from "../../utils/openrunSession";
 import { userService, type UserTotalStats, type MyAllMatch } from "../../services/userService";
 import { awardService, type AwardPeriodOption } from "../../services/awardService";

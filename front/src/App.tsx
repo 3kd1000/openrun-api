@@ -165,7 +165,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/intro" element={<IntroPage />} />
               <Route path="/more/terms" element={<TermsOfServicePage />} />
-              <Route path="/privacy" element={<PrivacyPolicyPage />} />
+              <Route path="/more/privacy" element={<PrivacyPolicyPage />} />
               <Route path="/more/license" element={<LicensePage />} />
               <Route path="/explore" element={<ClubExplorePage />} />
               <Route

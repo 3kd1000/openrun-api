@@ -5,7 +5,7 @@ import axiosInstance from '../../../services/api/axiosInstance';
 import { Button } from '../../../components/ui/button';
 import { ArrowLeftIcon, CrownIcon, StarIcon, UserIcon, SettingsIcon, XIcon, ChevronRightIcon } from '../../../components/common/Icons';
 import { getErrorMessage, logError } from '../../../utils/errorHandler';
-import { canManageClub, isClubOwner, normalizeClubRole } from '../../../utils/role';
+import { isClubOwner, normalizeClubRole } from '../../../utils/role';
 import { getOpenRunSession } from '../../../utils/openrunSession';
 import UserNameWithBadge from '../../../components/common/UserNameWithBadge';
 import { useToast } from '../../../contexts/ToastContext';
@@ -53,7 +53,6 @@ const ClubMembersPage: React.FC = () => {
   const { showToast } = useToast();
   const session = getOpenRunSession();
   const myRole = normalizeClubRole(session.currentClubRole);
-  const canManage = canManageClub(myRole);
   const isOwner = isClubOwner(myRole);
   const canEditRoles = isOwner;
 
@@ -206,7 +205,7 @@ const ClubMembersPage: React.FC = () => {
             className="text-xs"
             onClick={() => {
               if (!canEditRoles) {
-                showToast("클럽장만 역할을 변경할 수 있습니다", "info");
+                showToast("클럽장만 역할을 변경할 수 있습니다", "warning");
                 return;
               }
               isEditMode ? void handleSaveRoles() : setIsEditMode(true);
