@@ -143,7 +143,7 @@ export default function ScheduleTypeWizard({ hasClub, onComplete, onSkip, onBack
       />
 
       {/* 프로그레스 바 */}
-      <div className="mb-5">
+      <div className="mt-3 mb-5">
         <div className="flex justify-between mb-2">
           {stepLabels.map((label, i) => (
             <span

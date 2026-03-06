@@ -34,7 +34,6 @@ export default function ScheduleCreatePage() {
   const hasClub = !!(clubIdParam !== "null" && clubIdParam) || !!session.currentClubId;
   const [isPublic, setIsPublic] = useState(isPublicRoute || !hasClub);
   const [showWizard, setShowWizard] = useState(() => {
-    if (isPublicRoute) return false;
     return !getOpenRunUiSettings().scheduleWizardSeen;
   });
 
