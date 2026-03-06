@@ -279,15 +279,13 @@ public class GoogleCalendarClient {
         LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
         String timeZone = "Asia/Seoul";
 
-        // LocalDateTime은 JVM 기본 시간대로 읽힘 (TIMESTAMPTZ → JVM TZ → LocalDateTime)
-        // JVM 시간대가 UTC/KST 어디든 정확히 KST로 변환
-        ZonedDateTime kstStart = startTime.atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(ZoneId.of(timeZone));
-        ZonedDateTime kstEnd = endTime.atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(ZoneId.of(timeZone));
+        // LocalDateTime 값은 시스템 관례상 KST 시간 (JVM=UTC에서 DB 읽기 시 UTC 숫자 = 실제 KST)
+        // 따라서 KST로 직접 해석 (UTC→KST 변환 없이)
+        ZonedDateTime kstStart = startTime.atZone(ZoneId.of(timeZone));
+        ZonedDateTime kstEnd = endTime.atZone(ZoneId.of(timeZone));
 
-        log.info("캘린더 이벤트 시간 변환: startTime={}, JVM TZ={}, kstStart={}",
-                startTime, ZoneId.systemDefault(), kstStart);
+        log.info("캘린더 이벤트 시간: startTime={}, kstStart={}",
+                startTime, kstStart);
 
         return Map.of(
                 "summary", title,
