@@ -19,8 +19,12 @@ const CalendarSettingsPage: React.FC = () => {
 
   useEffect(() => {
     // OAuth callback 결과 처리
-    if (searchParams.get("connected") === "true") {
+    const connected = searchParams.get("connected");
+    if (connected === "true") {
       setMessage({ type: "success", text: "Google Calendar 연동이 완료되었습니다." });
+      setSearchParams({}, { replace: true });
+    } else if (connected === "kakao") {
+      setMessage({ type: "success", text: "카카오 톡캘린더 연동이 완료되었습니다." });
       setSearchParams({}, { replace: true });
     } else if (searchParams.get("error") === "true") {
       setMessage({ type: "error", text: "연동에 실패했습니다. 다시 시도해주세요." });
@@ -43,6 +47,9 @@ const CalendarSettingsPage: React.FC = () => {
   const googleConnection = connections.find(
     (c) => c.provider === "GOOGLE" && c.active
   );
+  const kakaoConnection = connections.find(
+    (c) => c.provider === "KAKAO" && c.active
+  );
 
   const handleGoogleConnect = async () => {
     if (isInAppBrowser()) {
@@ -56,6 +63,22 @@ const CalendarSettingsPage: React.FC = () => {
       window.location.href = authUrl;
     } catch (error) {
       console.error("Google 인증 URL 생성 실패:", error);
+      setIsConnecting(false);
+    }
+  };
+
+  const handleKakaoConnect = async () => {
+    if (isInAppBrowser()) {
+      setShowInAppGuide(true);
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      const authUrl = await calendarService.getKakaoAuthUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("카카오 인증 URL 생성 실패:", error);
       setIsConnecting(false);
     }
   };
@@ -159,6 +182,75 @@ const CalendarSettingsPage: React.FC = () => {
                 ) : (
                   <button
                     onClick={handleGoogleConnect}
+                    disabled={isConnecting}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {isConnecting ? "연결 중..." : "연동하기"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 카카오 톡캘린더 */}
+            <div className="bg-background border border-border rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6">
+                      <path
+                        d="M12 3C6.48 3 2 6.58 2 10.94c0 2.8 1.86 5.27 4.66 6.67-.15.56-.96 3.6-.99 3.83 0 0-.02.17.09.24.11.06.24.01.24.01.32-.04 3.7-2.44 4.28-2.86.56.08 1.14.12 1.72.12 5.52 0 10-3.58 10-7.94C22 6.58 17.52 3 12 3z"
+                        fill="#FEE500"
+                      />
+                      <path
+                        d="M12 3C6.48 3 2 6.58 2 10.94c0 2.8 1.86 5.27 4.66 6.67-.15.56-.96 3.6-.99 3.83 0 0-.02.17.09.24.11.06.24.01.24.01.32-.04 3.7-2.44 4.28-2.86.56.08 1.14.12 1.72.12 5.52 0 10-3.58 10-7.94C22 6.58 17.52 3 12 3z"
+                        fill="none"
+                        stroke="#3C1E1E"
+                        strokeWidth="0.3"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">
+                      카카오 톡캘린더
+                    </div>
+                    {kakaoConnection ? (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {kakaoConnection.externalEmail || "연동됨"}
+                        {kakaoConnection.tokenExpired && (
+                          <span className="text-destructive ml-1">
+                            (재인증 필요)
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        연동되지 않음
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {kakaoConnection ? (
+                  <div className="flex gap-2">
+                    {kakaoConnection.tokenExpired && (
+                      <button
+                        onClick={handleKakaoConnect}
+                        disabled={isConnecting}
+                        className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                      >
+                        재연결
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDisconnect("KAKAO")}
+                      className="px-3 py-1.5 text-xs font-medium rounded-md border border-border text-muted-foreground hover:bg-muted"
+                    >
+                      연동 해제
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleKakaoConnect}
                     disabled={isConnecting}
                     className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                   >

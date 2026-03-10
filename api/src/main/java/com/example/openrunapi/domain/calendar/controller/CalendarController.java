@@ -7,6 +7,7 @@ import com.example.openrunapi.domain.calendar.model.CalendarConnection;
 import com.example.openrunapi.domain.calendar.service.CalendarService;
 import com.example.openrunapi.domain.calendar.service.CalendarSyncService;
 import com.example.openrunapi.domain.calendar.service.GoogleCalendarClient;
+import com.example.openrunapi.domain.calendar.service.KakaoCalendarClient;
 import com.example.openrunapi.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class CalendarController {
     private final CalendarService calendarService;
     private final CalendarSyncService calendarSyncService;
     private final GoogleCalendarClient googleCalendarClient;
+    private final KakaoCalendarClient kakaoCalendarClient;
     private final UserService userService;
 
     @Value("${FRONTEND_URL:http://localhost:5173}")
@@ -74,6 +76,44 @@ public class CalendarController {
             redirectUrl = frontendUrl + "/more/calendar-settings?connected=true";
         } catch (Exception e) {
             log.error("Google Calendar 연동 실패", e);
+            redirectUrl = frontendUrl + "/more/calendar-settings?error=true";
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(redirectUrl));
+        return new ResponseEntity<>(headers, HttpStatus.FOUND);
+    }
+
+    /**
+     * 카카오 OAuth 인증 URL 생성
+     */
+    @GetMapping("/kakao/auth-url")
+    public ResponseEntity<String> getKakaoAuthUrl(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.getCurrentUser(userDetails.getUsername()).getId();
+        String authUrl = kakaoCalendarClient.buildAuthUrl(userId);
+        return ResponseEntity.ok(authUrl);
+    }
+
+    /**
+     * 카카오 OAuth callback (카카오 리다이렉트로 호출됨 → 프론트로 리다이렉트)
+     */
+    @GetMapping("/kakao/callback")
+    public ResponseEntity<Void> handleKakaoCallback(
+            @RequestParam String code,
+            @RequestParam String state) {
+        String redirectUrl;
+        try {
+            Long userId = Long.parseLong(state);
+            kakaoCalendarClient.handleCallback(userId, code);
+            // 초기 동기화: 이미 확정된 미래 일정을 캘린더에 추가 (@Async로 비동기 실행)
+            CalendarConnection connection = calendarService.getActiveConnection(userId, CalendarProvider.KAKAO);
+            if (connection != null) {
+                calendarSyncService.syncExistingSchedules(userId, connection);
+            }
+            redirectUrl = frontendUrl + "/more/calendar-settings?connected=kakao";
+        } catch (Exception e) {
+            log.error("카카오 톡캘린더 연동 실패", e);
             redirectUrl = frontendUrl + "/more/calendar-settings?error=true";
         }
 

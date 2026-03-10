@@ -28,6 +28,8 @@ import com.example.openrunapi.domain.club.repository.ClubMemberRepository;
 import com.example.openrunapi.domain.notification.model.NotificationType;
 import com.example.openrunapi.domain.notification.service.NotificationService;
 import com.example.openrunapi.common.utils.TimeValidationUtils;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -118,9 +120,14 @@ public class ScheduleParticipantService {
         // 9. Audit 로깅
         auditLogService.logParticipantCreate(userId, savedParticipant, schedule.getClubId());
 
-        // 10. 외부 캘린더 동기화 (CONFIRMED 상태일 때만)
+        // 10. 외부 캘린더 동기화 (CONFIRMED 상태일 때만, 트랜잭션 커밋 후 실행)
         if (status == ParticipantStatus.CONFIRMED) {
-            calendarSyncService.onParticipantConfirmed(userId, scheduleId);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    calendarSyncService.onParticipantConfirmed(userId, scheduleId);
+                }
+            });
         }
 
         // 11. userName 포함된 Response 반환 (user는 위에서 이미 조회함)
@@ -234,9 +241,14 @@ public class ScheduleParticipantService {
         boolean wasConfirmed = participant.isConfirmed();
         participantRepository.delete(participant);
 
-        // 5. 외부 캘린더 이벤트 삭제
+        // 5. 외부 캘린더 이벤트 삭제 (트랜잭션 커밋 후 실행)
         if (wasConfirmed) {
-            calendarSyncService.onParticipantCancelled(userId, scheduleId);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    calendarSyncService.onParticipantCancelled(userId, scheduleId);
+                }
+            });
         }
 
         // 6. Schedule의 currentParticipants 감소
@@ -383,6 +395,7 @@ public class ScheduleParticipantService {
 
         if (!toRemove.isEmpty()) {
             int removedConfirmedCount = 0;
+            List<Long> removedConfirmedUserIds = new ArrayList<>();
             for (ScheduleParticipant participant : toRemove) {
                 // Audit 로깅 (삭제 전)
                 auditLogService.logParticipantDelete(requestUserId, participant, schedule.getClubId());
@@ -392,9 +405,25 @@ public class ScheduleParticipantService {
                 schedule.decrementParticipants();
                 if (wasConfirmed) {
                     removedConfirmedCount++;
+                    if (participant.getUserId() != null) {
+                        removedConfirmedUserIds.add(participant.getUserId());
+                    }
                 }
             }
             log.info("제거된 참가자: {} 명 (확정: {}명)", toRemove.size(), removedConfirmedCount);
+
+            // 제거된 확정 참가자의 외부 캘린더 이벤트 삭제 (트랜잭션 커밋 후)
+            if (!removedConfirmedUserIds.isEmpty()) {
+                final Long sid = scheduleId;
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (Long uid : removedConfirmedUserIds) {
+                            calendarSyncService.onParticipantCancelled(uid, sid);
+                        }
+                    }
+                });
+            }
 
             // 대진에 포함된 참가자가 제거된 경우에만 무효화
             Set<Long> removedUserIds = toRemove.stream()
@@ -445,6 +474,7 @@ public class ScheduleParticipantService {
 
             int confirmedCount = 0;
             int waitingCount = 0;
+            List<Long> addedConfirmedUserIds = new ArrayList<>();
 
             for (Long userId : toAdd) {
                 // User 존재 확인
@@ -458,6 +488,7 @@ public class ScheduleParticipantService {
                 if (confirmedCount < availableSlots) {
                     status = ParticipantStatus.CONFIRMED;
                     confirmedCount++;
+                    addedConfirmedUserIds.add(userId);
                 } else {
                     status = ParticipantStatus.WAITING;
                     waitingCount++;
@@ -478,6 +509,19 @@ public class ScheduleParticipantService {
             }
             log.info("추가된 참가자: {} 명 (확정: {}명, 대기: {}명)",
                     toAdd.size(), confirmedCount, waitingCount);
+
+            // 추가된 확정 참가자의 외부 캘린더 이벤트 생성 (트랜잭션 커밋 후)
+            if (!addedConfirmedUserIds.isEmpty()) {
+                final Long sid = scheduleId;
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (Long uid : addedConfirmedUserIds) {
+                            calendarSyncService.onParticipantConfirmed(uid, sid);
+                        }
+                    }
+                });
+            }
             // 참가자 추가는 기존 대진에 영향을 주지 않으므로 무효화하지 않음
         } else {
             log.info("변경사항 없음 (추가할 참가자 없음)");
@@ -834,9 +878,15 @@ public class ScheduleParticipantService {
 
         log.info("공개 일정 참가 승인: scheduleId={}, participantId={}, status={}", scheduleId, participantId, participant.getStatus());
 
-        // 외부 캘린더 동기화 (CONFIRMED 상태일 때만)
+        // 외부 캘린더 동기화 (CONFIRMED 상태일 때만, 트랜잭션 커밋 후 실행)
         if (participant.isConfirmed() && participant.getUserId() != null) {
-            calendarSyncService.onParticipantConfirmed(participant.getUserId(), scheduleId);
+            Long participantUserId = participant.getUserId();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    calendarSyncService.onParticipantConfirmed(participantUserId, scheduleId);
+                }
+            });
         }
 
         // 참가 승인 알림 발송 (신청자에게)

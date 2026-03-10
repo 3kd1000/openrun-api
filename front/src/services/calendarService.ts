@@ -24,6 +24,11 @@ export const calendarService = {
     return response.data;
   },
 
+  getKakaoAuthUrl: async (): Promise<string> => {
+    const response = await axiosInstance.get<string>("/calendar/kakao/auth-url");
+    return response.data;
+  },
+
   disconnect: async (provider: "GOOGLE" | "KAKAO"): Promise<void> => {
     await axiosInstance.delete(`/calendar/${provider}`);
   },
