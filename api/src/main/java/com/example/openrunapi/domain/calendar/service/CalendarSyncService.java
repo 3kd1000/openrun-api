@@ -27,6 +27,7 @@ public class CalendarSyncService {
     private final ScheduleRepository scheduleRepository;
     private final ScheduleParticipantRepository participantRepository;
     private final GoogleCalendarClient googleCalendarClient;
+    private final KakaoCalendarClient kakaoCalendarClient;
 
     /**
      * 초기 동기화: 연동 시점에 이미 참가 확정된 미래 일정을 캘린더에 추가
@@ -58,17 +59,16 @@ public class CalendarSyncService {
     }
 
     /**
-     * 참가 확정 시 외부 캘린더에 이벤트 생성
+     * 참가 확정 시 외부 캘린더에 이벤트 생성 + 기존 참가자들의 캘린더 이벤트 업데이트 (정원 정보 반영)
      */
     @Async
     @Transactional
     public void onParticipantConfirmed(Long userId, Long scheduleId) {
-        List<CalendarConnection> connections = connectionRepository.findByUserIdAndActiveTrue(userId);
-        if (connections.isEmpty()) return;
-
         Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
         if (schedule == null) return;
 
+        // 1. 본인 캘린더에 이벤트 생성
+        List<CalendarConnection> connections = connectionRepository.findByUserIdAndActiveTrue(userId);
         for (CalendarConnection connection : connections) {
             try {
                 createExternalEvent(connection, schedule);
@@ -77,14 +77,18 @@ public class CalendarSyncService {
                         userId, connection.getProvider(), scheduleId, e);
             }
         }
+
+        // 2. 기존 참가자들의 캘린더 이벤트 업데이트 (정원 정보 갱신)
+        updateAllEventsForSchedule(schedule);
     }
 
     /**
-     * 참가 취소 시 외부 캘린더에서 이벤트 삭제
+     * 참가 취소 시 외부 캘린더에서 이벤트 삭제 + 나머지 참가자들의 캘린더 이벤트 업데이트 (정원 정보 반영)
      */
     @Async
     @Transactional
     public void onParticipantCancelled(Long userId, Long scheduleId) {
+        // 1. 본인 캘린더에서 이벤트 삭제
         List<CalendarEvent> events = eventRepository.findByScheduleIdAndUserId(scheduleId, userId);
         for (CalendarEvent event : events) {
             try {
@@ -94,6 +98,12 @@ public class CalendarSyncService {
                 log.error("캘린더 이벤트 삭제 실패: eventId={}", event.getId(), e);
             }
         }
+
+        // 2. 나머지 참가자들의 캘린더 이벤트 업데이트 (정원 정보 갱신)
+        Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
+        if (schedule != null) {
+            updateAllEventsForSchedule(schedule);
+        }
     }
 
     /**
@@ -102,14 +112,21 @@ public class CalendarSyncService {
     @Async
     @Transactional
     public void onScheduleUpdated(Long scheduleId) {
+        log.info("onScheduleUpdated 호출: scheduleId={}", scheduleId);
         Schedule schedule = scheduleRepository.findById(scheduleId).orElse(null);
-        if (schedule == null) return;
+        if (schedule == null) {
+            log.warn("onScheduleUpdated: 일정을 찾을 수 없음 scheduleId={}", scheduleId);
+            return;
+        }
 
         List<CalendarEvent> events = eventRepository.findByScheduleId(scheduleId);
+        log.info("onScheduleUpdated: scheduleId={}, 동기화 대상 이벤트 {}건", scheduleId, events.size());
         for (CalendarEvent event : events) {
             try {
                 updateExternalEvent(event, schedule);
                 event.markSynced();
+                log.info("캘린더 이벤트 업데이트 성공: eventId={}, provider={}",
+                        event.getId(), event.getCalendarConnection().getProvider());
             } catch (Exception e) {
                 log.error("캘린더 이벤트 업데이트 실패: eventId={}", event.getId(), e);
             }
@@ -130,7 +147,26 @@ public class CalendarSyncService {
                 log.error("캘린더 이벤트 삭제 실패: eventId={}", event.getId(), e);
             }
         }
-        eventRepository.deleteAll(events);
+        eventRepository.deleteAllInBatch(events);
+    }
+
+    /**
+     * 해당 일정에 연동된 모든 캘린더 이벤트를 업데이트 (정원 정보 등 갱신)
+     */
+    private void updateAllEventsForSchedule(Schedule schedule) {
+        List<CalendarEvent> allEvents = eventRepository.findByScheduleId(schedule.getId());
+        if (allEvents.isEmpty()) return;
+
+        log.info("참가자 변동 → 기존 이벤트 업데이트: scheduleId={}, 대상 {}건",
+                schedule.getId(), allEvents.size());
+        for (CalendarEvent event : allEvents) {
+            try {
+                updateExternalEvent(event, schedule);
+                event.markSynced();
+            } catch (Exception e) {
+                log.error("참가자 변동 이벤트 업데이트 실패: eventId={}", event.getId(), e);
+            }
+        }
     }
 
     private void createExternalEvent(CalendarConnection connection, Schedule schedule) {
@@ -147,6 +183,10 @@ public class CalendarSyncService {
         String externalEventId = null;
         if (connection.getProvider() == CalendarProvider.GOOGLE) {
             externalEventId = googleCalendarClient.createEvent(
+                    connection, title, description,
+                    schedule.getScheduledAt(), duration, schedule.getCourtAddress());
+        } else if (connection.getProvider() == CalendarProvider.KAKAO) {
+            externalEventId = kakaoCalendarClient.createEvent(
                     connection, title, description,
                     schedule.getScheduledAt(), duration, schedule.getCourtAddress());
         }
@@ -172,6 +212,11 @@ public class CalendarSyncService {
                     connection, event.getExternalEventId(),
                     title, description,
                     schedule.getScheduledAt(), duration, schedule.getCourtAddress());
+        } else if (connection.getProvider() == CalendarProvider.KAKAO) {
+            kakaoCalendarClient.updateEvent(
+                    connection, event.getExternalEventId(),
+                    title, description,
+                    schedule.getScheduledAt(), duration, schedule.getCourtAddress());
         }
     }
 
@@ -179,6 +224,8 @@ public class CalendarSyncService {
         CalendarConnection connection = event.getCalendarConnection();
         if (connection.getProvider() == CalendarProvider.GOOGLE) {
             googleCalendarClient.deleteEvent(connection, event.getExternalEventId());
+        } else if (connection.getProvider() == CalendarProvider.KAKAO) {
+            kakaoCalendarClient.deleteEvent(connection, event.getExternalEventId());
         }
     }
 
