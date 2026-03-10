@@ -45,6 +45,10 @@ oauth2:
 googleCalendar:
   redirectUri: "http://localhost:8080/api/calendar/google/callback"
 
+# Kakao Calendar (External Calendar Integration)
+kakaoCalendar:
+  redirectUri: "http://localhost:8080/api/calendar/kakao/callback"
+
 # OAuth2 Provider 설정
 oauth2Provider:
   kakao:
