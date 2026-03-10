@@ -44,6 +44,10 @@ oauth2:
 googleCalendar:
   redirectUri: "https://api.openrun.app/api/calendar/google/callback"
 
+# Kakao Calendar (External Calendar Integration)
+kakaoCalendar:
+  redirectUri: "https://api.openrun.app/api/calendar/kakao/callback"
+
 # OAuth2 Provider 설정
 oauth2Provider:
   kakao:

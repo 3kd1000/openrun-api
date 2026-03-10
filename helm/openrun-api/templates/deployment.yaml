@@ -100,6 +100,20 @@ spec:
         - name: GOOGLE_CALENDAR_REDIRECT_URI
           value: {{ .Values.googleCalendar.redirectUri | quote }}
 
+        # === Kakao Calendar (External Calendar Integration) ===
+        - name: KAKAO_CALENDAR_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secrets.name }}
+              key: KAKAO_CALENDAR_CLIENT_ID
+        - name: KAKAO_CALENDAR_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.secrets.name }}
+              key: KAKAO_CALENDAR_CLIENT_SECRET
+        - name: KAKAO_CALENDAR_REDIRECT_URI
+          value: {{ .Values.kakaoCalendar.redirectUri | quote }}
+
         # === Encryption Key (AES-256) ===
         - name: ENCRYPTION_KEY
           valueFrom:

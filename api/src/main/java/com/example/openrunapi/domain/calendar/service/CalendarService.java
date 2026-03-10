@@ -7,8 +7,8 @@ import com.example.openrunapi.domain.calendar.model.dto.CalendarStatusResponse;
 import com.example.openrunapi.domain.calendar.repository.CalendarConnectionRepository;
 import com.example.openrunapi.domain.calendar.repository.CalendarEventRepository;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,20 +17,54 @@ import java.util.List;
 @Slf4j
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 public class CalendarService {
 
     private final CalendarConnectionRepository connectionRepository;
     private final CalendarEventRepository eventRepository;
+    private final GoogleCalendarClient googleCalendarClient;
+    private final KakaoCalendarClient kakaoCalendarClient;
+
+    public CalendarService(CalendarConnectionRepository connectionRepository,
+                           CalendarEventRepository eventRepository,
+                           @Lazy GoogleCalendarClient googleCalendarClient,
+                           @Lazy KakaoCalendarClient kakaoCalendarClient) {
+        this.connectionRepository = connectionRepository;
+        this.eventRepository = eventRepository;
+        this.googleCalendarClient = googleCalendarClient;
+        this.kakaoCalendarClient = kakaoCalendarClient;
+    }
 
     /**
      * 사용자의 캘린더 연동 상태 조회
+     * - 만료된 토큰은 refresh 시도 후 결과 반영
      */
+    @Transactional
     public CalendarStatusResponse getStatus(Long userId) {
         List<CalendarConnectionResponse> connections = connectionRepository.findByUserId(userId).stream()
-                .map(CalendarConnectionResponse::new)
+                .map(connection -> {
+                    if (connection.isActive() && connection.isTokenExpired()) {
+                        tryRefreshToken(connection);
+                    }
+                    return new CalendarConnectionResponse(connection);
+                })
                 .toList();
         return new CalendarStatusResponse(connections);
+    }
+
+    /**
+     * 만료된 토큰 갱신 시도 (실패 시 무시 — 프론트에서 tokenExpired=true로 재연결 안내)
+     */
+    private void tryRefreshToken(CalendarConnection connection) {
+        try {
+            switch (connection.getProvider()) {
+                case GOOGLE -> googleCalendarClient.refreshAccessToken(connection);
+                case KAKAO -> kakaoCalendarClient.refreshAccessToken(connection);
+            }
+            log.info("토큰 자동 갱신 성공: userId={}, provider={}", connection.getUserId(), connection.getProvider());
+        } catch (Exception e) {
+            log.warn("토큰 자동 갱신 실패 (재연결 필요): userId={}, provider={}, error={}",
+                    connection.getUserId(), connection.getProvider(), e.getMessage());
+        }
     }
 
     /**
