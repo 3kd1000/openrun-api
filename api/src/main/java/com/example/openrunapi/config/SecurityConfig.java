@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // CORS preflight 요청 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/robots.txt").permitAll()
                         // Actuator health 엔드포인트는 무조건 허용 (K8s liveness/readiness probe용)
                         .requestMatchers("/actuator/health/**").permitAll()
                         // 내부 배치 API (K8s CronJob에서 호출, X-Internal-Key 헤더로 인증)
