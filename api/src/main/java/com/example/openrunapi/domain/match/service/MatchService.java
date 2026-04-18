@@ -149,10 +149,18 @@ public class MatchService {
      * Match -> MatchResponse 변환 (선수 이름 포함)
      */
     private MatchResponse toMatchResponse(Match match) {
-        String teamAPlayer1Name = getUserName(match.getTeamAPlayer1Id());
-        String teamAPlayer2Name = match.getTeamAPlayer2Id() != null ? getUserName(match.getTeamAPlayer2Id()) : null;
-        String teamBPlayer1Name = getUserName(match.getTeamBPlayer1Id());
-        String teamBPlayer2Name = match.getTeamBPlayer2Id() != null ? getUserName(match.getTeamBPlayer2Id()) : null;
+        String teamAPlayer1Name = match.getTeamAPlayer1Id() != null
+                ? getUserName(match.getTeamAPlayer1Id())
+                : match.getTeamAPlayer1GuestName();
+        String teamAPlayer2Name = match.getTeamAPlayer2Id() != null
+                ? getUserName(match.getTeamAPlayer2Id())
+                : match.getTeamAPlayer2GuestName();
+        String teamBPlayer1Name = match.getTeamBPlayer1Id() != null
+                ? getUserName(match.getTeamBPlayer1Id())
+                : match.getTeamBPlayer1GuestName();
+        String teamBPlayer2Name = match.getTeamBPlayer2Id() != null
+                ? getUserName(match.getTeamBPlayer2Id())
+                : match.getTeamBPlayer2GuestName();
 
         return MatchResponse.from(match, teamAPlayer1Name, teamAPlayer2Name, teamBPlayer1Name, teamBPlayer2Name);
     }

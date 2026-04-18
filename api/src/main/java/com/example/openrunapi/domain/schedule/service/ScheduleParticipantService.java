@@ -660,10 +660,7 @@ public class ScheduleParticipantService {
                 .build();
 
         ScheduleParticipant saved = participantRepository.save(guest);
-        if (status == ParticipantStatus.CONFIRMED) {
-            schedule.incrementParticipants();
-        }
-
+        schedule.incrementParticipants(); // joinSchedule과 동일하게 상태 무관 카운트
         log.info("게스트 참가자 추가: scheduleId={}, guestName={}, status={}", scheduleId, guestName, status);
         return new ParticipantResponse(saved, guestName);
     }
