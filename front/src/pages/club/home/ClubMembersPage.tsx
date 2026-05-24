@@ -316,8 +316,25 @@ const ClubMembersPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 mb-0.5">
                         <UserNameWithBadge userId={member.userId} userName={member.name} showPrimaryOnly />
-                        <span className={`text-xs ${getRoleBadgeClass(member.role)}`}>{getRoleName(member.role)}</span>
+                        {!isEditMode && <span className={`text-xs ${getRoleBadgeClass(member.role)}`}>{getRoleName(member.role)}</span>}
                       </div>
+                      {/* 편집 모드: 역할 변경 드롭다운 */}
+                      {isEditMode && (
+                        <select
+                          className="mt-1 border border-gray-300 bg-white rounded-lg px-2 py-1 text-xs text-gray-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/40"
+                          value={roleDraftByUserId[member.userId] ?? member.role}
+                          onChange={(e) =>
+                            setRoleDraftByUserId((prev) => ({
+                              ...prev,
+                              [member.userId]: e.target.value as ClubMembershipResponse["role"],
+                            }))
+                          }
+                          disabled={saving}
+                        >
+                          <option value="REGULAR">정회원</option>
+                          <option value="ADMIN">운영진</option>
+                        </select>
+                      )}
                       <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
                         {formatTennisStarted(member.tennisStartedAt) && (
                           <>
