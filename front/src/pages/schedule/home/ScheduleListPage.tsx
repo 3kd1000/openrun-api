@@ -317,6 +317,20 @@ const ScheduleListPage: React.FC = () => {
     };
   }, [viewMode, scheduleMode, hasMorePast, hasMoreFuture, loadingPast, loadingFuture, loadMorePast, loadMoreFuture]);
 
+  // 캘린더뷰: 이전 달 이동 시 과거 일정 추가 로드
+  useEffect(() => {
+    if (viewMode !== "calendar" || scheduleMode !== "club") return;
+    if (!hasMorePast || loadingPast || schedules.length === 0) return;
+
+    const oldestScheduleDate = new Date(schedules[0].scheduledAt);
+    const viewingMonthStart = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1);
+    const oldestMonthStart = new Date(oldestScheduleDate.getFullYear(), oldestScheduleDate.getMonth(), 1);
+
+    if (viewingMonthStart <= oldestMonthStart) {
+      loadMorePast();
+    }
+  }, [calendarDate, viewMode, scheduleMode, hasMorePast, loadingPast, schedules, loadMorePast]);
+
   // 개인 일정 조회
   const loadPersonalSchedules = useCallback(async () => {
     if (isLoadingRef.current) return;
