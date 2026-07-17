@@ -12,7 +12,7 @@ on:
 jobs:
   # ========== 빌드 Job ==========
   build-and-push-front:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     steps:
       # --- 1. 소스코드 체크아웃 ---
@@ -36,9 +36,7 @@ jobs:
           EOF
 
       # --- 3. GitHub Container Registry(GHCR)에 로그인 ---
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
+      # 네이티브 arm64 러너라 QEMU 불필요 (제거함)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -57,7 +55,7 @@ jobs:
           file: ./Dockerfile.front
           push: true
           no-cache: true
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/arm64
           build-args: |
             BUILD_COMMAND=npm run build
           tags: |
