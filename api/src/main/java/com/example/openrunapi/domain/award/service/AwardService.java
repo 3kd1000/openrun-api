@@ -451,21 +451,22 @@ public class AwardService {
             }
         }
 
+        RankingCustomSeason currentSeason = seasons.get(currentIdx);
         int year = currentYear;
+        // 현재 시즌이 연도 경계를 넘는 시즌이고, 아직 그 경계를 넘기 전(예: 12월)이라면
+        // "이 시즌은 내년까지 이어진다" - year 기준을 한 해 앞으로 당겨서 이후 로직을 단일 규칙으로 통일
+        if (currentSeason.startMonth() > currentSeason.endMonth() && currentMonth > currentSeason.endMonth()) {
+            year = currentYear + 1;
+        }
+
         int idx = currentIdx;
         for (int i = 0; i < count; i++) {
             RankingCustomSeason season = seasons.get(idx);
             boolean wrapAround = season.startMonth() > season.endMonth();
 
-            int startYear = year;
+            // 연도 경계를 넘는 시즌은 항상 "작년 시작 ~ 올해(year) 종료"로 통일
+            int startYear = wrapAround ? year - 1 : year;
             int endYear = year;
-            if (wrapAround) {
-                if (i == 0 && currentMonth <= season.endMonth()) {
-                    startYear = year - 1;
-                } else {
-                    endYear = year + 1;
-                }
-            }
 
             LocalDate end = LocalDate.of(endYear, season.endMonth(), 1);
             result.add(new LocalDate[]{

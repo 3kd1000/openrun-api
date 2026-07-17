@@ -116,22 +116,22 @@ export function generateRankingPeriodOptions(
     };
 
     const currentIdx = findCurrentSeasonIndex();
+    const currentSeason = customSeasons[currentIdx];
     let year = currentYear;
+    // 현재 시즌이 연도 경계를 넘는 시즌이고, 아직 그 경계를 넘기 전(예: 12월)이라면
+    // "이 시즌은 내년까지 이어진다" - year 기준을 한 해 앞으로 당겨서 이후 로직을 단일 규칙으로 통일
+    if (currentSeason.startMonth > currentSeason.endMonth && currentMonth > currentSeason.endMonth) {
+      year = currentYear + 1;
+    }
     let idx = currentIdx;
 
     for (let i = 0; i < count; i++) {
       const season = customSeasons[idx];
       const isWrapAround = season.startMonth > season.endMonth;
 
-      let startYear = year;
-      let endYear = year;
-      if (isWrapAround) {
-        if (i === 0 && currentMonth <= season.endMonth) {
-          startYear = year - 1;
-        } else {
-          endYear = year + 1;
-        }
-      }
+      // 연도 경계를 넘는 시즌은 항상 "작년 시작 ~ 올해(year) 종료"로 통일
+      const startYear = isWrapAround ? year - 1 : year;
+      const endYear = year;
 
       options.push({
         label: `${startYear} ${season.name} (${season.startMonth}~${season.endMonth}월)`,
