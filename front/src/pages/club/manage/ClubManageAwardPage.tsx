@@ -17,6 +17,14 @@ import { useAwardWinners } from "../../../contexts/AwardWinnersContext";
 
 type TabType = "ranking" | "policy" | "winners";
 
+const RANKING_PERIOD_LABELS: Record<RankingPeriod, string> = {
+  MONTHLY: "월별",
+  QUARTERLY: "분기별",
+  HALF_YEAR: "반기",
+  YEARLY: "연간",
+  CUSTOM: "커스텀",
+};
+
 const ClubManageAwardPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -29,7 +37,6 @@ const ClubManageAwardPage: React.FC = () => {
   // 정책 설정 상태
   const [policy, setPolicy] = useState<UpdateAwardPolicyRequest>({
     awardEnabled: true,
-    awardPeriod: "HALF_YEAR",
     awardAttendanceEnabled: true,
     awardPointsEnabled: true,
     awardBookingEnabled: true,
@@ -72,7 +79,6 @@ const ClubManageAwardPage: React.FC = () => {
         }
         const newPolicy: UpdateAwardPolicyRequest = {
           awardEnabled: res.data.awardEnabled !== false,
-          awardPeriod: res.data.awardPeriod ?? "HALF_YEAR",
           awardAttendanceEnabled: res.data.awardAttendanceEnabled ?? true,
           awardPointsEnabled: res.data.awardPointsEnabled ?? true,
           awardBookingEnabled: res.data.awardBookingEnabled ?? true,
@@ -82,10 +88,11 @@ const ClubManageAwardPage: React.FC = () => {
         setPolicy(newPolicy);
         setCustomSeasons(parsedSeasons);
 
-        // 기간 옵션 생성 (클럽 생성일 이전 시즌 제외)
-        const options = awardService.generatePeriodOptions(
-          newPolicy.awardPeriod as "HALF_YEAR" | "YEARLY",
+        // 기간 옵션 생성 (랭킹 주기와 동일한 기준 사용, 클럽 생성일 이전 시즌 제외)
+        const options = awardService.generateRankingPeriodOptions(
+          rankingPeriod,
           6,
+          parsedSeasons,
           res.data.createdAt
         );
         setPeriodOptions(options);
@@ -228,9 +235,10 @@ const ClubManageAwardPage: React.FC = () => {
       showToast("저장되었습니다", "success");
 
       // 기간 옵션 재생성 (정책이 변경될 수 있으므로)
-      const options = awardService.generatePeriodOptions(
-        policy.awardPeriod as "HALF_YEAR" | "YEARLY",
-        6
+      const options = awardService.generateRankingPeriodOptions(
+        policy.rankingPeriod ?? "YEARLY",
+        6,
+        customSeasons
       );
       setPeriodOptions(options);
       setSelectedPeriodIndex(0);
@@ -242,7 +250,7 @@ const ClubManageAwardPage: React.FC = () => {
     }
   };
 
-  const toggleAward = (key: keyof Omit<UpdateAwardPolicyRequest, "awardPeriod">) => {
+  const toggleAward = (key: keyof UpdateAwardPolicyRequest) => {
     setPolicy((p) => ({ ...p, [key]: !p[key] }));
   };
 
@@ -494,27 +502,21 @@ const ClubManageAwardPage: React.FC = () => {
               </span>
               {/* 주기 선택 버튼 */}
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {([
-                  { value: "MONTHLY" as RankingPeriod, label: "월별" },
-                  { value: "QUARTERLY" as RankingPeriod, label: "분기별" },
-                  { value: "HALF_YEAR" as RankingPeriod, label: "반기" },
-                  { value: "YEARLY" as RankingPeriod, label: "연간" },
-                  { value: "CUSTOM" as RankingPeriod, label: "커스텀" },
-                ]).map((opt) => (
+                {(Object.keys(RANKING_PERIOD_LABELS) as RankingPeriod[]).map((value) => (
                   <button
-                    key={opt.value}
+                    key={value}
                     type="button"
                     className={[
                       "py-1.5 px-3 rounded-lg border text-sm font-semibold cursor-pointer transition-all",
                       "disabled:opacity-60 disabled:cursor-not-allowed",
-                      policy.rankingPeriod === opt.value
+                      policy.rankingPeriod === value
                         ? "bg-primary border-primary text-white"
                         : "bg-gray-50 border-border text-gray-900 hover:bg-gray-100",
                     ].join(" ")}
-                    onClick={() => setPolicy((p) => ({ ...p, rankingPeriod: opt.value }))}
+                    onClick={() => setPolicy((p) => ({ ...p, rankingPeriod: value }))}
                     disabled={saving}
                   >
-                    {opt.label}
+                    {RANKING_PERIOD_LABELS[value]}
                   </button>
                 ))}
               </div>
@@ -636,43 +638,12 @@ const ClubManageAwardPage: React.FC = () => {
           </div>
 
           <div className={["bg-white border border-border rounded-xl p-4 transition-opacity", !policy.awardEnabled ? "opacity-50 pointer-events-none" : ""].join(" ")}>
-            {/* 정산 주기 */}
+            {/* 정산 주기 (랭킹 탭 설정을 그대로 따름) */}
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-900">정산 주기</span>
               <span className="text-xs text-gray-400 leading-snug">
-                어워드 랭킹을 집계하는 기간입니다. 기준일은 1월 1일 / 7월 1일입니다.
+                어워드 랭킹을 집계하는 기간입니다. 랭킹 탭에서 설정한 주기({RANKING_PERIOD_LABELS[policy.rankingPeriod ?? "YEARLY"]})를 그대로 사용합니다.
               </span>
-              {/* 세그먼트 버튼 (반기/연간) */}
-              <div className="flex gap-2 mt-2">
-                <button
-                  type="button"
-                  className={[
-                    "flex-1 py-2 px-3 rounded-lg border text-sm font-semibold cursor-pointer transition-all",
-                    "disabled:opacity-60 disabled:cursor-not-allowed",
-                    policy.awardPeriod === "HALF_YEAR"
-                      ? "bg-primary border-primary text-white"
-                      : "bg-gray-50 border-border text-gray-900 hover:bg-gray-100",
-                  ].join(" ")}
-                  onClick={() => setPolicy((p) => ({ ...p, awardPeriod: "HALF_YEAR" }))}
-                  disabled={saving}
-                >
-                  반기 (6개월)
-                </button>
-                <button
-                  type="button"
-                  className={[
-                    "flex-1 py-2 px-3 rounded-lg border text-sm font-semibold cursor-pointer transition-all",
-                    "disabled:opacity-60 disabled:cursor-not-allowed",
-                    policy.awardPeriod === "YEARLY"
-                      ? "bg-primary border-primary text-white"
-                      : "bg-gray-50 border-border text-gray-900 hover:bg-gray-100",
-                  ].join(" ")}
-                  onClick={() => setPolicy((p) => ({ ...p, awardPeriod: "YEARLY" }))}
-                  disabled={saving}
-                >
-                  연간 (1년)
-                </button>
-              </div>
             </div>
 
             <div className="h-px bg-border my-4" />

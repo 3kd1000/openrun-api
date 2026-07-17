@@ -1,5 +1,5 @@
 import axiosInstance from "./api/axiosInstance";
-import type { AwardRankingResponse, AwardType, AwardPeriod, RankingPeriod, RankingCustomSeason } from "../types/club";
+import type { AwardRankingResponse, AwardType, RankingPeriod, RankingCustomSeason } from "../types/club";
 
 export interface AwardPeriodOption {
   label: string;
@@ -15,7 +15,7 @@ export interface WinnerDetail {
 }
 
 export interface AwardWinnersResponse {
-  period: AwardPeriod;
+  period: RankingPeriod;
   startDate: string;
   endDate: string;
   winnerUserIds: number[];  // 모든 어워드 1등 user ID
@@ -118,76 +118,6 @@ export const awardService = {
       { params }
     );
     return response.data;
-  },
-
-  /**
-   * 과거 완료된 정산 기간 목록 생성
-   * 현재 진행 중인 시즌은 제외하고 직전 완료 시즌부터 N개 반환
-   */
-  generatePeriodOptions(
-    periodType: "HALF_YEAR" | "YEARLY",
-    count: number = 5,
-    clubCreatedAt?: string
-  ): AwardPeriodOption[] {
-    const options: AwardPeriodOption[] = [];
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
-
-    if (periodType === "HALF_YEAR") {
-      // 현재 시즌 건너뛰고 직전 완료 시즌부터 시작
-      let year: number;
-      let isFirstHalf: boolean;
-
-      if (currentMonth <= 6) {
-        // 현재 상반기 → 직전 완료는 전년 하반기
-        year = currentYear - 1;
-        isFirstHalf = false;
-      } else {
-        // 현재 하반기 → 직전 완료는 올해 상반기
-        year = currentYear;
-        isFirstHalf = true;
-      }
-
-      for (let i = 0; i < count; i++) {
-        if (isFirstHalf) {
-          options.push({
-            label: `${year}년 상반기`,
-            startDate: `${year}-01-01`,
-            endDate: `${year}-06-30`,
-          });
-          // 다음 반복: 전년 하반기
-          isFirstHalf = false;
-          year--;
-        } else {
-          options.push({
-            label: `${year}년 하반기`,
-            startDate: `${year}-07-01`,
-            endDate: `${year}-12-31`,
-          });
-          // 다음 반복: 같은 연도 상반기
-          isFirstHalf = true;
-        }
-      }
-    } else {
-      // 연간 옵션: 현재 연도 제외, 전년부터 시작
-      for (let i = 0; i < count; i++) {
-        const year = currentYear - 1 - i;
-        options.push({
-          label: `${year}년`,
-          startDate: `${year}-01-01`,
-          endDate: `${year}-12-31`,
-        });
-      }
-    }
-
-    // 클럽 생성일 이전 시즌 필터링
-    if (clubCreatedAt) {
-      const createdDate = clubCreatedAt.substring(0, 10);
-      return options.filter((opt) => opt.endDate >= createdDate);
-    }
-
-    return options;
   },
 
   /**

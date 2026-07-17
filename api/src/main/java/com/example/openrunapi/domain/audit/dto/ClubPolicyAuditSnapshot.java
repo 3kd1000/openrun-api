@@ -1,6 +1,5 @@
 package com.example.openrunapi.domain.audit.dto;
 
-import com.example.openrunapi.domain.club.model.AwardPeriod;
 import com.example.openrunapi.domain.club.model.ClubPolicy;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +20,6 @@ public class ClubPolicyAuditSnapshot {
     private String memberRecruitmentNote;
 
     // 어워드 정책 필드
-    private AwardPeriod awardPeriod;
     private Boolean awardAttendanceEnabled;
     private Boolean awardPointsEnabled;
     private Boolean awardBookingEnabled;
@@ -37,7 +35,6 @@ public class ClubPolicyAuditSnapshot {
                 .interclubRecruitmentOpen(policy.getInterclubRecruitmentOpen())
                 .memberRecruitmentOpen(policy.getMemberRecruitmentOpen())
                 .memberRecruitmentNote(policy.getMemberRecruitmentNote())
-                .awardPeriod(policy.getAwardPeriod())
                 .awardAttendanceEnabled(policy.getAwardAttendanceEnabled())
                 .awardPointsEnabled(policy.getAwardPointsEnabled())
                 .awardBookingEnabled(policy.getAwardBookingEnabled())

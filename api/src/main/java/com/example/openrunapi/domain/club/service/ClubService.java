@@ -219,7 +219,6 @@ public class ClubService {
 
         policy.updateAwardPolicy(
                 request.getAwardEnabled(),
-                request.getAwardPeriod(),
                 request.getAwardAttendanceEnabled(),
                 request.getAwardPointsEnabled(),
                 request.getAwardBookingEnabled(),

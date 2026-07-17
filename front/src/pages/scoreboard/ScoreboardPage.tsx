@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/api/axiosInstance";
 import type { Match, MatchPageResponse } from "../../types/match";
-import type { AwardRankingResponse, AwardRankingEntry, AwardType, AwardPeriod, RankingPeriod, RankingCustomSeason, Club } from "../../types/club";
+import type { AwardRankingResponse, AwardRankingEntry, AwardType, RankingPeriod, RankingCustomSeason, Club } from "../../types/club";
 import { format } from "date-fns";
 import { TrophyIcon, CalendarIcon, ClipboardListIcon, UserIcon, StarIcon, MedalIcon } from "../../components/common/Icons";
 import { getOpenRunSession } from "../../utils/openrunSession";
@@ -52,6 +52,7 @@ const ScoreboardPage: React.FC = () => {
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rankingPeriod, setRankingPeriod] = useState<RankingPeriod>("YEARLY");
   const [rankingPeriodOptions, setRankingPeriodOptions] = useState<AwardPeriodOption[]>([]);
   const [selectedRankingPeriodIndex, setSelectedRankingPeriodIndex] = useState(0);
   const [sortBy, setSortBy] = useState<"points" | "totalMatches" | "winRate">(
@@ -96,8 +97,6 @@ const ScoreboardPage: React.FC = () => {
   const [awardRankings, setAwardRankings] = useState<AwardRankingResponse[]>([]);
   const [awardLoading, setAwardLoading] = useState(false);
   const [awardError, setAwardError] = useState<string | null>(null);
-  const [clubAwardPeriod, setClubAwardPeriod] = useState<AwardPeriod>("HALF_YEAR");
-  const [periodOptions, setPeriodOptions] = useState<AwardPeriodOption[]>([]);
   const [selectedPeriodIndex, setSelectedPeriodIndex] = useState(0);
   const isLoadingAwardRef = useRef(false);
 
@@ -216,6 +215,7 @@ const ScoreboardPage: React.FC = () => {
         }
         const clubCreatedAt = clubResponse.data.createdAt;
         const options = awardService.generateRankingPeriodOptions(rankingPeriod, 6, customSeasons, clubCreatedAt);
+        setRankingPeriod(rankingPeriod);
         setRankingPeriodOptions(options);
         setSelectedRankingPeriodIndex(0);
         // 어워드 활성화 여부도 여기서 설정 (탭 표시용)
@@ -404,43 +404,17 @@ const ScoreboardPage: React.FC = () => {
     }
   }, [personalHasMore, personalPage, fetchPersonalData]);
 
-  // Tab 4: 어워드 데이터 로드
+  // Tab 4: 어워드 데이터 로드 (랭킹 탭과 동일한 기간 옵션을 그대로 사용)
   const fetchAwardData = useCallback(async (periodIndex: number = 0) => {
-    if (isLoadingAwardRef.current || !selectedClubId) return;
+    if (isLoadingAwardRef.current || !selectedClubId || rankingPeriodOptions.length === 0) return;
+    if (awardEnabled === false) return;
 
     isLoadingAwardRef.current = true;
     try {
       setAwardLoading(true);
       setAwardError(null);
 
-      // 첫 로드 시 클럽 정보에서 award period 가져오기
-      if (periodOptions.length === 0) {
-        const clubResponse = await axiosInstance.get<Club>(`/clubs/${selectedClubId}`);
-        const isEnabled = clubResponse.data.awardEnabled !== false;
-        setAwardEnabled(isEnabled);
-
-        // 어워드 비활성화 시 데이터 로드 스킵
-        if (!isEnabled) {
-          setAwardLoading(false);
-          isLoadingAwardRef.current = false;
-          return;
-        }
-
-        const period = clubResponse.data.awardPeriod || "HALF_YEAR";
-        setClubAwardPeriod(period);
-
-        // 기간 옵션 생성 (클럽 생성일 이전 시즌 제외)
-        const clubCreatedAt = clubResponse.data.createdAt;
-        const options = awardService.generatePeriodOptions(period, 6, clubCreatedAt);
-        setPeriodOptions(options);
-      }
-
-      // 선택된 기간으로 수상자 조회 (확정된 수상 기록)
-      const currentOptions = periodOptions.length > 0
-        ? periodOptions
-        : awardService.generatePeriodOptions(clubAwardPeriod, 6);
-
-      const selectedOption = currentOptions[periodIndex];
+      const selectedOption = rankingPeriodOptions[periodIndex];
       if (selectedOption) {
         const winners = await awardService.getAwardWinners(
           selectedClubId,
@@ -464,7 +438,7 @@ const ScoreboardPage: React.FC = () => {
         const rankings: AwardRankingResponse[] = Array.from(typeMap.entries()).map(
           ([type, entries]) => ({
             type,
-            period: clubAwardPeriod,
+            period: rankingPeriod,
             startDate: selectedOption.startDate,
             endDate: selectedOption.endDate,
             rankings: entries,
@@ -479,7 +453,7 @@ const ScoreboardPage: React.FC = () => {
       setAwardLoading(false);
       isLoadingAwardRef.current = false;
     }
-  }, [selectedClubId, periodOptions, clubAwardPeriod]);
+  }, [selectedClubId, rankingPeriodOptions, rankingPeriod, awardEnabled]);
 
   // 기간 선택 변경 핸들러
   const handlePeriodChange = (index: number) => {
@@ -943,7 +917,7 @@ const ScoreboardPage: React.FC = () => {
               className="flex-1 px-2 py-1 border border-border rounded text-xs cursor-pointer max-w-[180px] max-md:max-w-none disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={awardLoading}
             >
-              {periodOptions.map((option, index) => (
+              {rankingPeriodOptions.map((option, index) => (
                 <option key={index} value={index}>
                   {option.label}
                 </option>

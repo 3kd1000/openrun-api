@@ -1,7 +1,7 @@
 package com.example.openrunapi.domain.award.model.dto;
 
-import com.example.openrunapi.domain.club.model.AwardPeriod;
 import com.example.openrunapi.domain.club.model.AwardType;
+import com.example.openrunapi.domain.club.model.RankingPeriod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +18,7 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 public class AwardWinnersResponse {
-    private final AwardPeriod period;
+    private final RankingPeriod period;
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final Set<Long> winnerUserIds;  // 모든 어워드 타입의 1등 사용자 ID

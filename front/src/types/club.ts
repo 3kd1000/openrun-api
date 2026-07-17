@@ -1,6 +1,5 @@
 // 어워드 타입
 export type AwardType = 'ATTENDANCE' | 'POINTS' | 'BOOKING';
-export type AwardPeriod = 'HALF_YEAR' | 'YEARLY';
 
 // 랭킹 주기 타입
 export type RankingPeriod = 'MONTHLY' | 'QUARTERLY' | 'HALF_YEAR' | 'YEARLY' | 'CUSTOM';
@@ -21,7 +20,7 @@ export interface AwardRankingEntry {
 
 export interface AwardRankingResponse {
     type: AwardType;
-    period: AwardPeriod;
+    period: RankingPeriod;
     startDate: string;  // YYYY-MM-DD
     endDate: string;    // YYYY-MM-DD
     rankings: AwardRankingEntry[];
@@ -46,7 +45,6 @@ export interface Club {
     logoThumbnailUrl?: string | null;
     // 어워드 정책 필드
     awardEnabled?: boolean | null;
-    awardPeriod?: AwardPeriod | null;
     awardAttendanceEnabled?: boolean | null;
     awardPointsEnabled?: boolean | null;
     awardBookingEnabled?: boolean | null;
@@ -95,7 +93,6 @@ export interface UpdateClubPolicyRequest {
 
 export interface UpdateAwardPolicyRequest {
     awardEnabled: boolean;
-    awardPeriod: AwardPeriod;
     awardAttendanceEnabled: boolean;
     awardPointsEnabled: boolean;
     awardBookingEnabled: boolean;
