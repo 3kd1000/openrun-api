@@ -1,5 +1,4 @@
 export type AwardType = "ATTENDANCE" | "POINTS" | "BOOKING";
-export type AwardPeriod = "HALF_YEAR" | "YEARLY";
 
 export interface Club {
   id: number;
@@ -17,7 +16,6 @@ export interface Club {
   memberCount?: number;
   logoUrl?: string | null;
   logoThumbnailUrl?: string | null;
-  awardPeriod?: AwardPeriod | null;
   awardAttendanceEnabled?: boolean | null;
   awardPointsEnabled?: boolean | null;
   awardBookingEnabled?: boolean | null;

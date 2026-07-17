@@ -1,13 +1,11 @@
 package com.example.openrunapi.domain.club.model.dto;
 
-import com.example.openrunapi.domain.club.model.AwardPeriod;
 import com.example.openrunapi.domain.club.model.RankingPeriod;
 import lombok.Getter;
 
 @Getter
 public class UpdateAwardPolicyRequest {
     private Boolean awardEnabled;
-    private AwardPeriod awardPeriod;
     private Boolean awardAttendanceEnabled;
     private Boolean awardPointsEnabled;
     private Boolean awardBookingEnabled;

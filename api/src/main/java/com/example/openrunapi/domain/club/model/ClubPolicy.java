@@ -42,10 +42,6 @@ public class ClubPolicy {
     @Column(name = "award_enabled", nullable = false)
     private Boolean awardEnabled = true;  // 어워드 기능 글로벌 ON/OFF
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "award_period", nullable = false, length = 20)
-    private AwardPeriod awardPeriod = AwardPeriod.HALF_YEAR;
-
     @Column(name = "award_attendance_enabled", nullable = false)
     private Boolean awardAttendanceEnabled = true;
 
@@ -101,7 +97,6 @@ public class ClubPolicy {
      */
     public void updateAwardPolicy(
             Boolean awardEnabled,
-            AwardPeriod awardPeriod,
             Boolean awardAttendanceEnabled,
             Boolean awardPointsEnabled,
             Boolean awardBookingEnabled,
@@ -110,9 +105,6 @@ public class ClubPolicy {
     ) {
         if (awardEnabled != null) {
             this.awardEnabled = awardEnabled;
-        }
-        if (awardPeriod != null) {
-            this.awardPeriod = awardPeriod;
         }
         if (awardAttendanceEnabled != null) {
             this.awardAttendanceEnabled = awardAttendanceEnabled;

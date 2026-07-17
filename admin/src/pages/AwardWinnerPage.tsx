@@ -23,11 +23,18 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  RANKING_PERIOD_LABELS,
+  generateRankingPeriodOptions,
+  type RankingCustomSeason,
+  type RankingPeriod,
+} from "../utils/rankingPeriod";
 
 interface Club {
   id: number;
   name: string;
-  awardPeriod?: "HALF_YEAR" | "YEARLY";
+  rankingPeriod?: RankingPeriod;
+  rankingCustomSeasons?: string | null;
   awardAttendanceEnabled?: boolean;
   awardPointsEnabled?: boolean;
   awardBookingEnabled?: boolean;
@@ -134,18 +141,18 @@ function AwardWinnerPage() {
     setSelectedClub(club || null);
 
     const fetchData = async () => {
-      // 기간 옵션 조회
-      try {
-        const period = club?.awardPeriod || "HALF_YEAR";
-        const periodResponse = await api.get<PeriodOption[]>(
-          `/clubs/${selectedClubId}/awards/periods`,
-          { params: { period, count: 10 } }
-        );
-        setPeriodOptions(periodResponse.data);
-        setSelectedPeriodIndex(0);
-      } catch (error) {
-        console.error("Failed to fetch period options:", error);
+      // 기간 옵션 생성 (랭킹 주기 기준, 클라이언트에서 직접 계산)
+      const period = club?.rankingPeriod || "YEARLY";
+      let customSeasons: RankingCustomSeason[] | undefined;
+      if (period === "CUSTOM" && club?.rankingCustomSeasons) {
+        try {
+          customSeasons = JSON.parse(club.rankingCustomSeasons);
+        } catch {
+          // 파싱 실패 시 무시
+        }
       }
+      setPeriodOptions(generateRankingPeriodOptions(period, 10, customSeasons));
+      setSelectedPeriodIndex(0);
 
       // 회원 목록 조회
       setMembersLoading(true);
@@ -331,7 +338,7 @@ function AwardWinnerPage() {
               </Select>
               {selectedClub && (
                 <span className="text-muted-foreground text-xs">
-                  정산 주기: {selectedClub.awardPeriod === "YEARLY" ? "연간" : "반기"}
+                  정산 주기: {RANKING_PERIOD_LABELS[selectedClub.rankingPeriod ?? "YEARLY"]}
                 </span>
               )}
             </div>

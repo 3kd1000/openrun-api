@@ -1,5 +1,5 @@
 import axiosInstance from "./api/axiosInstance";
-import type { AwardRankingResponse, AwardType, AwardPeriod, RankingPeriod, RankingCustomSeason } from "../types/club";
+import type { AwardRankingResponse, AwardType, RankingPeriod, RankingCustomSeason } from "../types/club";
 
 export interface AwardPeriodOption {
   label: string;
@@ -15,7 +15,7 @@ export interface WinnerDetail {
 }
 
 export interface AwardWinnersResponse {
-  period: AwardPeriod;
+  period: RankingPeriod;
   startDate: string;
   endDate: string;
   winnerUserIds: number[];  // 모든 어워드 1등 user ID
@@ -118,76 +118,6 @@ export const awardService = {
       { params }
     );
     return response.data;
-  },
-
-  /**
-   * 과거 완료된 정산 기간 목록 생성
-   * 현재 진행 중인 시즌은 제외하고 직전 완료 시즌부터 N개 반환
-   */
-  generatePeriodOptions(
-    periodType: "HALF_YEAR" | "YEARLY",
-    count: number = 5,
-    clubCreatedAt?: string
-  ): AwardPeriodOption[] {
-    const options: AwardPeriodOption[] = [];
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
-
-    if (periodType === "HALF_YEAR") {
-      // 현재 시즌 건너뛰고 직전 완료 시즌부터 시작
-      let year: number;
-      let isFirstHalf: boolean;
-
-      if (currentMonth <= 6) {
-        // 현재 상반기 → 직전 완료는 전년 하반기
-        year = currentYear - 1;
-        isFirstHalf = false;
-      } else {
-        // 현재 하반기 → 직전 완료는 올해 상반기
-        year = currentYear;
-        isFirstHalf = true;
-      }
-
-      for (let i = 0; i < count; i++) {
-        if (isFirstHalf) {
-          options.push({
-            label: `${year}년 상반기`,
-            startDate: `${year}-01-01`,
-            endDate: `${year}-06-30`,
-          });
-          // 다음 반복: 전년 하반기
-          isFirstHalf = false;
-          year--;
-        } else {
-          options.push({
-            label: `${year}년 하반기`,
-            startDate: `${year}-07-01`,
-            endDate: `${year}-12-31`,
-          });
-          // 다음 반복: 같은 연도 상반기
-          isFirstHalf = true;
-        }
-      }
-    } else {
-      // 연간 옵션: 현재 연도 제외, 전년부터 시작
-      for (let i = 0; i < count; i++) {
-        const year = currentYear - 1 - i;
-        options.push({
-          label: `${year}년`,
-          startDate: `${year}-01-01`,
-          endDate: `${year}-12-31`,
-        });
-      }
-    }
-
-    // 클럽 생성일 이전 시즌 필터링
-    if (clubCreatedAt) {
-      const createdDate = clubCreatedAt.substring(0, 10);
-      return options.filter((opt) => opt.endDate >= createdDate);
-    }
-
-    return options;
   },
 
   /**
@@ -458,25 +388,22 @@ export const awardService = {
       };
 
       const currentIdx = findCurrentSeasonIndex();
+      const currentSeason = customSeasons[currentIdx];
       let year = currentYear;
+      // 현재 시즌이 연도 경계를 넘는 시즌이고, 아직 그 경계를 넘기 전(예: 12월)이라면
+      // "이 시즌은 내년까지 이어진다" - year 기준을 한 해 앞으로 당겨서 이후 로직을 단일 규칙으로 통일
+      if (currentSeason.startMonth > currentSeason.endMonth && currentMonth > currentSeason.endMonth) {
+        year = currentYear + 1;
+      }
       let idx = currentIdx;
 
       for (let i = 0; i < count; i++) {
         const season = customSeasons[idx];
         const isWrapAround = season.startMonth > season.endMonth;
 
-        let startYear = year;
-        let endYear = year;
-        if (isWrapAround) {
-          // 연도 경계: 현재월이 endMonth 이하면 시작은 전년도
-          if (i === 0 && currentMonth <= season.endMonth) {
-            startYear = year - 1;
-          } else {
-            endYear = year + 1;
-            // 첫 번째가 아닌 경우 과거로 이동 중이므로 endYear = year, startYear = year -1 이 아니라
-            // 이미 year가 감소되어 있으므로 endYear = year + 1
-          }
-        }
+        // 연도 경계를 넘는 시즌은 항상 "작년 시작 ~ 올해(year) 종료"로 통일
+        const startYear = isWrapAround ? year - 1 : year;
+        const endYear = year;
 
         options.push({
           label: `${startYear} ${season.name} (${season.startMonth}~${season.endMonth}월)`,

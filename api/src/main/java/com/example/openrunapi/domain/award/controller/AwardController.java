@@ -7,7 +7,6 @@ import com.example.openrunapi.domain.award.model.dto.CumulativeAchievementRespon
 import com.example.openrunapi.domain.award.model.dto.SaveAwardWinnerRequest;
 import com.example.openrunapi.domain.award.model.dto.UpdateAwardWinnerRequest;
 import com.example.openrunapi.domain.award.service.AwardService;
-import com.example.openrunapi.domain.club.model.AwardPeriod;
 import com.example.openrunapi.domain.club.model.AwardType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/clubs/{clubId}/awards")
@@ -156,18 +154,5 @@ public class AwardController {
     ) {
         awardService.deleteAwardWinner(winnerId);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * 기간 옵션 생성 (Admin용)
-     */
-    @GetMapping("/periods")
-    public ResponseEntity<List<Map<String, Object>>> getPeriodOptions(
-            @PathVariable Long clubId,
-            @RequestParam(defaultValue = "HALF_YEAR") AwardPeriod period,
-            @RequestParam(defaultValue = "6") int count
-    ) {
-        List<Map<String, Object>> options = awardService.generatePeriodOptions(period, count);
-        return ResponseEntity.ok(options);
     }
 }

@@ -8,15 +8,20 @@ import com.example.openrunapi.domain.award.model.dto.AwardWinnersResponse;
 import com.example.openrunapi.domain.award.model.dto.CumulativeAchievementResponse;
 import com.example.openrunapi.domain.award.model.dto.SaveAwardWinnerRequest;
 import com.example.openrunapi.domain.award.repository.AwardWinnerRepository;
-import com.example.openrunapi.domain.club.model.AwardPeriod;
 import com.example.openrunapi.domain.club.model.AwardType;
 import com.example.openrunapi.domain.club.model.ClubPolicy;
+import com.example.openrunapi.domain.club.model.RankingPeriod;
+import com.example.openrunapi.domain.club.model.dto.RankingCustomSeason;
 import com.example.openrunapi.domain.club.repository.ClubPolicyRepository;
 import com.example.openrunapi.domain.match.model.Match;
 import com.example.openrunapi.domain.user.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +32,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -38,6 +44,7 @@ public class AwardService {
     private final ClubPolicyRepository clubPolicyRepository;
     private final UserRepository userRepository;
     private final AwardWinnerRepository awardWinnerRepository;
+    private final ObjectMapper objectMapper;
 
     // 승점 정책
     private static final int WIN_POINTS = 3;
@@ -63,8 +70,8 @@ public class AwardService {
         ClubPolicy policy = clubPolicyRepository.findByClubId(clubId)
                 .orElseThrow(() -> new IllegalArgumentException("클럽 정책을 찾을 수 없습니다."));
 
-        // 기간 계산
-        LocalDate[] periodDates = calculatePeriodDates(policy.getAwardPeriod(), startDate, endDate);
+        // 기간 계산 (랭킹 주기 기준으로 통일)
+        LocalDate[] periodDates = calculatePeriodDates(policy.getRankingPeriod(), policy.getRankingCustomSeasons(), startDate, endDate);
         LocalDate actualStartDate = periodDates[0];
         LocalDate actualEndDate = periodDates[1];
 
@@ -75,18 +82,18 @@ public class AwardService {
         // 특정 타입만 요청한 경우
         if (type != null) {
             if (isAwardTypeEnabled(policy, type)) {
-                results.add(getRankingForType(clubId, type, policy.getAwardPeriod(), actualStartDate, actualEndDate, actualLimit));
+                results.add(getRankingForType(clubId, type, policy.getRankingPeriod(), actualStartDate, actualEndDate, actualLimit));
             }
         } else {
             // 활성화된 모든 타입 조회
             if (Boolean.TRUE.equals(policy.getAwardAttendanceEnabled())) {
-                results.add(getRankingForType(clubId, AwardType.ATTENDANCE, policy.getAwardPeriod(), actualStartDate, actualEndDate, actualLimit));
+                results.add(getRankingForType(clubId, AwardType.ATTENDANCE, policy.getRankingPeriod(), actualStartDate, actualEndDate, actualLimit));
             }
             if (Boolean.TRUE.equals(policy.getAwardPointsEnabled())) {
-                results.add(getRankingForType(clubId, AwardType.POINTS, policy.getAwardPeriod(), actualStartDate, actualEndDate, actualLimit));
+                results.add(getRankingForType(clubId, AwardType.POINTS, policy.getRankingPeriod(), actualStartDate, actualEndDate, actualLimit));
             }
             if (Boolean.TRUE.equals(policy.getAwardBookingEnabled())) {
-                results.add(getRankingForType(clubId, AwardType.BOOKING, policy.getAwardPeriod(), actualStartDate, actualEndDate, actualLimit));
+                results.add(getRankingForType(clubId, AwardType.BOOKING, policy.getRankingPeriod(), actualStartDate, actualEndDate, actualLimit));
             }
         }
 
@@ -99,7 +106,7 @@ public class AwardService {
     private AwardRankingResponse getRankingForType(
             Long clubId,
             AwardType type,
-            AwardPeriod period,
+            RankingPeriod period,
             LocalDate startDate,
             LocalDate endDate,
             int limit
@@ -352,72 +359,159 @@ public class AwardService {
     }
 
     /**
-     * 정산 주기에 따른 기간 계산
+     * 랭킹 주기에 따른 기간 목록 계산 (index 0 = 현재 진행 중인 기간, 이후 과거 순)
+     * - 프론트 awardService.generateRankingPeriodOptions()와 동일한 규칙을 서버에서도 재현
      */
-    private LocalDate[] calculatePeriodDates(AwardPeriod period, LocalDate startDate, LocalDate endDate) {
+    private List<LocalDate[]> computePeriodBoundaries(RankingPeriod period, String customSeasonsJson, int count) {
+        List<LocalDate[]> result = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        int currentYear = now.getYear();
+        int currentMonth = now.getMonthValue();
+
+        switch (period) {
+            case MONTHLY -> {
+                int year = currentYear;
+                int month = currentMonth;
+                for (int i = 0; i < count; i++) {
+                    LocalDate start = LocalDate.of(year, month, 1);
+                    result.add(new LocalDate[]{start, start.withDayOfMonth(start.lengthOfMonth())});
+                    month--;
+                    if (month < 1) {
+                        month = 12;
+                        year--;
+                    }
+                }
+            }
+            case QUARTERLY -> {
+                int q = (currentMonth - 1) / 3 + 1;
+                int year = currentYear;
+                for (int i = 0; i < count; i++) {
+                    int startMonth = (q - 1) * 3 + 1;
+                    int endMonth = q * 3;
+                    LocalDate end = LocalDate.of(year, endMonth, 1);
+                    result.add(new LocalDate[]{LocalDate.of(year, startMonth, 1), end.withDayOfMonth(end.lengthOfMonth())});
+                    q--;
+                    if (q < 1) {
+                        q = 4;
+                        year--;
+                    }
+                }
+            }
+            case HALF_YEAR -> {
+                boolean first = currentMonth <= 6;
+                int year = currentYear;
+                for (int i = 0; i < count; i++) {
+                    if (first) {
+                        result.add(new LocalDate[]{LocalDate.of(year, 1, 1), LocalDate.of(year, 6, 30)});
+                        first = false;
+                        year--;
+                    } else {
+                        result.add(new LocalDate[]{LocalDate.of(year, 7, 1), LocalDate.of(year, 12, 31)});
+                        first = true;
+                    }
+                }
+            }
+            case YEARLY -> {
+                for (int i = 0; i < count; i++) {
+                    int year = currentYear - i;
+                    result.add(new LocalDate[]{LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31)});
+                }
+            }
+            case CUSTOM -> result.addAll(computeCustomSeasonBoundaries(customSeasonsJson, count, currentYear, currentMonth));
+        }
+
+        return result;
+    }
+
+    /**
+     * 커스텀 시즌 기반 기간 목록 계산
+     * - 시즌 미설정 시 연간으로 폴백
+     */
+    private List<LocalDate[]> computeCustomSeasonBoundaries(String customSeasonsJson, int count, int currentYear, int currentMonth) {
+        List<RankingCustomSeason> seasons = parseCustomSeasons(customSeasonsJson);
+        List<LocalDate[]> result = new ArrayList<>();
+
+        if (seasons.isEmpty()) {
+            for (int i = 0; i < count; i++) {
+                int year = currentYear - i;
+                result.add(new LocalDate[]{LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31)});
+            }
+            return result;
+        }
+
+        int currentIdx = 0;
+        for (int i = 0; i < seasons.size(); i++) {
+            RankingCustomSeason s = seasons.get(i);
+            boolean inSeason = s.startMonth() <= s.endMonth()
+                    ? (currentMonth >= s.startMonth() && currentMonth <= s.endMonth())
+                    : (currentMonth >= s.startMonth() || currentMonth <= s.endMonth());
+            if (inSeason) {
+                currentIdx = i;
+                break;
+            }
+        }
+
+        RankingCustomSeason currentSeason = seasons.get(currentIdx);
+        int year = currentYear;
+        // 현재 시즌이 연도 경계를 넘는 시즌이고, 아직 그 경계를 넘기 전(예: 12월)이라면
+        // "이 시즌은 내년까지 이어진다" - year 기준을 한 해 앞으로 당겨서 이후 로직을 단일 규칙으로 통일
+        if (currentSeason.startMonth() > currentSeason.endMonth() && currentMonth > currentSeason.endMonth()) {
+            year = currentYear + 1;
+        }
+
+        int idx = currentIdx;
+        for (int i = 0; i < count; i++) {
+            RankingCustomSeason season = seasons.get(idx);
+            boolean wrapAround = season.startMonth() > season.endMonth();
+
+            // 연도 경계를 넘는 시즌은 항상 "작년 시작 ~ 올해(year) 종료"로 통일
+            int startYear = wrapAround ? year - 1 : year;
+            int endYear = year;
+
+            LocalDate end = LocalDate.of(endYear, season.endMonth(), 1);
+            result.add(new LocalDate[]{
+                    LocalDate.of(startYear, season.startMonth(), 1),
+                    end.withDayOfMonth(end.lengthOfMonth())
+            });
+
+            idx--;
+            if (idx < 0) {
+                idx = seasons.size() - 1;
+                year--;
+            }
+        }
+
+        return result;
+    }
+
+    private List<RankingCustomSeason> parseCustomSeasons(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<RankingCustomSeason>>() {});
+        } catch (JsonProcessingException e) {
+            log.warn("커스텀 시즌 JSON 파싱 실패: {}", json, e);
+            return List.of();
+        }
+    }
+
+    /**
+     * 랭킹 주기에 따른 현재 기간 계산
+     */
+    private LocalDate[] calculatePeriodDates(RankingPeriod period, String customSeasonsJson, LocalDate startDate, LocalDate endDate) {
         // 명시적으로 기간이 지정된 경우
         if (startDate != null && endDate != null) {
             return new LocalDate[]{startDate, endDate};
         }
-
-        LocalDate now = LocalDate.now();
-        int year = now.getYear();
-        int month = now.getMonthValue();
-
-        return switch (period) {
-            case HALF_YEAR -> {
-                if (month <= 6) {
-                    // 상반기: 1월 1일 ~ 6월 30일
-                    yield new LocalDate[]{
-                            LocalDate.of(year, 1, 1),
-                            LocalDate.of(year, 6, 30)
-                    };
-                } else {
-                    // 하반기: 7월 1일 ~ 12월 31일
-                    yield new LocalDate[]{
-                            LocalDate.of(year, 7, 1),
-                            LocalDate.of(year, 12, 31)
-                    };
-                }
-            }
-            case YEARLY -> new LocalDate[]{
-                    LocalDate.of(year, 1, 1),
-                    LocalDate.of(year, 12, 31)
-            };
-        };
+        return computePeriodBoundaries(period, customSeasonsJson, 1).get(0);
     }
 
     /**
      * 직전 완료 기간 계산 (수상자 뱃지 표시용)
-     * - 현재 상반기 → 전년도 하반기
-     * - 현재 하반기 → 올해 상반기
      */
-    private LocalDate[] calculatePreviousPeriodDates(AwardPeriod period) {
-        LocalDate now = LocalDate.now();
-        int year = now.getYear();
-        int month = now.getMonthValue();
-
-        return switch (period) {
-            case HALF_YEAR -> {
-                if (month <= 6) {
-                    // 현재 상반기 → 직전 기간은 전년도 하반기
-                    yield new LocalDate[]{
-                            LocalDate.of(year - 1, 7, 1),
-                            LocalDate.of(year - 1, 12, 31)
-                    };
-                } else {
-                    // 현재 하반기 → 직전 기간은 올해 상반기
-                    yield new LocalDate[]{
-                            LocalDate.of(year, 1, 1),
-                            LocalDate.of(year, 6, 30)
-                    };
-                }
-            }
-            case YEARLY -> new LocalDate[]{
-                    LocalDate.of(year - 1, 1, 1),
-                    LocalDate.of(year - 1, 12, 31)
-            };
-        };
+    private LocalDate[] calculatePreviousPeriodDates(RankingPeriod period, String customSeasonsJson) {
+        return computePeriodBoundaries(period, customSeasonsJson, 2).get(1);
     }
 
     /**
@@ -441,7 +535,7 @@ public class AwardService {
                 .orElseThrow(() -> new IllegalArgumentException("클럽 정책을 찾을 수 없습니다."));
 
         // 직전 완료 기간 계산 (수상자 뱃지용)
-        LocalDate[] periodDates = calculatePreviousPeriodDates(policy.getAwardPeriod());
+        LocalDate[] periodDates = calculatePreviousPeriodDates(policy.getRankingPeriod(), policy.getRankingCustomSeasons());
         LocalDate startDate = periodDates[0];
         LocalDate endDate = periodDates[1];
 
@@ -460,7 +554,7 @@ public class AwardService {
         }
 
         return AwardWinnersResponse.builder()
-                .period(policy.getAwardPeriod())
+                .period(policy.getRankingPeriod())
                 .startDate(startDate)
                 .endDate(endDate)
                 .winnerUserIds(winnerUserIds)
@@ -688,76 +782,4 @@ public class AwardService {
         return awardCount;
     }
 
-    /**
-     * 기간 옵션 생성 (Admin용)
-     * 현재 진행 중인 시즌은 제외하고 직전 완료 시즌부터 N개 반환
-     */
-    public List<Map<String, Object>> generatePeriodOptions(AwardPeriod period, int count) {
-        List<Map<String, Object>> options = new ArrayList<>();
-        LocalDate now = LocalDate.now();
-        int year = now.getYear();
-        int month = now.getMonthValue();
-
-        if (period == AwardPeriod.HALF_YEAR) {
-            // 현재 시즌 건너뛰고 직전 완료 시즌부터 시작
-            int startYear;
-            boolean startFirstHalf;
-
-            if (month <= 6) {
-                // 현재 상반기 → 직전 완료는 전년 하반기
-                startYear = year - 1;
-                startFirstHalf = false;
-            } else {
-                // 현재 하반기 → 직전 완료는 올해 상반기
-                startYear = year;
-                startFirstHalf = true;
-            }
-
-            for (int i = 0; i < count; i++) {
-                LocalDate periodStart, periodEnd;
-                String label;
-
-                if (startFirstHalf) {
-                    // 상반기
-                    periodStart = LocalDate.of(startYear, 1, 1);
-                    periodEnd = LocalDate.of(startYear, 6, 30);
-                    label = startYear + "년 상반기";
-                } else {
-                    // 하반기
-                    periodStart = LocalDate.of(startYear, 7, 1);
-                    periodEnd = LocalDate.of(startYear, 12, 31);
-                    label = startYear + "년 하반기";
-                }
-
-                Map<String, Object> option = new HashMap<>();
-                option.put("label", label);
-                option.put("periodStart", periodStart.toString());
-                option.put("periodEnd", periodEnd.toString());
-                options.add(option);
-
-                // 다음 반기로
-                if (startFirstHalf) {
-                    startYear--;
-                    startFirstHalf = false;
-                } else {
-                    startFirstHalf = true;
-                }
-            }
-        } else {
-            // YEARLY: 현재 연도 제외, 전년부터 시작
-            for (int i = 0; i < count; i++) {
-                int targetYear = year - 1 - i;
-                LocalDate periodStart = LocalDate.of(targetYear, 1, 1);
-                LocalDate periodEnd = LocalDate.of(targetYear, 12, 31);
-
-                Map<String, Object> option = new HashMap<>();
-                option.put("label", targetYear + "년");
-                option.put("periodStart", periodStart.toString());
-                option.put("periodEnd", periodEnd.toString());
-                options.add(option);
-            }
-        }
-
-        return options;
-    }
 }

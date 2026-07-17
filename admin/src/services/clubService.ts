@@ -32,10 +32,11 @@ export interface ClubDetail {
   memberRecruitmentOpen: boolean | null;
   memberRecruitmentNote: string | null;
   awardEnabled: boolean | null;
-  awardPeriod: string | null;
   awardAttendanceEnabled: boolean | null;
   awardPointsEnabled: boolean | null;
   awardBookingEnabled: boolean | null;
+  rankingPeriod: string | null;
+  rankingCustomSeasons: string | null;
 }
 
 /** 클럽 멤버 상세 (GET /api/admin/clubs/{id}/membership) */
