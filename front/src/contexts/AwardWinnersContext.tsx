@@ -18,7 +18,8 @@ interface AwardWinnersContextType {
   achievements: Map<number, MemberAchievement>;  // userId -> 누적 업적
   isLoading: boolean;
   isWinner: (userId: number) => boolean;  // 수상자 여부 확인
-  getWinnerAwardTypes: (userId: number) => string[];  // 수상 타입 목록 반환
+  getWinnerAwardTypes: (userId: number) => string[];  // 직전 시즌 수상 타입 목록 (하이라이트용)
+  getCumulativeAwardTypes: (userId: number) => AwardType[];  // 역대 한 번이라도 수상한 타입 목록 (뱃지 노출 기준)
   getUserAchievement: (userId: number) => MemberAchievement | null;  // 누적 업적 조회
   getUserTier: (userId: number, awardType: AwardType) => number;  // 특정 타입의 티어
   getUserPrimaryBadge: (userId: number) => { awardType: AwardType; tier: number; tierName: TierName } | null;  // 대표 뱃지
@@ -38,6 +39,7 @@ export const useAwardWinners = () => {
       isLoading: false,
       isWinner: () => false,
       getWinnerAwardTypes: () => [],
+      getCumulativeAwardTypes: () => [],
       getUserAchievement: () => null,
       getUserTier: () => 0,
       getUserPrimaryBadge: () => null,
@@ -122,6 +124,14 @@ export const AwardWinnersProvider: React.FC<AwardWinnersProviderProps> = ({ chil
       .map((w) => w.type);
   }, [winners]);
 
+  // 역대 한 번이라도 수상한 타입 목록 (뱃지는 이걸 기준으로 노출 - 누적 방식)
+  const getCumulativeAwardTypes = useCallback((userId: number): AwardType[] => {
+    const achievement = achievements.get(userId);
+    if (!achievement) return [];
+    const order: AwardType[] = ["ATTENDANCE", "POINTS", "BOOKING"];
+    return order.filter((type) => (achievement.awardCounts[type] ?? 0) > 0);
+  }, [achievements]);
+
   const getUserAchievement = useCallback((userId: number): MemberAchievement | null => {
     return achievements.get(userId) || null;
   }, [achievements]);
@@ -159,6 +169,7 @@ export const AwardWinnersProvider: React.FC<AwardWinnersProviderProps> = ({ chil
         isLoading,
         isWinner,
         getWinnerAwardTypes,
+        getCumulativeAwardTypes,
         getUserAchievement,
         getUserTier,
         getUserPrimaryBadge,
