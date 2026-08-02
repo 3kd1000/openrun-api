@@ -145,38 +145,42 @@ public class AwardService {
     }
 
     /**
-     * 다참(ATTENDANCE) 랭킹 조회 - 확정된 일정 참가 횟수
+     * 다참(ATTENDANCE) 랭킹 조회 - 참여 경기 수
+     * - 기록 탭(ScoreboardService)의 "경기수"와 동일한 기준(Match 테이블)을 사용
      */
     private List<AwardRankingEntry> getAttendanceRanking(Long clubId, LocalDate startDate, LocalDate endDate, int limit) {
-        String jpql = """
-            SELECT sp.userId, u.name, COUNT(sp.id) as cnt
-            FROM ScheduleParticipant sp
-            JOIN Schedule s ON sp.scheduleId = s.id
-            JOIN User u ON sp.userId = u.id
-            WHERE s.clubId = :clubId
-              AND s.scheduledAt >= :startDateTime
-              AND s.scheduledAt < :endDateTime
-              AND sp.status = 'CONFIRMED'
-              AND sp.asGuest = false
-            GROUP BY sp.userId, u.name
-            ORDER BY cnt DESC, u.name ASC
-            """;
+        List<Match> matches = fetchCompletedMatches(clubId, startDate, endDate);
 
-        List<Object[]> results = em.createQuery(jpql, Object[].class)
-                .setParameter("clubId", clubId)
-                .setParameter("startDateTime", startDate.atStartOfDay())
-                .setParameter("endDateTime", endDate.plusDays(1).atStartOfDay())
-                .setMaxResults(limit)
-                .getResultList();
+        // 선수별 참여 경기 수 계산
+        Map<Long, Long> matchCountByUser = new HashMap<>();
+        for (Match match : matches) {
+            for (Long playerId : getAllMatchPlayers(match)) {
+                matchCountByUser.merge(playerId, 1L, Long::sum);
+            }
+        }
 
-        return buildRankingEntries(results);
+        return rankTopEntries(matchCountByUser, limit);
     }
 
     /**
      * 다승점(POINTS) 랭킹 조회 - 경기 승점 합계
      */
     private List<AwardRankingEntry> getPointsRanking(Long clubId, LocalDate startDate, LocalDate endDate, int limit) {
-        // 기간 내 완료된 경기 조회
+        List<Match> matches = fetchCompletedMatches(clubId, startDate, endDate);
+
+        // 선수별 승점 계산
+        Map<Long, Long> pointsByUser = new HashMap<>();
+        for (Match match : matches) {
+            calculateMatchPoints(match, pointsByUser);
+        }
+
+        return rankTopEntries(pointsByUser, limit);
+    }
+
+    /**
+     * 기간 내 완료된 경기 조회 (다참/다승점 랭킹 공용)
+     */
+    private List<Match> fetchCompletedMatches(Long clubId, LocalDate startDate, LocalDate endDate) {
         String jpql = """
             SELECT m FROM Match m
             WHERE m.clubId = :clubId
@@ -185,29 +189,34 @@ public class AwardService {
               AND m.result IS NOT NULL
             """;
 
-        List<Match> matches = em.createQuery(jpql, Match.class)
+        return em.createQuery(jpql, Match.class)
                 .setParameter("clubId", clubId)
                 .setParameter("startDateTime", startDate.atStartOfDay())
                 .setParameter("endDateTime", endDate.plusDays(1).atStartOfDay())
                 .getResultList();
+    }
 
-        // 선수별 승점 계산
-        Map<Long, Long> pointsByUser = new HashMap<>();
-        for (Match match : matches) {
-            calculateMatchPoints(match, pointsByUser);
-        }
+    /**
+     * 경기에 참여한 모든 선수 ID 반환 (양 팀, null 제외)
+     */
+    private List<Long> getAllMatchPlayers(Match match) {
+        List<Long> players = new ArrayList<>(getTeamPlayers(match.getTeamAPlayer1Id(), match.getTeamAPlayer2Id()));
+        players.addAll(getTeamPlayers(match.getTeamBPlayer1Id(), match.getTeamBPlayer2Id()));
+        return players;
+    }
 
-        // 상위 limit명 추출
-        List<Map.Entry<Long, Long>> topEntries = pointsByUser.entrySet().stream()
+    /**
+     * 사용자별 집계값(Map)을 상위 limit명 랭킹 엔트리로 변환 (동점 처리 포함)
+     */
+    private List<AwardRankingEntry> rankTopEntries(Map<Long, Long> valueByUser, int limit) {
+        List<Map.Entry<Long, Long>> topEntries = valueByUser.entrySet().stream()
                 .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
                 .limit(limit)
                 .toList();
 
-        // 사용자 이름 조회
         List<Long> userIds = topEntries.stream().map(Map.Entry::getKey).toList();
         Map<Long, String> userNames = getUserNames(userIds);
 
-        // 랭킹 엔트리 생성
         List<AwardRankingEntry> rankings = new ArrayList<>();
         int rank = 1;
         Long prevValue = null;
