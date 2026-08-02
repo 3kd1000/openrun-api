@@ -173,3 +173,40 @@
   justify-content: center;
   width: 100%;
 }
+
+/* ========== 아이콘 옆 한글 라벨 정렬 (뱃지 등) ==========
+ * 한글 글리프는 line-height 박스 안에서 위로 치우쳐 렌더링되는 경향이 있어,
+ * 아이콘과 나란히 두고 align-items:center로 정렬해도 시각적으로는 붕 떠 보인다.
+ * text-box-trim 지원 브라우저(Chrome 133+, Safari 18.2+)에서는 폰트의 실제
+ * 글자 높이(cap-height~alphabetic baseline)로 박스를 잘라 자동으로 정확히
+ * 정렬되므로 폰트가 무엇이든(기기별 system-ui 포함) 동일하게 맞는다.
+ * 미지원 브라우저는 대부분의 한글 폰트에서 무난히 맞는 보정값(1px)으로 대체.
+ */
+.icon-label-align {
+  transform: translateY(1px);
+}
+@supports (text-box-trim: trim-both) {
+  .icon-label-align {
+    transform: none;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+  }
+}
+
+/* ========== 레인보우 티어 뱃지 그라데이션 링 ==========
+ * box-shadow 기반 ring 유틸은 단색만 가능해서, 레인보우 티어(5회+)는
+ * ::before를 그라데이션으로 채우고 안쪽을 마스킹해 테두리만 남기는 방식으로 처리.
+ * 부모(.badge-rainbow-ring)가 이미 relative이므로 별도 wrapper 불필요.
+ */
+.badge-rainbow-ring::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 7px;
+  padding: 2px;
+  background: linear-gradient(90deg, #ff3b30, #ff9500, #ffcc00, #34c759, #00c7be, #007aff, #af52de);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
